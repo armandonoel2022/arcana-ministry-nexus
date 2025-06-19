@@ -3,6 +3,9 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Music, Plus, Search, Upload } from "lucide-react";
+import SongList from '@/components/songs/SongList';
+import AddSongForm from '@/components/songs/AddSongForm';
+import CSVUpload from '@/components/songs/CSVUpload';
 
 const RepertoirioMusical = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -48,49 +51,17 @@ const RepertoirioMusical = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <Music className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p className="text-lg mb-2">Repertorio Musical en Construcción</p>
-                <p className="text-sm">Pronto podrás ver y gestionar todas las canciones del ministerio</p>
-              </div>
+              <SongList />
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="add" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Agregar Nueva Canción</CardTitle>
-              <CardDescription>
-                Añade una nueva canción al repertorio del ministerio
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <Plus className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p className="text-lg mb-2">Formulario de Canción en Construcción</p>
-                <p className="text-sm">Pronto podrás agregar canciones individualmente</p>
-              </div>
-            </CardContent>
-          </Card>
+          <AddSongForm />
         </TabsContent>
 
         <TabsContent value="upload" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Carga Masiva de Canciones</CardTitle>
-              <CardDescription>
-                Importa múltiples canciones desde un archivo CSV
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <Upload className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p className="text-lg mb-2">Carga Masiva en Construcción</p>
-                <p className="text-sm">Pronto podrás importar canciones desde CSV</p>
-              </div>
-            </CardContent>
-          </Card>
+          <CSVUpload />
         </TabsContent>
       </Tabs>
     </div>
