@@ -57,8 +57,8 @@ const menuItems = [
     title: "Agenda Ministerial",
     description: "Turnos de alabanza y notificaciones",
     icon: Calendar,
-    url: "#",
-    comingSoon: true,
+    url: "/agenda",
+    comingSoon: false,
     isMain: true
   },
   {
