@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,193 +6,141 @@ import {
   Calendar, 
   Music, 
   Users, 
-  MessageCircle, 
-  Heart, 
-  Settings,
+  MessageCircle,
   Mic,
-  BookOpen,
-  Gift,
-  Scan,
-  Bell,
-  Bot
+  Heart
 } from "lucide-react";
 
 const Index = () => {
-  const [selectedModule, setSelectedModule] = useState<string | null>(null);
-
-  const modules = [
+  const mainModules = [
     {
       id: "agenda",
       title: "Agenda Ministerial",
-      description: "Turnos de alabanza y notificaciones automáticas",
+      description: "Gestiona los turnos de alabanza y recibe notificaciones automáticas para cada servicio",
       icon: Calendar,
       color: "bg-arcana-blue-gradient",
-      comingSoon: true
+      comingSoon: true,
+      features: ["Programación automática", "Notificaciones", "Rotación de grupos"]
     },
     {
       id: "repertorio", 
       title: "Repertorio Musical",
-      description: "Catálogo de canciones y sistema de semáforo",
+      description: "Catálogo completo de canciones con sistema de semáforo para conocimiento",
       icon: Music,
       color: "bg-arcana-gold-gradient",
-      comingSoon: true
+      comingSoon: true,
+      features: ["Catálogo de canciones", "Sistema de semáforo", "Letras y acordes"]
     },
     {
       id: "musicos",
       title: "Gestión de Músicos",
-      description: "Rotación automática y solicitudes de cambio",
+      description: "Administra la rotación de músicos y procesa solicitudes de cambio",
       icon: Users,
       color: "bg-arcana-blue-gradient",
-      comingSoon: true
+      comingSoon: true,
+      features: ["Rotación automática", "Solicitudes de cambio", "Perfiles de músicos"]
     },
     {
       id: "comunicacion",
       title: "Comunicación",
-      description: "Chats grupales y walkie-talkie",
+      description: "Mantén contacto con el equipo a través de chats grupales y walkie-talkie",
       icon: MessageCircle,
       color: "bg-arcana-gold-gradient",
-      comingSoon: true
-    },
-    {
-      id: "perfiles",
-      title: "Perfiles de Usuarios",
-      description: "Datos personales y roles del ministerio",
-      icon: Mic,
-      color: "bg-arcana-blue-gradient",
-      comingSoon: true
-    },
-    {
-      id: "espiritual",
-      title: "Módulo Espiritual",
-      description: "Versículo diario e historia del ministerio",
-      icon: BookOpen,
-      color: "bg-arcana-gold-gradient",
-      comingSoon: true
-    },
-    {
-      id: "eventos",
-      title: "Eventos Especiales",
-      description: "Cumpleaños y actividades recreativas",
-      icon: Heart,
-      color: "bg-arcana-blue-gradient",
-      comingSoon: true
-    },
-    {
-      id: "inventario",
-      title: "Inventario QR",
-      description: "Registro de equipos e instrumentos",
-      icon: Scan,
-      color: "bg-arcana-gold-gradient",
-      comingSoon: true
-    },
-    {
-      id: "donaciones",
-      title: "Donaciones",
-      description: "Registro de ofrendas y reportes",
-      icon: Gift,
-      color: "bg-arcana-blue-gradient",
-      comingSoon: true
-    },
-    {
-      id: "cuidado",
-      title: "Recomendaciones",
-      description: "Ejercicios diarios personalizados",
-      icon: Settings,
-      color: "bg-arcana-gold-gradient",
-      comingSoon: true
-    },
-    {
-      id: "chatbot",
-      title: "ARCANA Asistente",
-      description: "Chatbot AI para consultas rápidas",
-      icon: Bot,
-      color: "bg-arcana-blue-gradient",
-      comingSoon: true
-    },
-    {
-      id: "notificaciones",
-      title: "Centro de Notificaciones",
-      description: "Gestión centralizada de alertas",
-      icon: Bell,
-      color: "bg-arcana-gold-gradient",
-      comingSoon: true
+      comingSoon: true,
+      features: ["Chat grupal", "Walkie-talkie", "Mensajes directos"]
     }
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-amber-50">
-      {/* Header con logo y bienvenida */}
-      <div className="bg-arcana-gradient text-white py-8 px-4">
-        <div className="max-w-6xl mx-auto text-center">
+      {/* Header */}
+      <div className="bg-arcana-gradient text-white py-12 px-6">
+        <div className="max-w-4xl mx-auto text-center">
           <div className="mb-6 flex justify-center">
             <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm animate-float">
               <Mic className="w-10 h-10 text-white" />
             </div>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4 animate-fade-in">
-            ARCANA
+            Bienvenido a ARCANA
           </h1>
           <p className="text-xl md:text-2xl text-white/90 mb-2 animate-slide-up">
-            Ministerio ADN Arca de Noé
+            Tu plataforma integral para el ministerio de alabanza
           </p>
           <p className="text-lg text-white/80 max-w-2xl mx-auto animate-slide-up">
-            Tu plataforma integral para la gestión del ministerio de alabanza
+            Gestiona de forma eficiente todos los aspectos del Ministerio ADN Arca de Noé
           </p>
         </div>
       </div>
 
-      {/* Contenido principal */}
-      <div className="max-w-6xl mx-auto py-8 px-4">
-        {/* Bienvenida personalizada */}
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto py-8 px-6">
+        {/* Quick Actions */}
         <Card className="mb-8 shadow-lg border-0 bg-white/80 backdrop-blur-sm animate-scale-in">
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl text-gray-800">
-              ¡Bienvenido al Ministerio!
+              Acciones Rápidas
             </CardTitle>
             <CardDescription className="text-lg text-gray-600">
-              Gestiona tu participación en el ministerio de alabanza de forma integral
+              Comienza a gestionar tu participación en el ministerio
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-center">
-            <Button className="bg-arcana-gradient hover:opacity-90 text-white px-8 py-3 text-lg rounded-full shadow-lg transition-all duration-300 hover:scale-105">
-              Comenzar
+          <CardContent className="flex flex-wrap justify-center gap-4">
+            <Button className="bg-arcana-blue-gradient hover:opacity-90 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105">
+              Ver Mi Agenda
+            </Button>
+            <Button variant="outline" className="border-arcana-blue-600 text-arcana-blue-600 hover:bg-arcana-blue-50 px-6 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105">
+              Explorar Repertorio
+            </Button>
+            <Button variant="outline" className="border-arcana-gold-600 text-arcana-gold-600 hover:bg-arcana-gold-50 px-6 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105">
+              Ver Grupos
             </Button>
           </CardContent>
         </Card>
 
-        {/* Módulos principales */}
+        {/* Main Modules */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-            Módulos del Sistema
+            Funcionalidades Principales
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {modules.map((module, index) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {mainModules.map((module, index) => {
               const IconComponent = module.icon;
               return (
                 <Card 
                   key={module.id}
                   className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 bg-white/80 backdrop-blur-sm hover:scale-105 animate-fade-in"
                   style={{ animationDelay: `${index * 0.1}s` }}
-                  onClick={() => setSelectedModule(module.id)}
                 >
-                  <CardHeader className="text-center pb-3">
-                    <div className={`w-16 h-16 mx-auto mb-4 rounded-full ${module.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
-                      <IconComponent className="w-8 h-8 text-white" />
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-full ${module.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg flex-shrink-0`}>
+                        <IconComponent className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <CardTitle className="text-lg text-gray-800">
+                            {module.title}
+                          </CardTitle>
+                          {module.comingSoon && (
+                            <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0">
+                              Próximamente
+                            </Badge>
+                          )}
+                        </div>
+                        <CardDescription className="text-sm text-gray-600 leading-relaxed mb-3">
+                          {module.description}
+                        </CardDescription>
+                        <div className="flex flex-wrap gap-1">
+                          {module.features.map((feature, idx) => (
+                            <span key={idx} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                              {feature}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <CardTitle className="text-lg text-gray-800">
-                        {module.title}
-                      </CardTitle>
-                      {module.comingSoon && (
-                        <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0">
-                          Próximamente
-                        </Badge>
-                      )}
-                    </div>
-                    <CardDescription className="text-sm text-gray-600 leading-relaxed">
-                      {module.description}
-                    </CardDescription>
                   </CardHeader>
                 </Card>
               );
@@ -201,7 +148,40 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Información del ministerio */}
+        {/* Ministry Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg text-center animate-fade-in">
+            <CardHeader>
+              <div className="w-12 h-12 bg-arcana-blue-gradient rounded-full flex items-center justify-center mx-auto mb-2">
+                <Users className="w-6 h-6 text-white" />
+              </div>
+              <CardTitle className="text-2xl text-arcana-blue-600">15</CardTitle>
+              <CardDescription>Miembros Activos</CardDescription>
+            </CardHeader>
+          </Card>
+          
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg text-center animate-fade-in animation-delay-200">
+            <CardHeader>
+              <div className="w-12 h-12 bg-arcana-gold-gradient rounded-full flex items-center justify-center mx-auto mb-2">
+                <Calendar className="w-6 h-6 text-white" />
+              </div>
+              <CardTitle className="text-2xl text-arcana-gold-600">3</CardTitle>
+              <CardDescription>Grupos de Alabanza</CardDescription>
+            </CardHeader>
+          </Card>
+          
+          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg text-center animate-fade-in animation-delay-400">
+            <CardHeader>
+              <div className="w-12 h-12 bg-arcana-blue-gradient rounded-full flex items-center justify-center mx-auto mb-2">
+                <Heart className="w-6 h-6 text-white" />
+              </div>
+              <CardTitle className="text-2xl text-arcana-blue-600">∞</CardTitle>
+              <CardDescription>Servicios de Adoración</CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+
+        {/* Information Card */}
         <Card className="bg-gradient-to-r from-white/90 to-blue-50/90 backdrop-blur-sm border-0 shadow-lg animate-fade-in">
           <CardHeader className="text-center">
             <CardTitle className="text-xl text-gray-800 mb-4">
@@ -214,37 +194,8 @@ const Index = () => {
               la gestión de inventarios y la comunicación entre hermanos.
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-center">
-            <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-arcana-blue-600" />
-                <span>Gestión de Equipos</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-arcana-blue-600" />
-                <span>Programación Inteligente</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Music className="w-4 h-4 text-arcana-blue-600" />
-                <span>Repertorio Organizado</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Heart className="w-4 h-4 text-arcana-blue-600" />
-                <span>Comunidad Unida</span>
-              </div>
-            </div>
-          </CardContent>
         </Card>
       </div>
-
-      {/* Footer */}
-      <footer className="bg-gray-800 text-white py-6 mt-12">
-        <div className="max-w-6xl mx-auto text-center px-4">
-          <p className="text-gray-300">
-            © 2024 ARCANA - Ministerio ADN Arca de Noé. Desarrollado con amor para la gloria de Dios.
-          </p>
-        </div>
-      </footer>
     </div>
   );
 };
