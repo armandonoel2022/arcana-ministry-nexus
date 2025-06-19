@@ -10,17 +10,19 @@ import {
   Mic,
   Heart
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   const mainModules = [
     {
       id: "agenda",
-      title: "Agenda Ministerial",
+      title: "Agenda Ministerial", 
       description: "Gestiona los turnos de alabanza y recibe notificaciones automáticas para cada servicio",
       icon: Calendar,
       color: "bg-arcana-blue-gradient",
-      comingSoon: true,
-      features: ["Programación automática", "Notificaciones", "Rotación de grupos"]
+      comingSoon: false,
+      features: ["Programación automática", "Notificaciones", "Rotación de grupos"],
+      url: "/agenda"
     },
     {
       id: "repertorio", 
@@ -28,8 +30,9 @@ const Index = () => {
       description: "Catálogo completo de canciones con sistema de semáforo para conocimiento",
       icon: Music,
       color: "bg-arcana-gold-gradient",
-      comingSoon: true,
-      features: ["Catálogo de canciones", "Sistema de semáforo", "Letras y acordes"]
+      comingSoon: false,
+      features: ["Catálogo de canciones", "Sistema de semáforo", "Letras y acordes"],
+      url: "/repertorio"
     },
     {
       id: "musicos",
@@ -86,12 +89,16 @@ const Index = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap justify-center gap-4">
-            <Button className="bg-arcana-blue-gradient hover:opacity-90 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105">
-              Ver Mi Agenda
-            </Button>
-            <Button variant="outline" className="border-arcana-blue-600 text-arcana-blue-600 hover:bg-arcana-blue-50 px-6 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105">
-              Explorar Repertorio
-            </Button>
+            <Link to="/agenda">
+              <Button className="bg-arcana-blue-gradient hover:opacity-90 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105">
+                Ver Mi Agenda
+              </Button>
+            </Link>
+            <Link to="/repertorio">
+              <Button variant="outline" className="border-arcana-blue-600 text-arcana-blue-600 hover:bg-arcana-blue-50 px-6 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105">
+                Explorar Repertorio
+              </Button>
+            </Link>
             <Button variant="outline" className="border-arcana-gold-600 text-arcana-gold-600 hover:bg-arcana-gold-50 px-6 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105">
               Ver Grupos
             </Button>
@@ -107,7 +114,7 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {mainModules.map((module, index) => {
               const IconComponent = module.icon;
-              return (
+              const ModuleContent = (
                 <Card 
                   key={module.id}
                   className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-0 bg-white/80 backdrop-blur-sm hover:scale-105 animate-fade-in"
@@ -143,6 +150,14 @@ const Index = () => {
                     </div>
                   </CardHeader>
                 </Card>
+              );
+
+              return module.url && !module.comingSoon ? (
+                <Link key={module.id} to={module.url}>
+                  {ModuleContent}
+                </Link>
+              ) : (
+                ModuleContent
               );
             })}
           </div>

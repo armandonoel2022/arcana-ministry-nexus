@@ -1,3 +1,4 @@
+
 import {
   Calendar,
   Music,
@@ -66,8 +67,8 @@ const menuItems = [
     title: "Repertorio Musical",
     description: "Catálogo de canciones",
     icon: Music,
-    url: "#",
-    comingSoon: true,
+    url: "/repertorio",
+    comingSoon: false,
     isMain: true
   },
   {
@@ -168,7 +169,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r border-slate-200">
-      <SidebarHeader className="p-6">
+      <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-arcana-gradient rounded-full flex items-center justify-center">
             <Mic className="w-5 h-5 text-white" />
@@ -191,36 +192,36 @@ export function AppSidebar() {
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton asChild>
                       {item.url.startsWith('#') ? (
-                        <a href={item.url} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 transition-colors">
-                          <IconComponent className="w-5 h-5 text-arcana-blue-600" />
-                          <div className="flex-1">
+                        <a href={item.url} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 transition-colors">
+                          <IconComponent className="w-4 h-4 text-arcana-blue-600 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-800">{item.title}</span>
+                              <span className="font-medium text-gray-800 text-sm truncate">{item.title}</span>
                               {item.comingSoon && (
-                                <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0">
+                                <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0 flex-shrink-0">
                                   Próximamente
                                 </Badge>
                               )}
                             </div>
                             {item.description && (
-                              <p className="text-xs text-gray-500 mt-1">{item.description}</p>
+                              <p className="text-xs text-gray-500 mt-1 truncate">{item.description}</p>
                             )}
                           </div>
                         </a>
                       ) : (
-                        <Link to={item.url} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 transition-colors">
-                          <IconComponent className="w-5 h-5 text-arcana-blue-600" />
-                          <div className="flex-1">
+                        <Link to={item.url} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 transition-colors">
+                          <IconComponent className="w-4 h-4 text-arcana-blue-600 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-800">{item.title}</span>
+                              <span className="font-medium text-gray-800 text-sm truncate">{item.title}</span>
                               {item.comingSoon && (
-                                <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0">
+                                <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0 flex-shrink-0">
                                   Próximamente
                                 </Badge>
                               )}
                             </div>
                             {item.description && (
-                              <p className="text-xs text-gray-500 mt-1">{item.description}</p>
+                              <p className="text-xs text-gray-500 mt-1 truncate">{item.description}</p>
                             )}
                           </div>
                         </Link>
@@ -243,12 +244,12 @@ export function AppSidebar() {
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton asChild>
                       <a href={item.url} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 transition-colors">
-                        <IconComponent className="w-4 h-4 text-arcana-blue-600" />
-                        <div className="flex-1">
+                        <IconComponent className="w-4 h-4 text-arcana-blue-600 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-700">{item.title}</span>
+                            <span className="text-sm text-gray-700 truncate">{item.title}</span>
                             {item.comingSoon && (
-                              <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0">
+                              <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0 flex-shrink-0">
                                 Próximamente
                               </Badge>
                             )}

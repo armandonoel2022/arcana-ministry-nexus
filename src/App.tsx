@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import AboutMinistry from "./pages/AboutMinistry";
 import Statutes from "./pages/Statutes";
 import MinisterialAgenda from "./pages/MinisterialAgenda";
+import RepertoirioMusical from "./pages/RepertoirioMusical";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
                   <Route path="/about" element={<AboutMinistry />} />
                   <Route path="/statutes" element={<Statutes />} />
                   <Route path="/agenda" element={<MinisterialAgenda />} />
+                  <Route path="/repertorio" element={<RepertoirioMusical />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
