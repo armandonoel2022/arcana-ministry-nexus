@@ -1,18 +1,5 @@
-import {
-  Calendar,
-  Music,
-  Users,
-  MessageCircle,
-  Heart,
-  Settings,
-  Mic,
-  BookOpen,
-  Gift,
-  Scan,
-  Bell,
-  Bot,
-  Home
-} from "lucide-react";
+
+import { Calendar, Users, Music, BarChart3, Settings, LogOut, Home } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -24,256 +11,112 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
-} from "@/components/ui/sidebar";
-import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
+} from "@/components/ui/sidebar"
+import { useAuth } from '@/hooks/useAuth'
+import { useToast } from '@/hooks/use-toast'
 
-const menuItems = [
+const items = [
   {
-    id: "home",
     title: "Inicio",
-    icon: Home,
     url: "/",
-    isMain: true
+    icon: Home,
   },
   {
-    id: "about",
-    title: "Acerca del Ministerio",
-    description: "Historia, visión y misión",
-    icon: Heart,
-    url: "/about",
-    isMain: true
-  },
-  {
-    id: "statutes",
-    title: "Estatutos",
-    description: "Normativas y reglamentos",
-    icon: BookOpen,
-    url: "/statutes",
-    isMain: true
-  },
-  {
-    id: "agenda",
-    title: "Agenda Ministerial",
-    description: "Turnos de alabanza y notificaciones",
+    title: "Servicios",
+    url: "/services",
     icon: Calendar,
-    url: "#",
-    comingSoon: true,
-    isMain: true
   },
   {
-    id: "repertorio", 
-    title: "Repertorio Musical",
-    description: "Catálogo de canciones",
-    icon: Music,
-    url: "#",
-    comingSoon: true,
-    isMain: true
-  },
-  {
-    id: "musicos",
-    title: "Gestión de Músicos",
-    description: "Rotación y solicitudes",
+    title: "Grupos",
+    url: "/groups",
     icon: Users,
-    url: "#",
-    comingSoon: true,
-    isMain: true
   },
   {
-    id: "comunicacion",
-    title: "Comunicación",
-    description: "Chats grupales",
-    icon: MessageCircle,
-    url: "#",
-    comingSoon: true,
-    isMain: false
+    title: "Repertorio",
+    url: "/songs",
+    icon: Music,
   },
   {
-    id: "perfiles",
-    title: "Perfiles",
-    description: "Datos personales y roles",
-    icon: Mic,
-    url: "#",
-    comingSoon: true,
-    isMain: false
+    title: "Reportes",
+    url: "/reports",
+    icon: BarChart3,
   },
   {
-    id: "espiritual",
-    title: "Módulo Espiritual",
-    description: "Versículo diario",
-    icon: BookOpen,
-    url: "#",
-    comingSoon: true,
-    isMain: false
-  },
-  {
-    id: "eventos",
-    title: "Eventos Especiales",
-    description: "Cumpleaños y actividades",
-    icon: Heart,
-    url: "#",
-    comingSoon: true,
-    isMain: false
-  },
-  {
-    id: "inventario",
-    title: "Inventario QR",
-    description: "Registro de equipos",
-    icon: Scan,
-    url: "#",
-    comingSoon: true,
-    isMain: false
-  },
-  {
-    id: "donaciones",
-    title: "Donaciones",
-    description: "Registro de ofrendas",
-    icon: Gift,
-    url: "#",
-    comingSoon: true,
-    isMain: false
-  },
-  {
-    id: "cuidado",
-    title: "Recomendaciones",
-    description: "Ejercicios personalizados",
+    title: "Configuración",
+    url: "/settings",
     icon: Settings,
-    url: "#",
-    comingSoon: true,
-    isMain: false
   },
-  {
-    id: "chatbot",
-    title: "ARCANA Asistente",
-    description: "Chatbot AI",
-    icon: Bot,
-    url: "#",
-    comingSoon: true,
-    isMain: false
-  },
-  {
-    id: "notificaciones",
-    title: "Notificaciones",
-    description: "Centro de alertas",
-    icon: Bell,
-    url: "#",
-    comingSoon: true,
-    isMain: false
-  }
-];
+]
 
 export function AppSidebar() {
-  const mainModules = menuItems.filter(item => item.isMain);
-  const otherModules = menuItems.filter(item => !item.isMain);
+  const { signOut, user } = useAuth();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo cerrar sesión",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Sesión cerrada",
+        description: "Has cerrado sesión correctamente",
+      });
+    }
+  };
 
   return (
-    <Sidebar className="border-r border-slate-200">
-      <SidebarHeader className="p-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-arcana-gradient rounded-full flex items-center justify-center">
-            <Mic className="w-5 h-5 text-white" />
+    <Sidebar>
+      <SidebarHeader className="border-b p-4">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white font-bold">
+            A
           </div>
           <div>
-            <h2 className="text-xl font-bold arcana-gradient-text">ARCANA</h2>
-            <p className="text-sm text-gray-600">Ministerio ADN</p>
+            <h2 className="text-lg font-semibold text-blue-900">ARCANA</h2>
+            <p className="text-xs text-gray-500">Sistema de Gestión Musical</p>
           </div>
         </div>
       </SidebarHeader>
-
+      
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Módulos Principales</SidebarGroupLabel>
+          <SidebarGroupLabel>Menú Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainModules.map((item) => {
-                const IconComponent = item.icon;
-                return (
-                  <SidebarMenuItem key={item.id}>
-                    <SidebarMenuButton asChild>
-                      {item.url.startsWith('#') ? (
-                        <a href={item.url} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 transition-colors">
-                          <IconComponent className="w-5 h-5 text-arcana-blue-600" />
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-800">{item.title}</span>
-                              {item.comingSoon && (
-                                <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0">
-                                  Próximamente
-                                </Badge>
-                              )}
-                            </div>
-                            {item.description && (
-                              <p className="text-xs text-gray-500 mt-1">{item.description}</p>
-                            )}
-                          </div>
-                        </a>
-                      ) : (
-                        <Link to={item.url} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 transition-colors">
-                          <IconComponent className="w-5 h-5 text-arcana-blue-600" />
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-800">{item.title}</span>
-                              {item.comingSoon && (
-                                <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0">
-                                  Próximamente
-                                </Badge>
-                              )}
-                            </div>
-                            {item.description && (
-                              <p className="text-xs text-gray-500 mt-1">{item.description}</p>
-                            )}
-                          </div>
-                        </Link>
-                      )}
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Otros Módulos</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {otherModules.map((item) => {
-                const IconComponent = item.icon;
-                return (
-                  <SidebarMenuItem key={item.id}>
-                    <SidebarMenuButton asChild>
-                      <a href={item.url} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 transition-colors">
-                        <IconComponent className="w-4 h-4 text-arcana-blue-600" />
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-700">{item.title}</span>
-                            {item.comingSoon && (
-                              <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0">
-                                Próximamente
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </a>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+              {items.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <a href={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4">
-        <div className="text-center">
-          <p className="text-xs text-gray-500">
-            © 2024 ARCANA
-          </p>
-          <p className="text-xs text-gray-400">
-            Ministerio ADN Arca de Noé
-          </p>
+      <SidebarFooter className="border-t p-4">
+        <div className="flex items-center justify-between">
+          <div className="text-sm">
+            <p className="font-medium">{user?.email}</p>
+            <p className="text-gray-500">Usuario</p>
+          </div>
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-2 text-sm text-red-600 hover:text-red-700"
+          >
+            <LogOut className="h-4 w-4" />
+            Salir
+          </button>
         </div>
       </SidebarFooter>
     </Sidebar>
-  );
+  )
 }

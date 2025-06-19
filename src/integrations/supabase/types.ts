@@ -9,7 +9,308 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      group_members: {
+        Row: {
+          created_at: string | null
+          group_id: string | null
+          id: string
+          instrument: Database["public"]["Enums"]["instrument_type"]
+          is_active: boolean | null
+          is_leader: boolean | null
+          joined_date: string | null
+          notes: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          group_id?: string | null
+          id?: string
+          instrument: Database["public"]["Enums"]["instrument_type"]
+          is_active?: boolean | null
+          is_leader?: boolean | null
+          joined_date?: string | null
+          notes?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          group_id?: string | null
+          id?: string
+          instrument?: Database["public"]["Enums"]["instrument_type"]
+          is_active?: boolean | null
+          is_leader?: boolean | null
+          joined_date?: string | null
+          notes?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "worship_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          birthdate: string | null
+          created_at: string | null
+          email: string | null
+          emergency_contact: string | null
+          emergency_phone: string | null
+          full_name: string
+          id: string
+          is_active: boolean | null
+          joined_date: string | null
+          notes: string | null
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          birthdate?: string | null
+          created_at?: string | null
+          email?: string | null
+          emergency_contact?: string | null
+          emergency_phone?: string | null
+          full_name: string
+          id: string
+          is_active?: boolean | null
+          joined_date?: string | null
+          notes?: string | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          birthdate?: string | null
+          created_at?: string | null
+          email?: string | null
+          emergency_contact?: string | null
+          emergency_phone?: string | null
+          full_name?: string
+          id?: string
+          is_active?: boolean | null
+          joined_date?: string | null
+          notes?: string | null
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          assigned_group_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_confirmed: boolean | null
+          location: string | null
+          notes: string | null
+          service_date: string
+          service_type: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_group_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_confirmed?: boolean | null
+          location?: string | null
+          notes?: string | null
+          service_date: string
+          service_type?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_group_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_confirmed?: boolean | null
+          location?: string | null
+          notes?: string | null
+          service_date?: string
+          service_type?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_assigned_group_id_fkey"
+            columns: ["assigned_group_id"]
+            isOneToOne: false
+            referencedRelation: "worship_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      songs: {
+        Row: {
+          artist: string | null
+          chords: string | null
+          created_at: string | null
+          created_by: string | null
+          difficulty_level: number | null
+          genre: string | null
+          id: string
+          is_active: boolean | null
+          key_signature: string | null
+          lyrics: string | null
+          sheet_music_url: string | null
+          spotify_link: string | null
+          tags: string[] | null
+          tempo: string | null
+          title: string
+          updated_at: string | null
+          youtube_link: string | null
+        }
+        Insert: {
+          artist?: string | null
+          chords?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          difficulty_level?: number | null
+          genre?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_signature?: string | null
+          lyrics?: string | null
+          sheet_music_url?: string | null
+          spotify_link?: string | null
+          tags?: string[] | null
+          tempo?: string | null
+          title: string
+          updated_at?: string | null
+          youtube_link?: string | null
+        }
+        Update: {
+          artist?: string | null
+          chords?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          difficulty_level?: number | null
+          genre?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_signature?: string | null
+          lyrics?: string | null
+          sheet_music_url?: string | null
+          spotify_link?: string | null
+          tags?: string[] | null
+          tempo?: string | null
+          title?: string
+          updated_at?: string | null
+          youtube_link?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "songs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_song_knowledge: {
+        Row: {
+          id: string
+          knowledge_level: Database["public"]["Enums"]["song_knowledge"] | null
+          last_updated: string | null
+          notes: string | null
+          song_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          knowledge_level?: Database["public"]["Enums"]["song_knowledge"] | null
+          last_updated?: string | null
+          notes?: string | null
+          song_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          knowledge_level?: Database["public"]["Enums"]["song_knowledge"] | null
+          last_updated?: string | null
+          notes?: string | null
+          song_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_song_knowledge_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_song_knowledge_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      worship_groups: {
+        Row: {
+          color_theme: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          color_theme?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          color_theme?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +319,19 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      instrument_type:
+        | "vocals"
+        | "piano"
+        | "guitar"
+        | "bass"
+        | "drums"
+        | "percussion"
+        | "saxophone"
+        | "trumpet"
+        | "violin"
+        | "other"
+      song_knowledge: "unknown" | "learning" | "known" | "expert"
+      user_role: "admin" | "leader" | "musician" | "vocalist" | "member"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +446,21 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      instrument_type: [
+        "vocals",
+        "piano",
+        "guitar",
+        "bass",
+        "drums",
+        "percussion",
+        "saxophone",
+        "trumpet",
+        "violin",
+        "other",
+      ],
+      song_knowledge: ["unknown", "learning", "known", "expert"],
+      user_role: ["admin", "leader", "musician", "vocalist", "member"],
+    },
   },
 } as const
