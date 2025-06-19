@@ -42,7 +42,7 @@ export const CSVUpload: React.FC<CSVUploadProps> = ({ onSuccess }) => {
         'Juan Pérez',
         '07/01/2024',
         '1',
-        'Grupo Jóvenes',
+        'Grupo de Aleida',
         'Servicio Dominical',
         'regular',
         'Templo Principal',
@@ -100,6 +100,20 @@ export const CSVUpload: React.FC<CSVUploadProps> = ({ onSuccess }) => {
       .eq('is_active', true);
 
     const groupMap = new Map();
+    
+    // Mapeo de nombres genéricos a nombres reales
+    const groupNameMapping = {
+      'alpha': 'Grupo de Aleida',
+      'beta': 'Grupo de Massy', 
+      'gamma': 'Grupo de Keyla',
+      'grupo alpha': 'Grupo de Aleida',
+      'grupo beta': 'Grupo de Massy',
+      'grupo gamma': 'Grupo de Keyla',
+      'grupo de aleida': 'Grupo de Aleida',
+      'grupo de massy': 'Grupo de Massy',
+      'grupo de keyla': 'Grupo de Keyla'
+    };
+
     groups?.forEach(group => {
       groupMap.set(group.name.toLowerCase(), group.id);
     });
@@ -125,9 +139,20 @@ export const CSVUpload: React.FC<CSVUploadProps> = ({ onSuccess }) => {
           throw new Error('Fecha inválida');
         }
 
-        // Find group ID
-        const groupName = row['Grupo Asignado']?.toLowerCase();
-        const groupId = groupName ? groupMap.get(groupName) : null;
+        // Find group ID with mapping
+        let groupName = row['Grupo Asignado']?.toLowerCase().trim();
+        let groupId = null;
+
+        if (groupName) {
+          // Primero intenta mapear nombres genéricos a nombres reales
+          const mappedName = groupNameMapping[groupName];
+          if (mappedName) {
+            groupId = groupMap.get(mappedName.toLowerCase());
+          } else {
+            // Si no hay mapeo, busca directamente
+            groupId = groupMap.get(groupName);
+          }
+        }
 
         // Get Spanish month name
         const monthName = format(serviceDate, 'MMMM', { locale: es });
@@ -302,7 +327,8 @@ export const CSVUpload: React.FC<CSVUploadProps> = ({ onSuccess }) => {
           <strong>Formato del archivo CSV:</strong>
           <ul className="mt-2 text-sm space-y-1">
             <li>• Use el formato de fecha DD/MM/YYYY (ej: 07/01/2024)</li>
-            <li>• Los nombres de grupos deben coincidir exactamente con los grupos existentes</li>
+            <li>• Los nombres de grupos pueden ser: "Grupo de Aleida", "Grupo de Massy", "Grupo de Keyla"</li>
+            <li>• También acepta nombres genéricos: "Alpha", "Beta", "Gamma" que se mapearán automáticamente</li>
             <li>• El orden del mes debe ser un número (1, 2, 3, 4...)</li>
             <li>• Los tipos de servicio válidos son: regular, especial, conferencia, evento</li>
           </ul>
