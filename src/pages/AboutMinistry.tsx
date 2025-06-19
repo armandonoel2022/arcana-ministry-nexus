@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Users, Music, Calendar } from "lucide-react";
+import { Heart, Users, Music, Calendar, Crown, Star } from "lucide-react";
 
 const AboutMinistry = () => {
   return (
@@ -16,7 +16,7 @@ const AboutMinistry = () => {
           <p className="text-gray-600">Arca de Noé - Ministerio de Alabanza y Adoración</p>
         </div>
 
-        {/* Historia */}
+        {/* Historia Expandida */}
         <Card className="mb-6 bg-white/80 backdrop-blur-sm border-0 shadow-lg">
           <CardHeader>
             <CardTitle className="text-xl text-arcana-blue-600 flex items-center gap-2">
@@ -24,17 +24,98 @@ const AboutMinistry = () => {
               Nuestra Historia
             </CardTitle>
           </CardHeader>
-          <CardContent className="prose max-w-none">
-            <p className="text-gray-700 leading-relaxed mb-4">
-              El Ministerio ADN (Arca de Noé) nació de un corazón apasionado por la adoración y el deseo 
-              de servir a Dios a través de la música. Fundado en nuestra congregación con la visión de 
-              crear un espacio donde cada voz pueda elevarse en alabanza sincera.
-            </p>
+          <CardContent className="prose max-w-none space-y-4">
+            <div className="bg-gradient-to-r from-arcana-blue-50 to-arcana-gold-50 p-4 rounded-lg border-l-4 border-arcana-gold-600">
+              <p className="text-gray-700 leading-relaxed mb-2">
+                <strong className="text-arcana-blue-600">Octubre 1999</strong> - El Ministerio de Alabanza y Adoración de la Iglesia Arca de Noé es formalmente establecido, siendo nombrado <strong>Roosevelt Martínez</strong> como pastor y director de dicho ministerio, por iniciativa de nuestro pastor <strong>Freddy Martínez</strong>, quien siempre ha sido un apasionado de la adoración plena y de calidad a nuestro Dios y Señor.
+              </p>
+            </div>
+
             <p className="text-gray-700 leading-relaxed">
-              Desde nuestros inicios, hemos sido testigos de cómo Dios ha usado este ministerio para 
-              tocar corazones, sanar heridas y acercar a las personas a Su presencia. Cada servicio 
-              es una oportunidad para experimentar la gloria de Dios de manera tangible.
+              Inicialmente el grupo estaba formado por <strong>10 voces</strong> y <strong>2 músicos</strong> comprometidos con la excelencia en la adoración:
             </p>
+
+            <div className="grid md:grid-cols-2 gap-4 my-4">
+              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-arcana-blue-200">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg text-arcana-blue-600 flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    Voces Fundadoras
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="text-sm text-gray-700 space-y-1">
+                    <li>• Ivelisse Alburquerque</li>
+                    <li>• Massy Castillo</li>
+                    <li>• Keyla Santana</li>
+                    <li>• Rode Santana</li>
+                    <li>• Edward Jáquez</li>
+                    <li>• Abacuc Navarro</li>
+                    <li>• Aleida Batista</li>
+                    <li>• Fior Daliza Paniagua</li>
+                    <li>• Keyla Medrano</li>
+                    <li>• Jisell Mauricio</li>
+                  </ul>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-arcana-gold-200">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg text-arcana-gold-600 flex items-center gap-2">
+                    <Music className="w-4 h-4" />
+                    Músicos Fundadores
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="text-sm text-gray-700 space-y-2">
+                    <li className="flex items-center gap-2">
+                      <span className="w-2 h-2 bg-arcana-gold-500 rounded-full"></span>
+                      <strong>Amable Díaz (Jol)</strong> - Piano
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-2 h-2 bg-arcana-gold-500 rounded-full"></span>
+                      <strong>Alonzo Núñez</strong> - Batería
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+
+            <p className="text-gray-700 leading-relaxed">
+              A través del tiempo hemos atravesado momentos de pruebas y dificultades, pero también hemos vivido momentos inolvidables en la presencia de nuestro Señor, llegando a ser hoy en día un ministerio del cual <strong>Cristo es el centro y motivo</strong> para la adoración.
+            </p>
+
+            <div className="bg-gradient-to-r from-arcana-gold-50 to-arcana-blue-50 p-4 rounded-lg border-l-4 border-arcana-blue-600">
+              <p className="text-gray-700 leading-relaxed flex items-start gap-3">
+                <Crown className="w-5 h-5 text-arcana-gold-600 mt-1 flex-shrink-0" />
+                <span>
+                  Hoy somos un ministerio que ha sido testigo de la fidelidad de Dios en el cumplimiento de sus promesas, siendo el <strong className="text-arcana-blue-600">primer grupo de alabanza organizado de las Asambleas de Dios en la República Dominicana</strong>.
+                </span>
+              </p>
+            </div>
+
+            <p className="text-gray-700 leading-relaxed">
+              Desde nuestros inicios, hemos sido testigos de cómo Dios ha usado este ministerio para tocar corazones, sanar heridas y acercar a las personas a Su presencia. Cada servicio es una oportunidad para experimentar la gloria de Dios de manera tangible, manteniendo siempre nuestro compromiso con la excelencia y la adoración sincera.
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Logro Histórico */}
+        <Card className="mb-6 bg-gradient-to-r from-arcana-gold-100 to-arcana-blue-100 border-0 shadow-lg">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-arcana-gold-gradient rounded-full flex items-center justify-center mx-auto mb-3">
+                <Star className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-arcana-blue-600 mb-2">Logro Histórico</h3>
+              <p className="text-gray-700">
+                <strong>Primer grupo de alabanza organizado</strong><br />
+                de las Asambleas de Dios en República Dominicana
+              </p>
+              <Badge className="mt-2 bg-arcana-gold-gradient text-white">
+                Desde 1999
+              </Badge>
+            </div>
           </CardContent>
         </Card>
 
