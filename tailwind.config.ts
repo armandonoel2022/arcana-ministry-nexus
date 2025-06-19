@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,40 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Colores personalizados para ARCANA
+				arcana: {
+					blue: {
+						50: '#f0f7ff',
+						100: '#e0efff',
+						200: '#b9e0fe',
+						300: '#7cc8fd',
+						400: '#36acfa',
+						500: '#0c91eb',
+						600: '#0073c9',
+						700: '#005ba3',
+						800: '#004d86',
+						900: '#00426f',
+					},
+					gold: {
+						50: '#fefce8',
+						100: '#fef9c3',
+						200: '#fef08a',
+						300: '#fde047',
+						400: '#facc15',
+						500: '#eab308',
+						600: '#ca8a04',
+						700: '#a16207',
+						800: '#854d0e',
+						900: '#713f12',
+					}
 				}
+			},
+			backgroundImage: {
+				'arcana-gradient': 'linear-gradient(135deg, #0c91eb 0%, #005ba3 50%, #eab308 100%)',
+				'arcana-gradient-soft': 'linear-gradient(135deg, #e0efff 0%, #b9e0fe 50%, #fef9c3 100%)',
+				'arcana-blue-gradient': 'linear-gradient(135deg, #0c91eb 0%, #005ba3 100%)',
+				'arcana-gold-gradient': 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,11 +118,49 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'fade-in': {
+					'0%': {
+						opacity: '0',
+						transform: 'translateY(10px)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'translateY(0)'
+					}
+				},
+				'scale-in': {
+					'0%': {
+						transform: 'scale(0.95)',
+						opacity: '0'
+					},
+					'100%': {
+						transform: 'scale(1)',
+						opacity: '1'
+					}
+				},
+				'slide-up': {
+					'0%': {
+						transform: 'translateY(20px)',
+						opacity: '0'
+					},
+					'100%': {
+						transform: 'translateY(0)',
+						opacity: '1'
+					}
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0px)' },
+					'50%': { transform: 'translateY(-10px)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-in': 'fade-in 0.5s ease-out',
+				'scale-in': 'scale-in 0.3s ease-out',
+				'slide-up': 'slide-up 0.6s ease-out',
+				'float': 'float 3s ease-in-out infinite'
 			}
 		}
 	},
