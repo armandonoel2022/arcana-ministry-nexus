@@ -1,4 +1,3 @@
-
 import {
   Calendar,
   Music,
@@ -27,6 +26,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 
 const menuItems = [
   {
@@ -34,6 +34,22 @@ const menuItems = [
     title: "Inicio",
     icon: Home,
     url: "/",
+    isMain: true
+  },
+  {
+    id: "about",
+    title: "Acerca del Ministerio",
+    description: "Historia, visión y misión",
+    icon: Heart,
+    url: "/about",
+    isMain: true
+  },
+  {
+    id: "statutes",
+    title: "Estatutos",
+    description: "Normativas y reglamentos",
+    icon: BookOpen,
+    url: "/statutes",
     isMain: true
   },
   {
@@ -174,22 +190,41 @@ export function AppSidebar() {
                 return (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton asChild>
-                      <a href={item.url} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 transition-colors">
-                        <IconComponent className="w-5 h-5 text-arcana-blue-600" />
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-800">{item.title}</span>
-                            {item.comingSoon && (
-                              <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0">
-                                Próximamente
-                              </Badge>
+                      {item.url.startsWith('#') ? (
+                        <a href={item.url} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 transition-colors">
+                          <IconComponent className="w-5 h-5 text-arcana-blue-600" />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-gray-800">{item.title}</span>
+                              {item.comingSoon && (
+                                <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0">
+                                  Próximamente
+                                </Badge>
+                              )}
+                            </div>
+                            {item.description && (
+                              <p className="text-xs text-gray-500 mt-1">{item.description}</p>
                             )}
                           </div>
-                          {item.description && (
-                            <p className="text-xs text-gray-500 mt-1">{item.description}</p>
-                          )}
-                        </div>
-                      </a>
+                        </a>
+                      ) : (
+                        <Link to={item.url} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 transition-colors">
+                          <IconComponent className="w-5 h-5 text-arcana-blue-600" />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-gray-800">{item.title}</span>
+                              {item.comingSoon && (
+                                <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0">
+                                  Próximamente
+                                </Badge>
+                              )}
+                            </div>
+                            {item.description && (
+                              <p className="text-xs text-gray-500 mt-1">{item.description}</p>
+                            )}
+                          </div>
+                        </Link>
+                      )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
