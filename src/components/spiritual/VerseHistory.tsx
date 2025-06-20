@@ -63,7 +63,7 @@ export const VerseHistory = () => {
       console.error('Error fetching verse history:', error);
       toast({
         title: "Error",
-        description: "No se pudo cargar el historial de versos",
+        description: "No se pudo cargar el historial de versículos",
         variant: "destructive"
       });
     } finally {
@@ -114,7 +114,7 @@ export const VerseHistory = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-arcana-blue-600" />
-            Historial de Versos Diarios
+            Historial de Versículos Diarios
           </CardTitle>
         </CardHeader>
         
@@ -123,7 +123,7 @@ export const VerseHistory = () => {
             <div className="relative flex-1">
               <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <Input
-                placeholder="Buscar en versos, libros o reflexiones..."
+                placeholder="Buscar en versículos, libros o reflexiones..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -135,7 +135,7 @@ export const VerseHistory = () => {
             <div className="text-center py-8">
               <BookOpen className="w-12 h-12 mx-auto text-gray-400 mb-4" />
               <p className="text-gray-500">
-                {searchTerm ? 'No se encontraron versos que coincidan con la búsqueda' : 'No hay versos en el historial'}
+                {searchTerm ? 'No se encontraron versículos que coincidan con la búsqueda' : 'No hay versículos en el historial'}
               </p>
             </div>
           ) : (

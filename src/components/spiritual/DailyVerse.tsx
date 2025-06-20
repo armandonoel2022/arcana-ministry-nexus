@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Heart, Share2, BookOpen, Calendar } from "lucide-react";
+import { Heart, Share2, BookOpen, Calendar, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -26,11 +26,34 @@ export const DailyVerse = () => {
   const [dailyVerse, setDailyVerse] = useState<DailyVerseData | null>(null);
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [sendingNotification, setSendingNotification] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchTodayVerse();
+    checkUserRole();
   }, []);
+
+  const checkUserRole = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile) {
+          setUserRole(profile.role);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking user role:', error);
+    }
+  };
 
   const fetchTodayVerse = async () => {
     try {
@@ -58,14 +81,14 @@ export const DailyVerse = () => {
       if (data) {
         setDailyVerse(data);
       } else {
-        // Si no hay verso para hoy, obtener un verso aleatorio
+        // Si no hay versículo para hoy, obtener un versículo aleatorio
         await createRandomDailyVerse();
       }
     } catch (error) {
       console.error('Error fetching daily verse:', error);
       toast({
         title: "Error",
-        description: "No se pudo cargar el verso del día",
+        description: "No se pudo cargar el versículo del día",
         variant: "destructive"
       });
     } finally {
@@ -75,7 +98,7 @@ export const DailyVerse = () => {
 
   const createRandomDailyVerse = async () => {
     try {
-      // Obtener un verso aleatorio
+      // Obtener un versículo aleatorio
       const { data: verses, error: versesError } = await supabase
         .from('bible_verses')
         .select('*');
@@ -86,13 +109,13 @@ export const DailyVerse = () => {
         const randomVerse = verses[Math.floor(Math.random() * verses.length)];
         const today = new Date().toISOString().split('T')[0];
 
-        // Crear el verso diario
+        // Crear el versículo diario
         const { data: dailyVerseData, error: dailyVerseError } = await supabase
           .from('daily_verses')
           .insert({
             verse_id: randomVerse.id,
             date: today,
-            reflection: "Que este verso te inspire y fortalezca tu fe hoy."
+            reflection: "Que este versículo te inspire y fortalezca tu fe hoy."
           })
           .select(`
             *,
@@ -115,20 +138,45 @@ export const DailyVerse = () => {
     }
   };
 
+  const testNotification = async () => {
+    setSendingNotification(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-daily-verse-notification', {
+        body: { test: true }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "¡Notificación enviada!",
+        description: "Se ha enviado una notificación de prueba del versículo del día"
+      });
+    } catch (error) {
+      console.error('Error sending test notification:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo enviar la notificación de prueba",
+        variant: "destructive"
+      });
+    } finally {
+      setSendingNotification(false);
+    }
+  };
+
   const handleShare = () => {
     if (dailyVerse) {
       const verseText = `${dailyVerse.bible_verses.text}\n\n- ${dailyVerse.bible_verses.book} ${dailyVerse.bible_verses.chapter}:${dailyVerse.bible_verses.verse} (${dailyVerse.bible_verses.version})`;
       
       if (navigator.share) {
         navigator.share({
-          title: 'Verso del Día - ARCANA',
+          title: 'Versículo del Día - ARCANA',
           text: verseText,
         });
       } else {
         navigator.clipboard.writeText(verseText);
         toast({
           title: "¡Copiado!",
-          description: "El verso ha sido copiado al portapapeles"
+          description: "El versículo ha sido copiado al portapapeles"
         });
       }
     }
@@ -138,7 +186,7 @@ export const DailyVerse = () => {
     setLiked(!liked);
     toast({
       title: liked ? "Quitado de favoritos" : "Agregado a favoritos",
-      description: liked ? "Has quitado este verso de tus favoritos" : "Has agregado este verso a tus favoritos"
+      description: liked ? "Has quitado este versículo de tus favoritos" : "Has agregado este versículo a tus favoritos"
     });
   };
 
@@ -148,7 +196,7 @@ export const DailyVerse = () => {
         <CardContent className="p-8">
           <div className="text-center py-8">
             <BookOpen className="w-12 h-12 mx-auto text-gray-400 mb-4 animate-pulse" />
-            <p className="text-gray-500">Cargando verso del día...</p>
+            <p className="text-gray-500">Cargando versículo del día...</p>
           </div>
         </CardContent>
       </Card>
@@ -161,7 +209,7 @@ export const DailyVerse = () => {
         <CardContent className="p-8">
           <div className="text-center py-8">
             <BookOpen className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-500">No hay verso disponible para hoy</p>
+            <p className="text-gray-500">No hay versículo disponible para hoy</p>
           </div>
         </CardContent>
       </Card>
@@ -171,13 +219,27 @@ export const DailyVerse = () => {
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader className="text-center pb-4">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Calendar className="w-5 h-5 text-arcana-blue-600" />
-          <span className="text-sm text-gray-600">
-            {format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
-          </span>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-arcana-blue-600" />
+            <span className="text-sm text-gray-600">
+              {format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
+            </span>
+          </div>
+          {userRole === 'administrator' && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={testNotification}
+              disabled={sendingNotification}
+              className="flex items-center gap-2"
+            >
+              <Bell className="w-4 h-4" />
+              {sendingNotification ? 'Enviando...' : 'Probar Notificación'}
+            </Button>
+          )}
         </div>
-        <CardTitle className="text-2xl text-arcana-blue-700">Verso del Día</CardTitle>
+        <CardTitle className="text-2xl text-arcana-blue-700">Versículo del Día</CardTitle>
       </CardHeader>
       
       <CardContent className="space-y-6">
