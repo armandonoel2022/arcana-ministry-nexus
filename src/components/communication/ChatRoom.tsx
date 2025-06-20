@@ -187,8 +187,10 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
   };
 
   const isBot = (message: Message) => {
-    return message.user_id === 'arcana-bot' || message.is_bot;
+    return message.user_id === '00000000-0000-0000-0000-000000000001' || message.is_bot;
   };
+
+  const getBotDisplayName = () => 'ARCANA Asistente';
 
   if (loading) {
     return <div className="text-center py-8">Cargando mensajes...</div>;
@@ -257,7 +259,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
                       >
                         {(!isOwnMessage || isBotMessage) && (
                           <p className="text-xs font-medium mb-1">
-                            {isBotMessage ? 'ARCANA Asistente' : message.profiles?.full_name || 'Usuario'}
+                            {isBotMessage ? getBotDisplayName() : message.profiles?.full_name || 'Usuario'}
                           </p>
                         )}
                         <div className="text-sm whitespace-pre-wrap">{message.message}</div>

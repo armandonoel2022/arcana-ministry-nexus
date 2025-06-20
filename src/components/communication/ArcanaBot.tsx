@@ -8,7 +8,7 @@ interface BotResponse {
 }
 
 export class ArcanaBot {
-  private static readonly BOT_USER_ID = 'arcana-bot';
+  private static readonly BOT_USER_ID = '00000000-0000-0000-0000-000000000001';
   
   static async processMessage(message: string, roomId: string, userId: string): Promise<BotResponse | null> {
     // Verificar si el mensaje menciona a ARCANA
