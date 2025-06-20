@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -318,18 +317,7 @@ export const DailyVerse = () => {
       {/* Diálogo de Notificación */}
       <Dialog open={showNotificationDialog} onOpenChange={setShowNotificationDialog}>
         <DialogContent className="max-w-md mx-auto bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200">
-          <DialogHeader className="text-center space-y-4">
-            {/* Logo del Ministerio */}
-            <div className="flex justify-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-arcana-blue-600 to-arcana-gold-600 rounded-full flex items-center justify-center shadow-lg overflow-hidden">
-                <img 
-                  src="/lovable-uploads/a58d8d74-4ced-444f-b402-8a028fc7f65e.png" 
-                  alt="Logo ADN Arca de Noé" 
-                  className="w-14 h-14 rounded-full object-cover"
-                />
-              </div>
-            </div>
-            
+          <DialogHeader className="text-center space-y-4">            
             <div className="space-y-1">
               <DialogTitle className="text-xl font-bold text-blue-800">
                 Versículo del Día - ARCANA
