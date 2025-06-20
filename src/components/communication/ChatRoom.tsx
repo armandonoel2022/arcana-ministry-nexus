@@ -92,6 +92,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
       }
       
       console.log('Mensajes obtenidos:', data?.length || 0);
+      console.log('Datos de mensajes:', data);
       setMessages(data || []);
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -123,7 +124,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
           filter: `room_id=eq.${room.id}`
         },
         (payload) => {
-          console.log('Nuevo mensaje recibido:', payload);
+          console.log('Nuevo mensaje recibido via realtime:', payload);
           fetchMessages(); // Refetch to get user data
         }
       )
@@ -269,6 +270,14 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
               messages.map((message) => {
                 const isOwnMessage = message.user_id === currentUser?.id;
                 const isBotMessage = isBot(message);
+                
+                console.log('Renderizando mensaje:', {
+                  id: message.id,
+                  isBot: isBotMessage,
+                  user_id: message.user_id,
+                  is_bot: message.is_bot,
+                  message: message.message.substring(0, 50)
+                });
                 
                 return (
                   <div
