@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const menuItems = [
   {
@@ -169,8 +171,47 @@ const menuItems = [
 ];
 
 export function AppSidebar() {
-  const mainModules = menuItems.filter(item => item.isMain);
-  const otherModules = menuItems.filter(item => !item.isMain);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    checkUserRole();
+  }, []);
+
+  const checkUserRole = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile) {
+          setUserRole(profile.role);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking user role:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filtrar elementos del menú basado en el rol del usuario
+  const getFilteredMenuItems = (items: typeof menuItems) => {
+    return items.filter(item => {
+      if (item.adminOnly) {
+        return userRole === 'administrator';
+      }
+      return true;
+    });
+  };
+
+  const filteredMainModules = getFilteredMenuItems(menuItems.filter(item => item.isMain));
+  const filteredOtherModules = getFilteredMenuItems(menuItems.filter(item => !item.isMain));
 
   return (
     <Sidebar className="border-r border-slate-200">
@@ -191,7 +232,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Módulos Principales</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainModules.map((item) => {
+              {filteredMainModules.map((item) => {
                 const IconComponent = item.icon;
                 return (
                   <SidebarMenuItem key={item.id}>
@@ -233,7 +274,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Otros Módulos</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {otherModules.map((item) => {
+              {filteredOtherModules.map((item) => {
                 const IconComponent = item.icon;
                 return (
                   <SidebarMenuItem key={item.id}>
