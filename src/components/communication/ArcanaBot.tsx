@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 interface BotResponse {
@@ -199,45 +198,33 @@ export class ArcanaBot {
 
   private static async handleEnsayosQuery(): Promise<BotResponse> {
     try {
-      console.log('ARCANA consultando ensayos');
+      console.log('ARCANA consultando ensayos - respuesta fija para viernes');
       
-      const today = new Date().toISOString().split('T')[0];
-      const { data: ensayos, error } = await supabase
-        .from('services')
-        .select('*')
-        .gte('service_date', today)
-        .ilike('title', '%ensayo%')
-        .order('service_date', { ascending: true })
-        .limit(3);
-
-      if (error) {
-        console.error('Error consultando ensayos:', error);
-        return {
-          type: 'ensayos',
-          message: '🤖 Disculpa, hubo un error consultando los ensayos. Revisa la agenda ministerial directamente.'
-        };
+      // Obtener la fecha actual
+      const today = new Date();
+      const currentDay = today.getDay(); // 0 = Domingo, 5 = Viernes
+      
+      let nextFriday: Date;
+      
+      if (currentDay === 5) {
+        // Si hoy es viernes, usar la fecha de hoy
+        nextFriday = today;
+      } else {
+        // Calcular el próximo viernes
+        const daysUntilFriday = (5 - currentDay + 7) % 7;
+        nextFriday = new Date(today);
+        nextFriday.setDate(today.getDate() + daysUntilFriday);
       }
-
-      console.log('Ensayos encontrados:', ensayos?.length || 0);
-
-      if (!ensayos || ensayos.length === 0) {
-        return {
-          type: 'ensayos',
-          message: '🤖 No hay ensayos programados próximamente. Mantente atento a los anuncios del ministerio.'
-        };
-      }
-
-      let mensaje = '🎵 **Próximos Ensayos:**\n\n';
-      ensayos.forEach((ensayo, index) => {
-        const fecha = new Date(ensayo.service_date).toLocaleDateString('es-ES', {
-          weekday: 'long',
-          day: 'numeric',
-          month: 'long'
-        });
-        mensaje += `${index + 1}. **${ensayo.title}**\n📅 ${fecha}\n📍 ${ensayo.location || 'Ubicación por confirmar'}\n\n`;
+      
+      // Formatear la fecha en español
+      const fechaEnsayo = nextFriday.toLocaleDateString('es-ES', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
       });
 
-      mensaje += '¡No faltes! La alabanza requiere preparación. 🙏';
+      const mensaje = `🎵 **Próximo Ensayo:**\n\n📅 ${fechaEnsayo}\n⏰ 07:00 p.m. a 09:00 p.m.\n📍 Ubicación habitual de ensayo\n\n¡No faltes! La alabanza requiere preparación. 🙏`;
 
       return {
         type: 'ensayos',
@@ -245,10 +232,10 @@ export class ArcanaBot {
       };
 
     } catch (error) {
-      console.error('Error consultando ensayos:', error);
+      console.error('Error generando respuesta de ensayos:', error);
       return {
         type: 'ensayos',
-        message: '🤖 Disculpa, hubo un error consultando los ensayos. Revisa la agenda ministerial directamente.'
+        message: '🤖 Disculpa, hubo un error consultando los ensayos. Los ensayos son todos los viernes de 07:00 p.m. a 09:00 p.m.'
       };
     }
   }
