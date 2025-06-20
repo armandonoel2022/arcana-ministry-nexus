@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Heart, Share2, BookOpen, Calendar, Bell, X } from "lucide-react";
+import { Heart, Share2, BookOpen, Calendar, Bell, X, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -318,25 +319,24 @@ export const DailyVerse = () => {
       <Dialog open={showNotificationDialog} onOpenChange={setShowNotificationDialog}>
         <DialogContent className="max-w-md mx-auto bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200">
           <DialogHeader className="text-center space-y-4">
-            {/* Logo del Ministerio */}
+            {/* Logo del Ministerio - Estilo similar al de Integrantes */}
             <div className="flex justify-center">
-              <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
-                <img 
-                  src="/lovable-uploads/74634c97-a2ef-403b-9fa0-89d9207b7b00.png" 
-                  alt="Logo ADN Arca de Noé" 
-                  className="w-16 h-16 rounded-full object-cover"
-                  onError={(e) => {
-                    // Si la imagen no carga, mostrar texto alternativo
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.parentElement!.innerHTML = '<span class="text-white font-bold text-lg">ADN</span>';
-                  }}
-                />
+              <div className="w-16 h-16 bg-gradient-to-br from-arcana-blue-600 to-arcana-gold-600 rounded-full flex items-center justify-center shadow-lg">
+                <Users className="w-8 h-8 text-white" />
               </div>
             </div>
             
-            <DialogTitle className="text-xl font-bold text-blue-800">
-              Versículo del Día - ARCANA
-            </DialogTitle>
+            <div className="space-y-1">
+              <DialogTitle className="text-xl font-bold text-blue-800">
+                Versículo del Día - ARCANA
+              </DialogTitle>
+              <p className="text-sm text-blue-600 font-medium">
+                Ministerio ADN
+              </p>
+              <p className="text-xs text-blue-500">
+                Arca de Noé
+              </p>
+            </div>
           </DialogHeader>
           
           <div className="space-y-6 py-4">
