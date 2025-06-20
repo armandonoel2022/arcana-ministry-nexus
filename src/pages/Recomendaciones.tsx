@@ -1,14 +1,16 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, Mic, Music, Heart, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RecommendationCard } from "@/components/recommendations/RecommendationCard";
+import { RecommendationModal } from "@/components/recommendations/RecommendationModal";
 import { useToast } from "@/hooks/use-toast";
 
 const Recomendaciones = () => {
   const [feedback, setFeedback] = useState<{[key: string]: 'up' | 'down' | null}>({});
+  const [showModal, setShowModal] = useState(false);
+  const [selectedRecommendation, setSelectedRecommendation] = useState<any>(null);
   const { toast } = useToast();
 
   const handleFeedback = (tipId: string, type: 'up' | 'down') => {
@@ -18,15 +20,26 @@ const Recomendaciones = () => {
     }));
   };
 
-  const handleTestNotification = () => {
-    const allTips = [...voiceTips, ...musicTips, ...danceTips];
-    const randomTip = allTips[Math.floor(Math.random() * allTips.length)];
-    
+  const handleModalFeedback = (type: 'up' | 'down') => {
+    const message = type === 'up' ? 'Gracias por tu feedback positivo!' : 'Gracias por tu feedback. Seguiremos mejorando.';
     toast({
-      title: "🔔 Recomendación del día",
-      description: `${randomTip.title}: ${randomTip.description.substring(0, 100)}...`,
-      duration: 5000,
+      title: "Feedback recibido",
+      description: message,
+      duration: 3000,
     });
+    setShowModal(false);
+  };
+
+  const handleTestNotification = () => {
+    const allTips = [
+      ...voiceTips.map(tip => ({ ...tip, type: 'voice' as const })),
+      ...musicTips.map(tip => ({ ...tip, type: 'music' as const })),
+      ...danceTips.map(tip => ({ ...tip, type: 'dance' as const }))
+    ];
+    
+    const randomTip = allTips[Math.floor(Math.random() * allTips.length)];
+    setSelectedRecommendation(randomTip);
+    setShowModal(true);
   };
 
   const voiceTips = [
@@ -303,6 +316,16 @@ const Recomendaciones = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Modal for displaying recommendation */}
+      {selectedRecommendation && (
+        <RecommendationModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          recommendation={selectedRecommendation}
+          onFeedback={handleModalFeedback}
+        />
+      )}
     </div>
   );
 };
