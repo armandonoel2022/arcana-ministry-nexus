@@ -2,10 +2,11 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Plus, Search, Upload } from "lucide-react";
+import { Users, Plus, Search, Upload, Database } from "lucide-react";
 import MembersList from '@/components/members/MembersList';
 import AddMemberForm from '@/components/members/AddMemberForm';
 import MembersCSVUpload from '@/components/members/MembersCSVUpload';
+import BulkMemberInsert from '@/components/members/BulkMemberInsert';
 
 const Integrantes = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -27,7 +28,7 @@ const Integrantes = () => {
       </div>
 
       <Tabs defaultValue="view" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="view" className="flex items-center gap-2">
             <Search className="w-4 h-4" />
             Ver Integrantes
@@ -35,6 +36,10 @@ const Integrantes = () => {
           <TabsTrigger value="add" className="flex items-center gap-2">
             <Plus className="w-4 h-4" />
             Agregar Integrante
+          </TabsTrigger>
+          <TabsTrigger value="bulk" className="flex items-center gap-2">
+            <Database className="w-4 h-4" />
+            Lista Completa
           </TabsTrigger>
           <TabsTrigger value="upload" className="flex items-center gap-2">
             <Upload className="w-4 h-4" />
@@ -58,6 +63,10 @@ const Integrantes = () => {
 
         <TabsContent value="add" className="space-y-4">
           <AddMemberForm onSuccess={handleDataUpdate} />
+        </TabsContent>
+
+        <TabsContent value="bulk" className="space-y-4">
+          <BulkMemberInsert onSuccess={handleDataUpdate} />
         </TabsContent>
 
         <TabsContent value="upload" className="space-y-4">
