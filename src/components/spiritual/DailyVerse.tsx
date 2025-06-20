@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Heart, Share2, BookOpen, Calendar, Bell, X, Users } from "lucide-react";
+import { Heart, Share2, BookOpen, Calendar, Bell, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -319,10 +319,14 @@ export const DailyVerse = () => {
       <Dialog open={showNotificationDialog} onOpenChange={setShowNotificationDialog}>
         <DialogContent className="max-w-md mx-auto bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200">
           <DialogHeader className="text-center space-y-4">
-            {/* Logo del Ministerio - Estilo similar al de Integrantes */}
+            {/* Logo del Ministerio */}
             <div className="flex justify-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-arcana-blue-600 to-arcana-gold-600 rounded-full flex items-center justify-center shadow-lg">
-                <Users className="w-8 h-8 text-white" />
+              <div className="w-16 h-16 bg-gradient-to-br from-arcana-blue-600 to-arcana-gold-600 rounded-full flex items-center justify-center shadow-lg overflow-hidden">
+                <img 
+                  src="/lovable-uploads/a58d8d74-4ced-444f-b402-8a028fc7f65e.png" 
+                  alt="Logo ADN Arca de Noé" 
+                  className="w-14 h-14 rounded-full object-cover"
+                />
               </div>
             </div>
             
