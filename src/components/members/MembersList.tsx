@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Search, Edit, Trash2, Phone, Mail, MapPin, Users, Eye } from 'lucide-react';
+import { Search, Edit, Trash2, Users, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import EditMemberForm from './EditMemberForm';
 import {
@@ -180,12 +181,13 @@ const MembersList = () => {
         </Badge>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="space-y-2">
         {filteredMembers.map((member) => (
-          <Card key={member.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3 flex-1">
+          <Card key={member.id} className="hover:shadow-md transition-shadow">
+            <CardContent className="py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4 flex-1">
+                  {/* Foto */}
                   <div 
                     className="cursor-pointer transition-transform hover:scale-105"
                     onClick={() => handleViewProfile(member.id)}
@@ -200,19 +202,36 @@ const MembersList = () => {
                       </AvatarFallback>
                     </Avatar>
                   </div>
-                  <div className="flex-1">
-                    <CardTitle 
-                      className="text-lg cursor-pointer hover:text-arcana-blue-600 transition-colors"
+
+                  {/* Nombre */}
+                  <div className="flex-1 min-w-0">
+                    <h3 
+                      className="font-semibold text-gray-800 cursor-pointer hover:text-arcana-blue-600 transition-colors truncate"
                       onClick={() => handleViewProfile(member.id)}
                     >
                       {member.nombres} {member.apellidos}
-                    </CardTitle>
-                    <Badge variant="secondary" className="text-xs mt-1">
+                    </h3>
+                  </div>
+
+                  {/* Cargo */}
+                  <div className="hidden sm:block">
+                    <Badge variant="secondary" className="text-xs">
                       {getRoleLabel(member.cargo)}
                     </Badge>
                   </div>
+
+                  {/* Grupo */}
+                  {member.grupo && (
+                    <div className="hidden md:block">
+                      <Badge variant="outline" className="text-xs">
+                        {getGroupLabel(member.grupo)}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
-                <div className="flex gap-1">
+
+                {/* Botones de acción */}
+                <div className="flex items-center gap-1 ml-4">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -259,48 +278,18 @@ const MembersList = () => {
                   </Button>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {member.grupo && (
-                <div className="flex items-center gap-2">
+
+              {/* Información adicional en móviles */}
+              <div className="block sm:hidden mt-3 space-y-2">
+                <Badge variant="secondary" className="text-xs mr-2">
+                  {getRoleLabel(member.cargo)}
+                </Badge>
+                {member.grupo && (
                   <Badge variant="outline" className="text-xs">
                     {getGroupLabel(member.grupo)}
                   </Badge>
-                </div>
-              )}
-              
-              {member.voz_instrumento && (
-                <div className="text-sm text-gray-600">
-                  <strong>Instrumento/Voz:</strong> {member.voz_instrumento}
-                </div>
-              )}
-
-              <div className="space-y-2 text-sm text-gray-600">
-                {member.celular && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="w-3 h-3" />
-                    <span>{member.celular}</span>
-                  </div>
-                )}
-                {member.email && (
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-3 h-3" />
-                    <span className="truncate">{member.email}</span>
-                  </div>
-                )}
-                {member.direccion && (
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-3 h-3" />
-                    <span className="text-xs truncate">{member.direccion}</span>
-                  </div>
                 )}
               </div>
-
-              {member.fecha_nacimiento && (
-                <div className="text-xs text-gray-500">
-                  <strong>Nacimiento:</strong> {new Date(member.fecha_nacimiento).toLocaleDateString()}
-                </div>
-              )}
             </CardContent>
           </Card>
         ))}
