@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,13 +34,14 @@ const Index = () => {
       url: "/repertorio"
     },
     {
-      id: "musicos",
-      title: "Gestión de Músicos",
-      description: "Administra la rotación de músicos y procesa solicitudes de cambio",
+      id: "integrantes",
+      title: "Integrantes",
+      description: "Gestión de miembros y roles del ministerio de alabanza",
       icon: Users,
       color: "bg-arcana-blue-gradient",
-      comingSoon: true,
-      features: ["Rotación automática", "Solicitudes de cambio", "Perfiles de músicos"]
+      comingSoon: false,
+      features: ["Gestión de miembros", "Perfiles detallados", "Roles y grupos"],
+      url: "/integrantes"
     },
     {
       id: "comunicacion",
@@ -99,9 +99,11 @@ const Index = () => {
                 Explorar Repertorio
               </Button>
             </Link>
-            <Button variant="outline" className="border-arcana-gold-600 text-arcana-gold-600 hover:bg-arcana-gold-50 px-6 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105">
-              Ver Grupos
-            </Button>
+            <Link to="/integrantes">
+              <Button variant="outline" className="border-arcana-gold-600 text-arcana-gold-600 hover:bg-arcana-gold-50 px-6 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105">
+                Ver Integrantes
+              </Button>
+            </Link>
           </CardContent>
         </Card>
 
