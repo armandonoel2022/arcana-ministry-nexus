@@ -46,6 +46,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          is_bot: boolean | null
           is_deleted: boolean | null
           message: string
           message_type: string | null
@@ -56,6 +57,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          is_bot?: boolean | null
           is_deleted?: boolean | null
           message: string
           message_type?: string | null
@@ -66,6 +68,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          is_bot?: boolean | null
           is_deleted?: boolean | null
           message?: string
           message_type?: string | null
