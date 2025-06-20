@@ -37,12 +37,21 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const channelRef = useRef<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     getCurrentUser();
     fetchMessages();
     setupRealtimeSubscription();
+
+    return () => {
+      // Cleanup subscription on unmount or room change
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
   }, [room.id]);
 
   useEffect(() => {
@@ -87,8 +96,14 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
   };
 
   const setupRealtimeSubscription = () => {
+    // Remove existing channel if it exists
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+    }
+
+    // Create new channel
     const channel = supabase
-      .channel('chat-messages')
+      .channel(`chat-messages-${room.id}`)
       .on(
         'postgres_changes',
         {
@@ -104,9 +119,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    channelRef.current = channel;
   };
 
   const sendMessage = async () => {

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ export const WalkieTalkie = () => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const audioChunks = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout>();
+  const channelRef = useRef<any>(null);
   const { toast } = useToast();
 
   const CHANNEL_ID = "7e8f9a10-1234-5678-9abc-def012345678"; // This should match the inserted channel
@@ -35,9 +37,15 @@ export const WalkieTalkie = () => {
     getCurrentUser();
     fetchTransmissions();
     setupRealtimeSubscription();
+    
     return () => {
+      // Cleanup on unmount
       if (timerRef.current) {
         clearInterval(timerRef.current);
+      }
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
       }
     };
   }, []);
@@ -69,6 +77,12 @@ export const WalkieTalkie = () => {
   };
 
   const setupRealtimeSubscription = () => {
+    // Remove existing channel if it exists
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+    }
+
+    // Create new channel
     const channel = supabase
       .channel('walkie-transmissions')
       .on(
@@ -85,9 +99,7 @@ export const WalkieTalkie = () => {
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    channelRef.current = channel;
   };
 
   const startRecording = async () => {
