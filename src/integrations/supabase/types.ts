@@ -697,7 +697,13 @@ export type Database = {
         | "encargado_streaming"
         | "director_musical"
       song_knowledge: "unknown" | "learning" | "known" | "expert"
-      user_role: "admin" | "leader" | "musician" | "vocalist" | "member"
+      user_role:
+        | "admin"
+        | "leader"
+        | "musician"
+        | "vocalist"
+        | "member"
+        | "administrator"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -855,7 +861,14 @@ export const Constants = {
         "director_musical",
       ],
       song_knowledge: ["unknown", "learning", "known", "expert"],
-      user_role: ["admin", "leader", "musician", "vocalist", "member"],
+      user_role: [
+        "admin",
+        "leader",
+        "musician",
+        "vocalist",
+        "member",
+        "administrator",
+      ],
     },
   },
 } as const
