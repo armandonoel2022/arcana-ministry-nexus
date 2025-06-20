@@ -31,7 +31,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
           <CardTitle className="text-lg leading-tight">{title}</CardTitle>
           {(instrument || style) && (
             <Badge variant="secondary" className="bg-arcana-blue-50 text-arcana-blue-700 border-arcana-blue-200">
-              {instrument ||Style}
+              {instrument || style}
             </Badge>
           )}
         </div>
