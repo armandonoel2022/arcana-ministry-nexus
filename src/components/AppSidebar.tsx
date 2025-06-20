@@ -137,8 +137,8 @@ const menuItems = [
     id: "notificaciones",
     title: "Notificaciones",
     icon: Bell,
-    url: "#",
-    comingSoon: true,
+    url: "/notificaciones",
+    comingSoon: false,
     isMain: false
   }
 ];
