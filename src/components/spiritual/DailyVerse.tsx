@@ -165,7 +165,7 @@ export const DailyVerse = () => {
 
   const handleShare = () => {
     if (dailyVerse) {
-      const verseText = `${dailyVerse.bible_verses.text}\n\n- ${dailyVerse.bible_verses.book} ${dailyVerse.bible_verses.chapter}:${dailyVerse.bible_verses.verse} (${dailyVerse.bible_verses.version})`;
+      const verseText = `${dailyVerse.bible_verses.text}\n\n${dailyVerse.bible_verses.book} ${dailyVerse.bible_verses.chapter}:${dailyVerse.bible_verses.verse} (${dailyVerse.bible_verses.version})`;
       
       if (navigator.share) {
         navigator.share({
@@ -244,17 +244,23 @@ export const DailyVerse = () => {
       
       <CardContent className="space-y-6">
         <div className="bg-gradient-to-r from-arcana-blue-50 to-arcana-gold-50 p-6 rounded-lg border-l-4 border-arcana-blue-500">
-          <blockquote className="text-lg leading-relaxed text-gray-800 italic mb-4">
-            "{dailyVerse.bible_verses.text}"
-          </blockquote>
-          
-          <div className="flex items-center justify-between">
-            <Badge variant="secondary" className="bg-arcana-blue-100 text-arcana-blue-800">
-              {dailyVerse.bible_verses.book} {dailyVerse.bible_verses.chapter}:{dailyVerse.bible_verses.verse}
-            </Badge>
-            <span className="text-sm text-gray-600">
-              {dailyVerse.bible_verses.version}
-            </span>
+          <div className="text-center space-y-4">
+            <div className="text-lg leading-relaxed text-gray-800 font-serif">
+              <sup className="text-sm font-bold text-arcana-blue-600 mr-1">
+                {dailyVerse.bible_verses.verse}
+              </sup>
+              {dailyVerse.bible_verses.text}
+            </div>
+            
+            <div className="text-right">
+              <span className="text-base font-semibold text-arcana-blue-700">
+                {dailyVerse.bible_verses.book} {dailyVerse.bible_verses.chapter}:{dailyVerse.bible_verses.verse}
+              </span>
+              <br />
+              <span className="text-sm text-gray-600 italic">
+                {dailyVerse.bible_verses.version}
+              </span>
+            </div>
           </div>
         </div>
 
