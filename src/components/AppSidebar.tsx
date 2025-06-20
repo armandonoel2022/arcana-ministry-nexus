@@ -7,7 +7,6 @@ import {
   Settings,
   Mic,
   BookOpen,
-  Gift,
   Scan,
   Bell,
   Home,
@@ -114,8 +113,8 @@ const menuItems = [
     id: "eventos",
     title: "Eventos Especiales",
     icon: Heart,
-    url: "#",
-    comingSoon: true,
+    url: "/eventos-especiales",
+    comingSoon: false,
     isMain: false
   },
   {
@@ -127,19 +126,11 @@ const menuItems = [
     isMain: false
   },
   {
-    id: "donaciones",
-    title: "Donaciones",
-    icon: Gift,
-    url: "#",
-    comingSoon: true,
-    isMain: false
-  },
-  {
     id: "cuidado",
     title: "Recomendaciones",
     icon: Settings,
-    url: "#",
-    comingSoon: true,
+    url: "/recomendaciones",
+    comingSoon: false,
     isMain: false
   },
   {

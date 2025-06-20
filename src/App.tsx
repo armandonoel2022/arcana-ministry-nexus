@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +17,8 @@ import Communication from "./pages/Communication";
 import AdminDashboard from "./pages/AdminDashboard";
 import SpiritualModule from "./pages/SpiritualModule";
 import NotFound from "./pages/NotFound";
+import EventosEspeciales from "@/pages/EventosEspeciales";
+import Recomendaciones from "@/pages/Recomendaciones";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,8 @@ const App = () => (
                   <Route path="/comunicacion" element={<Communication />} />
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/espiritual" element={<SpiritualModule />} />
+                  <Route path="/eventos-especiales" element={<EventosEspeciales />} />
+                  <Route path="/recomendaciones" element={<Recomendaciones />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
