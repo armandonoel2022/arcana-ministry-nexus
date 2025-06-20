@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+
 import { supabase } from "@/integrations/supabase/client";
 
 interface BotResponse {
@@ -337,12 +337,12 @@ export class ArcanaBot {
     try {
       console.log('ARCANA enviando respuesta:', response.message.substring(0, 50) + '...');
       
-      // Crear una conexión administrativa para enviar el mensaje del bot
+      // Enviar mensaje del bot sin user_id (ya que es nullable ahora)
       const { data, error } = await supabase
         .from('chat_messages')
         .insert({
           room_id: roomId,
-          user_id: this.BOT_USER_ID,
+          user_id: null, // Bot no necesita user_id
           message: response.message,
           is_bot: true
         });

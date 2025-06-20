@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,7 @@ interface Message {
   id: string;
   message: string;
   created_at: string;
-  user_id: string;
+  user_id: string | null; // Allow null for bot messages
   is_bot?: boolean;
   profiles?: {
     full_name: string;
@@ -62,6 +63,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
   const getCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     setCurrentUser(user);
+    console.log('Usuario actual:', user?.id, user?.email);
   };
 
   const scrollToBottom = () => {
@@ -70,6 +72,8 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
 
   const fetchMessages = async () => {
     try {
+      console.log('Obteniendo mensajes para sala:', room.id);
+      
       const { data, error } = await supabase
         .from('chat_messages')
         .select(`
@@ -82,7 +86,12 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
         .eq('is_deleted', false)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error obteniendo mensajes:', error);
+        throw error;
+      }
+      
+      console.log('Mensajes obtenidos:', data?.length || 0);
       setMessages(data || []);
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -114,7 +123,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
           filter: `room_id=eq.${room.id}`
         },
         (payload) => {
-          console.log('New message received:', payload);
+          console.log('Nuevo mensaje recibido:', payload);
           fetchMessages(); // Refetch to get user data
         }
       )
@@ -124,7 +133,10 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !currentUser) return;
+    if (!newMessage.trim() || !currentUser) {
+      console.log('No se puede enviar mensaje vacío o sin usuario');
+      return;
+    }
 
     const messageText = newMessage.trim();
 
@@ -137,7 +149,8 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
         .insert({
           room_id: room.id,
           user_id: currentUser.id,
-          message: messageText
+          message: messageText,
+          is_bot: false
         });
 
       if (error) {
@@ -206,7 +219,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
   };
 
   const isBot = (message: Message) => {
-    return message.user_id === '00000000-0000-0000-0000-000000000001' || message.is_bot;
+    return message.is_bot === true || message.user_id === null;
   };
 
   const getBotDisplayName = () => 'ARCANA Asistente';
