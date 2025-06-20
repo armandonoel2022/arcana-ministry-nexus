@@ -193,6 +193,7 @@ const EditMemberForm = ({ member, onSuccess }: EditMemberFormProps) => {
     { value: 'pastora', label: 'Pastora' },
     { value: 'director_alabanza', label: 'Director de Alabanza' },
     { value: 'directora_alabanza', label: 'Directora de Alabanza' },
+    { value: 'director_musical', label: 'Director Musical' },
     { value: 'corista', label: 'Corista' },
     { value: 'directora_danza', label: 'Directora de Danza' },
     { value: 'director_multimedia', label: 'Director Multimedia' },
