@@ -160,11 +160,8 @@ export const UserManagement = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Users className="w-8 h-8 text-arcana-blue-600" />
-        <div>
-          <h2 className="text-2xl font-bold">Gestión de Usuarios</h2>
-          <p className="text-gray-600">Administra los roles y permisos de los usuarios</p>
-        </div>
+        <Users className="w-6 h-6 text-arcana-blue-600" />
+        <p className="text-gray-600">Administra los roles y permisos de los usuarios</p>
       </div>
 
       <div className="grid gap-4">

@@ -109,13 +109,7 @@ const AdminDashboard = () => {
 
         <TabsContent value="users" className="mt-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-arcana-blue-600" />
-                Gestión de Usuarios
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               <UserManagement />
             </CardContent>
           </Card>
