@@ -167,13 +167,13 @@ const Index = () => {
         </div>
 
         {/* Ministry Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg text-center animate-fade-in">
             <CardHeader>
               <div className="w-12 h-12 bg-arcana-blue-gradient rounded-full flex items-center justify-center mx-auto mb-2">
                 <Users className="w-6 h-6 text-white" />
               </div>
-              <CardTitle className="text-2xl text-arcana-blue-600">15</CardTitle>
+              <CardTitle className="text-2xl text-arcana-blue-600">3</CardTitle>
               <CardDescription>Miembros Activos</CardDescription>
             </CardHeader>
           </Card>
@@ -185,16 +185,6 @@ const Index = () => {
               </div>
               <CardTitle className="text-2xl text-arcana-gold-600">3</CardTitle>
               <CardDescription>Grupos de Alabanza</CardDescription>
-            </CardHeader>
-          </Card>
-          
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg text-center animate-fade-in animation-delay-400">
-            <CardHeader>
-              <div className="w-12 h-12 bg-arcana-blue-gradient rounded-full flex items-center justify-center mx-auto mb-2">
-                <Heart className="w-6 h-6 text-white" />
-              </div>
-              <CardTitle className="text-2xl text-arcana-blue-600">∞</CardTitle>
-              <CardDescription>Servicios de Adoración</CardDescription>
             </CardHeader>
           </Card>
         </div>

@@ -198,13 +198,13 @@ const AboutMinistry = () => {
         </Card>
 
         {/* Estadísticas */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg text-center">
             <CardContent className="pt-6">
               <div className="w-12 h-12 bg-arcana-blue-gradient rounded-full flex items-center justify-center mx-auto mb-2">
                 <Users className="w-6 h-6 text-white" />
               </div>
-              <div className="text-2xl font-bold text-arcana-blue-600">15</div>
+              <div className="text-2xl font-bold text-arcana-blue-600">3</div>
               <div className="text-sm text-gray-600">Miembros Activos</div>
             </CardContent>
           </Card>
@@ -216,26 +216,6 @@ const AboutMinistry = () => {
               </div>
               <div className="text-2xl font-bold text-arcana-gold-600">3</div>
               <div className="text-sm text-gray-600">Grupos de Alabanza</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg text-center">
-            <CardContent className="pt-6">
-              <div className="w-12 h-12 bg-arcana-blue-gradient rounded-full flex items-center justify-center mx-auto mb-2">
-                <Calendar className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-2xl font-bold text-arcana-blue-600">52</div>
-              <div className="text-sm text-gray-600">Servicios Anuales</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg text-center">
-            <CardContent className="pt-6">
-              <div className="w-12 h-12 bg-arcana-gold-gradient rounded-full flex items-center justify-center mx-auto mb-2">
-                <Heart className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-2xl font-bold text-arcana-gold-600">∞</div>
-              <div className="text-sm text-gray-600">Vidas Tocadas</div>
             </CardContent>
           </Card>
         </div>
