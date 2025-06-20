@@ -489,6 +489,7 @@ export type Database = {
         | "encargado_luces"
         | "encargado_proyeccion"
         | "encargado_streaming"
+        | "director_musical"
       song_knowledge: "unknown" | "learning" | "known" | "expert"
       user_role: "admin" | "leader" | "musician" | "vocalist" | "member"
     }
@@ -645,6 +646,7 @@ export const Constants = {
         "encargado_luces",
         "encargado_proyeccion",
         "encargado_streaming",
+        "director_musical",
       ],
       song_knowledge: ["unknown", "learning", "known", "expert"],
       user_role: ["admin", "leader", "musician", "vocalist", "member"],

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -207,7 +206,6 @@ const EditMemberForm = ({ member, onSuccess }: EditMemberFormProps) => {
     { value: 'encargado_proyeccion', label: 'Encargado de Proyección' },
     { value: 'encargado_streaming', label: 'Encargado de Streaming' },
   ];
-
   const groups = [
     { value: 'directiva', label: 'Directiva' },
     { value: 'directores_alabanza', label: 'Directores de Alabanza' },
