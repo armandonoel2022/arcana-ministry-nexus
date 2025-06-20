@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -128,6 +127,8 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
     if (!newMessage.trim() || !currentUser) return;
 
     try {
+      console.log('Enviando mensaje:', newMessage.trim());
+      
       const { error } = await supabase
         .from('chat_messages')
         .insert({
@@ -136,9 +137,15 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
           message: newMessage.trim()
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error enviando mensaje:', error);
+        throw error;
+      }
+
+      console.log('Mensaje enviado exitosamente');
 
       // Procesar mensaje para ver si ARCANA debe responder
+      console.log('Procesando mensaje para ARCANA...');
       const botResponse = await ArcanaBot.processMessage(
         newMessage.trim(),
         room.id,
@@ -146,10 +153,14 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
       );
 
       if (botResponse) {
+        console.log('ARCANA generó respuesta:', botResponse.type);
         // Esperar un momento antes de que el bot responda para que parezca más natural
         setTimeout(async () => {
+          console.log('Enviando respuesta de ARCANA...');
           await ArcanaBot.sendBotResponse(room.id, botResponse);
         }, 1500);
+      } else {
+        console.log('ARCANA no generó respuesta para este mensaje');
       }
 
       setNewMessage("");
