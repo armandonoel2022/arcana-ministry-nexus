@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -126,15 +127,18 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
   const sendMessage = async () => {
     if (!newMessage.trim() || !currentUser) return;
 
+    const messageText = newMessage.trim();
+
     try {
-      console.log('Enviando mensaje:', newMessage.trim());
+      console.log('Enviando mensaje:', messageText);
       
+      // Enviar el mensaje del usuario
       const { error } = await supabase
         .from('chat_messages')
         .insert({
           room_id: room.id,
           user_id: currentUser.id,
-          message: newMessage.trim()
+          message: messageText
         });
 
       if (error) {
@@ -143,11 +147,12 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
       }
 
       console.log('Mensaje enviado exitosamente');
+      setNewMessage("");
 
       // Procesar mensaje para ver si ARCANA debe responder
       console.log('Procesando mensaje para ARCANA...');
       const botResponse = await ArcanaBot.processMessage(
-        newMessage.trim(),
+        messageText,
         room.id,
         currentUser.id
       );
@@ -157,13 +162,17 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
         // Esperar un momento antes de que el bot responda para que parezca más natural
         setTimeout(async () => {
           console.log('Enviando respuesta de ARCANA...');
-          await ArcanaBot.sendBotResponse(room.id, botResponse);
+          try {
+            await ArcanaBot.sendBotResponse(room.id, botResponse);
+            console.log('Respuesta de ARCANA enviada exitosamente');
+          } catch (botError) {
+            console.error('Error enviando respuesta del bot:', botError);
+          }
         }, 1500);
       } else {
         console.log('ARCANA no generó respuesta para este mensaje');
       }
 
-      setNewMessage("");
     } catch (error) {
       console.error('Error sending message:', error);
       toast({

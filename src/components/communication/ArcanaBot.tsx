@@ -21,7 +21,7 @@ export class ArcanaBot {
     const cleanMessage = message
       .replace(/@arcana\s*:?/gi, '')
       .replace(/^arcana\s*:?/gi, '')
-      .replace(/^\s*:\s*/, '') // Remover dos puntos iniciales
+      .replace(/^\s*:\s*/, '')
       .trim()
       .toLowerCase();
 
@@ -69,23 +69,53 @@ export class ArcanaBot {
         .eq('id', userId)
         .single();
 
-      if (profileError) {
-        console.error('Error consultando perfil:', profileError);
-        return {
-          type: 'turnos',
-          message: '🤖 No pude encontrar tu perfil. Asegúrate de tener tu información actualizada en el sistema.'
-        };
+      if (profileError || !profile) {
+        console.log('No se encontró perfil, buscando en tabla members');
+        
+        // Buscar en la tabla members usando el email del usuario autenticado
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user) {
+          return {
+            type: 'turnos',
+            message: '🤖 No pude identificar tu usuario. Asegúrate de estar autenticado correctamente.'
+          };
+        }
+
+        // Buscar en members por email
+        const { data: member, error: memberError } = await supabase
+          .from('members')
+          .select('nombres, apellidos')
+          .eq('email', user.email)
+          .single();
+
+        if (memberError || !member) {
+          return {
+            type: 'turnos',
+            message: '🤖 No encontré tu información en el sistema de integrantes. Contacta a tu líder para actualizar tus datos.'
+          };
+        }
+
+        // Usar el nombre completo del member
+        const fullName = `${member.nombres} ${member.apellidos}`;
+        return await this.searchUserInServices(fullName);
       }
 
-      if (!profile) {
-        console.log('No se encontró perfil para el usuario');
-        return {
-          type: 'turnos',
-          message: '🤖 No pude encontrar tu perfil. Asegúrate de tener tu información actualizada en el sistema.'
-        };
-      }
+      // Usar el nombre del perfil
+      return await this.searchUserInServices(profile.full_name);
 
-      console.log('Perfil encontrado:', profile.full_name);
+    } catch (error) {
+      console.error('Error consultando turnos:', error);
+      return {
+        type: 'turnos',
+        message: '🤖 Disculpa, hubo un error consultando tus turnos. Intenta nuevamente o consulta directamente la agenda ministerial.'
+      };
+    }
+  }
+
+  private static async searchUserInServices(fullName: string): Promise<BotResponse> {
+    try {
+      console.log('Buscando servicios para:', fullName);
 
       // Buscar próximos eventos en la agenda ministerial
       const today = new Date().toISOString().split('T')[0];
@@ -94,7 +124,7 @@ export class ArcanaBot {
         .select('*')
         .gte('service_date', today)
         .order('service_date', { ascending: true })
-        .limit(5);
+        .limit(10);
 
       if (eventosError) {
         console.error('Error consultando eventos:', eventosError);
@@ -114,18 +144,26 @@ export class ArcanaBot {
       }
 
       // Buscar si el usuario está mencionado en algún evento
-      const eventosConUsuario = eventos.filter(evento => 
-        evento.leader?.toLowerCase().includes(profile.full_name.toLowerCase()) ||
-        evento.description?.toLowerCase().includes(profile.full_name.toLowerCase()) ||
-        evento.notes?.toLowerCase().includes(profile.full_name.toLowerCase())
-      );
+      const eventosConUsuario = eventos.filter(evento => {
+        const searchableText = [
+          evento.leader,
+          evento.description,
+          evento.notes,
+          evento.title
+        ].join(' ').toLowerCase();
+        
+        const nombresParts = fullName.toLowerCase().split(' ');
+        return nombresParts.some(part => 
+          part.length > 2 && searchableText.includes(part)
+        );
+      });
 
       console.log('Eventos con usuario:', eventosConUsuario.length);
 
       if (eventosConUsuario.length === 0) {
         return {
           type: 'turnos',
-          message: `🤖 Hola ${profile.full_name}! No tienes turnos programados en los próximos servicios. Consulta con tu líder de grupo para más información.`
+          message: `🤖 Hola ${fullName}! No tienes turnos programados en los próximos servicios. Consulta con tu líder de grupo para más información.`
         };
       }
 
@@ -139,11 +177,11 @@ export class ArcanaBot {
 
       return {
         type: 'turnos',
-        message: `🎵 ¡Hola ${profile.full_name}! Tu próximo turno es:\n\n📅 **${proximoEvento.title}**\n🗓️ ${fecha}\n📍 ${proximoEvento.location || 'Ubicación por confirmar'}\n\n¡Prepárate para alabar al Señor! 🙏`
+        message: `🎵 ¡Hola ${fullName}! Tu próximo turno es:\n\n📅 **${proximoEvento.title}**\n🗓️ ${fecha}\n📍 ${proximoEvento.location || 'Ubicación por confirmar'}\n\n¡Prepárate para alabar al Señor! 🙏`
       };
 
     } catch (error) {
-      console.error('Error consultando turnos:', error);
+      console.error('Error buscando en servicios:', error);
       return {
         type: 'turnos',
         message: '🤖 Disculpa, hubo un error consultando tus turnos. Intenta nuevamente o consulta directamente la agenda ministerial.'
