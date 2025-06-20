@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Search, Edit, Trash2, Users, Eye } from 'lucide-react';
+import { Search, Edit, Trash2, Users, Eye, ArrowUp, ArrowDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import EditMemberForm from './EditMemberForm';
 import {
@@ -18,6 +17,13 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Member {
   id: string;
@@ -40,6 +46,8 @@ interface Member {
   created_at: string;
 }
 
+type SortOption = 'creation_date' | 'alphabetical';
+
 const MembersList = () => {
   const navigate = useNavigate();
   const [members, setMembers] = useState<Member[]>([]);
@@ -47,6 +55,7 @@ const MembersList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [sortOption, setSortOption] = useState<SortOption>('creation_date');
   const { toast } = useToast();
 
   const fetchMembers = async () => {
@@ -55,7 +64,7 @@ const MembersList = () => {
         .from('members')
         .select('*')
         .eq('is_active', true)
-        .order('nombres', { ascending: true });
+        .order('created_at', { ascending: true }); // Orden por fecha de creación por defecto
 
       if (error) throw error;
       setMembers(data || []);
@@ -77,14 +86,29 @@ const MembersList = () => {
   }, []);
 
   useEffect(() => {
-    const filtered = members.filter(member =>
+    let filtered = members.filter(member =>
       member.nombres.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.apellidos.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.cargo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (member.grupo && member.grupo.toLowerCase().includes(searchTerm.toLowerCase()))
     );
+
+    // Aplicar ordenamiento según la opción seleccionada
+    if (sortOption === 'alphabetical') {
+      filtered = filtered.sort((a, b) => {
+        const nameA = `${a.nombres} ${a.apellidos}`.toLowerCase();
+        const nameB = `${b.nombres} ${b.apellidos}`.toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+    } else {
+      // Ordenar por fecha de creación (más antiguos primero)
+      filtered = filtered.sort((a, b) => 
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+    }
+
     setFilteredMembers(filtered);
-  }, [searchTerm, members]);
+  }, [searchTerm, members, sortOption]);
 
   const handleDeleteMember = async (memberId: string) => {
     if (!confirm('¿Estás seguro de que quieres eliminar este integrante?')) {
@@ -141,6 +165,7 @@ const MembersList = () => {
       'directiva': 'Directiva',
       'directores_alabanza': 'Directores de Alabanza',
       'coristas': 'Coristas',
+      'musicos': 'Músicos',
       'multimedia': 'Multimedia',
       'danza': 'Danza',
       'teatro': 'Teatro',
@@ -166,7 +191,7 @@ const MembersList = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
@@ -176,9 +201,35 @@ const MembersList = () => {
             className="pl-10"
           />
         </div>
-        <Badge variant="secondary" className="bg-arcana-blue-50 text-arcana-blue-600">
-          {filteredMembers.length} integrantes
-        </Badge>
+        
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Ordenar por:</span>
+            <Select value={sortOption} onValueChange={(value: SortOption) => setSortOption(value)}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="creation_date">
+                  <div className="flex items-center gap-2">
+                    <ArrowUp className="w-4 h-4" />
+                    Orden de registro
+                  </div>
+                </SelectItem>
+                <SelectItem value="alphabetical">
+                  <div className="flex items-center gap-2">
+                    <ArrowDown className="w-4 h-4" />
+                    Alfabético (A-Z)
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <Badge variant="secondary" className="bg-arcana-blue-50 text-arcana-blue-600">
+            {filteredMembers.length} integrantes
+          </Badge>
+        </div>
       </div>
 
       <div className="space-y-2">
