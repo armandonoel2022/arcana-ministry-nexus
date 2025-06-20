@@ -1,4 +1,3 @@
-
 import {
   Calendar,
   Music,
@@ -12,7 +11,8 @@ import {
   Scan,
   Bell,
   Bot,
-  Home
+  Home,
+  UsersRound
 } from "lucide-react";
 import {
   Sidebar,
@@ -77,6 +77,15 @@ const menuItems = [
     description: "Gestión de miembros del ministerio",
     icon: Users,
     url: "/integrantes",
+    comingSoon: false,
+    isMain: true
+  },
+  {
+    id: "grupos",
+    title: "Grupos de Alabanza",
+    description: "Gestión de grupos y asignaciones",
+    icon: UsersRound,
+    url: "/grupos",
     comingSoon: false,
     isMain: true
   },
