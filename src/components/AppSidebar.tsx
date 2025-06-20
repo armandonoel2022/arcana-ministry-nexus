@@ -1,4 +1,3 @@
-
 import {
   Calendar,
   Music,
@@ -103,14 +102,6 @@ const menuItems = [
     comingSoon: false,
     isMain: true,
     adminOnly: true
-  },
-  {
-    id: "perfiles",
-    title: "Perfiles",
-    icon: Mic,
-    url: "#",
-    comingSoon: true,
-    isMain: false
   },
   {
     id: "espiritual",
