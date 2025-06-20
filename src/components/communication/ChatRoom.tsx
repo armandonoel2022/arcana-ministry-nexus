@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, Users } from "lucide-react";
+import { Send, Users, Bot } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ArcanaBot } from "./ArcanaBot";
 
 interface ChatRoomData {
   id: string;
@@ -22,6 +23,7 @@ interface Message {
   message: string;
   created_at: string;
   user_id: string;
+  is_bot?: boolean;
   profiles?: {
     full_name: string;
   };
@@ -136,6 +138,20 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
 
       if (error) throw error;
 
+      // Procesar mensaje para ver si ARCANA debe responder
+      const botResponse = await ArcanaBot.processMessage(
+        newMessage.trim(),
+        room.id,
+        currentUser.id
+      );
+
+      if (botResponse) {
+        // Esperar un momento antes de que el bot responda para que parezca más natural
+        setTimeout(async () => {
+          await ArcanaBot.sendBotResponse(room.id, botResponse);
+        }, 1500);
+      }
+
       setNewMessage("");
     } catch (error) {
       console.error('Error sending message:', error);
@@ -170,6 +186,10 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
       .slice(0, 2);
   };
 
+  const isBot = (message: Message) => {
+    return message.user_id === 'arcana-bot' || message.is_bot;
+  };
+
   if (loading) {
     return <div className="text-center py-8">Cargando mensajes...</div>;
   }
@@ -188,6 +208,9 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
               {room.description && (
                 <p className="text-sm text-gray-600">{room.description}</p>
               )}
+              <p className="text-xs text-arcana-blue-600 mt-1">
+                💡 Menciona @ARCANA para consultas sobre turnos, ensayos y canciones
+              </p>
             </div>
           </div>
         </CardHeader>
@@ -203,39 +226,47 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
               </div>
             ) : (
               messages.map((message) => {
-                const isOwn = message.user_id === currentUser?.id;
+                const isOwnMessage = message.user_id === currentUser?.id;
+                const isBotMessage = isBot(message);
+                
                 return (
                   <div
                     key={message.id}
-                    className={`flex gap-3 ${isOwn ? 'justify-end' : 'justify-start'}`}
+                    className={`flex gap-3 ${isOwnMessage && !isBotMessage ? 'justify-end' : 'justify-start'}`}
                   >
-                    {!isOwn && (
+                    {(!isOwnMessage || isBotMessage) && (
                       <Avatar className="w-8 h-8">
-                        <AvatarFallback className="text-xs bg-arcana-blue-100">
-                          {getInitials(message.profiles?.full_name || 'U')}
+                        <AvatarFallback className={`text-xs ${isBotMessage ? 'bg-purple-100' : 'bg-arcana-blue-100'}`}>
+                          {isBotMessage ? (
+                            <Bot className="w-4 h-4 text-purple-600" />
+                          ) : (
+                            getInitials(message.profiles?.full_name || 'U')
+                          )}
                         </AvatarFallback>
                       </Avatar>
                     )}
-                    <div className={`max-w-xs ${isOwn ? 'order-first' : ''}`}>
+                    <div className={`max-w-xs ${isOwnMessage && !isBotMessage ? 'order-first' : ''}`}>
                       <div
                         className={`p-3 rounded-lg ${
-                          isOwn
+                          isBotMessage
+                            ? 'bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300'
+                            : isOwnMessage
                             ? 'bg-arcana-blue-gradient text-white'
                             : 'bg-gray-100 text-gray-800'
                         }`}
                       >
-                        {!isOwn && (
+                        {(!isOwnMessage || isBotMessage) && (
                           <p className="text-xs font-medium mb-1">
-                            {message.profiles?.full_name || 'Usuario'}
+                            {isBotMessage ? 'ARCANA Asistente' : message.profiles?.full_name || 'Usuario'}
                           </p>
                         )}
-                        <p className="text-sm">{message.message}</p>
+                        <div className="text-sm whitespace-pre-wrap">{message.message}</div>
                       </div>
-                      <p className={`text-xs text-gray-500 mt-1 ${isOwn ? 'text-right' : 'text-left'}`}>
+                      <p className={`text-xs text-gray-500 mt-1 ${isOwnMessage && !isBotMessage ? 'text-right' : 'text-left'}`}>
                         {formatTime(message.created_at)}
                       </p>
                     </div>
-                    {isOwn && (
+                    {isOwnMessage && !isBotMessage && (
                       <Avatar className="w-8 h-8">
                         <AvatarFallback className="text-xs bg-arcana-gold-100">
                           Tú
@@ -256,7 +287,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Escribe tu mensaje..."
+                placeholder="Escribe tu mensaje... (usa @ARCANA para consultas)"
                 className="flex-1"
               />
               <Button
