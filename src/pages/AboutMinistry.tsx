@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Users, Music, Calendar, Crown, Star } from "lucide-react";
+import { Heart, Users, Music, Calendar, Crown, Star, Disc } from "lucide-react";
 
 const AboutMinistry = () => {
   return (
@@ -114,6 +114,25 @@ const AboutMinistry = () => {
               </p>
               <Badge className="mt-2 bg-arcana-gold-gradient text-white">
                 Desde 1999
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Logro Destacado */}
+        <Card className="mb-6 bg-gradient-to-r from-purple-100 to-pink-100 border-0 shadow-lg">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Disc className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-purple-600 mb-2">Logro Destacado</h3>
+              <p className="text-gray-700 mb-2">
+                <strong>Grabación de nuestra primera producción musical</strong>
+              </p>
+              <h4 className="text-xl font-bold text-pink-600 mb-2">Adoración Eterna</h4>
+              <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                2017 - 2018
               </Badge>
             </div>
           </CardContent>
