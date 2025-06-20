@@ -1,3 +1,4 @@
+
 import {
   Calendar,
   Music,
@@ -40,7 +41,6 @@ const menuItems = [
   {
     id: "about",
     title: "Acerca del Ministerio",
-    description: "Historia, visión y misión",
     icon: Heart,
     url: "/about",
     isMain: true
@@ -48,7 +48,6 @@ const menuItems = [
   {
     id: "statutes",
     title: "Estatutos",
-    description: "Normativas y reglamentos",
     icon: BookOpen,
     url: "/statutes",
     isMain: true
@@ -56,7 +55,6 @@ const menuItems = [
   {
     id: "agenda",
     title: "Agenda Ministerial",
-    description: "Turnos de alabanza y notificaciones",
     icon: Calendar,
     url: "/agenda",
     comingSoon: false,
@@ -65,7 +63,6 @@ const menuItems = [
   {
     id: "repertorio", 
     title: "Repertorio Musical",
-    description: "Catálogo de canciones",
     icon: Music,
     url: "/repertorio",
     comingSoon: false,
@@ -74,7 +71,6 @@ const menuItems = [
   {
     id: "integrantes",
     title: "Integrantes",
-    description: "Gestión de miembros del ministerio",
     icon: Users,
     url: "/integrantes",
     comingSoon: false,
@@ -83,7 +79,6 @@ const menuItems = [
   {
     id: "grupos",
     title: "Grupos de Alabanza",
-    description: "Gestión de grupos y asignaciones",
     icon: UsersRound,
     url: "/grupos",
     comingSoon: false,
@@ -92,7 +87,6 @@ const menuItems = [
   {
     id: "comunicacion",
     title: "Comunicación",
-    description: "Chats grupales",
     icon: MessageCircle,
     url: "#",
     comingSoon: true,
@@ -101,7 +95,6 @@ const menuItems = [
   {
     id: "perfiles",
     title: "Perfiles",
-    description: "Datos personales y roles",
     icon: Mic,
     url: "#",
     comingSoon: true,
@@ -110,7 +103,6 @@ const menuItems = [
   {
     id: "espiritual",
     title: "Módulo Espiritual",
-    description: "Versículo diario",
     icon: BookOpen,
     url: "#",
     comingSoon: true,
@@ -119,7 +111,6 @@ const menuItems = [
   {
     id: "eventos",
     title: "Eventos Especiales",
-    description: "Cumpleaños y actividades",
     icon: Heart,
     url: "#",
     comingSoon: true,
@@ -128,7 +119,6 @@ const menuItems = [
   {
     id: "inventario",
     title: "Inventario QR",
-    description: "Registro de equipos",
     icon: Scan,
     url: "#",
     comingSoon: true,
@@ -137,7 +127,6 @@ const menuItems = [
   {
     id: "donaciones",
     title: "Donaciones",
-    description: "Registro de ofrendas",
     icon: Gift,
     url: "#",
     comingSoon: true,
@@ -146,7 +135,6 @@ const menuItems = [
   {
     id: "cuidado",
     title: "Recomendaciones",
-    description: "Ejercicios personalizados",
     icon: Settings,
     url: "#",
     comingSoon: true,
@@ -155,7 +143,6 @@ const menuItems = [
   {
     id: "chatbot",
     title: "ARCANA Asistente",
-    description: "Chatbot AI",
     icon: Bot,
     url: "#",
     comingSoon: true,
@@ -164,7 +151,6 @@ const menuItems = [
   {
     id: "notificaciones",
     title: "Notificaciones",
-    description: "Centro de alertas",
     icon: Bell,
     url: "#",
     comingSoon: true,
@@ -203,34 +189,24 @@ export function AppSidebar() {
                       {item.url.startsWith('#') ? (
                         <a href={item.url} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 transition-colors">
                           <IconComponent className="w-4 h-4 text-arcana-blue-600 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-800 text-sm truncate">{item.title}</span>
-                              {item.comingSoon && (
-                                <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0 flex-shrink-0">
-                                  Próximamente
-                                </Badge>
-                              )}
-                            </div>
-                            {item.description && (
-                              <p className="text-xs text-gray-500 mt-1 truncate">{item.description}</p>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-800 text-sm">{item.title}</span>
+                            {item.comingSoon && (
+                              <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0">
+                                Próximamente
+                              </Badge>
                             )}
                           </div>
                         </a>
                       ) : (
                         <Link to={item.url} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 transition-colors">
                           <IconComponent className="w-4 h-4 text-arcana-blue-600 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-800 text-sm truncate">{item.title}</span>
-                              {item.comingSoon && (
-                                <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0 flex-shrink-0">
-                                  Próximamente
-                                </Badge>
-                              )}
-                            </div>
-                            {item.description && (
-                              <p className="text-xs text-gray-500 mt-1 truncate">{item.description}</p>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-800 text-sm">{item.title}</span>
+                            {item.comingSoon && (
+                              <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0">
+                                Próximamente
+                              </Badge>
                             )}
                           </div>
                         </Link>
@@ -254,15 +230,13 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild>
                       <a href={item.url} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 transition-colors">
                         <IconComponent className="w-4 h-4 text-arcana-blue-600 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-700 truncate">{item.title}</span>
-                            {item.comingSoon && (
-                              <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0 flex-shrink-0">
-                                Próximamente
-                              </Badge>
-                            )}
-                          </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-700">{item.title}</span>
+                          {item.comingSoon && (
+                            <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0">
+                              Próximamente
+                            </Badge>
+                          )}
                         </div>
                       </a>
                     </SidebarMenuButton>
