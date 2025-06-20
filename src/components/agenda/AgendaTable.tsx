@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -37,13 +36,20 @@ interface Service {
   }[];
 }
 
-type FilterType = 'current_weekend' | 'week' | 'month' | 'all' | 'my_agenda';
+type FilterType = 'current_weekend' | 'month' | 'all' | 'my_agenda';
 
-export const AgendaTable: React.FC = () => {
+interface AgendaTableProps {
+  initialFilter?: string | null;
+}
+
+export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
   const [services, setServices] = useState<Service[]>([]);
   const [filteredServices, setFilteredServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState<FilterType>('current_weekend');
+  const [filter, setFilter] = useState<FilterType>(() => {
+    if (initialFilter === 'my_agenda') return 'my_agenda';
+    return 'current_weekend';
+  });
 
   useEffect(() => {
     fetchServices();
@@ -98,27 +104,22 @@ export const AgendaTable: React.FC = () => {
         );
         break;
       
-      case 'week':
-        // Show services for the current week (Monday to Sunday)
-        const currentWeekStart = startOfWeek(now, { weekStartsOn: 1 });
-        const currentWeekEnd = endOfWeek(now, { weekStartsOn: 1 });
-        filtered = services.filter(service => 
-          isWithinInterval(new Date(service.service_date), { start: currentWeekStart, end: currentWeekEnd })
-        );
-        break;
-      
       case 'month':
-        // Show services for the current month
+        // Show only MY services for the current month
         const monthStart = startOfMonth(now);
         const monthEnd = endOfMonth(now);
         filtered = services.filter(service => 
-          isWithinInterval(new Date(service.service_date), { start: monthStart, end: monthEnd })
+          isWithinInterval(new Date(service.service_date), { start: monthStart, end: monthEnd }) &&
+          service.leader.toLowerCase().includes('armando noel')
         );
         break;
       
       case 'my_agenda':
-        // Show only services where the leader is "Armando Noel"
+        // Show only MY services for the current weekend
+        const myWeekStart = startOfWeek(now, { weekStartsOn: 5 }); // Friday
+        const myWeekEnd = endOfWeek(now, { weekStartsOn: 5 }); // Sunday
         filtered = services.filter(service => 
+          isWithinInterval(new Date(service.service_date), { start: myWeekStart, end: myWeekEnd }) &&
           service.leader.toLowerCase().includes('armando noel')
         );
         break;
@@ -191,12 +192,15 @@ export const AgendaTable: React.FC = () => {
   const getFilterLabel = (filterType: FilterType) => {
     switch (filterType) {
       case 'current_weekend': return 'Fin de Semana Actual';
-      case 'week': return 'Esta Semana';
-      case 'month': return 'Este Mes';
-      case 'my_agenda': return 'Mi Agenda';
+      case 'month': return 'Mis Servicios - Este Mes';
+      case 'my_agenda': return 'Mi Agenda - Fin de Semana';
       case 'all': return 'Todos los Servicios';
       default: return 'Filtro';
     }
+  };
+
+  const shouldShowChoirBreaks = () => {
+    return filter !== 'all' && filteredServices.some(s => s.choir_breaks);
   };
 
   if (isLoading) {
@@ -230,13 +234,6 @@ export const AgendaTable: React.FC = () => {
               onClick={() => setFilter('current_weekend')}
             >
               Fin de Semana Actual
-            </Button>
-            <Button
-              variant={filter === 'week' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilter('week')}
-            >
-              Esta Semana
             </Button>
             <Button
               variant={filter === 'month' ? 'default' : 'outline'}
@@ -276,7 +273,9 @@ export const AgendaTable: React.FC = () => {
           {filteredServices.length === 0 ? (
             <div className="text-center text-gray-500 py-8">
               {filter === 'my_agenda' 
-                ? "No tienes servicios asignados en este período." 
+                ? "🎉 ¡Estás libre este fin de semana!" 
+                : filter === 'month'
+                ? "No tienes servicios asignados este mes."
                 : "No hay servicios programados para este período."}
             </div>
           ) : (
@@ -406,8 +405,8 @@ export const AgendaTable: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Choir Breaks Card */}
-      {filteredServices.some(s => s.choir_breaks) && (
+      {/* Choir Breaks Card - Only show when not viewing all services */}
+      {shouldShowChoirBreaks() && (
         <Card>
           <CardHeader>
             <CardTitle>Descansos de los Coros</CardTitle>

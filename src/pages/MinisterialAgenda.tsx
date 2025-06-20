@@ -1,14 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AgendaForm } from "@/components/agenda/AgendaForm";
 import { AgendaTable } from "@/components/agenda/AgendaTable";
 import { CSVUpload } from "@/components/agenda/CSVUpload";
 import { Calendar, Upload, Plus } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 
 const MinisterialAgenda = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [searchParams] = useSearchParams();
+  const filterParam = searchParams.get('filter');
 
   const handleDataUpdate = () => {
     setRefreshTrigger(prev => prev + 1);
@@ -51,7 +54,7 @@ const MinisterialAgenda = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <AgendaTable key={refreshTrigger} />
+              <AgendaTable key={refreshTrigger} initialFilter={filterParam} />
             </CardContent>
           </Card>
         </TabsContent>

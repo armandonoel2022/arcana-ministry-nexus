@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -89,7 +90,7 @@ const Index = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap justify-center gap-4">
-            <Link to="/agenda">
+            <Link to="/agenda?filter=my_agenda">
               <Button className="bg-arcana-blue-gradient hover:opacity-90 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105">
                 Ver Mi Agenda
               </Button>
