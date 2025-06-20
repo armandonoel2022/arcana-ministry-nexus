@@ -1,12 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Search, Edit, Trash2, Phone, Mail, MapPin, Users } from 'lucide-react';
+import { Search, Edit, Trash2, Phone, Mail, MapPin, Users, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import EditMemberForm from './EditMemberForm';
 import {
@@ -40,6 +40,7 @@ interface Member {
 }
 
 const MembersList = () => {
+  const navigate = useNavigate();
   const [members, setMembers] = useState<Member[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -147,6 +148,10 @@ const MembersList = () => {
     return groupLabels[group] || group;
   };
 
+  const handleViewProfile = (memberId: string) => {
+    navigate(`/integrantes/${memberId}`);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-8">
@@ -180,18 +185,26 @@ const MembersList = () => {
           <Card key={member.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-12 h-12">
-                    <AvatarImage
-                      src={member.photo_url || undefined}
-                      alt={`${member.nombres} ${member.apellidos}`}
-                    />
-                    <AvatarFallback className="bg-arcana-blue-gradient text-white">
-                      {member.nombres.charAt(0)}{member.apellidos.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-lg">
+                <div className="flex items-center gap-3 flex-1">
+                  <div 
+                    className="cursor-pointer transition-transform hover:scale-105"
+                    onClick={() => handleViewProfile(member.id)}
+                  >
+                    <Avatar className="w-12 h-12 ring-2 ring-transparent hover:ring-arcana-blue-300">
+                      <AvatarImage
+                        src={member.photo_url || undefined}
+                        alt={`${member.nombres} ${member.apellidos}`}
+                      />
+                      <AvatarFallback className="bg-arcana-blue-gradient text-white">
+                        {member.nombres.charAt(0)}{member.apellidos.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                  <div className="flex-1">
+                    <CardTitle 
+                      className="text-lg cursor-pointer hover:text-arcana-blue-600 transition-colors"
+                      onClick={() => handleViewProfile(member.id)}
+                    >
                       {member.nombres} {member.apellidos}
                     </CardTitle>
                     <Badge variant="secondary" className="text-xs mt-1">
@@ -200,6 +213,14 @@ const MembersList = () => {
                   </div>
                 </div>
                 <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleViewProfile(member.id)}
+                    className="text-arcana-blue-600 hover:text-arcana-blue-700 hover:bg-arcana-blue-50"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Button>
                   <Sheet>
                     <SheetTrigger asChild>
                       <Button
