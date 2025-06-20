@@ -57,7 +57,9 @@ export const CSVUpload: React.FC<CSVUploadProps> = ({ onSuccess }) => {
       .map(row => row.map(cell => `"${cell}"`).join(','))
       .join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Add BOM for UTF-8 encoding to ensure proper character display
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
@@ -68,25 +70,88 @@ export const CSVUpload: React.FC<CSVUploadProps> = ({ onSuccess }) => {
     document.body.removeChild(link);
   };
 
-  const parseCSV = (csv: string): any[] => {
-    const lines = csv.split('\n').filter(line => line.trim());
-    if (lines.length < 2) return [];
+  const parseCSV = async (file: File): Promise<any[]> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        try {
+          const csv = e.target?.result as string;
+          const lines = csv.split('\n').filter(line => line.trim());
+          
+          if (lines.length < 2) {
+            resolve([]);
+            return;
+          }
 
-    const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
-    const data = [];
+          // Parse CSV with better handling of quoted fields and special characters
+          const parseCSVLine = (line: string): string[] => {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            let i = 0;
 
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(v => v.replace(/"/g, '').trim());
-      if (values.length >= headers.length) {
-        const row: any = {};
-        headers.forEach((header, index) => {
-          row[header] = values[index] || '';
-        });
-        data.push(row);
-      }
-    }
+            while (i < line.length) {
+              const char = line[i];
+              const nextChar = line[i + 1];
 
-    return data;
+              if (char === '"') {
+                if (inQuotes && nextChar === '"') {
+                  // Handle escaped quotes
+                  current += '"';
+                  i += 2;
+                } else {
+                  // Toggle quote state
+                  inQuotes = !inQuotes;
+                  i++;
+                }
+              } else if (char === ',' && !inQuotes) {
+                // End of field
+                result.push(current.trim());
+                current = '';
+                i++;
+              } else {
+                current += char;
+                i++;
+              }
+            }
+
+            // Add the last field
+            result.push(current.trim());
+            return result;
+          };
+
+          const headers = parseCSVLine(lines[0]);
+          const data = [];
+
+          for (let i = 1; i < lines.length; i++) {
+            const values = parseCSVLine(lines[i]);
+            if (values.length >= headers.length) {
+              const row: any = {};
+              headers.forEach((header, index) => {
+                // Clean and normalize the data
+                let value = values[index] || '';
+                // Remove extra quotes if present
+                value = value.replace(/^"(.*)"$/, '$1');
+                // Normalize whitespace
+                value = value.trim();
+                row[header] = value;
+              });
+              data.push(row);
+            }
+          }
+
+          resolve(data);
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      reader.onerror = () => reject(new Error('Error leyendo el archivo'));
+      
+      // Read file as UTF-8 text
+      reader.readAsText(file, 'UTF-8');
+    });
   };
 
   const processCSVData = async (data: any[]) => {
@@ -101,7 +166,7 @@ export const CSVUpload: React.FC<CSVUploadProps> = ({ onSuccess }) => {
 
     const groupMap = new Map();
     
-    // Mapeo de nombres genéricos a nombres reales
+    // Mapeo de nombres genéricos a nombres reales (con manejo de acentos)
     const groupNameMapping = {
       'alpha': 'Grupo de Aleida',
       'beta': 'Grupo de Massy', 
@@ -111,7 +176,11 @@ export const CSVUpload: React.FC<CSVUploadProps> = ({ onSuccess }) => {
       'grupo gamma': 'Grupo de Keyla',
       'grupo de aleida': 'Grupo de Aleida',
       'grupo de massy': 'Grupo de Massy',
-      'grupo de keyla': 'Grupo de Keyla'
+      'grupo de keyla': 'Grupo de Keyla',
+      // Versiones sin acentos
+      'aleida': 'Grupo de Aleida',
+      'massy': 'Grupo de Massy',
+      'keyla': 'Grupo de Keyla'
     };
 
     groups?.forEach(group => {
@@ -139,18 +208,33 @@ export const CSVUpload: React.FC<CSVUploadProps> = ({ onSuccess }) => {
           throw new Error('Fecha inválida');
         }
 
-        // Find group ID with mapping
+        // Find group ID with mapping (normalize for accent handling)
         let groupName = row['Grupo Asignado']?.toLowerCase().trim();
         let groupId = null;
 
         if (groupName) {
-          // Primero intenta mapear nombres genéricos a nombres reales
-          const mappedName = groupNameMapping[groupName];
+          // Normalize accents and special characters for comparison
+          const normalizeString = (str: string) => {
+            return str
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .toLowerCase();
+          };
+
+          const normalizedGroupName = normalizeString(groupName);
+          
+          // Try direct mapping first
+          const mappedName = groupNameMapping[groupName] || groupNameMapping[normalizedGroupName];
           if (mappedName) {
             groupId = groupMap.get(mappedName.toLowerCase());
           } else {
-            // Si no hay mapeo, busca directamente
-            groupId = groupMap.get(groupName);
+            // Try finding by normalized name in existing groups
+            for (const [existingName, id] of groupMap.entries()) {
+              if (normalizeString(existingName) === normalizedGroupName) {
+                groupId = id;
+                break;
+              }
+            }
           }
         }
 
@@ -196,8 +280,7 @@ export const CSVUpload: React.FC<CSVUploadProps> = ({ onSuccess }) => {
     setUploadResult(null);
 
     try {
-      const text = await file.text();
-      const csvData = parseCSV(text);
+      const csvData = await parseCSV(file);
 
       if (csvData.length === 0) {
         throw new Error('El archivo CSV está vacío o no tiene el formato correcto');
@@ -331,6 +414,7 @@ export const CSVUpload: React.FC<CSVUploadProps> = ({ onSuccess }) => {
             <li>• También acepta nombres genéricos: "Alpha", "Beta", "Gamma" que se mapearán automáticamente</li>
             <li>• El orden del mes debe ser un número (1, 2, 3, 4...)</li>
             <li>• Los tipos de servicio válidos son: regular, especial, conferencia, evento</li>
+            <li>• El archivo debe estar guardado con codificación UTF-8 para manejar acentos correctamente</li>
           </ul>
         </AlertDescription>
       </Alert>
