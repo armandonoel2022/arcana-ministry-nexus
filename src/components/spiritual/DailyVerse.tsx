@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Heart, Share2, BookOpen, Calendar, Bell } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Heart, Share2, BookOpen, Calendar, Bell, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -28,6 +28,7 @@ export const DailyVerse = () => {
   const [liked, setLiked] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [sendingNotification, setSendingNotification] = useState(false);
+  const [showNotificationDialog, setShowNotificationDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -147,10 +148,8 @@ export const DailyVerse = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "¡Notificación enviada!",
-        description: "Se ha enviado una notificación de prueba del versículo del día"
-      });
+      // Mostrar el diálogo de notificación en lugar del toast
+      setShowNotificationDialog(true);
     } catch (error) {
       console.error('Error sending test notification:', error);
       toast({
@@ -161,6 +160,18 @@ export const DailyVerse = () => {
     } finally {
       setSendingNotification(false);
     }
+  };
+
+  const handleNotificationAmen = () => {
+    setShowNotificationDialog(false);
+    toast({
+      title: "¡Amén! 🙏",
+      description: "Que Dios te bendiga con su palabra"
+    });
+  };
+
+  const handleNotificationClose = () => {
+    setShowNotificationDialog(false);
   };
 
   const handleShare = () => {
@@ -217,89 +228,168 @@ export const DailyVerse = () => {
   }
 
   return (
-    <Card className="max-w-2xl mx-auto">
-      <CardHeader className="text-center pb-4">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-arcana-blue-600" />
-            <span className="text-sm text-gray-600">
-              {format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
-            </span>
+    <>
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader className="text-center pb-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-arcana-blue-600" />
+              <span className="text-sm text-gray-600">
+                {format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
+              </span>
+            </div>
+            {userRole === 'administrator' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={testNotification}
+                disabled={sendingNotification}
+                className="flex items-center gap-2"
+              >
+                <Bell className="w-4 h-4" />
+                {sendingNotification ? 'Enviando...' : 'Probar Notificación'}
+              </Button>
+            )}
           </div>
-          {userRole === 'administrator' && (
+          <CardTitle className="text-2xl text-arcana-blue-700">Versículo del Día</CardTitle>
+        </CardHeader>
+        
+        <CardContent className="space-y-6">
+          <div className="bg-gradient-to-r from-arcana-blue-50 to-arcana-gold-50 p-6 rounded-lg border-l-4 border-arcana-blue-500">
+            <div className="text-center space-y-4">
+              <div className="text-lg leading-relaxed text-gray-800 font-serif">
+                <sup className="text-sm font-bold text-arcana-blue-600 mr-1">
+                  {dailyVerse.bible_verses.verse}
+                </sup>
+                {dailyVerse.bible_verses.text}
+              </div>
+              
+              <div className="text-right">
+                <span className="text-base font-semibold text-arcana-blue-700">
+                  {dailyVerse.bible_verses.book} {dailyVerse.bible_verses.chapter}:{dailyVerse.bible_verses.verse}
+                </span>
+                <br />
+                <span className="text-sm text-gray-600 italic">
+                  {dailyVerse.bible_verses.version}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {dailyVerse.reflection && (
+            <div className="bg-arcana-gold-50 p-4 rounded-lg border border-arcana-gold-200">
+              <h4 className="font-semibold text-arcana-gold-700 mb-2 flex items-center gap-2">
+                <Heart className="w-4 h-4" />
+                Reflexión
+              </h4>
+              <p className="text-gray-700 leading-relaxed">
+                {dailyVerse.reflection}
+              </p>
+            </div>
+          )}
+
+          <div className="flex gap-3 justify-center pt-4">
             <Button
               variant="outline"
               size="sm"
-              onClick={testNotification}
-              disabled={sendingNotification}
+              onClick={toggleLike}
+              className={`flex items-center gap-2 ${
+                liked ? 'text-red-600 border-red-600' : ''
+              }`}
+            >
+              <Heart className={`w-4 h-4 ${liked ? 'fill-current' : ''}`} />
+              {liked ? 'Favorito' : 'Me gusta'}
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleShare}
               className="flex items-center gap-2"
             >
-              <Bell className="w-4 h-4" />
-              {sendingNotification ? 'Enviando...' : 'Probar Notificación'}
+              <Share2 className="w-4 h-4" />
+              Compartir
             </Button>
-          )}
-        </div>
-        <CardTitle className="text-2xl text-arcana-blue-700">Versículo del Día</CardTitle>
-      </CardHeader>
-      
-      <CardContent className="space-y-6">
-        <div className="bg-gradient-to-r from-arcana-blue-50 to-arcana-gold-50 p-6 rounded-lg border-l-4 border-arcana-blue-500">
-          <div className="text-center space-y-4">
-            <div className="text-lg leading-relaxed text-gray-800 font-serif">
-              <sup className="text-sm font-bold text-arcana-blue-600 mr-1">
-                {dailyVerse.bible_verses.verse}
-              </sup>
-              {dailyVerse.bible_verses.text}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Diálogo de Notificación */}
+      <Dialog open={showNotificationDialog} onOpenChange={setShowNotificationDialog}>
+        <DialogContent className="max-w-md mx-auto bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200">
+          <DialogHeader className="text-center space-y-4">
+            {/* Logo del Ministerio */}
+            <div className="flex justify-center">
+              <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                <img 
+                  src="/lovable-uploads/74634c97-a2ef-403b-9fa0-89d9207b7b00.png" 
+                  alt="Logo ADN Arca de Noé" 
+                  className="w-16 h-16 rounded-full object-cover"
+                  onError={(e) => {
+                    // Si la imagen no carga, mostrar texto alternativo
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement!.innerHTML = '<span class="text-white font-bold text-lg">ADN</span>';
+                  }}
+                />
+              </div>
             </div>
             
-            <div className="text-right">
-              <span className="text-base font-semibold text-arcana-blue-700">
-                {dailyVerse.bible_verses.book} {dailyVerse.bible_verses.chapter}:{dailyVerse.bible_verses.verse}
-              </span>
-              <br />
-              <span className="text-sm text-gray-600 italic">
-                {dailyVerse.bible_verses.version}
-              </span>
+            <DialogTitle className="text-xl font-bold text-blue-800">
+              Versículo del Día - ARCANA
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            {/* Contenido del Versículo */}
+            {dailyVerse && (
+              <div className="bg-white p-4 rounded-lg border border-blue-200 shadow-sm">
+                <div className="text-center space-y-3">
+                  <div className="text-base leading-relaxed text-gray-800 font-serif">
+                    <sup className="text-sm font-bold text-blue-600 mr-1">
+                      {dailyVerse.bible_verses.verse}
+                    </sup>
+                    {dailyVerse.bible_verses.text}
+                  </div>
+                  
+                  <div className="text-right">
+                    <span className="text-sm font-semibold text-blue-700">
+                      {dailyVerse.bible_verses.book} {dailyVerse.bible_verses.chapter}:{dailyVerse.bible_verses.verse}
+                    </span>
+                    <br />
+                    <span className="text-xs text-gray-600 italic">
+                      {dailyVerse.bible_verses.version}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className="text-center text-sm text-blue-700 font-medium">
+              ¡Que este versículo bendiga tu día! 🙏
+            </div>
+            
+            {/* Botones de Acción */}
+            <div className="flex gap-3 justify-center pt-2">
+              <Button 
+                onClick={handleNotificationAmen}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full shadow-md transition-all duration-200 transform hover:scale-105"
+              >
+                <Heart className="w-4 h-4 mr-2" />
+                Amén
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                onClick={handleNotificationClose}
+                className="border-blue-300 text-blue-700 hover:bg-blue-50 px-6 py-2 rounded-full shadow-md transition-all duration-200"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Cerrar
+              </Button>
             </div>
           </div>
-        </div>
-
-        {dailyVerse.reflection && (
-          <div className="bg-arcana-gold-50 p-4 rounded-lg border border-arcana-gold-200">
-            <h4 className="font-semibold text-arcana-gold-700 mb-2 flex items-center gap-2">
-              <Heart className="w-4 h-4" />
-              Reflexión
-            </h4>
-            <p className="text-gray-700 leading-relaxed">
-              {dailyVerse.reflection}
-            </p>
-          </div>
-        )}
-
-        <div className="flex gap-3 justify-center pt-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleLike}
-            className={`flex items-center gap-2 ${
-              liked ? 'text-red-600 border-red-600' : ''
-            }`}
-          >
-            <Heart className={`w-4 h-4 ${liked ? 'fill-current' : ''}`} />
-            {liked ? 'Favorito' : 'Me gusta'}
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleShare}
-            className="flex items-center gap-2"
-          >
-            <Share2 className="w-4 h-4" />
-            Compartir
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
