@@ -206,6 +206,7 @@ const AddMemberForm = ({ onSuccess }: AddMemberFormProps) => {
     { value: 'directiva', label: 'Directiva' },
     { value: 'directores_alabanza', label: 'Directores de Alabanza' },
     { value: 'coristas', label: 'Coristas' },
+    { value: 'musicos', label: 'Músicos' },
     { value: 'multimedia', label: 'Multimedia' },
     { value: 'danza', label: 'Danza' },
     { value: 'teatro', label: 'Teatro' },
