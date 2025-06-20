@@ -17,38 +17,89 @@ interface ChatRoomData {
   is_moderated: boolean;
   is_active: boolean;
   member_count?: number;
+  is_member?: boolean;
 }
 
 export const ChatRooms = () => {
   const [rooms, setRooms] = useState<ChatRoomData[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<ChatRoomData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
+    getCurrentUser();
     fetchRooms();
   }, []);
 
+  const getCurrentUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setCurrentUser(user);
+  };
+
   const fetchRooms = async () => {
     try {
-      const { data, error } = await supabase
+      console.log("Fetching chat rooms...");
+      
+      // Get all active rooms
+      const { data: roomsData, error: roomsError } = await supabase
         .from('chat_rooms')
-        .select(`
-          *,
-          chat_room_members(count)
-        `)
+        .select('*')
         .eq('is_active', true);
 
-      if (error) throw error;
+      if (roomsError) {
+        console.error('Error fetching rooms:', roomsError);
+        throw roomsError;
+      }
 
-      const roomsWithCount = data?.map(room => ({
+      console.log("Rooms data:", roomsData);
+
+      // Get member counts for each room
+      const { data: memberCounts, error: membersError } = await supabase
+        .from('chat_room_members')
+        .select('room_id');
+
+      if (membersError) {
+        console.error('Error fetching member counts:', membersError);
+        throw membersError;
+      }
+
+      console.log("Member counts data:", memberCounts);
+
+      // Count members per room
+      const memberCountMap = memberCounts?.reduce((acc, member) => {
+        acc[member.room_id] = (acc[member.room_id] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>) || {};
+
+      // Check current user membership
+      const { data: { user } } = await supabase.auth.getUser();
+      let userMemberships: string[] = [];
+      
+      if (user) {
+        const { data: userMemberData, error: userMemberError } = await supabase
+          .from('chat_room_members')
+          .select('room_id')
+          .eq('user_id', user.id);
+
+        if (userMemberError) {
+          console.error('Error fetching user memberships:', userMemberError);
+        } else {
+          userMemberships = userMemberData?.map(m => m.room_id) || [];
+        }
+      }
+
+      // Combine data
+      const roomsWithCount = roomsData?.map(room => ({
         ...room,
-        member_count: room.chat_room_members?.length || 0
+        member_count: memberCountMap[room.id] || 0,
+        is_member: userMemberships.includes(room.id)
       })) || [];
 
+      console.log("Final rooms data:", roomsWithCount);
       setRooms(roomsWithCount);
     } catch (error) {
-      console.error('Error fetching rooms:', error);
+      console.error('Error in fetchRooms:', error);
       toast({
         title: "Error",
         description: "No se pudieron cargar las salas de chat",
@@ -61,8 +112,7 @@ export const ChatRooms = () => {
 
   const joinRoom = async (roomId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      if (!currentUser) {
         toast({
           title: "Error",
           description: "Debes estar autenticado para unirte a una sala",
@@ -71,14 +121,19 @@ export const ChatRooms = () => {
         return;
       }
 
+      console.log("Joining room:", roomId, "User:", currentUser.id);
+
       const { error } = await supabase
         .from('chat_room_members')
         .upsert({
           room_id: roomId,
-          user_id: user.id
+          user_id: currentUser.id
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error joining room:', error);
+        throw error;
+      }
 
       toast({
         title: "Éxito",
@@ -151,6 +206,11 @@ export const ChatRooms = () => {
                   <Badge variant="secondary" className="text-xs">
                     {room.member_count} miembros
                   </Badge>
+                  {room.is_member && (
+                    <Badge variant="default" className="text-xs bg-green-500">
+                      Miembro
+                    </Badge>
+                  )}
                 </div>
               </div>
             </CardHeader>
@@ -168,13 +228,15 @@ export const ChatRooms = () => {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => joinRoom(room.id)}
-                  >
-                    Unirse
-                  </Button>
+                  {!room.is_member && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => joinRoom(room.id)}
+                    >
+                      Unirse
+                    </Button>
+                  )}
                   <Button
                     size="sm"
                     onClick={() => setSelectedRoom(room)}
