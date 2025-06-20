@@ -57,8 +57,39 @@ export type Database = {
           },
         ]
       }
+      chat_room_join_requests: {
+        Row: {
+          id: string
+          requested_at: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          room_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          requested_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          room_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          requested_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          room_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       chat_room_members: {
         Row: {
+          can_leave: boolean | null
           id: string
           joined_at: string | null
           last_read_at: string | null
@@ -67,6 +98,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          can_leave?: boolean | null
           id?: string
           joined_at?: string | null
           last_read_at?: string | null
@@ -75,6 +107,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          can_leave?: boolean | null
           id?: string
           joined_at?: string | null
           last_read_at?: string | null
@@ -655,6 +688,14 @@ export type Database = {
       get_spanish_month_name: {
         Args: { date_input: string }
         Returns: string
+      }
+      is_administrator: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
+      is_room_moderator: {
+        Args: { _user_id: string; _room_id: string }
+        Returns: boolean
       }
     }
     Enums: {

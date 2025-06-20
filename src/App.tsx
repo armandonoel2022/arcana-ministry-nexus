@@ -15,6 +15,7 @@ import Integrantes from "./pages/Integrantes";
 import MemberProfile from "./pages/MemberProfile";
 import WorshipGroups from "./pages/WorshipGroups";
 import Communication from "./pages/Communication";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
                   <Route path="/integrantes/:id" element={<MemberProfile />} />
                   <Route path="/grupos" element={<WorshipGroups />} />
                   <Route path="/comunicacion" element={<Communication />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
