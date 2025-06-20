@@ -60,6 +60,72 @@ export type Database = {
           },
         ]
       }
+      members: {
+        Row: {
+          apellidos: string
+          cargo: Database["public"]["Enums"]["member_role"]
+          celular: string | null
+          contacto_emergencia: string | null
+          created_at: string | null
+          direccion: string | null
+          email: string | null
+          fecha_nacimiento: string | null
+          grupo: Database["public"]["Enums"]["member_group"] | null
+          id: string
+          is_active: boolean | null
+          nombres: string
+          persona_reporte: string | null
+          photo_url: string | null
+          referencias: string | null
+          telefono: string | null
+          tipo_sangre: Database["public"]["Enums"]["blood_type"] | null
+          updated_at: string | null
+          voz_instrumento: string | null
+        }
+        Insert: {
+          apellidos: string
+          cargo: Database["public"]["Enums"]["member_role"]
+          celular?: string | null
+          contacto_emergencia?: string | null
+          created_at?: string | null
+          direccion?: string | null
+          email?: string | null
+          fecha_nacimiento?: string | null
+          grupo?: Database["public"]["Enums"]["member_group"] | null
+          id?: string
+          is_active?: boolean | null
+          nombres: string
+          persona_reporte?: string | null
+          photo_url?: string | null
+          referencias?: string | null
+          telefono?: string | null
+          tipo_sangre?: Database["public"]["Enums"]["blood_type"] | null
+          updated_at?: string | null
+          voz_instrumento?: string | null
+        }
+        Update: {
+          apellidos?: string
+          cargo?: Database["public"]["Enums"]["member_role"]
+          celular?: string | null
+          contacto_emergencia?: string | null
+          created_at?: string | null
+          direccion?: string | null
+          email?: string | null
+          fecha_nacimiento?: string | null
+          grupo?: Database["public"]["Enums"]["member_group"] | null
+          id?: string
+          is_active?: boolean | null
+          nombres?: string
+          persona_reporte?: string | null
+          photo_url?: string | null
+          referencias?: string | null
+          telefono?: string | null
+          tipo_sangre?: Database["public"]["Enums"]["blood_type"] | null
+          updated_at?: string | null
+          voz_instrumento?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null
@@ -341,6 +407,7 @@ export type Database = {
       }
     }
     Enums: {
+      blood_type: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-"
       instrument_type:
         | "vocals"
         | "piano"
@@ -352,6 +419,31 @@ export type Database = {
         | "trumpet"
         | "violin"
         | "other"
+      member_group:
+        | "directiva"
+        | "directores_alabanza"
+        | "coristas"
+        | "multimedia"
+        | "danza"
+        | "teatro"
+        | "piso"
+      member_role:
+        | "pastor"
+        | "pastora"
+        | "director_alabanza"
+        | "directora_alabanza"
+        | "corista"
+        | "directora_danza"
+        | "director_multimedia"
+        | "camarografo"
+        | "camarógrafa"
+        | "encargado_piso"
+        | "encargada_piso"
+        | "musico"
+        | "sonidista"
+        | "encargado_luces"
+        | "encargado_proyeccion"
+        | "encargado_streaming"
       song_knowledge: "unknown" | "learning" | "known" | "expert"
       user_role: "admin" | "leader" | "musician" | "vocalist" | "member"
     }
@@ -469,6 +561,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      blood_type: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
       instrument_type: [
         "vocals",
         "piano",
@@ -480,6 +573,33 @@ export const Constants = {
         "trumpet",
         "violin",
         "other",
+      ],
+      member_group: [
+        "directiva",
+        "directores_alabanza",
+        "coristas",
+        "multimedia",
+        "danza",
+        "teatro",
+        "piso",
+      ],
+      member_role: [
+        "pastor",
+        "pastora",
+        "director_alabanza",
+        "directora_alabanza",
+        "corista",
+        "directora_danza",
+        "director_multimedia",
+        "camarografo",
+        "camarógrafa",
+        "encargado_piso",
+        "encargada_piso",
+        "musico",
+        "sonidista",
+        "encargado_luces",
+        "encargado_proyeccion",
+        "encargado_streaming",
       ],
       song_knowledge: ["unknown", "learning", "known", "expert"],
       user_role: ["admin", "leader", "musician", "vocalist", "member"],

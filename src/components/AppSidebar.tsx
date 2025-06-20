@@ -1,4 +1,3 @@
-
 import {
   Calendar,
   Music,
@@ -68,6 +67,15 @@ const menuItems = [
     description: "Catálogo de canciones",
     icon: Music,
     url: "/repertorio",
+    comingSoon: false,
+    isMain: true
+  },
+  {
+    id: "integrantes",
+    title: "Integrantes",
+    description: "Gestión de miembros del ministerio",
+    icon: Users,
+    url: "/integrantes",
     comingSoon: false,
     isMain: true
   },
