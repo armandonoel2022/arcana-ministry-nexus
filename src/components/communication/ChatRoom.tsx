@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -179,7 +180,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
           } catch (botError) {
             console.error('Error enviando respuesta del bot:', botError);
           }
-        }, 2000); // Aumenté el delay a 2 segundos
+        }, 2000);
       } else {
         console.log('ARCANA no generó respuesta para este mensaje');
       }

@@ -7,7 +7,7 @@ interface BotResponse {
 }
 
 export class ArcanaBot {
-  private static readonly BOT_USER_ID = '00000000-0000-0000-0000-000000000001';
+  // Remove the BOT_USER_ID since we'll use null instead
   
   static async processMessage(message: string, roomId: string, userId: string): Promise<BotResponse | null> {
     // Verificar si el mensaje menciona a ARCANA (más flexible)
@@ -346,12 +346,12 @@ export class ArcanaBot {
     try {
       console.log('ARCANA enviando respuesta:', response.message.substring(0, 50) + '...');
       
-      // Usar una inserción directa más simple
+      // Usar user_id null para el bot
       const { error } = await supabase
         .from('chat_messages')
         .insert([{
           room_id: roomId,
-          user_id: null,
+          user_id: null, // Bot messages will have null user_id
           message: response.message,
           is_bot: true,
           message_type: 'text',
