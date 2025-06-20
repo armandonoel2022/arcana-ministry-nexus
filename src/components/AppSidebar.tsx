@@ -10,7 +10,6 @@ import {
   Gift,
   Scan,
   Bell,
-  Bot,
   Home,
   UsersRound,
   Shield
@@ -139,14 +138,6 @@ const menuItems = [
     id: "cuidado",
     title: "Recomendaciones",
     icon: Settings,
-    url: "#",
-    comingSoon: true,
-    isMain: false
-  },
-  {
-    id: "chatbot",
-    title: "ARCANA Asistente",
-    icon: Bot,
     url: "#",
     comingSoon: true,
     isMain: false
