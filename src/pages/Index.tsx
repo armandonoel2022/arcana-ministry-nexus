@@ -17,41 +17,33 @@ const Index = () => {
     {
       id: "agenda",
       title: "Agenda Ministerial", 
-      description: "Gestiona los turnos de alabanza y recibe notificaciones automáticas para cada servicio",
       icon: Calendar,
       color: "bg-arcana-blue-gradient",
       comingSoon: false,
-      features: ["Programación automática", "Notificaciones", "Rotación de grupos"],
       url: "/agenda"
     },
     {
       id: "repertorio", 
       title: "Repertorio Musical",
-      description: "Catálogo completo de canciones con sistema de semáforo para conocimiento",
       icon: Music,
       color: "bg-arcana-gold-gradient",
       comingSoon: false,
-      features: ["Catálogo de canciones", "Sistema de semáforo", "Letras y acordes"],
       url: "/repertorio"
     },
     {
       id: "integrantes",
       title: "Integrantes",
-      description: "Gestión de miembros y roles del ministerio de alabanza",
       icon: Users,
       color: "bg-arcana-blue-gradient",
       comingSoon: false,
-      features: ["Gestión de miembros", "Perfiles detallados", "Roles y grupos"],
       url: "/integrantes"
     },
     {
       id: "comunicacion",
       title: "Comunicación",
-      description: "Mantén contacto con el equipo a través de chats grupales y walkie-talkie",
       icon: MessageCircle,
       color: "bg-arcana-gold-gradient",
       comingSoon: false,
-      features: ["Chat grupal", "Walkie-talkie", "Mensajes directos"],
       url: "/comunicacion"
     }
   ];
@@ -125,31 +117,14 @@ const Index = () => {
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <CardHeader className="pb-3">
-                    <div className="flex items-start gap-4">
+                    <div className="flex items-center gap-4">
                       <div className={`w-12 h-12 rounded-full ${module.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg flex-shrink-0`}>
                         <IconComponent className="w-6 h-6 text-white" />
                       </div>
                       <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <CardTitle className="text-lg text-gray-800">
-                            {module.title}
-                          </CardTitle>
-                          {module.comingSoon && (
-                            <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0">
-                              Próximamente
-                            </Badge>
-                          )}
-                        </div>
-                        <CardDescription className="text-sm text-gray-600 leading-relaxed mb-3">
-                          {module.description}
-                        </CardDescription>
-                        <div className="flex flex-wrap gap-1">
-                          {module.features.map((feature, idx) => (
-                            <span key={idx} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                              {feature}
-                            </span>
-                          ))}
-                        </div>
+                        <CardTitle className="text-lg text-gray-800">
+                          {module.title}
+                        </CardTitle>
                       </div>
                     </div>
                   </CardHeader>
