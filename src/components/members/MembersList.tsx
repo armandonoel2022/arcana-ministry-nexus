@@ -144,6 +144,7 @@ const MembersList = () => {
       'pastora': 'Pastora',
       'director_alabanza': 'Director de Alabanza',
       'directora_alabanza': 'Directora de Alabanza',
+      'director_musical': 'Director Musical',
       'corista': 'Corista',
       'directora_danza': 'Directora de Danza',
       'director_multimedia': 'Director Multimedia',
