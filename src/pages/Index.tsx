@@ -65,7 +65,7 @@ const Index = () => {
             </div>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4 animate-fade-in">
-            Bienvenido a ARCANA
+            ARCANA
           </h1>
           <p className="text-xl md:text-2xl text-white/90 mb-2 animate-slide-up">
             Tu plataforma integral para el ministerio de alabanza
