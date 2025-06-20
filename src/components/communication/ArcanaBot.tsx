@@ -17,14 +17,15 @@ export class ArcanaBot {
     
     if (!mentionsBot) return null;
 
-    // Limpiar el mensaje removiendo la mención
+    // Limpiar el mensaje removiendo la mención y signos de puntuación
     const cleanMessage = message
-      .replace(/@arcana/gi, '')
-      .replace(/^arcana:/gi, '')
+      .replace(/@arcana\s*:?/gi, '')
+      .replace(/^arcana\s*:?/gi, '')
+      .replace(/^\s*:\s*/, '') // Remover dos puntos iniciales
       .trim()
       .toLowerCase();
 
-    console.log('ARCANA procesando mensaje:', cleanMessage);
+    console.log('ARCANA procesando mensaje limpio:', cleanMessage);
 
     // Analizar el tipo de consulta
     if (this.isTurnosQuery(cleanMessage)) {
@@ -39,7 +40,7 @@ export class ArcanaBot {
   }
 
   private static isTurnosQuery(message: string): boolean {
-    const turnosKeywords = ['turno', 'turnos', 'cantar', 'cuando me toca', 'próximo turno', 'agenda'];
+    const turnosKeywords = ['turno', 'turnos', 'cantar', 'cuando me toca', 'próximo turno', 'agenda', 'toca'];
     return turnosKeywords.some(keyword => message.includes(keyword));
   }
 
@@ -69,37 +70,38 @@ export class ArcanaBot {
         };
       }
 
-      // Buscar próximos eventos donde el usuario esté programado
+      // Buscar próximos eventos en la agenda ministerial
       const today = new Date().toISOString().split('T')[0];
       const { data: eventos } = await supabase
-        .from('ministerial_agenda')
+        .from('services')
         .select('*')
-        .gte('date', today)
-        .order('date', { ascending: true })
+        .gte('service_date', today)
+        .order('service_date', { ascending: true })
         .limit(5);
 
       if (!eventos || eventos.length === 0) {
         return {
           type: 'turnos',
-          message: '🤖 No hay eventos próximos programados en la agenda ministerial.'
+          message: '🤖 No hay servicios próximos programados en la agenda ministerial.'
         };
       }
 
       // Buscar si el usuario está mencionado en algún evento
       const eventosConUsuario = eventos.filter(evento => 
-        evento.participants?.includes(profile.full_name) ||
-        evento.description?.toLowerCase().includes(profile.full_name.toLowerCase())
+        evento.leader?.toLowerCase().includes(profile.full_name.toLowerCase()) ||
+        evento.description?.toLowerCase().includes(profile.full_name.toLowerCase()) ||
+        evento.notes?.toLowerCase().includes(profile.full_name.toLowerCase())
       );
 
       if (eventosConUsuario.length === 0) {
         return {
           type: 'turnos',
-          message: `🤖 Hola ${profile.full_name}! No tienes turnos programados en los próximos eventos. Consulta con tu líder de grupo para más información.`
+          message: `🤖 Hola ${profile.full_name}! No tienes turnos programados en los próximos servicios. Consulta con tu líder de grupo para más información.`
         };
       }
 
       const proximoEvento = eventosConUsuario[0];
-      const fecha = new Date(proximoEvento.date).toLocaleDateString('es-ES', {
+      const fecha = new Date(proximoEvento.service_date).toLocaleDateString('es-ES', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
@@ -124,11 +126,11 @@ export class ArcanaBot {
     try {
       const today = new Date().toISOString().split('T')[0];
       const { data: ensayos } = await supabase
-        .from('ministerial_agenda')
+        .from('services')
         .select('*')
-        .gte('date', today)
+        .gte('service_date', today)
         .ilike('title', '%ensayo%')
-        .order('date', { ascending: true })
+        .order('service_date', { ascending: true })
         .limit(3);
 
       if (!ensayos || ensayos.length === 0) {
@@ -140,12 +142,12 @@ export class ArcanaBot {
 
       let mensaje = '🎵 **Próximos Ensayos:**\n\n';
       ensayos.forEach((ensayo, index) => {
-        const fecha = new Date(ensayo.date).toLocaleDateString('es-ES', {
+        const fecha = new Date(ensayo.service_date).toLocaleDateString('es-ES', {
           weekday: 'long',
           day: 'numeric',
           month: 'long'
         });
-        mensaje += `${index + 1}. **${ensayo.title}**\n📅 ${fecha}\n⏰ ${ensayo.time || 'Hora por confirmar'}\n📍 ${ensayo.location || 'Ubicación por confirmar'}\n\n`;
+        mensaje += `${index + 1}. **${ensayo.title}**\n📅 ${fecha}\n📍 ${ensayo.location || 'Ubicación por confirmar'}\n\n`;
       });
 
       mensaje += '¡No faltes! La alabanza requiere preparación. 🙏';
