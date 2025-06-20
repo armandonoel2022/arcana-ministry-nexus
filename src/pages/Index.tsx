@@ -50,8 +50,9 @@ const Index = () => {
       description: "Mantén contacto con el equipo a través de chats grupales y walkie-talkie",
       icon: MessageCircle,
       color: "bg-arcana-gold-gradient",
-      comingSoon: true,
-      features: ["Chat grupal", "Walkie-talkie", "Mensajes directos"]
+      comingSoon: false,
+      features: ["Chat grupal", "Walkie-talkie", "Mensajes directos"],
+      url: "/comunicacion"
     }
   ];
 
@@ -100,9 +101,9 @@ const Index = () => {
                 Explorar Repertorio
               </Button>
             </Link>
-            <Link to="/integrantes">
+            <Link to="/comunicacion">
               <Button variant="outline" className="border-arcana-gold-600 text-arcana-gold-600 hover:bg-arcana-gold-50 px-6 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105">
-                Ver Integrantes
+                Chat Grupal
               </Button>
             </Link>
           </CardContent>

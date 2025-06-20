@@ -88,9 +88,9 @@ const menuItems = [
     id: "comunicacion",
     title: "Comunicación",
     icon: MessageCircle,
-    url: "#",
-    comingSoon: true,
-    isMain: false
+    url: "/comunicacion",
+    comingSoon: false,
+    isMain: true
   },
   {
     id: "perfiles",
