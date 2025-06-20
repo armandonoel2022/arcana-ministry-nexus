@@ -13,7 +13,8 @@ import {
   Bell,
   Bot,
   Home,
-  UsersRound
+  UsersRound,
+  Shield
 } from "lucide-react";
 import {
   Sidebar,
@@ -91,6 +92,15 @@ const menuItems = [
     url: "/comunicacion",
     comingSoon: false,
     isMain: true
+  },
+  {
+    id: "admin",
+    title: "Panel de Administración",
+    icon: Shield,
+    url: "/admin",
+    comingSoon: false,
+    isMain: true,
+    adminOnly: true
   },
   {
     id: "perfiles",
