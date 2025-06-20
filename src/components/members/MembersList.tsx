@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Search, Edit, Trash2, Phone, Mail, MapPin } from 'lucide-react';
+import { Search, Edit, Trash2, Phone, Mail, MapPin, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import EditMemberForm from './EditMemberForm';
 import {
