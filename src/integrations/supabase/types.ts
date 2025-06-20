@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bible_verses: {
+        Row: {
+          book: string
+          chapter: number
+          created_at: string
+          id: string
+          text: string
+          updated_at: string
+          verse: number
+          version: string | null
+        }
+        Insert: {
+          book: string
+          chapter: number
+          created_at?: string
+          id?: string
+          text: string
+          updated_at?: string
+          verse: number
+          version?: string | null
+        }
+        Update: {
+          book?: string
+          chapter?: number
+          created_at?: string
+          id?: string
+          text?: string
+          updated_at?: string
+          verse?: number
+          version?: string | null
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           created_at: string | null
@@ -175,6 +208,44 @@ export type Database = {
             columns: ["moderator_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_verses: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date: string
+          id: string
+          reflection: string | null
+          updated_at: string
+          verse_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date: string
+          id?: string
+          reflection?: string | null
+          updated_at?: string
+          verse_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          reflection?: string | null
+          updated_at?: string
+          verse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_verses_verse_id_fkey"
+            columns: ["verse_id"]
+            isOneToOne: false
+            referencedRelation: "bible_verses"
             referencedColumns: ["id"]
           },
         ]

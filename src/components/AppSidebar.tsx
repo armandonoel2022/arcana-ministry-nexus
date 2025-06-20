@@ -107,8 +107,8 @@ const menuItems = [
     id: "espiritual",
     title: "Módulo Espiritual",
     icon: BookOpen,
-    url: "#",
-    comingSoon: true,
+    url: "/espiritual",
+    comingSoon: false,
     isMain: false
   },
   {
@@ -270,17 +270,31 @@ export function AppSidebar() {
                 return (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton asChild>
-                      <a href={item.url} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 transition-colors">
-                        <IconComponent className="w-4 h-4 text-arcana-blue-600 flex-shrink-0" />
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-700">{item.title}</span>
-                          {item.comingSoon && (
-                            <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0">
-                              Próximamente
-                            </Badge>
-                          )}
-                        </div>
-                      </a>
+                      {item.url.startsWith('#') ? (
+                        <a href={item.url} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 transition-colors">
+                          <IconComponent className="w-4 h-4 text-arcana-blue-600 flex-shrink-0" />
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-700">{item.title}</span>
+                            {item.comingSoon && (
+                              <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0">
+                                Próximamente
+                              </Badge>
+                            )}
+                          </div>
+                        </a>
+                      ) : (
+                        <Link to={item.url} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 transition-colors">
+                          <IconComponent className="w-4 h-4 text-arcana-blue-600 flex-shrink-0" />
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-700">{item.title}</span>
+                            {item.comingSoon && (
+                              <Badge variant="secondary" className="text-xs bg-arcana-gold-gradient text-white border-0">
+                                Próximamente
+                              </Badge>
+                            )}
+                          </div>
+                        </Link>
+                      )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
