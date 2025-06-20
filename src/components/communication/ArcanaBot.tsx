@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -338,6 +337,7 @@ export class ArcanaBot {
     try {
       console.log('ARCANA enviando respuesta:', response.message.substring(0, 50) + '...');
       
+      // Crear una conexión administrativa para enviar el mensaje del bot
       const { data, error } = await supabase
         .from('chat_messages')
         .insert({

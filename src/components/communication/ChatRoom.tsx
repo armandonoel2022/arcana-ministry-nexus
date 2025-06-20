@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -212,6 +211,13 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
 
   const getBotDisplayName = () => 'ARCANA Asistente';
 
+  const getUserDisplayName = (message: Message) => {
+    if (isBot(message)) {
+      return getBotDisplayName();
+    }
+    return message.profiles?.full_name || 'Usuario';
+  };
+
   if (loading) {
     return <div className="text-center py-8">Cargando mensajes...</div>;
   }
@@ -262,7 +268,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
                           {isBotMessage ? (
                             <Bot className="w-4 h-4 text-purple-600" />
                           ) : (
-                            getInitials(message.profiles?.full_name || 'U')
+                            getInitials(getUserDisplayName(message))
                           )}
                         </AvatarFallback>
                       </Avatar>
@@ -279,7 +285,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
                       >
                         {(!isOwnMessage || isBotMessage) && (
                           <p className="text-xs font-medium mb-1">
-                            {isBotMessage ? getBotDisplayName() : message.profiles?.full_name || 'Usuario'}
+                            {getUserDisplayName(message)}
                           </p>
                         )}
                         <div className="text-sm whitespace-pre-wrap">{message.message}</div>
