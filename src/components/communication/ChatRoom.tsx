@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -180,7 +179,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
           } catch (botError) {
             console.error('Error enviando respuesta del bot:', botError);
           }
-        }, 1500);
+        }, 2000); // Aumenté el delay a 2 segundos
       } else {
         console.log('ARCANA no generó respuesta para este mensaje');
       }
@@ -250,7 +249,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
                 <p className="text-sm text-gray-600">{room.description}</p>
               )}
               <p className="text-xs text-arcana-blue-600 mt-1">
-                💡 Menciona @ARCANA para consultas sobre turnos, ensayos y canciones
+                💡 Escribe "ARCANA" o "@ARCANA" seguido de tu consulta sobre turnos, ensayos y canciones
               </p>
             </div>
           </div>
@@ -328,7 +327,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Escribe tu mensaje... (usa @ARCANA para consultas)"
+                placeholder="Escribe tu mensaje... (prueba: ARCANA ayuda)"
                 className="flex-1"
               />
               <Button

@@ -10,21 +10,30 @@ export class ArcanaBot {
   private static readonly BOT_USER_ID = '00000000-0000-0000-0000-000000000001';
   
   static async processMessage(message: string, roomId: string, userId: string): Promise<BotResponse | null> {
-    // Verificar si el mensaje menciona a ARCANA
-    const mentionsBot = message.toLowerCase().includes('@arcana') || 
-                       message.toLowerCase().startsWith('arcana:');
+    // Verificar si el mensaje menciona a ARCANA (más flexible)
+    const mentionsBot = message.toLowerCase().includes('arcana') || 
+                       message.toLowerCase().includes('@arcana');
     
-    if (!mentionsBot) return null;
+    if (!mentionsBot) {
+      console.log('ARCANA: Mensaje no contiene mención');
+      return null;
+    }
 
-    // Limpiar el mensaje removiendo la mención y signos de puntuación
+    // Limpiar el mensaje removiendo menciones y signos de puntuación
     const cleanMessage = message
       .replace(/@arcana\s*:?/gi, '')
-      .replace(/^arcana\s*:?/gi, '')
+      .replace(/arcana\s*:?/gi, '')
       .replace(/^\s*:\s*/, '')
       .trim()
       .toLowerCase();
 
     console.log('ARCANA procesando mensaje limpio:', cleanMessage);
+
+    // Si el mensaje limpio está vacío, dar respuesta de ayuda
+    if (!cleanMessage) {
+      console.log('ARCANA: Mensaje vacío después de limpiar, mostrando ayuda');
+      return this.handleGeneralQuery('ayuda');
+    }
 
     // Analizar el tipo de consulta
     if (this.isTurnosQuery(cleanMessage)) {
@@ -256,7 +265,7 @@ export class ArcanaBot {
       if (!searchTerms) {
         return {
           type: 'canciones',
-          message: '🤖 Para buscar canciones, especifica el nombre o categoría. Ejemplo: "@ARCANA buscar alabanza" o "@ARCANA canción espíritu santo"'
+          message: '🤖 Para buscar canciones, especifica el nombre o categoría. Ejemplo: "ARCANA buscar alabanza" o "ARCANA canción espíritu santo"'
         };
       }
 
@@ -314,7 +323,7 @@ export class ArcanaBot {
       'valores': '🤖 Nuestros valores fundamentales son: **Fe, Adoración, Comunidad, Servicio y Excelencia**. Cada integrante del ministerio debe reflejar estos valores en su vida y servicio.',
       'horarios': '🤖 Los horarios regulares son: Ensayos los miércoles 7:00 PM, Servicio domingo 9:00 AM. Para horarios específicos, consulta la agenda ministerial.',
       'contacto': '🤖 Para contactar a los líderes del ministerio, puedes usar este sistema de comunicación o consultar en la sección de Integrantes.',
-      'ayuda': '🤖 Puedo ayudarte con:\n• Consultar turnos: "@ARCANA cuándo me toca cantar"\n• Ver ensayos: "@ARCANA próximos ensayos"\n• Buscar canciones: "@ARCANA buscar [nombre/género]"\n• Información general del ministerio'
+      'ayuda': '🤖 Puedo ayudarte con:\n• Consultar turnos: "ARCANA cuándo me toca cantar"\n• Ver ensayos: "ARCANA próximos ensayos"\n• Buscar canciones: "ARCANA buscar [nombre/género]"\n• Información general del ministerio\n\n💡 Puedes escribir "ARCANA" o "@ARCANA" seguido de tu consulta.'
     };
 
     // Buscar coincidencias en las consultas
@@ -329,7 +338,7 @@ export class ArcanaBot {
     console.log('ARCANA usando respuesta por defecto');
     return {
       type: 'general',
-      message: '🤖 Hola! Soy ARCANA, el asistente del Ministerio ADN. Puedo ayudarte con consultas sobre turnos, ensayos y canciones. Escribe "@ARCANA ayuda" para ver todas mis funciones.'
+      message: '🤖 Hola! Soy ARCANA, el asistente del Ministerio ADN. Puedo ayudarte con consultas sobre turnos, ensayos y canciones. Escribe "ARCANA ayuda" para ver todas mis funciones.'
     };
   }
 
@@ -337,15 +346,17 @@ export class ArcanaBot {
     try {
       console.log('ARCANA enviando respuesta:', response.message.substring(0, 50) + '...');
       
-      // Enviar mensaje del bot sin user_id (ya que es nullable ahora)
-      const { data, error } = await supabase
+      // Usar una inserción directa más simple
+      const { error } = await supabase
         .from('chat_messages')
-        .insert({
+        .insert([{
           room_id: roomId,
-          user_id: null, // Bot no necesita user_id
+          user_id: null,
           message: response.message,
-          is_bot: true
-        });
+          is_bot: true,
+          message_type: 'text',
+          is_deleted: false
+        }]);
 
       if (error) {
         console.error('Error enviando respuesta del bot:', error);
