@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,6 +7,18 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Search, Music, ExternalLink, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import EditSongModal from './EditSongModal';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Song {
   id: string;
@@ -26,6 +37,7 @@ interface Song {
 const SongList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [genreFilter, setGenreFilter] = useState('');
+  const [editingSong, setEditingSong] = useState<Song | null>(null);
   const { toast } = useToast();
 
   const { data: songs, isLoading, error, refetch } = useQuery({
@@ -41,6 +53,31 @@ const SongList = () => {
       return data as Song[];
     }
   });
+
+  const deleteSong = async (songId: string, songTitle: string) => {
+    try {
+      const { error } = await supabase
+        .from('songs')
+        .update({ is_active: false })
+        .eq('id', songId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Canción eliminada",
+        description: `"${songTitle}" ha sido eliminada del repertorio.`,
+      });
+      
+      refetch();
+    } catch (error) {
+      console.error('Error deleting song:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar la canción. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const filteredSongs = songs?.filter(song => {
     const matchesSearch = song.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -137,8 +174,44 @@ const SongList = () => {
                     <p className="text-sm text-gray-600 truncate">{song.artist}</p>
                   )}
                 </div>
-                <div className="flex items-center gap-2 ml-2">
-                  <Music className="w-4 h-4 text-arcana-blue-600 flex-shrink-0" />
+                <div className="flex items-center gap-1 ml-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditingSong(song)}
+                    className="h-8 w-8 p-0"
+                  >
+                    <Edit className="w-4 h-4 text-blue-600" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>¿Eliminar canción?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          ¿Estás seguro de que quieres eliminar "{song.title}" del repertorio? 
+                          Esta acción no se puede deshacer.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteSong(song.id, song.title)}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Eliminar
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             </CardHeader>
@@ -238,6 +311,14 @@ const SongList = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Edit Song Modal */}
+      <EditSongModal
+        song={editingSong}
+        isOpen={!!editingSong}
+        onClose={() => setEditingSong(null)}
+        onSave={refetch}
+      />
     </div>
   );
 };
