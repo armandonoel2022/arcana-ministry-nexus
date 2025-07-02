@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Music, User, Clock, Star, ExternalLink, Play, Eye, Plus } from 'lucide-react';
 import SongLyrics from './SongLyrics';
 import SongSelectionDialog from './SongSelectionDialog';
+import SongSelectionIndicator from './SongSelectionIndicator';
 
 interface Song {
   id: string;
@@ -63,9 +64,12 @@ const SongCard: React.FC<SongCardProps> = ({ song }) => {
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <CardTitle className="text-lg font-semibold line-clamp-2 mb-1">
-              {song.title}
-            </CardTitle>
+            <div className="flex items-start gap-2 mb-1">
+              <CardTitle className="text-lg font-semibold line-clamp-2 flex-1">
+                {song.title}
+              </CardTitle>
+              <SongSelectionIndicator songId={song.id} compact={true} />
+            </div>
             {song.artist && (
               <div className="flex items-center text-sm text-gray-600 mb-2">
                 <User className="w-3 h-3 mr-1" />
@@ -100,6 +104,9 @@ const SongCard: React.FC<SongCardProps> = ({ song }) => {
 
       <CardContent className="pt-0">
         <div className="space-y-3">
+          {/* Selection Indicator */}
+          <SongSelectionIndicator songId={song.id} compact={false} />
+
           {/* Genre and Key */}
           <div className="flex items-center gap-2 flex-wrap">
             {song.genre && (

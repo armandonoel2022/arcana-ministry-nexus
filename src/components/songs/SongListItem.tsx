@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { User, Clock, Star, ExternalLink, Play, Eye, Plus } from 'lucide-react';
 import SongLyrics from './SongLyrics';
 import SongSelectionDialog from './SongSelectionDialog';
+import SongSelectionIndicator from './SongSelectionIndicator';
 
 interface Song {
   id: string;
@@ -63,7 +64,10 @@ const SongListItem: React.FC<SongListItemProps> = ({ song }) => {
         <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Title and Artist */}
           <div className="md:col-span-2">
-            <h3 className="font-semibold text-lg mb-1">{song.title}</h3>
+            <div className="flex items-start gap-2 mb-1">
+              <h3 className="font-semibold text-lg flex-1">{song.title}</h3>
+              <SongSelectionIndicator songId={song.id} compact={true} />
+            </div>
             {song.artist && (
               <div className="flex items-center text-sm text-gray-600">
                 <User className="w-3 h-3 mr-1" />

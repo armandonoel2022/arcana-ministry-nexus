@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ServiceActionsMenu from './ServiceActionsMenu';
 import DirectorChangeRequest from './DirectorChangeRequest';
+import SelectedSongsDisplay from './SelectedSongsDisplay';
 
 interface Service {
   id: string;
@@ -54,6 +55,7 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
     return 'current_weekend';
   });
   const [selectedServiceForReplacement, setSelectedServiceForReplacement] = useState<Service | null>(null);
+  const [selectedServiceForSongs, setSelectedServiceForSongs] = useState<Service | null>(null);
   const [currentUserName, setCurrentUserName] = useState<string>('');
 
   useEffect(() => {
@@ -414,33 +416,55 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {service.service_songs && service.service_songs.length > 0 ? (
-                          <div className="space-y-1">
-                            {service.service_songs
-                              .sort((a, b) => a.song_order - b.song_order)
-                              .slice(0, 3)
-                              .map((serviceSong, index) => (
-                                <div key={index} className="flex items-center gap-1 text-sm">
-                                  <Music className="w-3 h-3 text-gray-400" />
-                                  <span className="truncate max-w-32">
-                                    {serviceSong.songs.title}
-                                    {serviceSong.songs.artist && (
-                                      <span className="text-gray-500 text-xs ml-1">
-                                        - {serviceSong.songs.artist}
-                                      </span>
-                                    )}
-                                  </span>
+                        <div className="space-y-2">
+                          {/* Service Songs (from service_songs table) */}
+                          {service.service_songs && service.service_songs.length > 0 ? (
+                            <div className="space-y-1">
+                              <div className="text-xs text-gray-500 font-medium">Repertorio:</div>
+                              {service.service_songs
+                                .sort((a, b) => a.song_order - b.song_order)
+                                .slice(0, 2)
+                                .map((serviceSong, index) => (
+                                  <div key={index} className="flex items-center gap-1 text-sm">
+                                    <Music className="w-3 h-3 text-gray-400" />
+                                    <span className="truncate max-w-32">
+                                      {serviceSong.songs.title}
+                                      {serviceSong.songs.artist && (
+                                        <span className="text-gray-500 text-xs ml-1">
+                                          - {serviceSong.songs.artist}
+                                        </span>
+                                      )}
+                                    </span>
+                                  </div>
+                                ))}
+                              {service.service_songs.length > 2 && (
+                                <div className="text-xs text-gray-500">
+                                  +{service.service_songs.length - 2} más...
                                 </div>
-                              ))}
-                            {service.service_songs.length > 3 && (
-                              <div className="text-xs text-gray-500 mt-1">
-                                +{service.service_songs.length - 3} más...
-                              </div>
-                            )}
+                              )}
+                            </div>
+                          ) : null}
+                          
+                          {/* Selected Songs (from song_selections table) */}
+                          <div>
+                            <div className="text-xs text-blue-600 font-medium mb-1">Seleccionadas:</div>
+                            <SelectedSongsDisplay 
+                              serviceId={service.id} 
+                              serviceTitle={service.title}
+                              compact={true} 
+                            />
                           </div>
-                        ) : (
-                          <span className="text-gray-400 text-sm">Sin canciones</span>
-                        )}
+                          
+                          {/* View all selected songs button */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedServiceForSongs(service)}
+                            className="text-xs h-6 px-2"
+                          >
+                            Ver todas las seleccionadas
+                          </Button>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant={service.is_confirmed ? "default" : "secondary"}>
@@ -512,6 +536,25 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                 setSelectedServiceForReplacement(null);
                 fetchServices();
               }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Selected Songs Dialog */}
+      <Dialog open={!!selectedServiceForSongs} onOpenChange={() => setSelectedServiceForSongs(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Music className="w-5 h-5" />
+              Canciones Seleccionadas
+            </DialogTitle>
+          </DialogHeader>
+          {selectedServiceForSongs && (
+            <SelectedSongsDisplay 
+              serviceId={selectedServiceForSongs.id} 
+              serviceTitle={selectedServiceForSongs.title}
+              compact={false} 
             />
           )}
         </DialogContent>

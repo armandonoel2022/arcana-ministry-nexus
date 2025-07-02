@@ -867,7 +867,7 @@ export type Database = {
           scheduled_for: string | null
           sender_id: string | null
           title: string
-          type: string
+          type: Database["public"]["Enums"]["notification_type"]
           updated_at: string
         }
         Insert: {
@@ -882,7 +882,7 @@ export type Database = {
           scheduled_for?: string | null
           sender_id?: string | null
           title: string
-          type: string
+          type: Database["public"]["Enums"]["notification_type"]
           updated_at?: string
         }
         Update: {
@@ -897,7 +897,7 @@ export type Database = {
           scheduled_for?: string | null
           sender_id?: string | null
           title?: string
-          type?: string
+          type?: Database["public"]["Enums"]["notification_type"]
           updated_at?: string
         }
         Relationships: [
@@ -1060,7 +1060,46 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      service_selected_songs: {
+        Row: {
+          artist: string | null
+          difficulty_level: number | null
+          key_signature: string | null
+          selected_at: string | null
+          selected_by: string | null
+          selected_by_name: string | null
+          selection_reason: string | null
+          service_date: string | null
+          service_id: string | null
+          service_leader: string | null
+          service_title: string | null
+          song_id: string | null
+          song_title: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "song_selections_selected_by_fkey"
+            columns: ["selected_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "song_selections_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "song_selections_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       expire_pending_replacements: {
@@ -1132,6 +1171,14 @@ export type Database = {
         | "encargado_proyeccion"
         | "encargado_streaming"
         | "director_musical"
+      notification_type:
+        | "general"
+        | "agenda"
+        | "repertory"
+        | "director_replacement"
+        | "song_selection"
+        | "daily_verse"
+        | "system"
       song_knowledge: "unknown" | "learning" | "known" | "expert"
       user_role:
         | "admin"
@@ -1295,6 +1342,15 @@ export const Constants = {
         "encargado_proyeccion",
         "encargado_streaming",
         "director_musical",
+      ],
+      notification_type: [
+        "general",
+        "agenda",
+        "repertory",
+        "director_replacement",
+        "song_selection",
+        "daily_verse",
+        "system",
       ],
       song_knowledge: ["unknown", "learning", "known", "expert"],
       user_role: [
