@@ -1,13 +1,13 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
-import { Music } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Search, Music, ExternalLink, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import EditSongModal from './EditSongModal';
-import SongCard from './SongCard';
-import SongFilters from './SongFilters';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,74 +32,13 @@ interface Song {
   youtube_link: string;
   spotify_link: string;
   created_at: string;
-  mood?: string;
-  theme?: string;
-  last_used_date?: string;
-  usage_count?: number;
-}
-
-interface FilterState {
-  search: string;
-  genre: string;
-  difficulty: string;
-  mood: string;
-  theme: string;
-  recentlyUsed: boolean;
 }
 
 const SongList = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [genreFilter, setGenreFilter] = useState('');
   const [editingSong, setEditingSong] = useState<Song | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
-  const [filters, setFilters] = useState<FilterState>({
-    search: '',
-    genre: '',
-    difficulty: '',
-    mood: '',
-    theme: '',
-    recentlyUsed: false
-  });
   const { toast } = useToast();
-
-  // Load user's view preference on component mount
-  useEffect(() => {
-    const loadViewPreference = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('repertory_view_preference')
-            .eq('id', user.id)
-            .single();
-          
-          if (profile?.repertory_view_preference) {
-            setViewMode(profile.repertory_view_preference as 'list' | 'grid');
-          }
-        }
-      } catch (error) {
-        console.log('Error loading view preference:', error);
-      }
-    };
-
-    loadViewPreference();
-  }, []);
-
-  // Save view preference when it changes
-  const handleViewModeChange = async (mode: 'list' | 'grid') => {
-    setViewMode(mode);
-    
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
-          .from('profiles')
-          .update({ repertory_view_preference: mode })
-          .eq('id', user.id);
-      }
-    } catch (error) {
-      console.log('Error saving view preference:', error);
-    }
-  };
 
   const { data: songs, isLoading, error, refetch } = useQuery({
     queryKey: ['songs'],
@@ -140,47 +79,30 @@ const SongList = () => {
     }
   };
 
-  // Filter songs based on current filters
   const filteredSongs = songs?.filter(song => {
-    // Search filter
-    if (filters.search) {
-      const searchTerm = filters.search.toLowerCase();
-      const matchesSearch = 
-        song.title.toLowerCase().includes(searchTerm) ||
-        song.artist?.toLowerCase().includes(searchTerm) ||
-        song.tags?.some(tag => tag.toLowerCase().includes(searchTerm));
-      
-      if (!matchesSearch) return false;
-    }
-
-    // Genre filter
-    if (filters.genre && song.genre !== filters.genre) return false;
-
-    // Difficulty filter
-    if (filters.difficulty && song.difficulty_level.toString() !== filters.difficulty) return false;
-
-    // Mood filter
-    if (filters.mood && song.mood !== filters.mood) return false;
-
-    // Theme filter
-    if (filters.theme && song.theme !== filters.theme) return false;
-
-    // Recently used filter (songs used in the last 30 days)
-    if (filters.recentlyUsed) {
-      if (!song.last_used_date) return false;
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const lastUsed = new Date(song.last_used_date);
-      if (lastUsed < thirtyDaysAgo) return false;
-    }
-
-    return true;
+    const matchesSearch = song.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         song.artist?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesGenre = !genreFilter || song.genre === genreFilter;
+    return matchesSearch && matchesGenre;
   });
 
-  // Get unique values for filter options
   const uniqueGenres = [...new Set(songs?.map(song => song.genre).filter(Boolean))];
-  const uniqueMoods = [...new Set(songs?.map(song => song.mood).filter(Boolean))];
-  const uniqueThemes = [...new Set(songs?.map(song => song.theme).filter(Boolean))];
+
+  const getDifficultyColor = (level: number) => {
+    switch (level) {
+      case 1: return 'bg-green-100 text-green-800';
+      case 2: return 'bg-yellow-100 text-yellow-800';
+      case 3: return 'bg-orange-100 text-orange-800';
+      case 4: return 'bg-red-100 text-red-800';
+      case 5: return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getDifficultyText = (level: number) => {
+    const levels = ['', 'Muy Fácil', 'Fácil', 'Intermedio', 'Difícil', 'Muy Difícil'];
+    return levels[level] || 'Sin definir';
+  };
 
   if (isLoading) {
     return (
@@ -202,6 +124,7 @@ const SongList = () => {
       <Card>
         <CardContent className="p-6 text-center">
           <p className="text-red-600">Error al cargar las canciones: {error.message}</p>
+          <Button onClick={() => refetch()} className="mt-2">Reintentar</Button>
         </CardContent>
       </Card>
     );
@@ -209,89 +132,168 @@ const SongList = () => {
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      <SongFilters
-        filters={filters}
-        onFiltersChange={setFilters}
-        viewMode={viewMode}
-        onViewModeChange={handleViewModeChange}
-        uniqueGenres={uniqueGenres}
-        uniqueMoods={uniqueMoods}
-        uniqueThemes={uniqueThemes}
-        totalSongs={songs?.length || 0}
-        filteredCount={filteredSongs?.length || 0}
-      />
+      {/* Search and Filter Controls */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
+            placeholder="Buscar por título o artista..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <select
+          value={genreFilter}
+          onChange={(e) => setGenreFilter(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-arcana-blue-500"
+        >
+          <option value="">Todos los géneros</option>
+          {uniqueGenres.map(genre => (
+            <option key={genre} value={genre}>{genre}</option>
+          ))}
+        </select>
+      </div>
 
-      {/* Songs Display */}
-      {viewMode === 'list' ? (
-        <div className="space-y-2">
-          {filteredSongs?.map((song) => (
-            <AlertDialog key={song.id}>
-              <SongCard
-                song={song}
-                onEdit={setEditingSong}
-                onDelete={(songId, songTitle) => {}}
-                viewMode="list"
-              />
-              <AlertDialogTrigger asChild>
-                <span style={{ display: 'none' }} id={`delete-trigger-${song.id}`} />
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>¿Eliminar canción?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    ¿Estás seguro de que quieres eliminar "{song.title}" del repertorio? 
-                    Esta acción no se puede deshacer.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => deleteSong(song.id, song.title)}
-                    className="bg-red-600 hover:bg-red-700"
+      {/* Results Count */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-600">
+          {filteredSongs?.length || 0} canción(es) encontrada(s)
+        </p>
+      </div>
+
+      {/* Songs Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredSongs?.map((song) => (
+          <Card key={song.id} className="hover:shadow-lg transition-shadow duration-200">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <CardTitle className="text-lg truncate">{song.title}</CardTitle>
+                  {song.artist && (
+                    <p className="text-sm text-gray-600 truncate">{song.artist}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-1 ml-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditingSong(song)}
+                    className="h-8 w-8 p-0"
                   >
-                    Eliminar
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSongs?.map((song) => (
-            <AlertDialog key={song.id}>
-              <SongCard
-                song={song}
-                onEdit={setEditingSong}
-                onDelete={(songId, songTitle) => {}}
-                viewMode="grid"
-              />
-              <AlertDialogTrigger asChild>
-                <span style={{ display: 'none' }} id={`delete-trigger-${song.id}`} />
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>¿Eliminar canción?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    ¿Estás seguro de que quieres eliminar "{song.title}" del repertorio? 
-                    Esta acción no se puede deshacer.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => deleteSong(song.id, song.title)}
-                    className="bg-red-600 hover:bg-red-700"
+                    <Edit className="w-4 h-4 text-blue-600" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>¿Eliminar canción?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          ¿Estás seguro de que quieres eliminar "{song.title}" del repertorio? 
+                          Esta acción no se puede deshacer.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteSong(song.id, song.title)}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Eliminar
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {/* Genre and Difficulty */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {song.genre && (
+                  <Badge variant="outline" className="text-xs">
+                    {song.genre}
+                  </Badge>
+                )}
+                <Badge className={`text-xs ${getDifficultyColor(song.difficulty_level)}`}>
+                  {getDifficultyText(song.difficulty_level)}
+                </Badge>
+              </div>
+
+              {/* Musical Info */}
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                {song.key_signature && (
+                  <div>
+                    <span className="font-medium">Tono:</span> {song.key_signature}
+                  </div>
+                )}
+                {song.tempo && (
+                  <div>
+                    <span className="font-medium">Tempo:</span> {song.tempo}
+                  </div>
+                )}
+              </div>
+
+              {/* Tags */}
+              {song.tags && song.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {song.tags.slice(0, 3).map((tag, index) => (
+                    <span
+                      key={index}
+                      className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                  {song.tags.length > 3 && (
+                    <span className="text-xs text-gray-500">
+                      +{song.tags.length - 3} más
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* External Links */}
+              <div className="flex items-center gap-2 pt-2">
+                {song.youtube_link && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="flex-1"
                   >
-                    Eliminar
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          ))}
-        </div>
-      )}
+                    <a href={song.youtube_link} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      YouTube
+                    </a>
+                  </Button>
+                )}
+                {song.spotify_link && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="flex-1"
+                  >
+                    <a href={song.spotify_link} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      Spotify
+                    </a>
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
       {/* Empty State */}
       {filteredSongs?.length === 0 && (
@@ -302,7 +304,7 @@ const SongList = () => {
               No se encontraron canciones
             </h3>
             <p className="text-gray-600">
-              {Object.values(filters).some(value => typeof value === 'string' ? value !== '' : value === true)
+              {searchTerm || genreFilter
                 ? 'Intenta ajustar los filtros de búsqueda'
                 : 'Aún no hay canciones en el repertorio'}
             </p>
