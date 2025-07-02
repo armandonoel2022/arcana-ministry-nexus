@@ -69,14 +69,14 @@ const mapGrupoToEnum = (grupo: string): string | null => {
   const grupoMap: { [key: string]: string } = {
     'Directiva': 'directiva',
     'Músicos': 'musicos',
-    'Grupo de Aleida': 'coristas',
-    'Grupo de Keyla': 'coristas',
-    'Grupo de Massy': 'coristas',
-    'ADN Juvenil': 'coristas',
-    'Suplente': 'coristas',
-    'Ministerio de Danza Adonai': 'danza',
-    'Departamento de Sonido': 'multimedia',
-    'Departamento de Multimedia': 'multimedia'
+    'Grupo de Aleida': 'Grupo de Aleida',
+    'Grupo de Keyla': 'Grupo de Keyla',
+    'Grupo de Massy': 'Grupo de Massy',
+    'ADN Juvenil': 'ADN Juvenil',
+    'Suplente': 'Suplente',
+    'Ministerio de Danza Adonai': 'Danza',
+    'Departamento de Sonido': 'Sonido',
+    'Departamento de Multimedia': 'Multimedia'
   };
   
   return grupoMap[grupo] || null;
