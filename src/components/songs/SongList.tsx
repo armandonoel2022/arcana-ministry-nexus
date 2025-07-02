@@ -229,8 +229,8 @@ const SongList = () => {
             <AlertDialog key={song.id}>
               <SongCard
                 song={song}
-                onEdit={setEditingSong}
-                onDelete={(songId, songTitle) => {}}
+                onEdit={(song) => setEditingSong(song)}
+                onDelete={(songId, songTitle) => deleteSong(songId, songTitle)}
                 viewMode="list"
               />
               <AlertDialogTrigger asChild>
@@ -263,8 +263,8 @@ const SongList = () => {
             <AlertDialog key={song.id}>
               <SongCard
                 song={song}
-                onEdit={setEditingSong}
-                onDelete={(songId, songTitle) => {}}
+                onEdit={(song) => setEditingSong(song)}
+                onDelete={(songId, songTitle) => deleteSong(songId, songTitle)}
                 viewMode="grid"
               />
               <AlertDialogTrigger asChild>
