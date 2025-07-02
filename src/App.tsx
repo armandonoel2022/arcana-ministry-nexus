@@ -59,7 +59,7 @@ function App() {
             </div>
           </SidebarProvider>
         </BrowserRouter>
-      </QueryClientProvider>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
