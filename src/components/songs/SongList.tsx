@@ -167,11 +167,13 @@ const SongList = () => {
             </div>
           )}
 
-          <SongPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
+          {totalPages > 1 && (
+            <SongPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          )}
         </>
       ) : (
         <SongEmptyState searchTerm={searchTerm} genreFilter={genreFilter} />
