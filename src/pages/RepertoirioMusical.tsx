@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Music, Plus, Search, Upload } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
-import SongList from '@/components/songs/SongList';
 import AddSongForm from '@/components/songs/AddSongForm';
 import CSVUpload from '@/components/songs/CSVUpload';
 import NotificationTestButton from '@/components/NotificationTestButton';
@@ -85,7 +84,15 @@ const RepertoirioMusical = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <SongList />
+              <div className="text-center py-12">
+                <Music className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Catálogo en construcción
+                </h3>
+                <p className="text-gray-600">
+                  El catálogo de canciones será implementado próximamente
+                </p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
