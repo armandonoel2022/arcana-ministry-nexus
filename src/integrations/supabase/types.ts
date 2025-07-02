@@ -716,6 +716,61 @@ export type Database = {
           },
         ]
       }
+      song_selections: {
+        Row: {
+          created_at: string
+          id: string
+          notification_sent: boolean | null
+          selected_by: string
+          selection_reason: string | null
+          service_id: string
+          song_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notification_sent?: boolean | null
+          selected_by: string
+          selection_reason?: string | null
+          service_id: string
+          song_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notification_sent?: boolean | null
+          selected_by?: string
+          selection_reason?: string | null
+          service_id?: string
+          song_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "song_selections_selected_by_fkey"
+            columns: ["selected_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "song_selections_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "song_selections_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       songs: {
         Row: {
           artist: string | null
@@ -806,7 +861,10 @@ export type Database = {
           is_read: boolean | null
           message: string
           metadata: Json | null
+          notification_category: string | null
+          priority: number | null
           recipient_id: string | null
+          scheduled_for: string | null
           sender_id: string | null
           title: string
           type: string
@@ -818,7 +876,10 @@ export type Database = {
           is_read?: boolean | null
           message: string
           metadata?: Json | null
+          notification_category?: string | null
+          priority?: number | null
           recipient_id?: string | null
+          scheduled_for?: string | null
           sender_id?: string | null
           title: string
           type: string
@@ -830,7 +891,10 @@ export type Database = {
           is_read?: boolean | null
           message?: string
           metadata?: Json | null
+          notification_category?: string | null
+          priority?: number | null
           recipient_id?: string | null
+          scheduled_for?: string | null
           sender_id?: string | null
           title?: string
           type?: string

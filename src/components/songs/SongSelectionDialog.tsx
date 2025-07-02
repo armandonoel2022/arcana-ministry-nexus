@@ -52,7 +52,20 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
     if (servicesLoaded) return;
     
     try {
-      const { data, error } = await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Debes estar autenticado para seleccionar canciones');
+        return;
+      }
+
+      // Get user's profile to check their role and assigned groups
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, full_name')
+        .eq('id', user.id)
+        .single();
+
+      let query = supabase
         .from('services')
         .select(`
           id,
@@ -70,6 +83,13 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
         .order('service_date', { ascending: true })
         .limit(10);
 
+      // If user is not an administrator, filter services where they are the leader
+      if (profile?.role !== 'administrator') {
+        query = query.eq('leader', profile?.full_name);
+      }
+
+      const { data, error } = await query;
+
       if (error) throw error;
       
       // Transform the data to match our Service interface
@@ -82,6 +102,10 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
       
       setServices(transformedServices);
       setServicesLoaded(true);
+
+      if (transformedServices.length === 0) {
+        toast.info('No tienes servicios próximos asignados');
+      }
     } catch (error) {
       console.error('Error loading services:', error);
       toast.error('Error al cargar los servicios');
@@ -89,8 +113,8 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
   };
 
   const handleSelectSong = async () => {
-    if (!selectedService || !reason.trim()) {
-      toast.error('Por favor selecciona un servicio y proporciona una razón');
+    if (!selectedService) {
+      toast.error('Por favor selecciona un servicio');
       return;
     }
 
@@ -106,12 +130,12 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
           service_id: selectedService,
           song_id: song.id,
           selected_by: user.id,
-          selection_reason: reason
+          selection_reason: reason || 'Seleccionada para el servicio'
         });
 
       if (selectionError) throw selectionError;
 
-      // Get service details for notification
+      // Get service details for notification  
       const selectedServiceData = services.find(s => s.id === selectedService);
       
       // Create notification for the service leader and group members
@@ -130,7 +154,7 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
               service_id: selectedService,
               service_title: selectedServiceData.title,
               service_date: selectedServiceData.service_date,
-              reason: reason,
+              reason: reason || 'Seleccionada para el servicio',
               selected_by_name: user.user_metadata?.full_name || user.email
             }
           });
@@ -231,62 +255,69 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
               <label className="text-sm font-medium mb-2 block">
                 Seleccionar Servicio
               </label>
-              <Select value={selectedService} onValueChange={setSelectedService}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Elige un servicio próximo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {services.map((service) => (
-                    <SelectItem key={service.id} value={service.id}>
-                      <div className="space-y-1">
-                        <div className="font-medium">{service.title}</div>
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {format(new Date(service.service_date), 'dd/MM/yyyy HH:mm', { locale: es })}
+              {services.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Calendar className="w-8 h-8 mx-auto mb-2" />
+                  <p>No tienes servicios próximos asignados</p>
+                </div>
+              ) : (
+                <Select value={selectedService} onValueChange={setSelectedService}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Elige un servicio próximo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {services.map((service) => (
+                      <SelectItem key={service.id} value={service.id}>
+                        <div className="space-y-1">
+                          <div className="font-medium">{service.title}</div>
+                          <div className="flex items-center gap-4 text-xs text-gray-500">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {format(new Date(service.service_date), 'dd/MM/yyyy HH:mm', { locale: es })}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <User className="w-3 h-3" />
+                              {service.leader}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {service.location}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <User className="w-3 h-3" />
-                            {service.leader}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            {service.location}
-                          </div>
+                          {service.worship_groups && (
+                            <Badge 
+                              className="text-xs"
+                              style={{ 
+                                backgroundColor: service.worship_groups.color_theme + '20',
+                                color: service.worship_groups.color_theme,
+                                border: `1px solid ${service.worship_groups.color_theme}40`
+                              }}
+                            >
+                              {service.worship_groups.name}
+                            </Badge>
+                          )}
+                          {service.special_activity && (
+                            <div className="text-xs text-purple-600">
+                              <Star className="w-3 h-3 inline mr-1" />
+                              {service.special_activity}
+                            </div>
+                          )}
                         </div>
-                        {service.worship_groups && (
-                          <Badge 
-                            className="text-xs"
-                            style={{ 
-                              backgroundColor: service.worship_groups.color_theme + '20',
-                              color: service.worship_groups.color_theme,
-                              border: `1px solid ${service.worship_groups.color_theme}40`
-                            }}
-                          >
-                            {service.worship_groups.name}
-                          </Badge>
-                        )}
-                        {service.special_activity && (
-                          <div className="text-xs text-purple-600">
-                            <Star className="w-3 h-3 inline mr-1" />
-                            {service.special_activity}
-                          </div>
-                        )}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
 
             <div>
               <label className="text-sm font-medium mb-2 block">
-                Razón para la selección
+                Notas adicionales (opcional)
               </label>
               <Textarea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder="Explica por qué esta canción es adecuada para este servicio..."
+                placeholder="Añade notas sobre por qué esta canción es adecuada para este servicio..."
                 rows={3}
               />
             </div>
@@ -295,7 +326,7 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
           <div className="flex gap-2 pt-4">
             <Button 
               onClick={handleSelectSong} 
-              disabled={isLoading || !selectedService || !reason.trim()}
+              disabled={isLoading || !selectedService || services.length === 0}
               className="flex-1"
             >
               {isLoading ? 'Seleccionando...' : 'Seleccionar Canción'}
