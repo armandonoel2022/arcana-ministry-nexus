@@ -3,7 +3,9 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Music, User, Clock, Star, ExternalLink, Play } from 'lucide-react';
+import { Music, User, Clock, Star, ExternalLink, Play, Eye, Plus } from 'lucide-react';
+import SongLyrics from './SongLyrics';
+import SongSelectionDialog from './SongSelectionDialog';
 
 interface Song {
   id: string;
@@ -144,15 +146,31 @@ const SongCard: React.FC<SongCardProps> = ({ song }) => {
             </div>
           )}
 
-          {/* Usage stats */}
-          <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t">
-            <div className="flex items-center">
+          {/* Actions */}
+          <div className="flex items-center justify-between pt-2 border-t">
+            <div className="flex items-center text-xs text-gray-500">
               <Star className="w-3 h-3 mr-1" />
               Usada {song.usage_count || 0} veces
             </div>
-            <div>
-              Agregada {formatDate(song.created_at)}
+            <div className="flex items-center gap-2">
+              <SongLyrics songId={song.id}>
+                <Button variant="ghost" size="sm" className="h-8 px-2">
+                  <Eye className="w-3 h-3 mr-1" />
+                  Ver
+                </Button>
+              </SongLyrics>
+              <SongSelectionDialog song={song}>
+                <Button variant="ghost" size="sm" className="h-8 px-2">
+                  <Plus className="w-3 h-3 mr-1" />
+                  Seleccionar
+                </Button>
+              </SongSelectionDialog>
             </div>
+          </div>
+
+          {/* Created date */}
+          <div className="text-xs text-gray-500 text-center">
+            Agregada {formatDate(song.created_at)}
           </div>
         </div>
       </CardContent>

@@ -2,7 +2,9 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, Clock, Star, ExternalLink, Play } from 'lucide-react';
+import { User, Clock, Star, ExternalLink, Play, Eye, Plus } from 'lucide-react';
+import SongLyrics from './SongLyrics';
+import SongSelectionDialog from './SongSelectionDialog';
 
 interface Song {
   id: string;
@@ -141,6 +143,18 @@ const SongListItem: React.FC<SongListItemProps> = ({ song }) => {
               <ExternalLink className="w-4 h-4 text-green-600" />
             </Button>
           )}
+          <SongLyrics songId={song.id}>
+            <Button variant="ghost" size="sm" className="h-8 px-2">
+              <Eye className="w-3 h-3 mr-1" />
+              Ver
+            </Button>
+          </SongLyrics>
+          <SongSelectionDialog song={song}>
+            <Button variant="ghost" size="sm" className="h-8 px-2">
+              <Plus className="w-3 h-3 mr-1" />
+              Seleccionar
+            </Button>
+          </SongSelectionDialog>
         </div>
       </div>
     </div>
