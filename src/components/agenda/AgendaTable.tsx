@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Edit, Trash2, CheckCircle, XCircle, Music, Calendar, User } from "lucide-react";
-import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
+import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, addWeeks, getDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -90,15 +90,57 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
     }
   };
 
+  const getCurrentWeekend = () => {
+    const now = new Date();
+    const currentDay = getDay(now); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    
+    let weekStart, weekEnd;
+    
+    // Si estamos entre lunes (1) y jueves (4), mostrar el próximo fin de semana
+    if (currentDay >= 1 && currentDay <= 4) {
+      // Obtener el próximo viernes
+      const daysUntilFriday = 5 - currentDay; // 5 = Friday
+      weekStart = new Date(now);
+      weekStart.setDate(now.getDate() + daysUntilFriday);
+      weekStart.setHours(0, 0, 0, 0);
+      
+      // El domingo será 2 días después del viernes
+      weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 2);
+      weekEnd.setHours(23, 59, 59, 999);
+    } else {
+      // Si estamos en viernes (5), sábado (6) o domingo (0), mostrar el fin de semana actual
+      if (currentDay === 0) {
+        // Si es domingo, el fin de semana empezó el viernes anterior
+        weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - 2);
+        weekStart.setHours(0, 0, 0, 0);
+        weekEnd = new Date(now);
+        weekEnd.setHours(23, 59, 59, 999);
+      } else {
+        // Si es viernes o sábado
+        const daysFromFriday = currentDay - 5; // 0 para viernes, 1 para sábado
+        weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - daysFromFriday);
+        weekStart.setHours(0, 0, 0, 0);
+        
+        weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 2);
+        weekEnd.setHours(23, 59, 59, 999);
+      }
+    }
+    
+    return { start: weekStart, end: weekEnd };
+  };
+
   const applyFilter = () => {
     const now = new Date();
     let filtered = [...services];
 
     switch (filter) {
       case 'current_weekend':
-        // Show services from Friday to Sunday of current week
-        const weekStart = startOfWeek(now, { weekStartsOn: 5 }); // Friday
-        const weekEnd = endOfWeek(now, { weekStartsOn: 5 }); // Sunday
+        const { start: weekStart, end: weekEnd } = getCurrentWeekend();
+        console.log('Filtering weekend from:', weekStart, 'to:', weekEnd);
         filtered = services.filter(service => 
           isWithinInterval(new Date(service.service_date), { start: weekStart, end: weekEnd })
         );
@@ -116,8 +158,7 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
       
       case 'my_agenda':
         // Show only MY services for the current weekend
-        const myWeekStart = startOfWeek(now, { weekStartsOn: 5 }); // Friday
-        const myWeekEnd = endOfWeek(now, { weekStartsOn: 5 }); // Sunday
+        const { start: myWeekStart, end: myWeekEnd } = getCurrentWeekend();
         filtered = services.filter(service => 
           isWithinInterval(new Date(service.service_date), { start: myWeekStart, end: myWeekEnd }) &&
           service.leader.toLowerCase().includes('armando noel')
