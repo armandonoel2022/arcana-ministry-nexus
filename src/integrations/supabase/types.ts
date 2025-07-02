@@ -253,6 +253,73 @@ export type Database = {
           },
         ]
       }
+      director_replacement_requests: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          notes: string | null
+          original_director_id: string
+          reason: string | null
+          replacement_director_id: string
+          requested_at: string
+          responded_at: string | null
+          service_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          original_director_id: string
+          reason?: string | null
+          replacement_director_id: string
+          requested_at?: string
+          responded_at?: string | null
+          service_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          original_director_id?: string
+          reason?: string | null
+          replacement_director_id?: string
+          requested_at?: string
+          responded_at?: string | null
+          service_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "director_replacement_requests_original_director_id_fkey"
+            columns: ["original_director_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "director_replacement_requests_replacement_director_id_fkey"
+            columns: ["replacement_director_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "director_replacement_requests_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       director_replacements: {
         Row: {
           created_at: string

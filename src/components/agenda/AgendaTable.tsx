@@ -3,11 +3,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Edit, Trash2, CheckCircle, XCircle, Music, Calendar, User } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Edit, Trash2, CheckCircle, XCircle, Music, Calendar, User, UserSwitch } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, addWeeks, getDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ServiceActionsMenu from './ServiceActionsMenu';
+import DirectorChangeRequest from './DirectorChangeRequest';
 
 interface Service {
   id: string;
@@ -50,14 +53,36 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
     if (initialFilter === 'my_agenda') return 'my_agenda';
     return 'current_weekend';
   });
+  const [selectedServiceForReplacement, setSelectedServiceForReplacement] = useState<Service | null>(null);
+  const [currentUserName, setCurrentUserName] = useState<string>('');
 
   useEffect(() => {
     fetchServices();
+    getCurrentUser();
   }, []);
 
   useEffect(() => {
     applyFilter();
   }, [services, filter]);
+
+  const getCurrentUser = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile) {
+          setCurrentUserName(profile.full_name.toLowerCase());
+        }
+      }
+    } catch (error) {
+      console.error('Error getting current user:', error);
+    }
+  };
 
   const fetchServices = async () => {
     try {
@@ -218,6 +243,13 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
     } catch (error) {
       console.error('Error deleting service:', error);
       toast.error('Error al eliminar el servicio');
+    }
+  };
+
+  const handleRequestDirectorChange = (serviceId: string) => {
+    const service = services.find(s => s.id === serviceId);
+    if (service) {
+      setSelectedServiceForReplacement(service);
     }
   };
 
@@ -416,26 +448,13 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleConfirmation(service.id, service.is_confirmed)}
-                          >
-                            {service.is_confirmed ? (
-                              <XCircle className="h-4 w-4" />
-                            ) : (
-                              <CheckCircle className="h-4 w-4" />
-                            )}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => deleteService(service.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <ServiceActionsMenu
+                          service={service}
+                          currentUser={currentUserName}
+                          onToggleConfirmation={toggleConfirmation}
+                          onDelete={deleteService}
+                          onRequestDirectorChange={handleRequestDirectorChange}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -473,6 +492,30 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
           </CardContent>
         </Card>
       )}
+
+      {/* Director Change Request Dialog */}
+      <Dialog open={!!selectedServiceForReplacement} onOpenChange={() => setSelectedServiceForReplacement(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserSwitch className="w-5 h-5" />
+              Solicitar Reemplazo de Director
+            </DialogTitle>
+          </DialogHeader>
+          {selectedServiceForReplacement && (
+            <DirectorChangeRequest
+              serviceId={selectedServiceForReplacement.id}
+              currentDirector={selectedServiceForReplacement.leader}
+              serviceDate={selectedServiceForReplacement.service_date}
+              serviceTitle={selectedServiceForReplacement.title}
+              onRequestCreated={() => {
+                setSelectedServiceForReplacement(null);
+                fetchServices();
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
