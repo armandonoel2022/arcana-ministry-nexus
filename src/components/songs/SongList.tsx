@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,6 +35,7 @@ interface Song {
   theme?: string;
   last_used_date?: string;
   usage_count?: number;
+  director_notes?: string;
 }
 
 interface FilterState {
