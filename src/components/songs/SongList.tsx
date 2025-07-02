@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -166,7 +167,7 @@ const SongList = () => {
             </div>
           )}
 
-          {filteredSongs.length > SONGS_PER_PAGE && (
+          {totalPages > 1 && (
             <SongPagination
               currentPage={currentPage}
               totalPages={totalPages}
