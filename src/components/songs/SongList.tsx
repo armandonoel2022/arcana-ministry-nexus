@@ -95,6 +95,7 @@ const SongList = () => {
   const startIndex = (currentPage - 1) * SONGS_PER_PAGE;
   const endIndex = startIndex + SONGS_PER_PAGE;
   const paginatedSongs = filteredSongs.slice(startIndex, endIndex);
+  const shouldShowPagination = filteredSongs.length > SONGS_PER_PAGE;
 
   // Reset to first page when filters change
   React.useEffect(() => {
@@ -167,7 +168,7 @@ const SongList = () => {
             </div>
           )}
 
-          {totalPages > 1 && (
+          {shouldShowPagination && (
             <SongPagination
               currentPage={currentPage}
               totalPages={totalPages}
