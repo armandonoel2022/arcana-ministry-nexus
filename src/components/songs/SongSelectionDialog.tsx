@@ -22,7 +22,7 @@ interface Service {
   worship_groups?: {
     name: string;
     color_theme: string;
-  };
+  } | null;
 }
 
 interface Song {
@@ -71,7 +71,16 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
         .limit(10);
 
       if (error) throw error;
-      setServices(data || []);
+      
+      // Transform the data to match our Service interface
+      const transformedServices = (data || []).map(service => ({
+        ...service,
+        worship_groups: Array.isArray(service.worship_groups) && service.worship_groups.length > 0 
+          ? service.worship_groups[0] 
+          : null
+      }));
+      
+      setServices(transformedServices);
       setServicesLoaded(true);
     } catch (error) {
       console.error('Error loading services:', error);
