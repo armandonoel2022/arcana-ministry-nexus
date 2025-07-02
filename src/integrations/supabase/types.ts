@@ -253,6 +253,70 @@ export type Database = {
           },
         ]
       }
+      director_replacements: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          original_director_id: string | null
+          reason: string | null
+          replacement_director_id: string | null
+          requested_at: string
+          responded_at: string | null
+          service_id: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          original_director_id?: string | null
+          reason?: string | null
+          replacement_director_id?: string | null
+          requested_at?: string
+          responded_at?: string | null
+          service_id?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          original_director_id?: string | null
+          reason?: string | null
+          replacement_director_id?: string | null
+          requested_at?: string
+          responded_at?: string | null
+          service_id?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "director_replacements_original_director_id_fkey"
+            columns: ["original_director_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "director_replacements_replacement_director_id_fkey"
+            columns: ["replacement_director_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "director_replacements_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_members: {
         Row: {
           created_at: string | null
@@ -370,6 +434,47 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_settings: {
+        Row: {
+          agenda_notifications: boolean | null
+          created_at: string
+          director_replacement_notifications: boolean | null
+          email_notifications: boolean | null
+          id: string
+          repertory_notifications: boolean | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          agenda_notifications?: boolean | null
+          created_at?: string
+          director_replacement_notifications?: boolean | null
+          email_notifications?: boolean | null
+          id?: string
+          repertory_notifications?: boolean | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          agenda_notifications?: boolean | null
+          created_at?: string
+          director_replacement_notifications?: boolean | null
+          email_notifications?: boolean | null
+          id?: string
+          repertory_notifications?: boolean | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
@@ -384,6 +489,7 @@ export type Database = {
           joined_date: string | null
           notes: string | null
           phone: string | null
+          repertory_view_preference: string | null
           role: Database["public"]["Enums"]["user_role"] | null
           updated_at: string | null
         }
@@ -400,6 +506,7 @@ export type Database = {
           joined_date?: string | null
           notes?: string | null
           phone?: string | null
+          repertory_view_preference?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string | null
         }
@@ -416,6 +523,7 @@ export type Database = {
           joined_date?: string | null
           notes?: string | null
           phone?: string | null
+          repertory_view_preference?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string | null
         }
@@ -548,17 +656,22 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           difficulty_level: number | null
+          director_notes: string | null
           genre: string | null
           id: string
           is_active: boolean | null
           key_signature: string | null
+          last_used_date: string | null
           lyrics: string | null
+          mood: string | null
           sheet_music_url: string | null
           spotify_link: string | null
           tags: string[] | null
           tempo: string | null
+          theme: string | null
           title: string
           updated_at: string | null
+          usage_count: number | null
           youtube_link: string | null
         }
         Insert: {
@@ -567,17 +680,22 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           difficulty_level?: number | null
+          director_notes?: string | null
           genre?: string | null
           id?: string
           is_active?: boolean | null
           key_signature?: string | null
+          last_used_date?: string | null
           lyrics?: string | null
+          mood?: string | null
           sheet_music_url?: string | null
           spotify_link?: string | null
           tags?: string[] | null
           tempo?: string | null
+          theme?: string | null
           title: string
           updated_at?: string | null
+          usage_count?: number | null
           youtube_link?: string | null
         }
         Update: {
@@ -586,23 +704,82 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           difficulty_level?: number | null
+          director_notes?: string | null
           genre?: string | null
           id?: string
           is_active?: boolean | null
           key_signature?: string | null
+          last_used_date?: string | null
           lyrics?: string | null
+          mood?: string | null
           sheet_music_url?: string | null
           spotify_link?: string | null
           tags?: string[] | null
           tempo?: string | null
+          theme?: string | null
           title?: string
           updated_at?: string | null
+          usage_count?: number | null
           youtube_link?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "songs_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      system_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          message: string
+          metadata: Json | null
+          recipient_id: string | null
+          sender_id: string | null
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          metadata?: Json | null
+          recipient_id?: string | null
+          sender_id?: string | null
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          metadata?: Json | null
+          recipient_id?: string | null
+          sender_id?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_notifications_sender_id_fkey"
+            columns: ["sender_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -755,6 +932,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      expire_pending_replacements: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      get_available_directors: {
+        Args: { exclude_director_id: string }
+        Returns: {
+          id: string
+          full_name: string
+          phone: string
+          email: string
+        }[]
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
