@@ -28,7 +28,7 @@ interface Song {
 
 type ViewMode = 'grid' | 'list';
 
-const SONGS_PER_PAGE = 12;
+const SONGS_PER_PAGE = 5;
 
 const SongList = () => {
   const [searchTerm, setSearchTerm] = useState('');
