@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserSwitch, Clock, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { UserCheck, Clock, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
@@ -188,7 +188,7 @@ const DirectorChangeRequest: React.FC<DirectorChangeRequestProps> = ({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <UserSwitch className="w-5 h-5" />
+            <UserCheck className="w-5 h-5" />
             Solicitar Reemplazo de Director
           </CardTitle>
           <CardDescription>

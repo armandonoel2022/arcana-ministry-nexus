@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { 
@@ -8,7 +7,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Edit, Trash2, UserSwitch, CheckCircle, XCircle } from "lucide-react";
+import { MoreHorizontal, Edit, Trash2, UserCheck, CheckCircle, XCircle } from "lucide-react";
 
 interface ServiceActionsMenuProps {
   service: {
@@ -57,7 +56,7 @@ const ServiceActionsMenu: React.FC<ServiceActionsMenuProps> = ({
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onRequestDirectorChange(service.id)}>
-              <UserSwitch className="h-4 w-4 mr-2" />
+              <UserCheck className="h-4 w-4 mr-2" />
               Solicitar Reemplazo
             </DropdownMenuItem>
           </>

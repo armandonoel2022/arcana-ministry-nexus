@@ -11,7 +11,7 @@ import {
   Settings,
   Info,
   FileText,
-  UserSwitch,
+  UserCheck,
   Home
 } from "lucide-react"
 
@@ -42,7 +42,7 @@ const items = [
   {
     title: "Reemplazos de Director",
     url: "/director-replacements",
-    icon: UserSwitch,
+    icon: UserCheck,
   },
   {
     title: "Repertorio Musical",

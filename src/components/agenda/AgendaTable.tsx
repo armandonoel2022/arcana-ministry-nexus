@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Edit, Trash2, CheckCircle, XCircle, Music, Calendar, User, UserSwitch } from "lucide-react";
+import { Edit, Trash2, CheckCircle, XCircle, Music, Calendar, User, UserCheck } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, addWeeks, getDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
@@ -498,7 +498,7 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <UserSwitch className="w-5 h-5" />
+              <UserCheck className="w-5 h-5" />
               Solicitar Reemplazo de Director
             </DialogTitle>
           </DialogHeader>
