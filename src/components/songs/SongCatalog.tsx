@@ -72,7 +72,7 @@ const SongCatalog = () => {
           query = query.order('created_at', { ascending: false });
           break;
         case 'popular':
-          query = query.order('usage_count', { ascending: false, nullsLast: true });
+          query = query.order('usage_count', { ascending: false, nullsFirst: false });
           break;
         default:
           query = query.order('title', { ascending: true });
