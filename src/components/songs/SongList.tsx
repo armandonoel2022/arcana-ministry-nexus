@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,7 +36,6 @@ interface Song {
   theme?: string;
   last_used_date?: string;
   usage_count?: number;
-  director_notes?: string;
 }
 
 interface FilterState {
@@ -229,8 +229,8 @@ const SongList = () => {
             <AlertDialog key={song.id}>
               <SongCard
                 song={song}
-                onEdit={(song) => setEditingSong(song)}
-                onDelete={(songId, songTitle) => deleteSong(songId, songTitle)}
+                onEdit={setEditingSong}
+                onDelete={(songId, songTitle) => {}}
                 viewMode="list"
               />
               <AlertDialogTrigger asChild>
@@ -263,8 +263,8 @@ const SongList = () => {
             <AlertDialog key={song.id}>
               <SongCard
                 song={song}
-                onEdit={(song) => setEditingSong(song)}
-                onDelete={(songId, songTitle) => deleteSong(songId, songTitle)}
+                onEdit={setEditingSong}
+                onDelete={(songId, songTitle) => {}}
                 viewMode="grid"
               />
               <AlertDialogTrigger asChild>
