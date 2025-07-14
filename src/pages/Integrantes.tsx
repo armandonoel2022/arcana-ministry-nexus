@@ -26,13 +26,13 @@ const Integrantes = () => {
               <Users className="w-8 h-8 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold text-white mb-2">Integrantes del Ministerio</h1>
-              <p className="text-white/90 text-lg">Gestión de miembros y roles del ministerio</p>
+              <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">Integrantes del Ministerio</h1>
+              <p className="text-white/90 text-lg drop-shadow-md">Gestión de miembros y roles del ministerio</p>
             </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Quick Actions - Paleta simplificada */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Card className="service-card-blue ciudadconecta-card cursor-pointer hover:scale-105 transition-transform">
             <CardContent className="p-6">
@@ -46,7 +46,7 @@ const Integrantes = () => {
             </CardContent>
           </Card>
 
-          <Card className="service-card-green ciudadconecta-card cursor-pointer hover:scale-105 transition-transform">
+          <Card className="service-card-blue-light ciudadconecta-card cursor-pointer hover:scale-105 transition-transform">
             <CardContent className="p-6">
               <div className="flex items-center gap-3">
                 <UserPlus className="w-8 h-8" />
@@ -58,7 +58,7 @@ const Integrantes = () => {
             </CardContent>
           </Card>
 
-          <Card className="service-card-yellow ciudadconecta-card cursor-pointer hover:scale-105 transition-transform">
+          <Card className="service-card-blue-dark ciudadconecta-card cursor-pointer hover:scale-105 transition-transform">
             <CardContent className="p-6">
               <div className="flex items-center gap-3">
                 <FileText className="w-8 h-8" />
@@ -70,7 +70,7 @@ const Integrantes = () => {
             </CardContent>
           </Card>
 
-          <Card className="service-card-red ciudadconecta-card cursor-pointer hover:scale-105 transition-transform">
+          <Card className="service-card-gray ciudadconecta-card cursor-pointer hover:scale-105 transition-transform">
             <CardContent className="p-6">
               <div className="flex items-center gap-3">
                 <Upload className="w-8 h-8" />

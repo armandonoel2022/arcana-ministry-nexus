@@ -32,7 +32,7 @@ const Index = () => {
       description: "Explora y gestiona el catálogo de canciones",
       icon: Music,
       url: "/repertorio",
-      gradient: "service-card-green"
+      gradient: "service-card-blue-light"
     },
     {
       id: "integrantes",
@@ -40,7 +40,7 @@ const Index = () => {
       description: "Administra los miembros del ministerio",
       icon: Users,
       url: "/integrantes",
-      gradient: "service-card-yellow"
+      gradient: "service-card-blue-dark"
     },
     {
       id: "comunicacion",
@@ -48,7 +48,7 @@ const Index = () => {
       description: "Chat y mensajería para el equipo",
       icon: MessageCircle,
       url: "/communication",
-      gradient: "service-card-red"
+      gradient: "service-card-gray"
     }
   ];
 
@@ -62,23 +62,23 @@ const Index = () => {
               <Heart className="w-10 h-10 text-blue-600" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-4">
-            Bienvenido a Ministerio Arcana
+          <h1 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">
+            Ministerio Arcana
           </h1>
-          <p className="text-white/90 text-xl mb-6">
-            Tu plataforma integral para una ciudad mejor. Reporta, consulta y participa.
+          <p className="text-white text-xl mb-6 drop-shadow-md">
+            Tu plataforma integral para una iglesia mejor. Organiza, consulta y participa.
           </p>
           
           {/* Personal Greeting */}
           <div className="ciudadconecta-glass rounded-2xl p-6 max-w-md mx-auto">
-            <h2 className="text-2xl font-bold text-white mb-2">¡Hola, Administrador!</h2>
-            <p className="text-white/80 mb-4">
+            <h2 className="text-2xl font-bold text-white mb-2 drop-shadow-md">¡Hola, Administrador!</h2>
+            <p className="text-white/90 mb-4 drop-shadow-sm">
               Tienes gestiones pendientes de seguimiento
             </p>
-            <div className="text-sm text-white/70">
+            <div className="text-sm text-white/80 drop-shadow-sm">
               (3 servicios) • (2 notificaciones pendientes)
             </div>
-            <Button className="mt-4 bg-white text-blue-600 hover:bg-gray-100 rounded-xl px-6">
+            <Button className="mt-4 bg-white text-blue-600 hover:bg-gray-100 rounded-xl px-6 font-semibold shadow-lg">
               GESTIONAR MINISTERIO (2)
             </Button>
           </div>
@@ -86,7 +86,7 @@ const Index = () => {
 
         {/* Main Services */}
         <div>
-          <h2 className="text-2xl font-bold text-white mb-6 text-center">
+          <h2 className="text-2xl font-bold text-white mb-6 text-center drop-shadow-md">
             SERVICIOS PRINCIPALES
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -119,10 +119,10 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Additional Services */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Additional Services - Simplificado con solo tonos azules */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link to="/spiritual">
-            <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white ciudadconecta-card hover:scale-105 transition-transform">
+            <Card className="service-card-blue ciudadconecta-card hover:scale-105 transition-transform">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3">
                   <Heart className="w-8 h-8" />
@@ -136,7 +136,7 @@ const Index = () => {
           </Link>
 
           <Link to="/recomendaciones">
-            <Card className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white ciudadconecta-card hover:scale-105 transition-transform">
+            <Card className="service-card-blue-light ciudadconecta-card hover:scale-105 transition-transform">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3">
                   <Star className="w-8 h-8" />
@@ -150,7 +150,7 @@ const Index = () => {
           </Link>
 
           <Link to="/notificaciones">
-            <Card className="bg-gradient-to-br from-pink-500 to-pink-600 text-white ciudadconecta-card hover:scale-105 transition-transform">
+            <Card className="service-card-blue-dark ciudadconecta-card hover:scale-105 transition-transform">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3">
                   <Bell className="w-8 h-8" />

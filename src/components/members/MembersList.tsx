@@ -176,7 +176,7 @@ const MembersList = () => {
   };
 
   const handleViewProfile = (memberId: string) => {
-    navigate(`/integrantes/${memberId}`);
+    navigate(`/member/${memberId}`);
   };
 
   if (loading) {
