@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import Index from "./pages/Index";
 import RepertoirioMusical from "./pages/RepertoirioMusical";
@@ -37,27 +37,37 @@ function App() {
           <SidebarProvider>
             <div className="flex h-screen w-full bg-gray-50">
               <AppSidebar />
-              <main className="flex-1 overflow-auto bg-gray-50">
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/repertorio" element={<RepertoirioMusical />} />
-                  <Route path="/agenda" element={<MinisterialAgenda />} />
-                  <Route path="/director-replacements" element={<DirectorReplacements />} />
-                  <Route path="/communication" element={<Communication />} />
-                  <Route path="/integrantes" element={<Integrantes />} />
-                  <Route path="/member/:id" element={<MemberProfile />} />
-                  <Route path="/worship-groups" element={<WorshipGroups />} />
-                  <Route path="/recomendaciones" element={<Recomendaciones />} />
-                  <Route path="/eventos-especiales" element={<EventosEspeciales />} />
-                  <Route path="/spiritual" element={<SpiritualModule />} />
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/notificaciones" element={<Notificaciones />} />
-                  <Route path="/cumpleanos" element={<BirthdayModulePage />} />
-                  <Route path="/about" element={<AboutMinistry />} />
-                  <Route path="/statutes" element={<Statutes />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
+              <div className="flex-1 flex flex-col">
+                {/* Global Header with Sidebar Toggle */}
+                <header className="h-12 bg-white border-b border-gray-200 flex items-center px-4 shadow-sm">
+                  <SidebarTrigger className="p-2 hover:bg-gray-100 rounded-lg transition-colors" />
+                  <div className="flex-1 flex items-center justify-center">
+                    <h1 className="text-lg font-bold text-gray-900">ARCANA</h1>
+                  </div>
+                </header>
+                
+                <main className="flex-1 overflow-auto bg-gray-50">
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/repertorio" element={<RepertoirioMusical />} />
+                    <Route path="/agenda" element={<MinisterialAgenda />} />
+                    <Route path="/director-replacements" element={<DirectorReplacements />} />
+                    <Route path="/communication" element={<Communication />} />
+                    <Route path="/integrantes" element={<Integrantes />} />
+                    <Route path="/member/:id" element={<MemberProfile />} />
+                    <Route path="/worship-groups" element={<WorshipGroups />} />
+                    <Route path="/recomendaciones" element={<Recomendaciones />} />
+                    <Route path="/eventos-especiales" element={<EventosEspeciales />} />
+                    <Route path="/spiritual" element={<SpiritualModule />} />
+                    <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/notificaciones" element={<Notificaciones />} />
+                    <Route path="/cumpleanos" element={<BirthdayModulePage />} />
+                    <Route path="/about" element={<AboutMinistry />} />
+                    <Route path="/statutes" element={<Statutes />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+              </div>
             </div>
           </SidebarProvider>
         </BrowserRouter>
