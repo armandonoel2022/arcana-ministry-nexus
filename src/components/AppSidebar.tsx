@@ -26,9 +26,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger
+  SidebarTrigger,
+  useSidebar
 } from "@/components/ui/sidebar"
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 
 // Menu items.
 const items = [
@@ -110,6 +111,14 @@ const items = [
 ]
 
 export function AppSidebar() {
+  const { setOpenMobile } = useSidebar()
+  const location = useLocation()
+
+  const handleLinkClick = () => {
+    // Close sidebar on mobile when a link is clicked
+    setOpenMobile(false)
+  }
+
   return (
     <Sidebar className="border-r-0 bg-white shadow-xl">
       <SidebarContent className="bg-white">
@@ -135,7 +144,11 @@ export function AppSidebar() {
                     asChild 
                     className="h-12 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 data-[active=true]:bg-blue-500 data-[active=true]:text-white data-[active=true]:shadow-lg"
                   >
-                    <Link to={item.url} className="flex items-center gap-3 px-3">
+                    <Link 
+                      to={item.url} 
+                      className="flex items-center gap-3 px-3"
+                      onClick={handleLinkClick}
+                    >
                       <item.icon className="w-5 h-5" />
                       <span className="font-medium">{item.title}</span>
                     </Link>

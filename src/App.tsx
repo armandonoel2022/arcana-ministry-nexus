@@ -4,7 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Menu } from "lucide-react";
+import { SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import Index from "./pages/Index";
 import RepertoirioMusical from "./pages/RepertoirioMusical";
@@ -27,6 +28,16 @@ import "./App.css";
 
 const queryClient = new QueryClient();
 
+function HeaderTrigger() {
+  const { open } = useSidebar();
+  
+  return (
+    <SidebarTrigger className="group p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105">
+      <Menu className={`w-5 h-5 transition-transform duration-300 ${open ? 'rotate-90' : 'rotate-0'} group-hover:text-blue-600`} />
+    </SidebarTrigger>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -40,7 +51,7 @@ function App() {
               <div className="flex-1 flex flex-col">
                 {/* Global Header with Sidebar Toggle */}
                 <header className="h-12 bg-white border-b border-gray-200 flex items-center px-4 shadow-sm">
-                  <SidebarTrigger className="p-2 hover:bg-gray-100 rounded-lg transition-colors" />
+                  <HeaderTrigger />
                   <div className="flex-1 flex items-center justify-center">
                     <h1 className="text-lg font-bold text-gray-900">ARCANA</h1>
                   </div>
