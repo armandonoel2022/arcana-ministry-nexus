@@ -50,9 +50,9 @@ const WorshipGroupsList: React.FC<WorshipGroupsListProps> = ({ onUpdate }) => {
       const groupsWithCounts = await Promise.all(
         (data || []).map(async (group) => {
           const { count } = await supabase
-            .from('group_members')
+            .from('members')
             .select('*', { count: 'exact', head: true })
-            .eq('group_id', group.id)
+            .eq('grupo', group.name.toLowerCase().replace(/\s+/g, '_'))
             .eq('is_active', true);
 
           return {

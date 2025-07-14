@@ -32,56 +32,6 @@ const Integrantes = () => {
           </div>
         </div>
 
-        {/* Quick Actions - Paleta simplificada */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="service-card-blue ciudadconecta-card cursor-pointer hover:scale-105 transition-transform">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <Search className="w-8 h-8" />
-                <div>
-                  <h3 className="font-semibold text-lg">Ver Integrantes</h3>
-                  <p className="text-sm opacity-90">Explorar directorio</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="service-card-blue-light ciudadconecta-card cursor-pointer hover:scale-105 transition-transform">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <UserPlus className="w-8 h-8" />
-                <div>
-                  <h3 className="font-semibold text-lg">Agregar Integrante</h3>
-                  <p className="text-sm opacity-90">Registro individual</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="service-card-blue-dark ciudadconecta-card cursor-pointer hover:scale-105 transition-transform">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <FileText className="w-8 h-8" />
-                <div>
-                  <h3 className="font-semibold text-lg">Lista Completa</h3>
-                  <p className="text-sm opacity-90">Registro masivo</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="service-card-gray ciudadconecta-card cursor-pointer hover:scale-105 transition-transform">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <Upload className="w-8 h-8" />
-                <div>
-                  <h3 className="font-semibold text-lg">Cargar Masivo</h3>
-                  <p className="text-sm opacity-90">Importar CSV</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Main Content */}
         <Tabs defaultValue="view" className="w-full">
