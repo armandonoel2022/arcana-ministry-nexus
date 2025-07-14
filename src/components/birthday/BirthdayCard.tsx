@@ -126,8 +126,24 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
               height: 'auto'
             }}
           />
-          <div className="text-xl font-bold text-blue-600" style={{ fontWeight: '700' }}>Ministerio ADN</div>
-          <div className="text-base text-blue-500" style={{ fontWeight: '500' }}>Arca de Noé</div>
+          <div 
+            className="text-xl font-bold text-blue-600" 
+            style={{ 
+              fontWeight: '700',
+              fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
+            }}
+          >
+            Ministerio ADN
+          </div>
+          <div 
+            className="text-base text-blue-500" 
+            style={{ 
+              fontWeight: '500',
+              fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
+            }}
+          >
+            Arca de Noé
+          </div>
         </div>
 
         {/* Foto del integrante */}
@@ -153,22 +169,33 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
         {/* Mensaje principal */}
         <div className="text-center space-y-6">
           <div 
-            className="text-4xl font-bold bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 bg-clip-text text-transparent"
-            style={{ fontWeight: '900', lineHeight: '1.1' }}
+            className="text-4xl font-bold text-orange-500"
+            style={{ 
+              fontWeight: '900', 
+              lineHeight: '1.1',
+              fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+              color: '#f97316'
+            }}
           >
             ¡Feliz Cumpleaños!
           </div>
           
           <div 
             className="text-3xl font-bold text-blue-600"
-            style={{ fontWeight: '700' }}
+            style={{ 
+              fontWeight: '700',
+              fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
+            }}
           >
             {getFirstName(member.nombres)}
           </div>
           
           <div 
             className="text-xl text-blue-500 font-medium"
-            style={{ fontWeight: '600' }}
+            style={{ 
+              fontWeight: '600',
+              fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
+            }}
           >
             {getRoleLabel(member.cargo)}
           </div>
@@ -180,13 +207,20 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
           <div className="bg-white/90 p-6 rounded-2xl shadow-lg mx-auto border border-gray-100" style={{ maxWidth: '480px' }}>
             <p 
               className="text-lg leading-relaxed text-gray-700 font-medium"
-              style={{ fontWeight: '500', lineHeight: '1.4' }}
+              style={{ 
+                fontWeight: '500', 
+                lineHeight: '1.4',
+                fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
+              }}
             >
               Gracias por tu entrega y pasión en el ministerio ADN Arca de Noé.
             </p>
             <p 
               className="text-2xl font-bold text-blue-600 mt-4"
-              style={{ fontWeight: '700' }}
+              style={{ 
+                fontWeight: '700',
+                fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
+              }}
             >
               ¡Que Dios te bendiga!
             </p>
