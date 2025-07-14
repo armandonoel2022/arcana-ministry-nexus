@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, Calendar, Gift, Bell, Users } from 'lucide-react';
+import { Search, Calendar, Gift, Bell, Users, Filter } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { format, isToday, isSameDay, parseISO } from 'date-fns';
+import { format, isToday, isSameDay, parseISO, isSameMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import BirthdayCard from './BirthdayCard';
 import {
@@ -32,6 +32,7 @@ const BirthdayModule = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showThisMonthOnly, setShowThisMonthOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [cardDialogOpen, setCardDialogOpen] = useState(false);
@@ -43,7 +44,7 @@ const BirthdayModule = () => {
 
   useEffect(() => {
     filterMembers();
-  }, [searchTerm, members]);
+  }, [searchTerm, members, showThisMonthOnly]);
 
   const fetchMembers = async () => {
     try {
@@ -74,6 +75,16 @@ const BirthdayModule = () => {
       member.apellidos.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.cargo.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    // Filtrar por mes actual si está activado
+    if (showThisMonthOnly) {
+      const currentMonth = new Date().getMonth();
+      filtered = filtered.filter(member => {
+        if (!member.fecha_nacimiento) return false;
+        const birthDate = new Date(member.fecha_nacimiento);
+        return birthDate.getMonth() === currentMonth;
+      });
+    }
 
     // Ordenar por mes y día de cumpleaños
     filtered = filtered.sort((a, b) => {
@@ -209,15 +220,30 @@ const BirthdayModule = () => {
         </div>
       </div>
 
-      {/* Búsqueda */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-        <Input
-          placeholder="Buscar integrante por nombre o cargo..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
-        />
+      {/* Búsqueda y filtros */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
+            placeholder="Buscar integrante por nombre o cargo..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => setShowThisMonthOnly(!showThisMonthOnly)}
+            variant={showThisMonthOnly ? "default" : "outline"}
+            className={showThisMonthOnly ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white" : ""}
+          >
+            <Filter className="w-4 h-4 mr-2" />
+            Solo este mes
+          </Button>
+          <Badge variant="secondary" className="bg-arcana-blue-50 text-arcana-blue-600">
+            {filteredMembers.length} cumpleaños
+          </Badge>
+        </div>
       </div>
 
       {/* Cumpleaños de hoy */}

@@ -170,7 +170,10 @@ const MembersList = () => {
       'multimedia': 'Multimedia',
       'danza': 'Danza',
       'teatro': 'Teatro',
-      'piso': 'Piso'
+      'piso': 'Piso',
+      'grupo_massy': 'Grupo de Massy',
+      'grupo_aleida': 'Grupo de Aleida',
+      'grupo_keyla': 'Grupo de Keyla'
     };
     return groupLabels[group] || group;
   };
@@ -265,21 +268,17 @@ const MembersList = () => {
                     </h3>
                   </div>
 
-                  {/* Cargo */}
-                  <div className="hidden sm:block">
-                    <Badge variant="secondary" className="text-xs">
+                  {/* Información alineada con ancho fijo */}
+                  <div className="hidden sm:flex flex-col gap-1 w-48">
+                    <Badge variant="secondary" className="text-xs w-fit">
                       {getRoleLabel(member.cargo)}
                     </Badge>
-                  </div>
-
-                  {/* Grupo */}
-                  {member.grupo && (
-                    <div className="hidden md:block">
-                      <Badge variant="outline" className="text-xs">
+                    {member.grupo && (
+                      <Badge variant="outline" className="text-xs w-fit">
                         {getGroupLabel(member.grupo)}
                       </Badge>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
 
                 {/* Botones de acción */}
