@@ -34,9 +34,9 @@ function App() {
         <Sonner />
         <BrowserRouter>
           <SidebarProvider>
-            <div className="flex h-screen w-full">
+            <div className="flex h-screen w-full bg-gray-50">
               <AppSidebar />
-              <main className="flex-1 overflow-auto">
+              <main className="flex-1 overflow-auto bg-gray-50">
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/repertorio" element={<RepertoirioMusical />} />
