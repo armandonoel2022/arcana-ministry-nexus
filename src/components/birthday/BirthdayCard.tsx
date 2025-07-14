@@ -54,16 +54,25 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
     if (!cardRef.current) return;
 
     try {
+      // Configuración optimizada para alta calidad
       const canvas = await html2canvas(cardRef.current, {
-        scale: 3, // Alta calidad
+        scale: 4, // Aumentado para mejor calidad
         useCORS: true,
         allowTaint: false,
-        backgroundColor: null,
+        backgroundColor: '#ffffff',
         width: 800,
-        height: 1200, // Formato vertical para WhatsApp
+        height: 1200,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 800,
+        windowHeight: 1200,
+        imageTimeout: 10000, // Tiempo suficiente para cargar imágenes
+        removeContainer: true,
+        foreignObjectRendering: false, // Mejora compatibilidad
+        logging: false, // Desactivar logs para mejor rendimiento
       });
 
-      // Crear enlace de descarga
+      // Crear enlace de descarga con máxima calidad
       const link = document.createElement('a');
       link.download = `cumpleanos-${member.nombres.toLowerCase()}-${member.apellidos.toLowerCase()}.png`;
       link.href = canvas.toDataURL('image/png', 1.0);
@@ -90,8 +99,12 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
       {/* Vista previa de la tarjeta */}
       <div 
         ref={cardRef}
-        className="mx-auto bg-gradient-to-br from-arcana-blue-50 via-white to-arcana-blue-100 p-12 rounded-3xl shadow-2xl"
-        style={{ width: '800px', height: '1200px' }}
+        className="mx-auto bg-gradient-to-br from-blue-50 via-white to-blue-100 p-12 rounded-3xl shadow-2xl relative"
+        style={{ 
+          width: '800px', 
+          height: '1200px',
+          fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
+        }}
       >
         {/* Encabezado con logo */}
         <div className="text-center mb-12">
@@ -99,10 +112,14 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
             src="/lovable-uploads/74634c97-a2ef-403b-9fa0-89d9207b7b00.png" 
             alt="ADN Ministerio Logo" 
             className="w-32 h-auto mx-auto mb-4"
-            crossOrigin="anonymous"
+            style={{ 
+              maxWidth: '128px',
+              height: 'auto',
+              imageRendering: 'crisp-edges'
+            }}
           />
-          <div className="text-2xl font-bold text-arcana-blue-600">Ministerio ADN</div>
-          <div className="text-lg text-arcana-blue-500">Arca de Noé</div>
+          <div className="text-2xl font-bold text-blue-600" style={{ fontWeight: '700' }}>Ministerio ADN</div>
+          <div className="text-lg text-blue-500" style={{ fontWeight: '500' }}>Arca de Noé</div>
         </div>
 
         {/* Foto del integrante */}
@@ -114,9 +131,12 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
                 src={member.photo_url || undefined}
                 alt={`${member.nombres} ${member.apellidos}`}
                 className="object-cover"
-                crossOrigin="anonymous"
+                style={{
+                  imageRendering: 'crisp-edges',
+                  objectFit: 'cover'
+                }}
               />
-              <AvatarFallback className="bg-arcana-blue-gradient text-white text-6xl font-bold">
+              <AvatarFallback className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-6xl font-bold">
                 {member.nombres.charAt(0)}{member.apellidos.charAt(0)}
               </AvatarFallback>
             </Avatar>
@@ -125,33 +145,51 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
 
         {/* Mensaje principal */}
         <div className="text-center space-y-8">
-          <div className="text-6xl font-bold bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 bg-clip-text text-transparent">
+          <div 
+            className="text-6xl font-bold bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 bg-clip-text text-transparent"
+            style={{ fontWeight: '900', lineHeight: '1.1' }}
+          >
             ¡Feliz Cumpleaños!
           </div>
           
-          <div className="text-4xl font-bold text-arcana-blue-600 mb-4">
+          <div 
+            className="text-4xl font-bold text-blue-600 mb-4"
+            style={{ fontWeight: '700' }}
+          >
             {getFirstName(member.nombres)}
           </div>
           
-          <div className="text-2xl text-arcana-blue-500 font-medium mb-8">
+          <div 
+            className="text-2xl text-blue-500 font-medium mb-8"
+            style={{ fontWeight: '600' }}
+          >
             {getRoleLabel(member.cargo)}
           </div>
 
           {/* Pastel decorativo */}
-          <div className="text-8xl mb-8">🎂</div>
+          <div className="text-8xl mb-8" style={{ fontSize: '6rem', lineHeight: '1' }}>🎂</div>
 
           {/* Mensaje de felicitación */}
-          <div className="bg-white/80 p-8 rounded-2xl shadow-lg max-w-2xl mx-auto">
-            <p className="text-2xl leading-relaxed text-gray-700 font-medium">
+          <div className="bg-white/90 p-8 rounded-2xl shadow-lg max-w-2xl mx-auto border border-gray-100">
+            <p 
+              className="text-2xl leading-relaxed text-gray-700 font-medium"
+              style={{ fontWeight: '500', lineHeight: '1.4' }}
+            >
               Gracias por tu entrega y pasión en el ministerio ADN Arca de Noé.
             </p>
-            <p className="text-3xl font-bold text-arcana-blue-600 mt-6">
+            <p 
+              className="text-3xl font-bold text-blue-600 mt-6"
+              style={{ fontWeight: '700' }}
+            >
               ¡Que Dios te bendiga!
             </p>
           </div>
 
           {/* Decoración inferior */}
-          <div className="flex justify-center items-center space-x-4 text-4xl mt-12">
+          <div 
+            className="flex justify-center items-center space-x-4 text-4xl mt-12"
+            style={{ fontSize: '3rem' }}
+          >
             <span>🎉</span>
             <span>🎈</span>
             <span>🎁</span>
@@ -164,11 +202,11 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
       <div className="flex justify-center space-x-4">
         <Button 
           onClick={downloadImage} 
-          className="flex items-center gap-2 bg-gradient-to-r from-arcana-blue-500 to-arcana-blue-600 hover:from-arcana-blue-600 hover:to-arcana-blue-700"
+          className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
           size="lg"
         >
           <Download className="w-5 h-5" />
-          Descargar PNG para WhatsApp
+          Descargar PNG HD para WhatsApp
         </Button>
       </div>
     </div>
