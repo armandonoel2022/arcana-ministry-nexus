@@ -63,7 +63,7 @@ const Index = () => {
             </div>
           </div>
           <h1 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">
-            Ministerio Arcana
+              ARCANA
           </h1>
           <p className="text-white text-xl mb-6 drop-shadow-md">
             Tu plataforma integral para una iglesia mejor. Organiza, consulta y participa.
