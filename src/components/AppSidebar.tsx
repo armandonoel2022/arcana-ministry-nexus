@@ -13,7 +13,8 @@ import {
   FileText,
   UserCheck,
   Home,
-  Gift
+  Gift,
+  Menu
 } from "lucide-react"
 
 import {
@@ -25,6 +26,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger
 } from "@/components/ui/sidebar"
 import { Link } from "react-router-dom"
 
@@ -114,12 +116,12 @@ export function AppSidebar() {
         {/* Header */}
         <div className="p-6 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
-              <Heart className="w-6 h-6 text-white" />
-            </div>
+            <SidebarTrigger className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center hover:from-blue-600 hover:to-blue-700 transition-all">
+              <Menu className="w-6 h-6 text-white" />
+            </SidebarTrigger>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Ministerio Arcana</h1>
-              <p className="text-sm text-gray-500">Administrador</p>
+              <h1 className="text-xl font-bold text-gray-900">ARCANA</h1>
+              <p className="text-sm text-gray-500">Armando</p>
             </div>
           </div>
         </div>

@@ -71,16 +71,18 @@ const Index = () => {
           
           {/* Personal Greeting */}
           <div className="ciudadconecta-glass rounded-2xl p-6 max-w-md mx-auto">
-            <h2 className="text-2xl font-bold text-white mb-2 drop-shadow-md">¡Hola, Administrador!</h2>
+            <h2 className="text-2xl font-bold text-white mb-2 drop-shadow-md">¡Hola, Armando!</h2>
             <p className="text-white/90 mb-4 drop-shadow-sm">
               Tienes gestiones pendientes de seguimiento
             </p>
             <div className="text-sm text-white/80 drop-shadow-sm">
               (3 servicios) • (2 notificaciones pendientes)
             </div>
-            <Button className="mt-4 bg-white text-blue-600 hover:bg-gray-100 rounded-xl px-6 font-semibold shadow-lg">
-              GESTIONAR MINISTERIO (2)
-            </Button>
+            <Link to="/admin">
+              <Button className="mt-4 bg-white text-blue-600 hover:bg-gray-100 rounded-xl px-6 font-semibold shadow-lg">
+                GESTIONAR MINISTERIO (2)
+              </Button>
+            </Link>
           </div>
         </div>
 
@@ -166,35 +168,41 @@ const Index = () => {
 
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="bg-white ciudadconecta-card text-center">
-            <CardContent className="p-6">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Users className="w-6 h-6 text-blue-600" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">12</h3>
-              <p className="text-gray-600">Integrantes Activos</p>
-            </CardContent>
-          </Card>
+          <Link to="/integrantes">
+            <Card className="bg-white ciudadconecta-card text-center hover:scale-105 transition-transform cursor-pointer">
+              <CardContent className="p-6">
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <Users className="w-6 h-6 text-blue-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">18</h3>
+                <p className="text-gray-600">Integrantes Activos</p>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="bg-white ciudadconecta-card text-center">
-            <CardContent className="p-6">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Calendar className="w-6 h-6 text-green-600" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">5</h3>
-              <p className="text-gray-600">Servicios este mes</p>
-            </CardContent>
-          </Card>
+          <Link to="/agenda">
+            <Card className="bg-white ciudadconecta-card text-center hover:scale-105 transition-transform cursor-pointer">
+              <CardContent className="p-6">
+                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="w-6 h-6 text-green-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">5</h3>
+                <p className="text-gray-600">Servicios este mes</p>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="bg-white ciudadconecta-card text-center">
-            <CardContent className="p-6">
-              <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                <Music className="w-6 h-6 text-yellow-600" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">48</h3>
-              <p className="text-gray-600">Canciones en repertorio</p>
-            </CardContent>
-          </Card>
+          <Link to="/repertorio">
+            <Card className="bg-white ciudadconecta-card text-center hover:scale-105 transition-transform cursor-pointer">
+              <CardContent className="p-6">
+                <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <Music className="w-6 h-6 text-yellow-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">48</h3>
+                <p className="text-gray-600">Canciones en repertorio</p>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
       </div>
     </div>
