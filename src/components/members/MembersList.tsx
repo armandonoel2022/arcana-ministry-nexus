@@ -301,22 +301,24 @@ const MembersList = () => {
                         <Edit className="w-4 h-4" />
                       </Button>
                     </SheetTrigger>
-                    <SheetContent className="w-full sm:max-w-lg">
-                      <SheetHeader>
+                    <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+                      <SheetHeader className="sticky top-0 bg-background z-10 pb-4">
                         <SheetTitle>Editar Integrante</SheetTitle>
                         <SheetDescription>
                           Modifica la información del integrante
                         </SheetDescription>
                       </SheetHeader>
-                      {editingMember && (
-                        <EditMemberForm 
-                          member={editingMember} 
-                          onSuccess={() => {
-                            fetchMembers();
-                            setEditingMember(null);
-                          }}
-                        />
-                      )}
+                      <div className="flex-1 overflow-y-auto pb-6">
+                        {editingMember && (
+                          <EditMemberForm 
+                            member={editingMember} 
+                            onSuccess={() => {
+                              fetchMembers();
+                              setEditingMember(null);
+                            }}
+                          />
+                        )}
+                      </div>
                     </SheetContent>
                   </Sheet>
                   <Button
