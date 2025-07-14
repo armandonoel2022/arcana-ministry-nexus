@@ -74,6 +74,7 @@ const MemberProfile = () => {
       'directora_alabanza': 'Directora de Alabanza',
       'corista': 'Corista',
       'directora_danza': 'Directora de Danza',
+      'danzarina': 'Danzarina',
       'director_multimedia': 'Director Multimedia',
       'camarografo': 'Camarógrafo',
       'camarógrafa': 'Camarógrafa',
@@ -298,37 +299,45 @@ const MemberProfile = () => {
               {/* Additional Information Table */}
               {(member.grupo || member.persona_reporte || member.voz_instrumento || member.tipo_sangre || member.contacto_emergencia) && (
                 <div className="mt-8 border-t pt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-0 border border-gray-300 rounded-lg overflow-hidden">
-                    <div className="bg-arcana-blue-600 text-white p-3 text-center font-bold text-sm">
-                      GRUPO AL QUE PERTENECE
-                    </div>
-                    <div className="bg-arcana-blue-600 text-white p-3 text-center font-bold text-sm">
-                      PERSONA A QUIEN SE REPORTA
-                    </div>
-                    <div className="bg-arcana-blue-600 text-white p-3 text-center font-bold text-sm">
-                      VOZ / INSTRUMENTO
-                    </div>
-                    <div className="bg-arcana-blue-600 text-white p-3 text-center font-bold text-sm">
-                      TIPO DE SANGRE
-                    </div>
-                    <div className="bg-arcana-blue-600 text-white p-3 text-center font-bold text-sm">
-                      CONTACTO DE EMERGENCIA
-                    </div>
-                    
-                    <div className="p-3 text-center border-r border-gray-300 bg-white">
-                      {member.grupo ? getGroupLabel(member.grupo) : '-'}
-                    </div>
-                    <div className="p-3 text-center border-r border-gray-300 bg-white">
-                      {member.persona_reporte || '-'}
-                    </div>
-                    <div className="p-3 text-center border-r border-gray-300 bg-white">
-                      {member.voz_instrumento || '-'}
-                    </div>
-                    <div className="p-3 text-center border-r border-gray-300 bg-white">
-                      {member.tipo_sangre || '-'}
-                    </div>
-                    <div className="p-3 text-center bg-white">
-                      {member.contacto_emergencia || '-'}
+                  <div className="overflow-x-auto">
+                    <div className="min-w-full border border-gray-300 rounded-lg overflow-hidden">
+                      {/* Headers */}
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-0">
+                        <div className="bg-arcana-blue-600 text-white p-3 text-center font-bold text-xs md:text-sm">
+                          GRUPO AL QUE PERTENECE
+                        </div>
+                        <div className="bg-arcana-blue-600 text-white p-3 text-center font-bold text-xs md:text-sm">
+                          PERSONA A QUIEN SE REPORTA
+                        </div>
+                        <div className="bg-arcana-blue-600 text-white p-3 text-center font-bold text-xs md:text-sm">
+                          VOZ / INSTRUMENTO
+                        </div>
+                        <div className="bg-arcana-blue-600 text-white p-3 text-center font-bold text-xs md:text-sm">
+                          TIPO DE SANGRE
+                        </div>
+                        <div className="bg-arcana-blue-600 text-white p-3 text-center font-bold text-xs md:text-sm">
+                          CONTACTO DE EMERGENCIA
+                        </div>
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-0">
+                        <div className="p-3 text-center border-r border-gray-300 bg-white text-sm break-words">
+                          {member.grupo ? getGroupLabel(member.grupo) : '-'}
+                        </div>
+                        <div className="p-3 text-center border-r border-gray-300 bg-white text-sm break-words">
+                          {member.persona_reporte || '-'}
+                        </div>
+                        <div className="p-3 text-center border-r border-gray-300 bg-white text-sm break-words">
+                          {member.voz_instrumento || '-'}
+                        </div>
+                        <div className="p-3 text-center border-r border-gray-300 bg-white text-sm break-words">
+                          {member.tipo_sangre || '-'}
+                        </div>
+                        <div className="p-3 text-center bg-white text-sm break-words">
+                          {member.contacto_emergencia || '-'}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
