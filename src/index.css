@@ -142,6 +142,23 @@
   .service-card-gray {
     @apply bg-gradient-to-br from-gray-500 to-gray-600 text-white;
   }
+
+  /* Birthday card gradients */
+  .arcana-blue-gradient {
+    @apply bg-gradient-to-r from-blue-500 to-blue-600;
+  }
+  
+  .arcana-gradient {
+    background: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(217, 91%, 50%) 100%);
+  }
+  
+  .arcana-gradient-text {
+    @apply bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent;
+  }
+
+  .yellow-gradient {
+    @apply bg-gradient-to-r from-yellow-400 to-orange-500;
+  }
 }
 
 /* Animaciones personalizadas */

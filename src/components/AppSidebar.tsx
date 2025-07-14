@@ -12,7 +12,8 @@ import {
   Info,
   FileText,
   UserCheck,
-  Home
+  Home,
+  Gift
 } from "lucide-react"
 
 import {
@@ -78,6 +79,11 @@ const items = [
     title: "Módulo Espiritual",
     url: "/spiritual",
     icon: Heart,
+  },
+  {
+    title: "Cumpleaños",
+    url: "/cumpleanos",
+    icon: Gift,
   },
   {
     title: "Notificaciones",

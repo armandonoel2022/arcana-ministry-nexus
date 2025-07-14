@@ -1,0 +1,364 @@
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Search, Calendar, Gift, Bell, Users } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { format, isToday, isSameDay, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
+import BirthdayCard from './BirthdayCard';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+interface Member {
+  id: string;
+  nombres: string;
+  apellidos: string;
+  photo_url?: string;
+  cargo: string;
+  fecha_nacimiento?: string;
+  is_active: boolean;
+}
+
+const BirthdayModule = () => {
+  const [members, setMembers] = useState<Member[]>([]);
+  const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [cardDialogOpen, setCardDialogOpen] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchMembers();
+  }, []);
+
+  useEffect(() => {
+    filterMembers();
+  }, [searchTerm, members]);
+
+  const fetchMembers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('members')
+        .select('id, nombres, apellidos, photo_url, cargo, fecha_nacimiento, is_active')
+        .eq('is_active', true)
+        .not('fecha_nacimiento', 'is', null)
+        .order('nombres', { ascending: true });
+
+      if (error) throw error;
+      setMembers(data || []);
+    } catch (error) {
+      console.error('Error fetching members:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los integrantes",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filterMembers = () => {
+    let filtered = members.filter(member =>
+      member.nombres.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.apellidos.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.cargo.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Ordenar por mes y día de cumpleaños
+    filtered = filtered.sort((a, b) => {
+      if (!a.fecha_nacimiento || !b.fecha_nacimiento) return 0;
+      
+      const dateA = new Date(a.fecha_nacimiento);
+      const dateB = new Date(b.fecha_nacimiento);
+      
+      // Primero por mes, luego por día
+      const monthDiff = dateA.getMonth() - dateB.getMonth();
+      if (monthDiff !== 0) return monthDiff;
+      
+      return dateA.getDate() - dateB.getDate();
+    });
+
+    setFilteredMembers(filtered);
+  };
+
+  const isBirthdayToday = (birthDate: string) => {
+    const today = new Date();
+    const birth = new Date(birthDate);
+    return today.getMonth() === birth.getMonth() && today.getDate() === birth.getDate();
+  };
+
+  const getNextBirthday = (birthDate: string) => {
+    const today = new Date();
+    const birth = new Date(birthDate);
+    const thisYear = new Date(today.getFullYear(), birth.getMonth(), birth.getDate());
+    
+    if (thisYear < today) {
+      return new Date(today.getFullYear() + 1, birth.getMonth(), birth.getDate());
+    }
+    return thisYear;
+  };
+
+  const generateBirthdayCard = (member: Member) => {
+    setSelectedMember(member);
+    setCardDialogOpen(true);
+  };
+
+  const sendBirthdayNotification = async (member: Member) => {
+    try {
+      const { error } = await supabase
+        .from('system_notifications')
+        .insert({
+          type: 'general',
+          title: `🎉 ¡Cumpleaños de ${member.nombres}!`,
+          message: `Hoy es el cumpleaños de ${member.nombres} ${member.apellidos} (${getRoleLabel(member.cargo)}). ¡Felicitémosle en este día especial!`,
+          notification_category: 'general',
+          priority: 2,
+          metadata: {
+            member_id: member.id,
+            member_name: `${member.nombres} ${member.apellidos}`,
+            member_role: member.cargo,
+            birthday: true
+          }
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "¡Notificación enviada!",
+        description: `Se ha enviado la notificación de cumpleaños de ${member.nombres} a todos los integrantes`,
+      });
+    } catch (error) {
+      console.error('Error sending notification:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo enviar la notificación de cumpleaños",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getRoleLabel = (role: string) => {
+    const roleLabels: { [key: string]: string } = {
+      'pastor': 'Pastor',
+      'pastora': 'Pastora',
+      'director_alabanza': 'Director de Alabanza',
+      'directora_alabanza': 'Directora de Alabanza',
+      'director_musical': 'Director Musical',
+      'corista': 'Corista',
+      'directora_danza': 'Directora de Danza',
+      'director_multimedia': 'Director Multimedia',
+      'camarografo': 'Camarógrafo',
+      'camarógrafa': 'Camarógrafa',
+      'encargado_piso': 'Encargado de Piso',
+      'encargada_piso': 'Encargada de Piso',
+      'musico': 'Músico',
+      'sonidista': 'Sonidista',
+      'encargado_luces': 'Encargado de Luces',
+      'encargado_proyeccion': 'Encargado de Proyección',
+      'encargado_streaming': 'Encargado de Streaming'
+    };
+    return roleLabels[role] || role;
+  };
+
+  const todaysBirthdays = filteredMembers.filter(member => 
+    member.fecha_nacimiento && isBirthdayToday(member.fecha_nacimiento)
+  );
+
+  const upcomingBirthdays = filteredMembers.filter(member => 
+    member.fecha_nacimiento && !isBirthdayToday(member.fecha_nacimiento)
+  );
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-arcana-blue-600 mx-auto"></div>
+          <p className="text-gray-600 mt-2">Cargando cumpleaños...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center">
+            <Gift className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+              Módulo de Cumpleaños
+            </h1>
+            <p className="text-gray-600">
+              Genera tarjetas profesionales y envía notificaciones de cumpleaños
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Búsqueda */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <Input
+          placeholder="Buscar integrante por nombre o cargo..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      {/* Cumpleaños de hoy */}
+      {todaysBirthdays.length > 0 && (
+        <Card className="border-yellow-300 bg-gradient-to-r from-yellow-50 to-orange-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-yellow-700">
+              <Gift className="w-5 h-5" />
+              🎉 Cumpleaños de Hoy ({todaysBirthdays.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {todaysBirthdays.map((member) => (
+                <div key={member.id} className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border border-yellow-200">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="w-16 h-16 border-2 border-yellow-300">
+                      <AvatarImage
+                        src={member.photo_url || undefined}
+                        alt={`${member.nombres} ${member.apellidos}`}
+                      />
+                      <AvatarFallback className="bg-yellow-gradient text-white text-lg">
+                        {member.nombres.charAt(0)}{member.apellidos.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-bold text-lg text-yellow-700">
+                        {member.nombres} {member.apellidos}
+                      </h3>
+                      <p className="text-yellow-600">{getRoleLabel(member.cargo)}</p>
+                      <Badge className="bg-yellow-500 text-white text-xs">
+                        🎂 ¡Cumpleaños hoy!
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => generateBirthdayCard(member)}
+                      className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
+                    >
+                      <Gift className="w-4 h-4 mr-2" />
+                      Generar Tarjeta
+                    </Button>
+                    <Button
+                      onClick={() => sendBirthdayNotification(member)}
+                      variant="outline"
+                      className="border-yellow-500 text-yellow-600 hover:bg-yellow-50"
+                    >
+                      <Bell className="w-4 h-4 mr-2" />
+                      Notificar
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Próximos cumpleaños */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="w-5 h-5" />
+            Próximos Cumpleaños ({upcomingBirthdays.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {upcomingBirthdays.length === 0 ? (
+            <div className="text-center py-8">
+              <Gift className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">No hay próximos cumpleaños registrados</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {upcomingBirthdays.map((member) => (
+                <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-12 h-12">
+                      <AvatarImage
+                        src={member.photo_url || undefined}
+                        alt={`${member.nombres} ${member.apellidos}`}
+                      />
+                      <AvatarFallback className="bg-arcana-blue-gradient text-white">
+                        {member.nombres.charAt(0)}{member.apellidos.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h4 className="font-semibold">{member.nombres} {member.apellidos}</h4>
+                      <p className="text-sm text-gray-600">{getRoleLabel(member.cargo)}</p>
+                      {member.fecha_nacimiento && (
+                        <p className="text-xs text-gray-500">
+                          {format(getNextBirthday(member.fecha_nacimiento), 'dd \'de\' MMMM', { locale: es })}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => generateBirthdayCard(member)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <Gift className="w-4 h-4 mr-1" />
+                      Tarjeta
+                    </Button>
+                    <Button
+                      onClick={() => sendBirthdayNotification(member)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <Bell className="w-4 h-4 mr-1" />
+                      Notificar
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Dialog para mostrar la tarjeta de cumpleaños */}
+      <Dialog open={cardDialogOpen} onOpenChange={setCardDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Tarjeta de Cumpleaños</DialogTitle>
+            <DialogDescription>
+              Tarjeta profesional para {selectedMember?.nombres} {selectedMember?.apellidos}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedMember && (
+            <BirthdayCard 
+              member={selectedMember} 
+              onDownload={() => setCardDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default BirthdayModule;

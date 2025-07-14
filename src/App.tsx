@@ -19,6 +19,7 @@ import EventosEspeciales from "./pages/EventosEspeciales";
 import SpiritualModule from "./pages/SpiritualModule";
 import AdminDashboard from "./pages/AdminDashboard";
 import Notificaciones from "./pages/Notificaciones";
+import BirthdayModulePage from "./pages/BirthdayModule";
 import AboutMinistry from "./pages/AboutMinistry";
 import Statutes from "./pages/Statutes";
 import NotFound from "./pages/NotFound";
@@ -51,6 +52,7 @@ function App() {
                   <Route path="/spiritual" element={<SpiritualModule />} />
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/notificaciones" element={<Notificaciones />} />
+                  <Route path="/cumpleanos" element={<BirthdayModulePage />} />
                   <Route path="/about" element={<AboutMinistry />} />
                   <Route path="/statutes" element={<Statutes />} />
                   <Route path="*" element={<NotFound />} />
