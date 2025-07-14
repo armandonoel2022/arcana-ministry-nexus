@@ -49,15 +49,29 @@ const WorshipGroupsList: React.FC<WorshipGroupsListProps> = ({ onUpdate }) => {
       // Fetch member counts for each group
       const groupsWithCounts = await Promise.all(
         (data || []).map(async (group) => {
-          const { count } = await supabase
-            .from('members')
-            .select('*', { count: 'exact', head: true })
-            .eq('grupo', group.name.toLowerCase().replace(/\s+/g, '_'))
-            .eq('is_active', true);
+          // Map group names to the corresponding enum values in the members table
+          let groupEnum = '';
+          if (group.name === 'Grupo de Massy') {
+            groupEnum = 'grupo_massy';
+          } else if (group.name === 'Grupo de Aleida') {
+            groupEnum = 'grupo_aleida';
+          } else if (group.name === 'Grupo de Keyla') {
+            groupEnum = 'grupo_keyla';
+          }
+
+          let count = 0;
+          if (groupEnum) {
+            const result = await supabase
+              .from('members')
+              .select('*', { count: 'exact', head: true })
+              .eq('grupo', groupEnum)
+              .eq('is_active', true);
+            count = result.count || 0;
+          }
 
           return {
             ...group,
-            _count: { members: count || 0 }
+            _count: { members: count }
           };
         })
       );
