@@ -212,9 +212,9 @@ const AddMemberForm = ({ onSuccess }: AddMemberFormProps) => {
     { value: 'teatro', label: 'Teatro' },
     { value: 'piso', label: 'Piso' },
     // Grupos específicos de adoración
-    { value: 'Grupo de Massy', label: 'Grupo de Massy' },
-    { value: 'Grupo de Aleida', label: 'Grupo de Aleida' },
-    { value: 'Grupo de Keyla', label: 'Grupo de Keyla' },
+    { value: 'grupo_massy', label: 'Grupo de Massy' },
+    { value: 'grupo_aleida', label: 'Grupo de Aleida' },
+    { value: 'grupo_keyla', label: 'Grupo de Keyla' },
   ];
 
   const bloodTypes = [

@@ -1158,6 +1158,9 @@ export type Database = {
         | "danza"
         | "teatro"
         | "piso"
+        | "grupo_massy"
+        | "grupo_aleida"
+        | "grupo_keyla"
       member_role:
         | "pastor"
         | "pastora"
@@ -1340,6 +1343,9 @@ export const Constants = {
         "danza",
         "teatro",
         "piso",
+        "grupo_massy",
+        "grupo_aleida",
+        "grupo_keyla",
       ],
       member_role: [
         "pastor",
