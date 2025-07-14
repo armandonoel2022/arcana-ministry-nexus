@@ -32,7 +32,7 @@ function HeaderTrigger() {
   const { open } = useSidebar();
   
   return (
-    <SidebarTrigger className="group p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105">
+    <SidebarTrigger className="group p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105 md:hidden">
       <Menu className={`w-5 h-5 transition-transform duration-300 ${open ? 'rotate-90' : 'rotate-0'} group-hover:text-blue-600`} />
     </SidebarTrigger>
   );
@@ -49,8 +49,8 @@ function App() {
             <div className="flex h-screen w-full bg-gray-50">
               <AppSidebar />
               <div className="flex-1 flex flex-col">
-                {/* Global Header with Sidebar Toggle */}
-                <header className="h-12 bg-white border-b border-gray-200 flex items-center px-4 shadow-sm">
+                {/* Global Header with Sidebar Toggle - Only on Mobile */}
+                <header className="h-12 bg-white border-b border-gray-200 flex items-center px-4 shadow-sm md:hidden">
                   <HeaderTrigger />
                   <div className="flex-1 flex items-center justify-center">
                     <h1 className="text-lg font-bold text-gray-900">ARCANA</h1>

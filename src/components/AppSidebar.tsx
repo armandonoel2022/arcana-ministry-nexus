@@ -120,12 +120,15 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar className="border-r-0 bg-white shadow-xl">
+    <Sidebar className="border-r-0 bg-white shadow-xl" collapsible="icon">
       <SidebarContent className="bg-white">
         {/* Header */}
         <div className="p-6 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+            <SidebarTrigger className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center hover:from-blue-600 hover:to-blue-700 transition-all duration-200 hover:scale-105 group hidden md:flex">
+              <Menu className="w-6 h-6 text-white transition-transform duration-300 group-hover:rotate-90" />
+            </SidebarTrigger>
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center md:hidden">
               <Menu className="w-6 h-6 text-white" />
             </div>
             <div>
