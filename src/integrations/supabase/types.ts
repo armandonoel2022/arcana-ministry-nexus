@@ -1179,6 +1179,7 @@ export type Database = {
         | "encargado_proyeccion"
         | "encargado_streaming"
         | "director_musical"
+        | "danzarina"
       notification_type:
         | "general"
         | "agenda"
@@ -1365,6 +1366,7 @@ export const Constants = {
         "encargado_proyeccion",
         "encargado_streaming",
         "director_musical",
+        "danzarina",
       ],
       notification_type: [
         "general",

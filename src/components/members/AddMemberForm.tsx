@@ -190,6 +190,7 @@ const AddMemberForm = ({ onSuccess }: AddMemberFormProps) => {
     { value: 'director_musical', label: 'Director Musical' },
     { value: 'corista', label: 'Corista' },
     { value: 'directora_danza', label: 'Directora de Danza' },
+    { value: 'danzarina', label: 'Danzarina' },
     { value: 'director_multimedia', label: 'Director Multimedia' },
     { value: 'camarografo', label: 'Camarógrafo' },
     { value: 'camarógrafa', label: 'Camarógrafa' },
