@@ -151,12 +151,12 @@ const MemberProfile = () => {
         </div>
       </div>
 
-      <div className="container mx-auto p-6 print:p-0">
+      <div className="container mx-auto p-6 print:p-4">
         <div className="max-w-4xl mx-auto">
           <Card className="print:shadow-none print:border-none">
-            <CardContent className="p-8">
+            <CardContent className="p-8 print:p-4">
               {/* Header with Logo and Member Info */}
-              <div className="flex items-start justify-between mb-8">
+              <div className="flex items-start justify-between mb-6 print:mb-4">
                 <div className="flex items-center gap-6">
                   <Avatar className="w-24 h-24 border-4 border-arcana-blue-200">
                     <AvatarImage
@@ -168,10 +168,10 @@ const MemberProfile = () => {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h1 className="text-4xl font-bold text-arcana-blue-600 mb-2">
+                    <h1 className="text-4xl print:text-2xl font-bold text-arcana-blue-600 mb-2 print:mb-1">
                       {member.nombres} {member.apellidos}
                     </h1>
-                    <p className="text-2xl text-gray-700 mb-3">
+                    <p className="text-2xl print:text-lg text-gray-700 mb-3 print:mb-2">
                       {getRoleLabel(member.cargo)}
                     </p>
                     {member.grupo && (
@@ -195,7 +195,7 @@ const MemberProfile = () => {
               </div>
 
               {/* Contact Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:gap-4 mb-8 print:mb-4">
                 <div>
                   {member.fecha_nacimiento && (
                     <div className="flex items-center gap-3 mb-3">
@@ -296,9 +296,9 @@ const MemberProfile = () => {
                 </div>
               )}
 
-              {/* Additional Information Table */}
+              {/* Additional Information Table - Only show on screen, not print */}
               {(member.grupo || member.persona_reporte || member.voz_instrumento || member.tipo_sangre || member.contacto_emergencia) && (
-                <div className="mt-8 border-t pt-6">
+                <div className="mt-8 border-t pt-6 print:hidden">
                   <div className="overflow-x-auto">
                     <div className="min-w-full border border-gray-300 rounded-lg overflow-hidden">
                       {/* Headers */}
