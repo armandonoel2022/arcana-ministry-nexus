@@ -106,8 +106,7 @@ const Index = () => {
                           <IconComponent className="w-6 h-6 text-white" />
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-xl font-bold text-white mb-1">{service.title}</h3>
-                          <p className="text-white/80 text-sm">{service.description}</p>
+                          <h3 className="text-xl font-bold text-white">{service.title}</h3>
                         </div>
                         <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                           <span className="text-white">•</span>
