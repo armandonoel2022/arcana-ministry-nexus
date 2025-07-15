@@ -62,7 +62,7 @@ const SpiritualModule = () => {
 
       <Tabs defaultValue="daily" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="daily" className="flex items-center gap-2">
+        <TabsTrigger value="daily" className="flex items-center gap-2">
             <Heart className="w-4 h-4" />
             Versículo del Día
           </TabsTrigger>

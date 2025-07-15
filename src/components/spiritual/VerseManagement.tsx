@@ -80,11 +80,11 @@ export const VerseManagement = () => {
 
   const handleSaveDailyVerse = async () => {
     if (!selectedVerseId || !selectedDate) {
-      toast({
-        title: "Error",
-        description: "Selecciona una fecha y un verso",
-        variant: "destructive"
-      });
+        toast({
+          title: "Error",
+          description: "Selecciona una fecha y un versículo",
+          variant: "destructive"
+        });
       return;
     }
 
@@ -104,7 +104,7 @@ export const VerseManagement = () => {
 
         toast({
           title: "Éxito",
-          description: "Verso diario actualizado correctamente"
+          description: "Versículo diario actualizado correctamente"
         });
       } else {
         // Crear nuevo verso diario
@@ -120,7 +120,7 @@ export const VerseManagement = () => {
 
         toast({
           title: "Éxito",
-          description: "Verso diario creado correctamente"
+          description: "Versículo diario creado correctamente"
         });
       }
 
@@ -134,7 +134,7 @@ export const VerseManagement = () => {
       console.error('Error saving daily verse:', error);
       toast({
         title: "Error",
-        description: error.message || "No se pudo guardar el verso diario",
+        description: error.message || "No se pudo guardar el versículo diario",
         variant: "destructive"
       });
     }
@@ -149,7 +149,7 @@ export const VerseManagement = () => {
   };
 
   const handleDeleteDailyVerse = async (id: string) => {
-    if (!confirm("¿Estás seguro de que quieres eliminar este verso diario?")) {
+    if (!confirm("¿Estás seguro de que quieres eliminar este versículo diario?")) {
       return;
     }
 
@@ -163,7 +163,7 @@ export const VerseManagement = () => {
 
       toast({
         title: "Éxito",
-        description: "Verso diario eliminado correctamente"
+        description: "Versículo diario eliminado correctamente"
       });
 
       fetchData();
@@ -171,7 +171,7 @@ export const VerseManagement = () => {
       console.error('Error deleting daily verse:', error);
       toast({
         title: "Error",
-        description: "No se pudo eliminar el verso diario",
+        description: "No se pudo eliminar el versículo diario",
         variant: "destructive"
       });
     }
@@ -190,7 +190,7 @@ export const VerseManagement = () => {
         <CardContent className="p-8">
           <div className="text-center py-8">
             <BookOpen className="w-12 h-12 mx-auto text-gray-400 mb-4 animate-pulse" />
-            <p className="text-gray-500">Cargando gestión de versos...</p>
+            <p className="text-gray-500">Cargando gestión de versículos...</p>
           </div>
         </CardContent>
       </Card>
@@ -203,7 +203,7 @@ export const VerseManagement = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Plus className="w-5 h-5 text-arcana-blue-600" />
-            {isEditMode ? 'Editar Verso Diario' : 'Crear Verso Diario'}
+            {isEditMode ? 'Editar Versículo Diario' : 'Crear Versículo Diario'}
           </CardTitle>
         </CardHeader>
         
@@ -219,10 +219,10 @@ export const VerseManagement = () => {
             </div>
             
             <div>
-              <label className="block text-sm font-medium mb-2">Verso Bíblico</label>
+              <label className="block text-sm font-medium mb-2">Versículo Bíblico</label>
               <Select value={selectedVerseId} onValueChange={setSelectedVerseId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un verso" />
+                  <SelectValue placeholder="Selecciona un versículo" />
                 </SelectTrigger>
                 <SelectContent>
                   {bibleVerses.map((verse) => (
@@ -238,7 +238,7 @@ export const VerseManagement = () => {
           <div>
             <label className="block text-sm font-medium mb-2">Reflexión (Opcional)</label>
             <Textarea
-              placeholder="Escribe una reflexión sobre este verso..."
+              placeholder="Escribe una reflexión sobre este versículo..."
               value={reflection}
               onChange={(e) => setReflection(e.target.value)}
               rows={3}
@@ -247,7 +247,7 @@ export const VerseManagement = () => {
 
           <div className="flex gap-2">
             <Button onClick={handleSaveDailyVerse}>
-              {isEditMode ? 'Actualizar' : 'Crear'} Verso Diario
+              {isEditMode ? 'Actualizar' : 'Crear'} Versículo Diario
             </Button>
             {isEditMode && (
               <Button variant="outline" onClick={cancelEdit}>
@@ -262,7 +262,7 @@ export const VerseManagement = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-arcana-blue-600" />
-            Versos Diarios Existentes
+            Versículos Diarios Existentes
           </CardTitle>
         </CardHeader>
         
@@ -270,7 +270,7 @@ export const VerseManagement = () => {
           {dailyVerses.length === 0 ? (
             <div className="text-center py-8">
               <Calendar className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-500">No hay versos diarios creados</p>
+              <p className="text-gray-500">No hay versículos diarios creados</p>
             </div>
           ) : (
             <div className="space-y-3">
