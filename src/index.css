@@ -128,15 +128,15 @@
   
   /* Paleta de colores simplificada - solo azul como principal */
   .service-card-blue {
-    @apply bg-gradient-to-br from-blue-500 to-blue-600 text-white;
+    @apply bg-gradient-to-br from-blue-400/80 to-blue-500/80 text-white;
   }
   
   .service-card-blue-light {
-    @apply bg-gradient-to-br from-blue-400 to-blue-500 text-white;
+    @apply bg-gradient-to-br from-blue-300/80 to-blue-400/80 text-white;
   }
   
   .service-card-blue-dark {
-    @apply bg-gradient-to-br from-blue-600 to-blue-700 text-white;
+    @apply bg-gradient-to-br from-blue-500/80 to-blue-600/80 text-white;
   }
   
   .service-card-gray {
