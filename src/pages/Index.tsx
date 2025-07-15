@@ -21,7 +21,7 @@ const Index = () => {
     {
       id: "agenda",
       title: "Agenda Ministerial", 
-      description: "Organiza y gestiona los servicios del ministerio",
+      description: "Servicios y eventos",
       icon: Calendar,
       url: "/agenda",
       gradient: "service-card-blue"
@@ -29,7 +29,7 @@ const Index = () => {
     {
       id: "repertorio", 
       title: "Repertorio Musical",
-      description: "Explora y gestiona el catálogo de canciones",
+      description: "Catálogo de canciones",
       icon: Music,
       url: "/repertorio",
       gradient: "service-card-blue-light"
@@ -37,7 +37,7 @@ const Index = () => {
     {
       id: "integrantes",
       title: "Integrantes",
-      description: "Administra los miembros del ministerio",
+      description: "Miembros del ministerio",
       icon: Users,
       url: "/integrantes",
       gradient: "service-card-blue-dark"
@@ -45,10 +45,10 @@ const Index = () => {
     {
       id: "comunicacion",
       title: "Comunicación",
-      description: "Chat y mensajería para el equipo",
+      description: "Chat del equipo",
       icon: MessageCircle,
       url: "/communication",
-      gradient: "service-card-gray"
+      gradient: "service-card-blue"
     }
   ];
 
