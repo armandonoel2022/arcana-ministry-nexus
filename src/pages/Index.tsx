@@ -196,7 +196,7 @@ const Index = () => {
             </div>
           </Link>
 
-          <Link to="/groups">
+          <Link to="/worship-groups">
             <div className="bg-white hover:shadow-xl transition-all duration-300 border border-gray-100 text-center cursor-pointer group rounded-[2rem] p-8 hover:-translate-y-2">
               <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg">
                 <Calendar className="w-8 h-8 text-white" />
