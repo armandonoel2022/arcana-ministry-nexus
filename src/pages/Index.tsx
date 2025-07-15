@@ -91,7 +91,7 @@ const Index = () => {
           <h2 className="text-2xl font-bold text-white mb-6 text-center drop-shadow-md">
             SERVICIOS PRINCIPALES
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
             {mainServices.map((service, index) => {
               const IconComponent = service.icon;
               return (
@@ -118,51 +118,6 @@ const Index = () => {
               );
             })}
           </div>
-        </div>
-
-        {/* Additional Services - Simplificado con solo tonos azules */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link to="/spiritual">
-            <Card className="service-card-blue ciudadconecta-card hover:scale-105 transition-transform">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <Heart className="w-8 h-8" />
-                  <div>
-                    <h3 className="font-semibold text-lg">Módulo Espiritual</h3>
-                    <p className="text-sm opacity-90">Versos y reflexiones</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link to="/recomendaciones">
-            <Card className="service-card-blue-light ciudadconecta-card hover:scale-105 transition-transform">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <Star className="w-8 h-8" />
-                  <div>
-                    <h3 className="font-semibold text-lg">Recomendaciones</h3>
-                    <p className="text-sm opacity-90">Sugerencias del equipo</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link to="/notificaciones">
-            <Card className="service-card-blue-dark ciudadconecta-card hover:scale-105 transition-transform">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <Bell className="w-8 h-8" />
-                  <div>
-                    <h3 className="font-semibold text-lg">Notificaciones</h3>
-                    <p className="text-sm opacity-90">Mantente informado</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
         </div>
 
         {/* Statistics */}
