@@ -37,7 +37,13 @@ export class ArcanaBot {
     // Analizar el tipo de consulta
     if (this.isTurnosQuery(cleanMessage)) {
       console.log('ARCANA detectó consulta de turnos');
-      return await this.handleTurnosQuery(userId);
+      // Verificar si está preguntando por otro usuario
+      const otherUser = this.extractUserFromQuery(cleanMessage);
+      if (otherUser) {
+        return await this.handleTurnosQueryForUser(otherUser);
+      } else {
+        return await this.handleTurnosQuery(userId);
+      }
     } else if (this.isEnsayosQuery(cleanMessage)) {
       console.log('ARCANA detectó consulta de ensayos');
       return await this.handleEnsayosQuery();
@@ -47,6 +53,78 @@ export class ArcanaBot {
     } else {
       console.log('ARCANA detectó consulta general');
       return this.handleGeneralQuery(cleanMessage);
+    }
+  }
+
+  private static extractUserFromQuery(message: string): string | null {
+    // Buscar patrones como "turno de [nombre]", "cuando le toca a [nombre]", etc.
+    const patterns = [
+      /(?:turno\s+de|turnos?\s+de|cuando\s+le\s+toca\s+a?|toca\s+a)\s+([a-záéíóúñ\s]+)/i,
+      /([a-záéíóúñ\s]+)\s+(?:turno|turnos|toca|cantar)/i
+    ];
+    
+    for (const pattern of patterns) {
+      const match = message.match(pattern);
+      if (match && match[1]) {
+        const extractedName = match[1].trim();
+        // Validar que no sea una palabra común que podría causar falsos positivos
+        const commonWords = ['me', 'mi', 'cuando', 'que', 'el', 'la', 'un', 'una', 'este', 'esta'];
+        if (!commonWords.includes(extractedName.toLowerCase()) && extractedName.length > 2) {
+          console.log('ARCANA extrajo nombre:', extractedName);
+          return extractedName;
+        }
+      }
+    }
+    
+    return null;
+  }
+
+  private static async handleTurnosQueryForUser(userName: string): Promise<BotResponse> {
+    try {
+      console.log('ARCANA consultando turnos para otro usuario:', userName);
+      
+      // Buscar el usuario en la tabla members por nombre
+      const { data: members, error: membersError } = await supabase
+        .from('members')
+        .select('nombres, apellidos')
+        .or(`nombres.ilike.%${userName}%,apellidos.ilike.%${userName}%`)
+        .limit(5);
+
+      if (membersError) {
+        console.error('Error buscando miembros:', membersError);
+        return {
+          type: 'turnos',
+          message: '🤖 Hubo un error buscando información del integrante.'
+        };
+      }
+
+      if (!members || members.length === 0) {
+        return {
+          type: 'turnos',
+          message: `🤖 No encontré ningún integrante con el nombre "${userName}". Verifica el nombre e intenta nuevamente.`
+        };
+      }
+
+      // Si hay múltiples coincidencias, usar la primera
+      const member = members[0];
+      const fullName = `${member.nombres} ${member.apellidos}`;
+      
+      if (members.length > 1) {
+        const nombres = members.map(m => `${m.nombres} ${m.apellidos}`).join(', ');
+        return {
+          type: 'turnos',
+          message: `🤖 Encontré varios integrantes: ${nombres}. Por favor especifica mejor el nombre.`
+        };
+      }
+
+      return await this.searchUserInServices(fullName);
+
+    } catch (error) {
+      console.error('Error consultando turnos para otro usuario:', error);
+      return {
+        type: 'turnos',
+        message: '🤖 Disculpa, hubo un error consultando los turnos del integrante.'
+      };
     }
   }
 
@@ -124,14 +202,17 @@ export class ArcanaBot {
     try {
       console.log('Buscando servicios para:', fullName);
 
-      // Buscar próximos eventos en la agenda ministerial
-      const today = new Date().toISOString().split('T')[0];
+      // Buscar próximos eventos en la agenda ministerial (ampliar rango para incluir más fechas)
+      const today = new Date();
+      const thirtyDaysAgo = new Date(today);
+      thirtyDaysAgo.setDate(today.getDate() - 30);
+      
       const { data: eventos, error: eventosError } = await supabase
         .from('services')
         .select('*')
-        .gte('service_date', today)
+        .gte('service_date', thirtyDaysAgo.toISOString().split('T')[0])
         .order('service_date', { ascending: true })
-        .limit(10);
+        .limit(50);
 
       if (eventosError) {
         console.error('Error consultando eventos:', eventosError);
@@ -142,39 +223,89 @@ export class ArcanaBot {
       }
 
       console.log('Eventos encontrados:', eventos?.length || 0);
+      console.log('Buscando nombre completo:', fullName);
 
       if (!eventos || eventos.length === 0) {
         return {
           type: 'turnos',
-          message: '🤖 No hay servicios próximos programados en la agenda ministerial.'
+          message: '🤖 No hay servicios programados en la agenda ministerial.'
         };
       }
 
-      // Buscar si el usuario está mencionado en algún evento
+      // Mejorar la búsqueda del usuario en los eventos
       const eventosConUsuario = eventos.filter(evento => {
-        const searchableText = [
-          evento.leader,
-          evento.description,
-          evento.notes,
-          evento.title
-        ].join(' ').toLowerCase();
+        // Crear un texto de búsqueda más amplio
+        const searchableFields = [
+          evento.leader || '',
+          evento.description || '',
+          evento.notes || '',
+          evento.title || '',
+          evento.special_activity || '',
+          evento.choir_breaks || ''
+        ];
         
+        const searchableText = searchableFields.join(' ').toLowerCase();
+        console.log(`Evento ${evento.title}: buscando en "${searchableText}"`);
+        
+        // Dividir el nombre en partes para búsqueda más flexible
         const nombresParts = fullName.toLowerCase().split(' ');
-        return nombresParts.some(part => 
+        const firstNames = nombresParts.slice(0, 2); // Primeros dos nombres
+        const lastNames = nombresParts.slice(2); // Apellidos
+        
+        // Buscar coincidencias más flexibles
+        const hasFirstName = firstNames.some(part => 
           part.length > 2 && searchableText.includes(part)
         );
+        
+        const hasLastName = lastNames.some(part => 
+          part.length > 2 && searchableText.includes(part)
+        );
+        
+        // También buscar el nombre completo directo
+        const hasFullName = searchableText.includes(fullName.toLowerCase());
+        
+        const found = hasFirstName || hasLastName || hasFullName;
+        if (found) {
+          console.log(`✓ Encontrado en evento: ${evento.title} - ${evento.service_date}`);
+        }
+        
+        return found;
       });
 
-      console.log('Eventos con usuario:', eventosConUsuario.length);
+      // Filtrar solo eventos futuros de los encontrados
+      const today_str = today.toISOString().split('T')[0];
+      const eventosFuturos = eventosConUsuario.filter(evento => 
+        evento.service_date >= today_str
+      );
 
-      if (eventosConUsuario.length === 0) {
+      console.log('Eventos con usuario (todos):', eventosConUsuario.length);
+      console.log('Eventos futuros con usuario:', eventosFuturos.length);
+
+      if (eventosFuturos.length === 0 && eventosConUsuario.length > 0) {
+        // Hay eventos pasados pero no futuros
+        const ultimoEvento = eventosConUsuario[eventosConUsuario.length - 1];
+        const fecha = new Date(ultimoEvento.service_date).toLocaleDateString('es-ES', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        
         return {
           type: 'turnos',
-          message: `🤖 Hola ${fullName}! No tienes turnos programados en los próximos servicios. Consulta con tu líder de grupo para más información.`
+          message: `🎵 Hola ${fullName}! Tu último turno registrado fue:\n\n📅 **${ultimoEvento.title}**\n🗓️ ${fecha}\n📍 ${ultimoEvento.location || 'Ubicación por confirmar'}\n\n💡 No tienes turnos futuros programados. Consulta con tu líder de grupo para próximos servicios.`
         };
       }
 
-      const proximoEvento = eventosConUsuario[0];
+      if (eventosFuturos.length === 0) {
+        return {
+          type: 'turnos',
+          message: `🤖 Hola ${fullName}! No encontré turnos programados para ti en los próximos servicios. Consulta con tu líder de grupo para más información.`
+        };
+      }
+
+      // Mostrar el próximo evento futuro
+      const proximoEvento = eventosFuturos[0];
       const fecha = new Date(proximoEvento.service_date).toLocaleDateString('es-ES', {
         weekday: 'long',
         year: 'numeric',
@@ -182,9 +313,27 @@ export class ArcanaBot {
         day: 'numeric'
       });
 
+      let mensaje = `🎵 ¡Hola ${fullName}! Tu próximo turno es:\n\n📅 **${proximoEvento.title}**\n🗓️ ${fecha}\n📍 ${proximoEvento.location || 'Ubicación por confirmar'}`;
+      
+      // Agregar información adicional si está disponible
+      if (proximoEvento.special_activity) {
+        mensaje += `\n🎯 Actividad: ${proximoEvento.special_activity}`;
+      }
+      
+      if (proximoEvento.notes) {
+        mensaje += `\n📝 Notas: ${proximoEvento.notes}`;
+      }
+      
+      mensaje += '\n\n¡Prepárate para alabar al Señor! 🙏';
+      
+      // Si hay más turnos futuros, mencionarlo
+      if (eventosFuturos.length > 1) {
+        mensaje += `\n\n💡 Tienes ${eventosFuturos.length - 1} turno(s) adicional(es) programado(s).`;
+      }
+
       return {
         type: 'turnos',
-        message: `🎵 ¡Hola ${fullName}! Tu próximo turno es:\n\n📅 **${proximoEvento.title}**\n🗓️ ${fecha}\n📍 ${proximoEvento.location || 'Ubicación por confirmar'}\n\n¡Prepárate para alabar al Señor! 🙏`
+        message: mensaje
       };
 
     } catch (error) {
@@ -310,7 +459,7 @@ export class ArcanaBot {
       'valores': '🤖 Nuestros valores fundamentales son: **Fe, Adoración, Comunidad, Servicio y Excelencia**. Cada integrante del ministerio debe reflejar estos valores en su vida y servicio.',
       'horarios': '🤖 Los horarios regulares son: Ensayos los miércoles 7:00 PM, Servicio domingo 9:00 AM. Para horarios específicos, consulta la agenda ministerial.',
       'contacto': '🤖 Para contactar a los líderes del ministerio, puedes usar este sistema de comunicación o consultar en la sección de Integrantes.',
-      'ayuda': '🤖 Puedo ayudarte con:\n• Consultar turnos: "ARCANA cuándo me toca cantar"\n• Ver ensayos: "ARCANA próximos ensayos"\n• Buscar canciones: "ARCANA buscar [nombre/género]"\n• Información general del ministerio\n\n💡 Puedes escribir "ARCANA" o "@ARCANA" seguido de tu consulta.'
+      'ayuda': '🤖 Puedo ayudarte con:\n• Consultar turnos: "ARCANA cuándo me toca cantar"\n• Turnos de otros: "ARCANA turno de [nombre]" o "ARCANA cuándo le toca a [nombre]"\n• Ver ensayos: "ARCANA próximos ensayos"\n• Buscar canciones: "ARCANA buscar [nombre/género]"\n• Información general del ministerio\n\n💡 Puedes escribir "ARCANA" o "@ARCANA" seguido de tu consulta.'
     };
 
     // Buscar coincidencias en las consultas
