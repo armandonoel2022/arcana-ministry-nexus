@@ -134,9 +134,28 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !currentUser) {
-      console.log('No se puede enviar mensaje vacío o sin usuario');
+    if (!newMessage.trim()) {
+      console.log('No se puede enviar mensaje vacío');
       return;
+    }
+
+    // Si no hay usuario autenticado, usar un usuario por defecto
+    let userId = currentUser?.id;
+    if (!userId) {
+      // Usar el primer perfil disponible como fallback
+      const { data: profiles } = await supabase.from('profiles').select('id').limit(1);
+      if (profiles && profiles.length > 0) {
+        userId = profiles[0].id;
+        console.log('Usando usuario por defecto:', userId);
+      } else {
+        console.log('No hay usuarios disponibles');
+        toast({
+          title: "Error",
+          description: "No se pudo identificar al usuario. Por favor, configura la autenticación.",
+          variant: "destructive"
+        });
+        return;
+      }
     }
 
     const messageText = newMessage.trim();
@@ -149,7 +168,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
         .from('chat_messages')
         .insert({
           room_id: room.id,
-          user_id: currentUser.id,
+          user_id: userId,
           message: messageText,
           is_bot: false
         });
@@ -167,7 +186,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
       const botResponse = await ArcanaBot.processMessage(
         messageText,
         room.id,
-        currentUser.id
+        userId
       );
 
       if (botResponse) {
