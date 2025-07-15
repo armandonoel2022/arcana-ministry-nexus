@@ -50,6 +50,9 @@ export class ArcanaBot {
     } else if (this.isCancionesQuery(cleanMessage)) {
       console.log('ARCANA detectó consulta de canciones');
       return await this.handleCancionesQuery(cleanMessage);
+    } else if (this.isSeleccionarCancionQuery(cleanMessage)) {
+      console.log('ARCANA detectó consulta de selección de canción');
+      return await this.handleSeleccionarCancionQuery(cleanMessage);
     } else {
       console.log('ARCANA detectó consulta general');
       return this.handleGeneralQuery(cleanMessage);
@@ -141,6 +144,119 @@ export class ArcanaBot {
   private static isCancionesQuery(message: string): boolean {
     const cancionesKeywords = ['canción', 'cancion', 'canciones', 'buscar', 'repertorio', 'música', 'song'];
     return cancionesKeywords.some(keyword => message.includes(keyword));
+  }
+
+  private static isSeleccionarCancionQuery(message: string): boolean {
+    const seleccionKeywords = ['seleccionar', 'elegir', 'añadir', 'agregar', 'para servicio', 'para próximo servicio'];
+    const hasSeleccionKeyword = seleccionKeywords.some(keyword => message.includes(keyword));
+    const hasCancionKeyword = message.includes('canción') || message.includes('cancion');
+    return hasSeleccionKeyword && hasCancionKeyword;
+  }
+
+  private static async handleSeleccionarCancionQuery(query: string): Promise<BotResponse> {
+    try {
+      console.log('ARCANA procesando selección de canción:', query);
+      
+      // Extraer el nombre de la canción del query
+      const patterns = [
+        /seleccionar\s+([a-záéíóúñ\s]+)\s+para/i,
+        /elegir\s+([a-záéíóúñ\s]+)\s+para/i,
+        /añadir\s+([a-záéíóúñ\s]+)\s+para/i,
+        /agregar\s+([a-záéíóúñ\s]+)\s+para/i,
+        /(?:seleccionar|elegir|añadir|agregar)\s+(.+)/i
+      ];
+      
+      let nombreCancion = null;
+      for (const pattern of patterns) {
+        const match = query.match(pattern);
+        if (match && match[1]) {
+          nombreCancion = match[1].trim();
+          break;
+        }
+      }
+      
+      if (!nombreCancion || nombreCancion.length < 3) {
+        return {
+          type: 'canciones',
+          message: '🤖 Para seleccionar una canción especifica el nombre completo. Ejemplo: "ARCANA seleccionar Como Lluvia para próximo servicio"'
+        };
+      }
+      
+      // Buscar la canción en el repertorio
+      const { data: canciones, error } = await supabase
+        .from('songs')
+        .select('*')
+        .or(`title.ilike.%${nombreCancion}%,artist.ilike.%${nombreCancion}%`)
+        .eq('is_active', true)
+        .limit(3);
+        
+      if (error) {
+        console.error('Error buscando canción:', error);
+        return {
+          type: 'canciones',
+          message: '🤖 Hubo un error buscando la canción. Intenta nuevamente.'
+        };
+      }
+      
+      if (!canciones || canciones.length === 0) {
+        return {
+          type: 'canciones',
+          message: `🤖 No encontré la canción "${nombreCancion}" en nuestro repertorio.\n\n💡 Puedes:\n• 🔍 [Buscar en el Repertorio](/repertorio-musical?search=${encodeURIComponent(nombreCancion)})\n• ➕ [Agregar Nueva Canción](/repertorio-musical?tab=add)`
+        };
+      }
+      
+      // Si hay múltiples canciones, mostrar opciones
+      if (canciones.length > 1) {
+        let mensaje = `🎵 Encontré ${canciones.length} canciones similares a "${nombreCancion}":\n\n`;
+        canciones.forEach((cancion, index) => {
+          mensaje += `${index + 1}. **${cancion.title}**`;
+          if (cancion.artist) mensaje += ` - ${cancion.artist}`;
+          mensaje += `\n📖 [Ver en Repertorio](/repertorio-musical?search=${encodeURIComponent(cancion.title)})\n\n`;
+        });
+        mensaje += '🤖 Para seleccionar una canción específica para un servicio:\n';
+        mensaje += '1. 📅 Ve a la **[Agenda Ministerial](/agenda)**\n';
+        mensaje += '2. 🎵 Selecciona el servicio deseado\n';
+        mensaje += '3. ➕ Agrega la canción desde ahí\n\n';
+        mensaje += '💬 O especifica mejor el nombre: "ARCANA seleccionar [título exacto] para próximo servicio"';
+        
+        return {
+          type: 'canciones',
+          message: mensaje
+        };
+      }
+      
+      // Una sola canción encontrada
+      const cancion = canciones[0];
+      let mensaje = `🎵 **Canción encontrada:** ${cancion.title}\n`;
+      if (cancion.artist) mensaje += `🎤 **Artista:** ${cancion.artist}\n`;
+      if (cancion.genre) mensaje += `🎼 **Género:** ${cancion.genre}\n`;
+      if (cancion.key_signature) mensaje += `🎹 **Tono:** ${cancion.key_signature}\n\n`;
+      
+      mensaje += '🤖 **Para seleccionar esta canción para un servicio:**\n';
+      mensaje += '1. 📅 Ve a la **[Agenda Ministerial](/agenda)**\n';
+      mensaje += '2. 🎵 Busca el servicio donde quieres incluirla\n';
+      mensaje += '3. ➕ Agrega la canción desde el formulario del servicio\n\n';
+      mensaje += `📖 [Ver en Repertorio](/repertorio-musical?search=${encodeURIComponent(cancion.title)})\n`;
+      
+      // Agregar enlaces a YouTube/Spotify si están disponibles
+      if (cancion.youtube_link || cancion.spotify_link) {
+        mensaje += '\n🔗 **Enlaces:**\n';
+        if (cancion.youtube_link) mensaje += `• [🎥 Ver en YouTube](${cancion.youtube_link})\n`;
+        if (cancion.spotify_link) mensaje += `• [🎧 Escuchar en Spotify](${cancion.spotify_link})\n`;
+      }
+      
+      return {
+        type: 'canciones',
+        message: mensaje
+      };
+      
+    } catch (error) {
+      console.error('Error en selección de canción:', error);
+      return {
+        type: 'canciones',
+        message: '🤖 Hubo un error procesando tu solicitud. Para seleccionar canciones visita la **[Agenda Ministerial](/agenda)**.'
+      };
+    }
   }
 
   private static async handleTurnosQuery(userId: string): Promise<BotResponse> {
@@ -408,7 +524,8 @@ export class ArcanaBot {
       const { data: canciones, error } = await supabase
         .from('songs')
         .select('*')
-        .or(`title.ilike.%${searchTerms}%,artist.ilike.%${searchTerms}%,genre.ilike.%${searchTerms}%`)
+        .or(`title.ilike.%${searchTerms}%,artist.ilike.%${searchTerms}%,genre.ilike.%${searchTerms}%,tags.cs.{${searchTerms}}`)
+        .eq('is_active', true)
         .limit(5);
 
       if (error) {
@@ -424,18 +541,41 @@ export class ArcanaBot {
       if (!canciones || canciones.length === 0) {
         return {
           type: 'canciones',
-          message: `🤖 No encontré canciones con "${searchTerms}". Puedes buscar por título, artista o género en nuestro repertorio.`
+          message: `🤖 No encontré canciones con "${searchTerms}". Puedes buscar por título, artista, género o etiquetas en nuestro repertorio.\n\n🔗 **[Ver Repertorio Completo](/repertorio-musical)**`
         };
       }
 
       let mensaje = `🎵 **Encontré ${canciones.length} canción(es) con "${searchTerms}":**\n\n`;
+      
       canciones.forEach((cancion, index) => {
         mensaje += `${index + 1}. **${cancion.title}**\n`;
         if (cancion.artist) mensaje += `🎤 ${cancion.artist}\n`;
         if (cancion.genre) mensaje += `🎼 ${cancion.genre}\n`;
         if (cancion.key_signature) mensaje += `🎹 Tono: ${cancion.key_signature}\n`;
+        if (cancion.difficulty_level) {
+          const difficulty = ['', 'Muy Fácil', 'Fácil', 'Intermedio', 'Difícil', 'Muy Difícil'][cancion.difficulty_level];
+          mensaje += `⭐ Dificultad: ${difficulty}\n`;
+        }
+        
+        // Agregar enlaces útiles
+        const links = [];
+        if (cancion.youtube_link) links.push(`[🎥 YouTube](${cancion.youtube_link})`);
+        if (cancion.spotify_link) links.push(`[🎧 Spotify](${cancion.spotify_link})`);
+        links.push(`[📖 Ver en Repertorio](/repertorio-musical?search=${encodeURIComponent(cancion.title)})`);
+        
+        if (links.length > 0) {
+          mensaje += `🔗 ${links.join(' • ')}\n`;
+        }
+        
         mensaje += '\n';
       });
+
+      // Agregar opciones adicionales
+      mensaje += '💡 **Opciones disponibles:**\n';
+      mensaje += '• 📖 [Ver Repertorio Completo](/repertorio-musical)\n';
+      mensaje += '• ➕ [Agregar Nueva Canción](/repertorio-musical?tab=add)\n';
+      mensaje += '• 🗓️ Para seleccionar una canción para un servicio, visita la **Agenda Ministerial**\n';
+      mensaje += '\n💬 También puedes preguntar: "ARCANA seleccionar [nombre canción] para próximo servicio"';
 
       return {
         type: 'canciones',
@@ -446,7 +586,7 @@ export class ArcanaBot {
       console.error('Error buscando canciones:', error);
       return {
         type: 'canciones',
-        message: '🤖 Disculpa, hubo un error buscando canciones. Consulta directamente el repertorio musical.'
+        message: '🤖 Disculpa, hubo un error buscando canciones. Consulta directamente el repertorio musical.\n\n🔗 **[Ver Repertorio Musical](/repertorio-musical)**'
       };
     }
   }
@@ -459,7 +599,7 @@ export class ArcanaBot {
       'valores': '🤖 Nuestros valores fundamentales son: **Fe, Adoración, Comunidad, Servicio y Excelencia**. Cada integrante del ministerio debe reflejar estos valores en su vida y servicio.',
       'horarios': '🤖 Los horarios regulares son: Ensayos los miércoles 7:00 PM, Servicio domingo 9:00 AM. Para horarios específicos, consulta la agenda ministerial.',
       'contacto': '🤖 Para contactar a los líderes del ministerio, puedes usar este sistema de comunicación o consultar en la sección de Integrantes.',
-      'ayuda': '🤖 Puedo ayudarte con:\n• Consultar turnos: "ARCANA cuándo me toca cantar"\n• Turnos de otros: "ARCANA turno de [nombre]" o "ARCANA cuándo le toca a [nombre]"\n• Ver ensayos: "ARCANA próximos ensayos"\n• Buscar canciones: "ARCANA buscar [nombre/género]"\n• Información general del ministerio\n\n💡 Puedes escribir "ARCANA" o "@ARCANA" seguido de tu consulta.'
+      'ayuda': '🤖 Puedo ayudarte con:\n• Consultar turnos: "ARCANA cuándo me toca cantar"\n• Turnos de otros: "ARCANA turno de [nombre]" o "ARCANA cuándo le toca a [nombre]"\n• Ver ensayos: "ARCANA próximos ensayos"\n• Buscar canciones: "ARCANA buscar [nombre/género]"\n• Seleccionar canciones: "ARCANA seleccionar [canción] para próximo servicio"\n• Información general del ministerio\n\n💡 Puedes escribir "ARCANA" o "@ARCANA" seguido de tu consulta.'
     };
 
     // Buscar coincidencias en las consultas
