@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Edit, Trash2, UserPlus } from "lucide-react";
+import { Users, Edit, Trash2, UserPlus, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import GroupMembersDisplay from './GroupMembersDisplay';
 
 interface WorshipGroup {
   id: string;
@@ -26,6 +27,7 @@ interface WorshipGroupsListProps {
 const WorshipGroupsList: React.FC<WorshipGroupsListProps> = ({ onUpdate }) => {
   const [groups, setGroups] = useState<WorshipGroup[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchGroups = async () => {
@@ -136,65 +138,82 @@ const WorshipGroupsList: React.FC<WorshipGroupsListProps> = ({ onUpdate }) => {
     );
   }
 
+  const selectedGroup = groups.find(g => g.id === selectedGroupId);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {groups.map((group) => (
-        <Card key={group.id} className="hover:shadow-lg transition-shadow">
-          <CardHeader className="pb-3">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div 
-                  className="w-10 h-10 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: group.color_theme }}
-                >
-                  <Users className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">{group.name}</CardTitle>
-                  <Badge variant={group.is_active ? "default" : "secondary"}>
-                    {group.is_active ? "Activo" : "Inactivo"}
-                  </Badge>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {groups.map((group) => (
+          <Card key={group.id} className="hover:shadow-lg transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-10 h-10 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: group.color_theme }}
+                  >
+                    <Users className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">{group.name}</CardTitle>
+                    <Badge variant={group.is_active ? "default" : "secondary"}>
+                      {group.is_active ? "Activo" : "Inactivo"}
+                    </Badge>
+                  </div>
                 </div>
               </div>
-            </div>
-          </CardHeader>
-          
-          <CardContent className="space-y-4">
-            {group.description && (
-              <CardDescription>{group.description}</CardDescription>
-            )}
+            </CardHeader>
             
-            <div className="flex items-center justify-between text-sm text-gray-600">
-              <span>Miembros:</span>
-              <Badge variant="outline">
-                {group._count?.members || 0}
-              </Badge>
-            </div>
+            <CardContent className="space-y-4">
+              {group.description && (
+                <CardDescription>{group.description}</CardDescription>
+              )}
+              
+              <div className="flex items-center justify-between text-sm text-gray-600">
+                <span>Miembros:</span>
+                <Badge variant="outline">
+                  {group._count?.members || 0}
+                </Badge>
+              </div>
 
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" className="flex-1">
-                <Edit className="w-4 h-4 mr-1" />
-                Editar
-              </Button>
-              <Button size="sm" variant="outline" className="flex-1">
-                <UserPlus className="w-4 h-4 mr-1" />
-                Miembros
-              </Button>
-              <Button 
-                size="sm" 
-                variant={group.is_active ? "destructive" : "default"}
-                onClick={() => handleToggleActive(group.id, group.is_active)}
-              >
-                {group.is_active ? (
-                  <Trash2 className="w-4 h-4" />
-                ) : (
-                  <Users className="w-4 h-4" />
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" className="flex-1">
+                  <Edit className="w-4 h-4 mr-1" />
+                  Editar
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => setSelectedGroupId(selectedGroupId === group.id ? null : group.id)}
+                >
+                  <ChevronDown className={`w-4 h-4 mr-1 transition-transform ${selectedGroupId === group.id ? 'rotate-180' : ''}`} />
+                  Ver Miembros
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant={group.is_active ? "destructive" : "default"}
+                  onClick={() => handleToggleActive(group.id, group.is_active)}
+                >
+                  {group.is_active ? (
+                    <Trash2 className="w-4 h-4" />
+                  ) : (
+                    <Users className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {selectedGroupId && selectedGroup && (
+        <GroupMembersDisplay
+          groupId={selectedGroupId}
+          groupName={selectedGroup.name}
+          onCollapse={() => setSelectedGroupId(null)}
+        />
+      )}
     </div>
   );
 };
