@@ -36,6 +36,8 @@ const memberSchema = z.object({
   direccion: z.string().optional(),
   referencias: z.string().optional(),
   grupo: z.string().optional(),
+  worship_group_id: z.string().optional(),
+  instrument: z.string().optional(),
   persona_reporte: z.string().optional(),
   voz_instrumento: z.string().optional(),
   tipo_sangre: z.string().optional(),
@@ -72,6 +74,8 @@ const EditMemberForm = ({ member, onSuccess }: EditMemberFormProps) => {
   const [loading, setLoading] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string>(member.photo_url || '');
+  const [worshipGroups, setWorshipGroups] = useState<Array<{id: string, name: string}>>([]);
+  const [currentGroupMembership, setCurrentGroupMembership] = useState<{worship_group_id: string, instrument: string} | null>(null);
   const { toast } = useToast();
 
   const form = useForm<MemberFormData>({
@@ -87,12 +91,48 @@ const EditMemberForm = ({ member, onSuccess }: EditMemberFormProps) => {
       direccion: member.direccion || '',
       referencias: member.referencias || '',
       grupo: member.grupo || '',
+      worship_group_id: '',
+      instrument: '',
       persona_reporte: member.persona_reporte || '',
       voz_instrumento: member.voz_instrumento || '',
       tipo_sangre: member.tipo_sangre || '',
       contacto_emergencia: member.contacto_emergencia || '',
     },
   });
+
+  // Fetch worship groups and current membership
+  useEffect(() => {
+    const fetchWorshipGroups = async () => {
+      const { data: groups } = await supabase
+        .from('worship_groups')
+        .select('id, name')
+        .eq('is_active', true)
+        .order('name');
+      
+      if (groups) {
+        setWorshipGroups(groups);
+      }
+
+      // Check if member has current group membership
+      const { data: membership } = await supabase
+        .from('group_members')
+        .select('group_id, instrument')
+        .eq('user_id', member.id)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (membership) {
+        setCurrentGroupMembership({
+          worship_group_id: membership.group_id,
+          instrument: membership.instrument
+        });
+        form.setValue('worship_group_id', membership.group_id);
+        form.setValue('instrument', membership.instrument);
+      }
+    };
+
+    fetchWorshipGroups();
+  }, [member.id, form]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -168,6 +208,38 @@ const EditMemberForm = ({ member, onSuccess }: EditMemberFormProps) => {
         .eq('id', member.id);
 
       if (updateError) throw updateError;
+
+      // Handle worship group assignment
+      if (data.worship_group_id && data.instrument) {
+        // First, deactivate any existing group memberships
+        await supabase
+          .from('group_members')
+          .update({ is_active: false })
+          .eq('user_id', member.id);
+
+        // Insert new group membership
+        const { error: groupError } = await supabase
+          .from('group_members')
+          .insert({
+            group_id: data.worship_group_id,
+            user_id: member.id,
+            instrument: data.instrument,
+            is_active: true,
+            joined_date: new Date().toISOString().split('T')[0],
+          });
+
+        if (groupError) {
+          console.error('Error updating group membership:', groupError);
+          // Don't fail the entire operation if group assignment fails
+        }
+      } else if (currentGroupMembership && !data.worship_group_id) {
+        // Remove from group if no group is selected
+        await supabase
+          .from('group_members')
+          .update({ is_active: false })
+          .eq('user_id', member.id)
+          .eq('is_active', true);
+      }
 
       toast({
         title: "Éxito",
@@ -339,6 +411,68 @@ const EditMemberForm = ({ member, onSuccess }: EditMemberFormProps) => {
                 </FormItem>
               )}
             />
+          </div>
+
+          {/* Worship Group Assignment Section */}
+          <div className="space-y-4 p-4 bg-blue-50 rounded-lg border">
+            <h3 className="text-lg font-semibold text-blue-900">Asignación a Grupo de Alabanza</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="worship_group_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Grupo de Alabanza</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona un grupo de alabanza" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">Ningún grupo</SelectItem>
+                        {worshipGroups.map((group) => (
+                          <SelectItem key={group.id} value={group.id}>
+                            {group.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="instrument"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Instrumento/Función</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona instrumento/función" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="vocals">Voz</SelectItem>
+                        <SelectItem value="piano">Piano</SelectItem>
+                        <SelectItem value="guitar">Guitarra</SelectItem>
+                        <SelectItem value="bass">Bajo</SelectItem>
+                        <SelectItem value="drums">Batería</SelectItem>
+                        <SelectItem value="percussion">Percusión</SelectItem>
+                        <SelectItem value="saxophone">Saxofón</SelectItem>
+                        <SelectItem value="trumpet">Trompeta</SelectItem>
+                        <SelectItem value="violin">Violín</SelectItem>
+                        <SelectItem value="other">Otro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
