@@ -7,6 +7,7 @@ import { Users, Edit, Trash2, UserPlus, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import GroupMembersDisplay from './GroupMembersDisplay';
+import EditGroupMembers from './EditGroupMembers';
 
 interface WorshipGroup {
   id: string;
@@ -28,6 +29,7 @@ const WorshipGroupsList: React.FC<WorshipGroupsListProps> = ({ onUpdate }) => {
   const [groups, setGroups] = useState<WorshipGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchGroups = async () => {
@@ -177,10 +179,15 @@ const WorshipGroupsList: React.FC<WorshipGroupsListProps> = ({ onUpdate }) => {
               </div>
 
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="flex-1">
-                  <Edit className="w-4 h-4 mr-1" />
-                  Editar
-                </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => setEditingGroupId(group.id)}
+              >
+                <Edit className="w-4 h-4 mr-1" />
+                Editar
+              </Button>
                 <Button 
                   size="sm" 
                   variant="outline" 
@@ -212,6 +219,19 @@ const WorshipGroupsList: React.FC<WorshipGroupsListProps> = ({ onUpdate }) => {
           groupId={selectedGroupId}
           groupName={selectedGroup.name}
           onCollapse={() => setSelectedGroupId(null)}
+        />
+      )}
+
+      {editingGroupId && (
+        <EditGroupMembers
+          groupId={editingGroupId}
+          groupName={groups.find(g => g.id === editingGroupId)?.name || ''}
+          isOpen={!!editingGroupId}
+          onClose={() => setEditingGroupId(null)}
+          onUpdate={() => {
+            fetchGroups();
+            onUpdate();
+          }}
         />
       )}
     </div>
