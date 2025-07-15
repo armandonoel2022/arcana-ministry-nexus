@@ -98,6 +98,12 @@ export const ChatRooms = () => {
 
       console.log("Final rooms data:", roomsWithCount);
       setRooms(roomsWithCount);
+      
+      // Seleccionar automáticamente la sala principal si no hay una sala seleccionada
+      if (!selectedRoom && roomsWithCount.length > 0) {
+        const mainRoom = roomsWithCount.find(r => r.room_type === 'general') || roomsWithCount[0];
+        setSelectedRoom(mainRoom);
+      }
     } catch (error) {
       console.error('Error in fetchRooms:', error);
       toast({
