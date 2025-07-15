@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,8 +16,13 @@ import {
   Bell
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
+  const [memberCount, setMemberCount] = useState<number>(0);
+  const [groupCount, setGroupCount] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+
   const mainServices = [
     {
       id: "agenda",
@@ -51,6 +57,42 @@ const Index = () => {
       gradient: "service-card-blue"
     }
   ];
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        // Obtener conteo de miembros activos
+        const { count: membersCount, error: membersError } = await supabase
+          .from('members')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_active', true);
+
+        if (membersError) {
+          console.error('Error fetching members count:', membersError);
+        } else {
+          setMemberCount(membersCount || 0);
+        }
+
+        // Obtener conteo de grupos de alabanza activos
+        const { count: groupsCount, error: groupsError } = await supabase
+          .from('worship_groups')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_active', true);
+
+        if (groupsError) {
+          console.error('Error fetching groups count:', groupsError);
+        } else {
+          setGroupCount(groupsCount || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching statistics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50">
@@ -142,7 +184,9 @@ const Index = () => {
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg">
                 <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-3xl font-bold text-gray-900 mb-2">3</h3>
+              <h3 className="text-3xl font-bold text-gray-900 mb-2">
+                {loading ? "..." : memberCount}
+              </h3>
               <p className="text-gray-600">Miembros Activos</p>
             </div>
           </Link>
@@ -152,7 +196,9 @@ const Index = () => {
               <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg">
                 <Calendar className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-3xl font-bold text-gray-900 mb-2">3</h3>
+              <h3 className="text-3xl font-bold text-gray-900 mb-2">
+                {loading ? "..." : groupCount}
+              </h3>
               <p className="text-gray-600">Grupos de Alabanza</p>
             </div>
           </Link>
