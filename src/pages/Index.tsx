@@ -104,13 +104,18 @@ const Index = () => {
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-yellow-400/20 rounded-full translate-y-24 -translate-x-24"></div>
             
             <div className="relative z-10">
-              <div className="flex items-center justify-center gap-6 mb-8">
-                <div className="w-20 h-20 bg-white/20 backdrop-blur rounded-full flex items-center justify-center border border-white/30">
-                  <Heart className="w-10 h-10 text-white" />
+              <div className="flex items-center justify-center gap-8 mb-8">
+                {/* Logo Container */}
+                <div className="w-24 h-24 bg-white/20 backdrop-blur rounded-full flex items-center justify-center border border-white/30 overflow-hidden">
+                  {/* Placeholder for ministry logo - user can upload their logo here */}
+                  <div className="w-full h-full bg-white/10 rounded-full flex items-center justify-center">
+                    <Heart className="w-12 h-12 text-white/70" />
+                  </div>
                 </div>
+                
+                {/* ARCANA Title - Made Larger */}
                 <div>
-                  <h1 className="text-4xl font-bold mb-2">ARCANA</h1>
-                  <p className="text-blue-100 text-lg">Ministerio ADN</p>
+                  <h1 className="text-6xl font-bold text-white tracking-wide">ARCANA</h1>
                 </div>
               </div>
               
