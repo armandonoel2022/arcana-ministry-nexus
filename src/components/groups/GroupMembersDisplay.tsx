@@ -34,7 +34,7 @@ const GroupMembersDisplay: React.FC<GroupMembersDisplayProps> = ({
   groupName, 
   onCollapse 
 }) => {
-  const [members, setMembers] = useState<GroupMember[]>([]);
+  const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -70,14 +70,11 @@ const GroupMembersDisplay: React.FC<GroupMembersDisplayProps> = ({
 
       console.log('Raw data from Supabase:', data);
 
-      // Transform the data to match our interface
-      const transformedMembers = (data || []).map(item => ({
-        ...item,
-        member: Array.isArray(item.members) && item.members.length > 0 ? item.members[0] : null
-      })).filter(item => item.member !== null);
+      // Use data directly with proper typing
+      const validMembers = (data || []).filter(item => item.members !== null);
 
-      console.log('Transformed members:', transformedMembers);
-      setMembers(transformedMembers as GroupMember[]);
+      console.log('Valid members:', validMembers);
+      setMembers(validMembers as any); // Type assertion for now
     } catch (error) {
       console.error('Error fetching group members:', error);
       toast({
@@ -166,30 +163,30 @@ const GroupMembersDisplay: React.FC<GroupMembersDisplayProps> = ({
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {members.map((member, index) => {
-            if (!member.member) return null;
+          {members.map((member: any, index) => {
+            if (!member.members) return null;
             
             return (
               <Card key={member.id} className="p-4 hover:shadow-md transition-shadow">
                 <div className="flex flex-col items-center text-center space-y-3">
                   <Avatar className="w-16 h-16">
                     <AvatarImage 
-                      src={member.member.photo_url || undefined} 
-                      alt={`${member.member.nombres} ${member.member.apellidos}`}
+                      src={member.members.photo_url || undefined} 
+                      alt={`${member.members.nombres} ${member.members.apellidos}`}
                     />
                     <AvatarFallback className="text-lg font-semibold">
-                      {getInitials(member.member.nombres, member.member.apellidos)}
+                      {getInitials(member.members.nombres, member.members.apellidos)}
                     </AvatarFallback>
                   </Avatar>
                   
                   <div className="space-y-1">
                     <h3 className="font-semibold text-lg">
-                      {member.member.nombres} {member.member.apellidos}
+                      {member.members.nombres} {member.members.apellidos}
                     </h3>
                     
-                    {member.member.voz_instrumento && (
+                    {member.members.voz_instrumento && (
                       <p className="text-sm text-gray-600">
-                        Voz {member.member.voz_instrumento}
+                        {member.members.voz_instrumento}
                       </p>
                     )}
                     
@@ -197,7 +194,10 @@ const GroupMembersDisplay: React.FC<GroupMembersDisplayProps> = ({
                       variant={member.is_leader ? "default" : "secondary"}
                       className="text-xs"
                     >
-                      {member.is_leader ? "Director de Alabanza" : member.member.cargo}
+                      {member.is_leader ? "Director de Alabanza" : 
+                       member.members.cargo === 'directora_alabanza' ? "Directora de Alabanza" :
+                       member.members.cargo === 'director_alabanza' ? "Director de Alabanza" :
+                       "Corista"}
                     </Badge>
                     
                     <div className="flex items-center justify-center gap-1 text-sm text-gray-500">
