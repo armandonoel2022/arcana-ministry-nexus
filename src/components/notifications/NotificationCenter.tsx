@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Bell, Check, Clock, Music, Calendar, UserCheck, MessageSquare, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -26,6 +26,7 @@ const NotificationCenter = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'unread' | 'agenda' | 'repertory' | 'director_replacement'>('all');
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchNotifications();
@@ -44,7 +45,11 @@ const NotificationCenter = () => {
       setNotifications(data || []);
     } catch (error) {
       console.error('Error fetching notifications:', error);
-      toast.error('Error al cargar las notificaciones');
+      toast({
+        title: "Error",
+        description: "Error al cargar las notificaciones",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -66,9 +71,9 @@ const NotificationCenter = () => {
           
           // Show toast for new notification
           const newNotification = payload.new as Notification;
-          toast.info(newNotification.title, {
-            description: newNotification.message,
-            duration: 5000,
+          toast({
+            title: newNotification.title,
+            description: newNotification.message
           });
         }
       )
@@ -97,7 +102,11 @@ const NotificationCenter = () => {
       );
     } catch (error) {
       console.error('Error marking notification as read:', error);
-      toast.error('Error al marcar como leída');
+      toast({
+        title: "Error",
+        description: "Error al marcar como leída",
+        variant: "destructive"
+      });
     }
   };
 
@@ -114,10 +123,17 @@ const NotificationCenter = () => {
         prev.map(notification => ({ ...notification, is_read: true }))
       );
       
-      toast.success('Todas las notificaciones marcadas como leídas');
+      toast({
+        title: "Éxito",
+        description: "Todas las notificaciones marcadas como leídas"
+      });
     } catch (error) {
       console.error('Error marking all as read:', error);
-      toast.error('Error al marcar todas como leídas');
+      toast({
+        title: "Error",
+        description: "Error al marcar todas como leídas",
+        variant: "destructive"
+      });
     }
   };
 

@@ -5,7 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DailyVerse } from "@/components/spiritual/DailyVerse";
 import { VerseHistory } from "@/components/spiritual/VerseHistory";
 import { VerseManagement } from "@/components/spiritual/VerseManagement";
-import { BookOpen, Calendar, Settings, Heart } from "lucide-react";
+import NotificationTestButton from "@/components/notifications/NotificationTestButton";
+import { BookOpen, Calendar, Settings, Heart, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -61,14 +62,18 @@ const SpiritualModule = () => {
       </div>
 
       <Tabs defaultValue="daily" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="daily" className="flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="daily" className="flex items-center gap-2">
             <Heart className="w-4 h-4" />
             Versículo del Día
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
             Historial
+          </TabsTrigger>
+          <TabsTrigger value="test" className="flex items-center gap-2">
+            <Bell className="w-4 h-4" />
+            Pruebas
           </TabsTrigger>
           {userRole === 'administrator' && (
             <TabsTrigger value="management" className="flex items-center gap-2">
@@ -84,6 +89,10 @@ const SpiritualModule = () => {
 
         <TabsContent value="history" className="mt-6">
           <VerseHistory />
+        </TabsContent>
+
+        <TabsContent value="test" className="mt-6">
+          <NotificationTestButton />
         </TabsContent>
 
         {userRole === 'administrator' && (
