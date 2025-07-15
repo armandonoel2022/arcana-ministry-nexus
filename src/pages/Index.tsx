@@ -130,7 +130,7 @@ const Index = () => {
         </div>
 
         {/* Clean Statistics - Oval Design */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           <Link to="/integrantes">
             <div className="bg-white hover:shadow-xl transition-all duration-300 border border-gray-100 text-center cursor-pointer group rounded-[2rem] p-8 hover:-translate-y-2">
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg">
@@ -150,18 +150,6 @@ const Index = () => {
               <p className="text-gray-600">Grupos de Alabanza</p>
             </div>
           </Link>
-
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-[2rem] p-8 border border-blue-200">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-              <Heart className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
-              Ministerio ADN
-            </h3>
-            <p className="text-gray-700 text-sm leading-relaxed text-center">
-              Dedicados a la alabanza y adoración con excelencia en el servicio a Dios.
-            </p>
-          </div>
         </div>
       </div>
     </div>
