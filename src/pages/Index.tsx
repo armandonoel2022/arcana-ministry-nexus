@@ -78,15 +78,21 @@ const Index = () => {
                   Gestiona de forma eficiente todos los aspectos del Ministerio ADN Arca de Noé
                 </p>
                 <div className="flex flex-wrap justify-center gap-3">
-                  <Button className="bg-white text-blue-600 hover:bg-blue-50 rounded-2xl px-6 py-3 font-semibold shadow-lg hover:shadow-xl transition-all">
-                    Ver Mi Agenda
-                  </Button>
-                  <Button className="bg-white/20 text-white border border-white/30 hover:bg-white/30 rounded-2xl px-6 py-3 backdrop-blur">
-                    Explorar Repertorio
-                  </Button>
-                  <Button className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 hover:from-yellow-500 hover:to-yellow-600 rounded-2xl px-6 py-3 font-semibold shadow-lg">
-                    Chat Grupal
-                  </Button>
+                  <Link to="/agenda">
+                    <Button className="bg-white text-blue-600 hover:bg-blue-50 rounded-2xl px-6 py-3 font-semibold shadow-lg hover:shadow-xl transition-all">
+                      Ver Mi Agenda
+                    </Button>
+                  </Link>
+                  <Link to="/repertorio">
+                    <Button className="bg-white/20 text-white border border-white/30 hover:bg-white/30 rounded-2xl px-6 py-3 backdrop-blur">
+                      Explorar Repertorio
+                    </Button>
+                  </Link>
+                  <Link to="/communication">
+                    <Button className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 hover:from-yellow-500 hover:to-yellow-600 rounded-2xl px-6 py-3 font-semibold shadow-lg">
+                      Chat Grupal
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -141,7 +147,7 @@ const Index = () => {
             </div>
           </Link>
 
-          <Link to="/agenda">
+          <Link to="/groups">
             <div className="bg-white hover:shadow-xl transition-all duration-300 border border-gray-100 text-center cursor-pointer group rounded-[2rem] p-8 hover:-translate-y-2">
               <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg">
                 <Calendar className="w-8 h-8 text-white" />
