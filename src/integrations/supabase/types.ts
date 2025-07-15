@@ -964,6 +964,41 @@ export type Database = {
           },
         ]
       }
+      verse_themes: {
+        Row: {
+          created_at: string | null
+          id: string
+          reflection: string | null
+          theme_name: string
+          updated_at: string | null
+          verse_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          reflection?: string | null
+          theme_name: string
+          updated_at?: string | null
+          verse_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          reflection?: string | null
+          theme_name?: string
+          updated_at?: string | null
+          verse_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verse_themes_verse_id_fkey"
+            columns: ["verse_id"]
+            isOneToOne: false
+            referencedRelation: "bible_verses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       walkie_talkie_channels: {
         Row: {
           created_at: string | null
