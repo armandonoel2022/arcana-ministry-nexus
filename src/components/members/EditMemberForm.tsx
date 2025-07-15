@@ -430,7 +430,6 @@ const EditMemberForm = ({ member, onSuccess }: EditMemberFormProps) => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Ningún grupo</SelectItem>
                         {worshipGroups.map((group) => (
                           <SelectItem key={group.id} value={group.id}>
                             {group.name}
