@@ -53,63 +53,59 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen ciudadconecta-gradient">
-      <div className="container mx-auto p-6 space-y-8">
-        {/* Header Welcome */}
-        <div className="ciudadconecta-glass rounded-2xl p-8 text-center">
-          <div className="flex items-center justify-center mb-6">
-            <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-xl">
-              <Heart className="w-10 h-10 text-blue-600" />
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto p-8 max-w-4xl">
+        {/* Clean Header */}
+        <div className="bg-white rounded-xl p-8 mb-8 shadow-sm border border-gray-100">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center">
+              <Heart className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">ARCANA</h1>
+              <p className="text-gray-600">Ministerio ADN</p>
             </div>
           </div>
-          <h1 className="text-5xl font-bold text-white mb-4 drop-shadow-lg">
-              ARCANA
-          </h1>
-          <p className="text-white text-xl mb-6 drop-shadow-md">
-            Tu plataforma integral para una iglesia mejor. Organiza, consulta y participa.
-          </p>
           
-          {/* Personal Greeting */}
-          <div className="ciudadconecta-glass rounded-2xl p-6 max-w-md mx-auto">
-            <h2 className="text-2xl font-bold text-white mb-2 drop-shadow-md">¡Hola, Armando!</h2>
-            <p className="text-white/90 mb-4 drop-shadow-sm">
-              Tienes gestiones pendientes de seguimiento
+          <div className="border-t border-gray-100 pt-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">¡Hola, Armando!</h2>
+            <p className="text-gray-600 mb-4">
+              Gestiona de forma eficiente todos los aspectos del Ministerio ADN Arca de Noé
             </p>
-            <div className="text-sm text-white/80 drop-shadow-sm">
-              (3 servicios) • (2 notificaciones pendientes)
-            </div>
-            <Link to="/admin">
-              <Button className="mt-4 bg-white text-blue-600 hover:bg-gray-100 rounded-xl px-6 font-semibold shadow-lg">
-                GESTIONAR MINISTERIO (2)
+            <div className="flex gap-3">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-6">
+                Ver Mi Agenda
               </Button>
-            </Link>
+              <Button variant="outline" className="rounded-lg px-6">
+                Explorar Repertorio
+              </Button>
+              <Button variant="outline" className="rounded-lg px-6 text-yellow-600 border-yellow-600 hover:bg-yellow-50">
+                Chat Grupal
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Main Services */}
-        <div>
-          <h2 className="text-2xl font-bold text-white mb-6 text-center drop-shadow-md">
-            SERVICIOS PRINCIPALES
-          </h2>
+        {/* Main Services - Clean Grid */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Funcionalidades Principales</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {mainServices.map((service, index) => {
               const IconComponent = service.icon;
               return (
                 <Link key={service.id} to={service.url}>
-                  <Card 
-                    className={`${service.gradient} ciudadconecta-card cursor-pointer hover:scale-105 transition-all duration-300`}
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
+                  <Card className="bg-white hover:shadow-md transition-all duration-200 border border-gray-100 group cursor-pointer">
                     <CardContent className="p-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                          index % 2 === 0 ? 'bg-blue-600' : 'bg-yellow-500'
+                        }`}>
                           <IconComponent className="w-6 h-6 text-white" />
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-xl font-bold text-white">{service.title}</h3>
-                        </div>
-                        <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                          <span className="text-white">•</span>
+                          <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                            {service.title}
+                          </h3>
                         </div>
                       </div>
                     </CardContent>
@@ -120,43 +116,42 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Statistics */}
+        {/* Clean Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Link to="/integrantes">
-            <Card className="bg-white ciudadconecta-card text-center hover:scale-105 transition-transform cursor-pointer">
+            <Card className="bg-white hover:shadow-md transition-all duration-200 border border-gray-100 text-center cursor-pointer group">
               <CardContent className="p-6">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <Users className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">18</h3>
-                <p className="text-gray-600">Integrantes Activos</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-1">3</h3>
+                <p className="text-gray-600 text-sm">Miembros Activos</p>
               </CardContent>
             </Card>
           </Link>
 
           <Link to="/agenda">
-            <Card className="bg-white ciudadconecta-card text-center hover:scale-105 transition-transform cursor-pointer">
+            <Card className="bg-white hover:shadow-md transition-all duration-200 border border-gray-100 text-center cursor-pointer group">
               <CardContent className="p-6">
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <Calendar className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">5</h3>
-                <p className="text-gray-600">Servicios este mes</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-1">3</h3>
+                <p className="text-gray-600 text-sm">Grupos de Alabanza</p>
               </CardContent>
             </Card>
           </Link>
 
-          <Link to="/repertorio">
-            <Card className="bg-white ciudadconecta-card text-center hover:scale-105 transition-transform cursor-pointer">
-              <CardContent className="p-6">
-                <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <Music className="w-6 h-6 text-yellow-600" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">48</h3>
-                <p className="text-gray-600">Canciones en repertorio</p>
-              </CardContent>
-            </Card>
-          </Link>
+          <div className="bg-white rounded-xl p-6 border border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Acerca del Ministerio ADN Arca de Noé
+            </h3>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              Somos un ministerio dedicado a la alabanza y adoración, comprometidos con la excelencia en el 
+              servicio a Dios. ARCANA es nuestra herramienta para coordinar eficientemente todos los aspectos 
+              de nuestro ministerio.
+            </p>
+          </div>
         </div>
       </div>
     </div>
