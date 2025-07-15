@@ -30,32 +30,7 @@ const NotificationCenter = () => {
 
   useEffect(() => {
     fetchNotifications();
-    subscribeToNotifications();
-  }, []);
-
-  const fetchNotifications = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('system_notifications')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (error) throw error;
-      setNotifications(data || []);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-      toast({
-        title: "Error",
-        description: "Error al cargar las notificaciones",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const subscribeToNotifications = () => {
+    
     const channel = supabase
       .channel('notification-changes')
       .on(
@@ -82,6 +57,28 @@ const NotificationCenter = () => {
     return () => {
       supabase.removeChannel(channel);
     };
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('system_notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      setNotifications(data || []);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      toast({
+        title: "Error",
+        description: "Error al cargar las notificaciones",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const markAsRead = async (notificationId: string) => {
