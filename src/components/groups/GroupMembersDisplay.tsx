@@ -41,6 +41,7 @@ const GroupMembersDisplay: React.FC<GroupMembersDisplayProps> = ({
   const fetchGroupMembers = async () => {
     try {
       setLoading(true);
+      console.log('Fetching members for group:', groupId);
       const { data, error } = await supabase
         .from('group_members')
         .select(`
@@ -62,7 +63,12 @@ const GroupMembersDisplay: React.FC<GroupMembersDisplayProps> = ({
         .eq('is_active', true)
         .order('is_leader', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Raw data from Supabase:', data);
 
       // Transform the data to match our interface
       const transformedMembers = (data || []).map(item => ({
@@ -70,6 +76,7 @@ const GroupMembersDisplay: React.FC<GroupMembersDisplayProps> = ({
         member: Array.isArray(item.members) && item.members.length > 0 ? item.members[0] : null
       })).filter(item => item.member !== null);
 
+      console.log('Transformed members:', transformedMembers);
       setMembers(transformedMembers as GroupMember[]);
     } catch (error) {
       console.error('Error fetching group members:', error);
