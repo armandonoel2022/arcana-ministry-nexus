@@ -91,7 +91,7 @@ const Index = () => {
           <h2 className="text-2xl font-bold text-white mb-6 text-center drop-shadow-md">
             SERVICIOS PRINCIPALES
           </h2>
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {mainServices.map((service, index) => {
               const IconComponent = service.icon;
               return (
