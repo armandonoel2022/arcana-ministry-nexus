@@ -46,32 +46,18 @@ const WorshipGroupsList: React.FC<WorshipGroupsListProps> = ({ onUpdate }) => {
 
       if (error) throw error;
 
-      // Fetch member counts for each group
+      // Fetch member counts for each group from the group_members table
       const groupsWithCounts = await Promise.all(
         (data || []).map(async (group) => {
-          // Map group names to the corresponding enum values in the members table
-          let groupEnum = '';
-          if (group.name === 'Grupo de Massy') {
-            groupEnum = 'grupo_massy';
-          } else if (group.name === 'Grupo de Aleida') {
-            groupEnum = 'grupo_aleida';
-          } else if (group.name === 'Grupo de Keyla') {
-            groupEnum = 'grupo_keyla';
-          }
-
-          let count = 0;
-          if (groupEnum) {
-            const result = await supabase
-              .from('members')
-              .select('*', { count: 'exact', head: true })
-              .eq('grupo', groupEnum)
-              .eq('is_active', true);
-            count = result.count || 0;
-          }
+          const { count } = await supabase
+            .from('group_members')
+            .select('*', { count: 'exact', head: true })
+            .eq('group_id', group.id)
+            .eq('is_active', true);
 
           return {
             ...group,
-            _count: { members: count }
+            _count: { members: count || 0 }
           };
         })
       );
