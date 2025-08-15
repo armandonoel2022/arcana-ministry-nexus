@@ -14,7 +14,11 @@ import {
   UserCheck,
   Home,
   Gift,
-  Menu
+  Menu,
+  Mic,
+  Guitar,
+  Users2,
+  Bot
 } from "lucide-react"
 
 import {
@@ -87,6 +91,26 @@ const items = [
     title: "Cumpleaños",
     url: "/cumpleanos",
     icon: Gift,
+  },
+  {
+    title: "Entrenamiento Vocal",
+    url: "/vocal-training",
+    icon: Mic,
+  },
+  {
+    title: "Entrenamiento Musical",
+    url: "/musical-training",
+    icon: Guitar,
+  },
+  {
+    title: "Entrenamiento de Danza",
+    url: "/dance-training",
+    icon: Users2,
+  },
+  {
+    title: "Asistente Personal",
+    url: "/personal-assistant",
+    icon: Bot,
   },
   {
     title: "Notificaciones",

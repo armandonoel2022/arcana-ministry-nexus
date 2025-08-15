@@ -23,6 +23,10 @@ import Notificaciones from "./pages/Notificaciones";
 import BirthdayModulePage from "./pages/BirthdayModule";
 import AboutMinistry from "./pages/AboutMinistry";
 import Statutes from "./pages/Statutes";
+import VocalTraining from "./pages/VocalTraining";
+import MusicalTraining from "./pages/MusicalTraining";
+import DanceTraining from "./pages/DanceTraining";
+import PersonalAssistant from "./pages/PersonalAssistant";
 import NotFound from "./pages/NotFound";
 import "./App.css";
 
@@ -73,6 +77,10 @@ function App() {
                     <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/notificaciones" element={<Notificaciones />} />
                     <Route path="/cumpleanos" element={<BirthdayModulePage />} />
+                    <Route path="/vocal-training" element={<VocalTraining />} />
+                    <Route path="/musical-training" element={<MusicalTraining />} />
+                    <Route path="/dance-training" element={<DanceTraining />} />
+                    <Route path="/personal-assistant" element={<PersonalAssistant />} />
                     <Route path="/about" element={<AboutMinistry />} />
                     <Route path="/statutes" element={<Statutes />} />
                     <Route path="*" element={<NotFound />} />
