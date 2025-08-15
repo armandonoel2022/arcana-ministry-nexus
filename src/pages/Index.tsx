@@ -95,7 +95,7 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-600 via-blue-500 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-blue-600 via-blue-500 to-blue-400">
       <div className="container mx-auto px-6 py-12 max-w-6xl">
         {/* Hero Section - Clean and Institutional */}
         <div className="text-center mb-16">
