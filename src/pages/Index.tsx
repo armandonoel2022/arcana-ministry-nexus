@@ -95,7 +95,7 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-600 to-blue-700">
+    <div className="min-h-screen bg-gradient-to-b from-blue-600 via-blue-500 to-white">
       <div className="container mx-auto px-6 py-12 max-w-6xl">
         {/* Hero Section - Clean and Institutional */}
         <div className="text-center mb-16">
@@ -121,7 +121,7 @@ const Index = () => {
               <p className="text-blue-100">Tu participación hace la diferencia</p>
               
               <Link to="/agenda">
-                <Button className="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-12 py-3 text-lg font-medium mt-6 transition-all duration-300">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-12 py-3 text-lg font-medium mt-6 transition-all duration-300">
                   COMENZAR
                 </Button>
               </Link>
@@ -139,10 +139,10 @@ const Index = () => {
             {mainServices.map((service, index) => {
               const IconComponent = service.icon;
               const colors = [
-                'bg-gradient-to-r from-purple-500 to-purple-600',
-                'bg-gradient-to-r from-blue-500 to-blue-600', 
-                'bg-gradient-to-r from-purple-600 to-pink-600',
-                'bg-gradient-to-r from-red-500 to-red-600'
+                'bg-gradient-to-r from-blue-500 to-blue-600',
+                'bg-gradient-to-r from-blue-600 to-blue-700', 
+                'bg-gradient-to-r from-blue-400 to-blue-500',
+                'bg-gradient-to-r from-blue-700 to-blue-800'
               ];
               const currentColor = colors[index % colors.length];
               
