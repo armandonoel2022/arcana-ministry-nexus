@@ -1183,6 +1183,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_musical_training: {
+        Row: {
+          created_at: string
+          current_level: string
+          exercises_completed: number
+          id: string
+          instrument: string
+          streak_days: number
+          updated_at: string
+          user_id: string
+          weekly_goal: number
+        }
+        Insert: {
+          created_at?: string
+          current_level?: string
+          exercises_completed?: number
+          id?: string
+          instrument: string
+          streak_days?: number
+          updated_at?: string
+          user_id: string
+          weekly_goal?: number
+        }
+        Update: {
+          created_at?: string
+          current_level?: string
+          exercises_completed?: number
+          id?: string
+          instrument?: string
+          streak_days?: number
+          updated_at?: string
+          user_id?: string
+          weekly_goal?: number
+        }
+        Relationships: []
+      }
       user_song_knowledge: {
         Row: {
           id: string

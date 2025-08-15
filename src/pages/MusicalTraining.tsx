@@ -276,10 +276,10 @@ const MusicalTraining = () => {
       if (!user) return;
 
       const { data, error } = await supabase
-        .from('instrument_training')
+        .from('user_musical_training')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (data) {
         setInstrument(data.instrument);
@@ -302,7 +302,7 @@ const MusicalTraining = () => {
       if (!user) return;
 
       const { error } = await supabase
-        .from('instrument_training')
+        .from('user_musical_training')
         .upsert({
           user_id: user.id,
           instrument: selectedInstrument,
@@ -356,7 +356,8 @@ const MusicalTraining = () => {
           training_type: 'musical',
           exercise_name: selectedExercise?.name || '',
           duration_minutes: selectedExercise?.duration || 0,
-          difficulty_level: selectedExercise?.difficulty || 'beginner'
+          difficulty_level: selectedExercise?.difficulty || 'beginner',
+          training_id: selectedExercise?.id || ''
         });
 
       if (error) throw error;
