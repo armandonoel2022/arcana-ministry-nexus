@@ -5,9 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Music, Mic, Play, Pause, Trophy, Calendar, Volume2, Square } from "lucide-react";
+import { Music, Mic, Play, Pause, Trophy, Calendar, Volume2, Square, MicOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { useVoiceAnalysis } from "@/hooks/useVoiceAnalysis";
+import { VoiceAnalysisDisplay } from "@/components/vocal/VoiceAnalysisDisplay";
 
 interface Exercise {
   id: string;
@@ -31,10 +33,11 @@ const VocalTraining = () => {
   const [currentLevel, setCurrentLevel] = useState<string>("beginner");
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [isRecording, setIsRecording] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+  
+  const { analysisData, startRecording, stopRecording, getPitchNote } = useVoiceAnalysis();
 
   const voiceTypes = [
     { value: "soprano", label: "Soprano" },
@@ -237,20 +240,49 @@ const VocalTraining = () => {
     }
   };
 
-  const startExercise = (exercise: Exercise) => {
+  const startExercise = async (exercise: Exercise) => {
     setSelectedExercise(exercise);
-    setIsRecording(true);
     
-    // Simular grabación por duración del ejercicio
-    setTimeout(() => {
-      completeExercise(exercise.id);
-      setIsRecording(false);
-    }, exercise.duration * 1000);
-
+    // Get target pitch based on exercise type
+    const targetPitch = getTargetPitchForExercise(exercise);
+    
+    const success = await startRecording(targetPitch);
+    if (!success) {
+      toast({
+        title: "Error",
+        description: "No se pudo acceder al micrófono. Verifica los permisos.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     toast({
       title: "Ejercicio iniciado",
       description: `${exercise.name} - ${exercise.duration} minutos`,
     });
+    
+    // Auto-stop after exercise duration
+    setTimeout(() => {
+      stopExercise();
+      toast({
+        title: "Ejercicio completado",
+        description: "Puedes marcarlo como terminado.",
+      });
+    }, exercise.duration * 1000);
+  };
+
+  const stopExercise = () => {
+    stopRecording();
+    setSelectedExercise(null);
+  };
+
+  const getTargetPitchForExercise = (exercise: Exercise): number | undefined => {
+    // Define target pitches for different exercise types
+    if (exercise.name.toLowerCase().includes('do re mi') || exercise.name.toLowerCase().includes('escalas')) return 262; // C4
+    if (exercise.name.toLowerCase().includes('sostenido')) return 294; // D4
+    if (exercise.name.toLowerCase().includes('vibrato')) return 330; // E4
+    if (exercise.name.toLowerCase().includes('arpegio') || exercise.name.toLowerCase().includes('agilidad')) return 349; // F4
+    return undefined;
   };
 
   const completeExercise = async (exerciseId: string) => {
@@ -328,6 +360,15 @@ const VocalTraining = () => {
         </Card>
       </div>
 
+      {/* Real-time Voice Analysis */}
+      <VoiceAnalysisDisplay
+        pitch={analysisData.pitch}
+        volume={analysisData.volume}
+        targetPitch={analysisData.targetPitch}
+        pitchNote={getPitchNote(analysisData.pitch)}
+        isRecording={analysisData.isRecording}
+      />
+
       <Tabs defaultValue="exercises" className="space-y-6">
         <TabsList>
           <TabsTrigger value="exercises">Ejercicios</TabsTrigger>
@@ -386,25 +427,36 @@ const VocalTraining = () => {
                              Detener
                            </Button>
                          )}
-                         <Button
-                           onClick={() => startExercise(exercise)}
-                           disabled={isRecording || exercise.completed}
-                           className="flex items-center gap-2"
-                         >
-                           {isRecording && selectedExercise?.id === exercise.id ? (
-                             <>
-                               <Pause className="h-4 w-4" />
-                               Practicando...
-                             </>
-                           ) : exercise.completed ? (
-                             "Completado"
-                           ) : (
-                             <>
-                               <Play className="h-4 w-4" />
-                               Iniciar
-                             </>
-                           )}
-                         </Button>
+                          <Button
+                            variant={analysisData.isRecording && selectedExercise?.id === exercise.id ? "destructive" : "default"}
+                            onClick={() => {
+                              if (analysisData.isRecording && selectedExercise?.id === exercise.id) {
+                                stopExercise();
+                                toast({
+                                  title: "Ejercicio detenido",
+                                  description: "Has detenido el ejercicio.",
+                                });
+                              } else {
+                                startExercise(exercise);
+                              }
+                            }}
+                            disabled={exercise.completed}
+                            className="flex items-center gap-2"
+                          >
+                            {analysisData.isRecording && selectedExercise?.id === exercise.id ? (
+                              <>
+                                <MicOff className="h-4 w-4" />
+                                Detener
+                              </>
+                            ) : exercise.completed ? (
+                              "Completado"
+                            ) : (
+                              <>
+                                <Mic className="h-4 w-4" />
+                                Iniciar
+                              </>
+                            )}
+                          </Button>
                        </div>
                      </div>
                    </CardContent>
