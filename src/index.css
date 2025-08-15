@@ -7,42 +7,51 @@
 
 @layer base {
   :root {
-    --background: 220 13% 97%;
-    --foreground: 220 13% 15%;
+    /* Modern blue gradient background inspired by the design */
+    --background: 210 40% 98%;
+    --foreground: 215 25% 27%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 13% 15%;
+    --card-foreground: 215 25% 27%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 13% 15%;
+    --popover-foreground: 215 25% 27%;
 
-    --primary: 217 91% 60%;
+    /* Primary blue - main brand color from the design */
+    --primary: 212 100% 47%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 220 13% 15%;
+    /* Light blue secondary */
+    --secondary: 210 100% 95%;
+    --secondary-foreground: 215 25% 27%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 13% 46%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 13% 54%;
 
-    --accent: 220 14% 96%;
-    --accent-foreground: 220 13% 15%;
+    /* Accent blue for highlights */
+    --accent: 212 100% 87%;
+    --accent-foreground: 215 25% 27%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 217 91% 60%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 212 100% 47%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    /* CiudadConecta inspired colors */
-    --ciudadconecta-blue: 217 91% 60%;
-    --ciudadconecta-blue-dark: 217 91% 50%;
-    --ciudadconecta-red: 0 84% 60%;
-    --ciudadconecta-yellow: 45 93% 47%;
-    --ciudadconecta-green: 142 71% 45%;
+    /* Modern blue palette inspired by the uploaded design */
+    --modern-blue-50: 210 100% 98%;
+    --modern-blue-100: 210 100% 95%;
+    --modern-blue-200: 212 100% 87%;
+    --modern-blue-300: 212 100% 78%;
+    --modern-blue-400: 212 100% 63%;
+    --modern-blue-500: 212 100% 47%;
+    --modern-blue-600: 212 100% 40%;
+    --modern-blue-700: 213 87% 34%;
+    --modern-blue-800: 213 84% 28%;
+    --modern-blue-900: 214 79% 23%;
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 220 13% 26%;
@@ -55,33 +64,34 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    /* Dark mode with modern blue accents */
+    --background: 215 28% 9%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 215 28% 11%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 215 28% 11%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 212 100% 63%;
+    --primary-foreground: 215 28% 9%;
 
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 215 25% 16%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 215 25% 16%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 215 25% 18%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 62% 50%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 215 25% 18%;
+    --input: 215 25% 18%;
+    --ring: 212 100% 63%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -104,60 +114,70 @@
   }
 }
 
-/* Estilos personalizados inspirados en CiudadConecta - Paleta simplificada */
+/* Modern design components inspired by the uploaded design */
 @layer components {
-  .ciudadconecta-gradient {
-    background: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(45, 93%, 47%) 100%);
+  /* Main gradient using modern blue palette */
+  .modern-gradient {
+    background: linear-gradient(135deg, hsl(var(--modern-blue-500)) 0%, hsl(var(--modern-blue-600)) 50%, hsl(var(--modern-blue-700)) 100%);
   }
   
-  .ciudadconecta-gradient-text {
-    @apply bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent;
+  .modern-gradient-soft {
+    background: linear-gradient(135deg, hsl(var(--modern-blue-100)) 0%, hsl(var(--modern-blue-200)) 100%);
   }
   
-  .ciudadconecta-card {
-    @apply bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 hover:-translate-y-1;
+  .modern-gradient-text {
+    background: linear-gradient(135deg, hsl(var(--modern-blue-500)), hsl(var(--modern-blue-700)));
+    @apply bg-clip-text text-transparent;
   }
   
-  .ciudadconecta-glass {
-    @apply bg-white/10 backdrop-blur-md border border-white/20;
+  /* Modern card styles with glass morphism */
+  .modern-card {
+    @apply bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2;
+    box-shadow: 0 20px 60px rgba(25, 118, 210, 0.15);
   }
   
-  .ciudadconecta-shadow {
-    box-shadow: 0 10px 40px rgba(59, 130, 246, 0.15);
+  .modern-glass {
+    @apply bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl;
   }
   
-  /* Paleta de colores simplificada - solo azul como principal */
-  .service-card-blue {
-    @apply bg-gradient-to-br from-blue-500 to-blue-600 text-white;
+  .modern-shadow {
+    box-shadow: 0 25px 80px rgba(25, 118, 210, 0.2);
   }
   
-  .service-card-blue-light {
-    @apply bg-gradient-to-br from-blue-400 to-blue-500 text-white;
+  /* Service cards with modern blue variations */
+  .service-card-primary {
+    background: linear-gradient(135deg, hsl(var(--modern-blue-500)) 0%, hsl(var(--modern-blue-600)) 100%);
+    @apply text-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105;
   }
   
-  .service-card-blue-dark {
-    @apply bg-gradient-to-br from-blue-600 to-blue-700 text-white;
+  .service-card-secondary {
+    background: linear-gradient(135deg, hsl(var(--modern-blue-400)) 0%, hsl(var(--modern-blue-500)) 100%);
+    @apply text-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105;
   }
   
-  .service-card-gray {
-    @apply bg-gradient-to-br from-gray-500 to-gray-600 text-white;
+  .service-card-accent {
+    background: linear-gradient(135deg, hsl(var(--modern-blue-300)) 0%, hsl(var(--modern-blue-400)) 100%);
+    @apply text-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105;
+  }
+  
+  .service-card-light {
+    background: linear-gradient(135deg, hsl(var(--modern-blue-100)) 0%, hsl(var(--modern-blue-200)) 100%);
+    @apply text-modern-blue-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105;
   }
 
-  /* Birthday card gradients */
-  .arcana-blue-gradient {
-    @apply bg-gradient-to-r from-blue-500 to-blue-600;
+  /* Circular elements like in the design */
+  .modern-circle {
+    @apply rounded-full bg-gradient-to-br from-modern-blue-400 to-modern-blue-600 shadow-lg;
   }
   
-  .arcana-gradient {
-    background: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(217, 91%, 50%) 100%);
+  /* Modern button styles */
+  .modern-button {
+    background: linear-gradient(135deg, hsl(var(--modern-blue-500)) 0%, hsl(var(--modern-blue-600)) 100%);
+    @apply text-white rounded-xl px-6 py-3 font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105;
   }
   
-  .arcana-gradient-text {
-    @apply bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent;
-  }
-
-  .yellow-gradient {
-    @apply bg-gradient-to-r from-yellow-400 to-orange-500;
+  .modern-button-outline {
+    @apply border-2 border-modern-blue-500 text-modern-blue-500 rounded-xl px-6 py-3 font-medium hover:bg-modern-blue-500 hover:text-white transition-all duration-300;
   }
 }
 
@@ -176,20 +196,20 @@
   }
 }
 
-/* Scrollbar personalizado */
+/* Modern scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: hsl(var(--modern-blue-50));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #0c91eb, #eab308);
-  border-radius: 4px;
+  background: linear-gradient(135deg, hsl(var(--modern-blue-500)), hsl(var(--modern-blue-600)));
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #005ba3, #ca8a04);
+  background: linear-gradient(135deg, hsl(var(--modern-blue-600)), hsl(var(--modern-blue-700)));
 }

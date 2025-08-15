@@ -63,39 +63,25 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Colores personalizados para ARCANA
-				arcana: {
-					blue: {
-						50: '#f0f7ff',
-						100: '#e0efff',
-						200: '#b9e0fe',
-						300: '#7cc8fd',
-						400: '#36acfa',
-						500: '#0c91eb',
-						600: '#0073c9',
-						700: '#005ba3',
-						800: '#004d86',
-						900: '#00426f',
-					},
-					gold: {
-						50: '#fefce8',
-						100: '#fef9c3',
-						200: '#fef08a',
-						300: '#fde047',
-						400: '#facc15',
-						500: '#eab308',
-						600: '#ca8a04',
-						700: '#a16207',
-						800: '#854d0e',
-						900: '#713f12',
-					}
+				// Modern blue palette inspired by the design
+				'modern-blue': {
+					50: 'hsl(var(--modern-blue-50))',
+					100: 'hsl(var(--modern-blue-100))',
+					200: 'hsl(var(--modern-blue-200))',
+					300: 'hsl(var(--modern-blue-300))',
+					400: 'hsl(var(--modern-blue-400))',
+					500: 'hsl(var(--modern-blue-500))',
+					600: 'hsl(var(--modern-blue-600))',
+					700: 'hsl(var(--modern-blue-700))',
+					800: 'hsl(var(--modern-blue-800))',
+					900: 'hsl(var(--modern-blue-900))',
 				}
 			},
 			backgroundImage: {
-				'arcana-gradient': 'linear-gradient(135deg, #0c91eb 0%, #005ba3 50%, #eab308 100%)',
-				'arcana-gradient-soft': 'linear-gradient(135deg, #e0efff 0%, #b9e0fe 50%, #fef9c3 100%)',
-				'arcana-blue-gradient': 'linear-gradient(135deg, #0c91eb 0%, #005ba3 100%)',
-				'arcana-gold-gradient': 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)',
+				'modern-gradient': 'linear-gradient(135deg, hsl(var(--modern-blue-500)) 0%, hsl(var(--modern-blue-600)) 50%, hsl(var(--modern-blue-700)) 100%)',
+				'modern-gradient-soft': 'linear-gradient(135deg, hsl(var(--modern-blue-100)) 0%, hsl(var(--modern-blue-200)) 100%)',
+				'modern-blue-gradient': 'linear-gradient(135deg, hsl(var(--modern-blue-500)) 0%, hsl(var(--modern-blue-600)) 100%)',
+				'modern-glass': 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
