@@ -168,76 +168,87 @@ const VocalTraining = () => {
     }
   };
 
-  const generateAudioInstruction = async (exerciseDescription: string, exerciseName: string) => {
+  const generateAudioInstruction = async (instruction: string, exerciseName: string): Promise<boolean> => {
     try {
-      const { data, error } = await supabase.functions.invoke('text-to-speech', {
-        body: {
-          text: `Ejercicio: ${exerciseName}. ${exerciseDescription}. Respira profundamente y toma tu tiempo. Cuando estés listo, puedes comenzar.`,
-          voice: 'nova'
-        }
+      // Check if speech synthesis is supported
+      if (!('speechSynthesis' in window)) {
+        toast({
+          title: "Error",
+          description: "Tu navegador no soporta síntesis de voz.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      // Cancel any ongoing speech
+      speechSynthesis.cancel();
+
+      const text = `Ejercicio: ${exerciseName}. ${instruction}`;
+      const utterance = new SpeechSynthesisUtterance(text);
+      
+      // Configure voice settings
+      utterance.lang = 'es-ES'; // Spanish
+      utterance.rate = 0.8; // Slightly slower for better comprehension
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+
+      // Try to find a Spanish voice
+      const voices = speechSynthesis.getVoices();
+      const spanishVoice = voices.find(voice => 
+        voice.lang.startsWith('es') || voice.name.toLowerCase().includes('spanish')
+      );
+      
+      if (spanishVoice) {
+        utterance.voice = spanishVoice;
+      }
+
+      return new Promise((resolve) => {
+        utterance.onend = () => {
+          setIsPlayingAudio(false);
+          resolve(true);
+        };
+        
+        utterance.onerror = (event) => {
+          console.error('Speech synthesis error:', event);
+          setIsPlayingAudio(false);
+          toast({
+            title: "Error",
+            description: "No se pudo reproducir la instrucción.",
+            variant: "destructive"
+          });
+          resolve(false);
+        };
+
+        speechSynthesis.speak(utterance);
       });
-
-      if (error) throw error;
-
-      // Create audio from base64
-      const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
-      return audio;
     } catch (error) {
-      console.error('Error generating audio:', error);
+      console.error('Error generating audio instruction:', error);
       toast({
         title: "Error",
         description: "No se pudo generar la instrucción de audio.",
         variant: "destructive"
       });
-      return null;
+      return false;
     }
   };
 
   const playAudioInstruction = async (exercise: Exercise) => {
-    if (currentAudio) {
-      currentAudio.pause();
-      setIsPlayingAudio(false);
-    }
-
-    setIsPlayingAudio(true);
-    const audio = await generateAudioInstruction(exercise.description, exercise.name);
-    if (!audio) {
-      setIsPlayingAudio(false);
+    if (isPlayingAudio) {
+      stopAudio();
       return;
     }
 
-    setCurrentAudio(audio);
-
-    audio.onended = () => {
+    setIsPlayingAudio(true);
+    const success = await generateAudioInstruction(exercise.description, exercise.name);
+    if (!success) {
       setIsPlayingAudio(false);
-      setCurrentAudio(null);
-    };
-
-    audio.onerror = () => {
-      setIsPlayingAudio(false);
-      setCurrentAudio(null);
-      toast({
-        title: "Error",
-        description: "No se pudo reproducir la instrucción.",
-        variant: "destructive"
-      });
-    };
-
-    try {
-      await audio.play();
-    } catch (error) {
-      setIsPlayingAudio(false);
-      setCurrentAudio(null);
-      console.error('Error playing audio:', error);
     }
   };
 
   const stopAudio = () => {
-    if (currentAudio) {
-      currentAudio.pause();
-      setIsPlayingAudio(false);
-      setCurrentAudio(null);
-    }
+    speechSynthesis.cancel();
+    setIsPlayingAudio(false);
+    setCurrentAudio(null);
   };
 
   const startExercise = async (exercise: Exercise) => {
