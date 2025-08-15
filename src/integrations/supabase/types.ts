@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -258,6 +258,69 @@ export type Database = {
           },
         ]
       }
+      dance_training: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          dance_style: string
+          difficulty_level: number | null
+          duration_minutes: number | null
+          formation_type: string | null
+          id: string
+          instructor_feedback: string | null
+          is_completed: boolean | null
+          music_url: string | null
+          notes: string | null
+          performance_score: number | null
+          routine_description: string | null
+          routine_name: string
+          target_movements: string[] | null
+          updated_at: string
+          user_id: string
+          video_url: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          dance_style: string
+          difficulty_level?: number | null
+          duration_minutes?: number | null
+          formation_type?: string | null
+          id?: string
+          instructor_feedback?: string | null
+          is_completed?: boolean | null
+          music_url?: string | null
+          notes?: string | null
+          performance_score?: number | null
+          routine_description?: string | null
+          routine_name: string
+          target_movements?: string[] | null
+          updated_at?: string
+          user_id: string
+          video_url?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          dance_style?: string
+          difficulty_level?: number | null
+          duration_minutes?: number | null
+          formation_type?: string | null
+          id?: string
+          instructor_feedback?: string | null
+          is_completed?: boolean | null
+          music_url?: string | null
+          notes?: string | null
+          performance_score?: number | null
+          routine_description?: string | null
+          routine_name?: string
+          target_movements?: string[] | null
+          updated_at?: string
+          user_id?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       director_replacement_requests: {
         Row: {
           created_at: string
@@ -440,6 +503,72 @@ export type Database = {
           },
         ]
       }
+      instrument_training: {
+        Row: {
+          audio_url: string | null
+          completed_at: string | null
+          created_at: string
+          difficulty_level: number | null
+          duration_minutes: number | null
+          exercise_description: string | null
+          exercise_name: string
+          id: string
+          instrument: string
+          is_completed: boolean | null
+          key_signature: string | null
+          notes: string | null
+          practice_score: number | null
+          sheet_music_url: string | null
+          target_techniques: string[] | null
+          tempo: number | null
+          updated_at: string
+          user_id: string
+          video_url: string | null
+        }
+        Insert: {
+          audio_url?: string | null
+          completed_at?: string | null
+          created_at?: string
+          difficulty_level?: number | null
+          duration_minutes?: number | null
+          exercise_description?: string | null
+          exercise_name: string
+          id?: string
+          instrument: string
+          is_completed?: boolean | null
+          key_signature?: string | null
+          notes?: string | null
+          practice_score?: number | null
+          sheet_music_url?: string | null
+          target_techniques?: string[] | null
+          tempo?: number | null
+          updated_at?: string
+          user_id: string
+          video_url?: string | null
+        }
+        Update: {
+          audio_url?: string | null
+          completed_at?: string | null
+          created_at?: string
+          difficulty_level?: number | null
+          duration_minutes?: number | null
+          exercise_description?: string | null
+          exercise_name?: string
+          id?: string
+          instrument?: string
+          is_completed?: boolean | null
+          key_signature?: string | null
+          notes?: string | null
+          practice_score?: number | null
+          sheet_music_url?: string | null
+          target_techniques?: string[] | null
+          tempo?: number | null
+          updated_at?: string
+          user_id?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       members: {
         Row: {
           apellidos: string
@@ -546,6 +675,93 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      personal_assistant_config: {
+        Row: {
+          created_at: string
+          expense_categories: string[] | null
+          id: string
+          monthly_budget: number | null
+          preferred_voice: string | null
+          reminder_preferences: Json | null
+          savings_goal: number | null
+          updated_at: string
+          user_id: string
+          voice_commands_enabled: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          expense_categories?: string[] | null
+          id?: string
+          monthly_budget?: number | null
+          preferred_voice?: string | null
+          reminder_preferences?: Json | null
+          savings_goal?: number | null
+          updated_at?: string
+          user_id: string
+          voice_commands_enabled?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          expense_categories?: string[] | null
+          id?: string
+          monthly_budget?: number | null
+          preferred_voice?: string | null
+          reminder_preferences?: Json | null
+          savings_goal?: number | null
+          updated_at?: string
+          user_id?: string
+          voice_commands_enabled?: boolean | null
+        }
+        Relationships: []
+      }
+      personal_expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          description: string | null
+          encrypted_notes: string | null
+          expense_date: string
+          expense_type: string
+          id: string
+          is_recurring: boolean | null
+          recurring_frequency: string | null
+          tags: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          description?: string | null
+          encrypted_notes?: string | null
+          expense_date?: string
+          expense_type: string
+          id?: string
+          is_recurring?: boolean | null
+          recurring_frequency?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string | null
+          encrypted_notes?: string | null
+          expense_date?: string
+          expense_type?: string
+          id?: string
+          is_recurring?: boolean | null
+          recurring_frequency?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -922,6 +1138,51 @@ export type Database = {
           },
         ]
       }
+      training_progress: {
+        Row: {
+          areas_to_improve: string[] | null
+          created_at: string
+          id: string
+          instructor_notes: string | null
+          performance_score: number | null
+          session_date: string
+          session_duration_minutes: number | null
+          strengths: string[] | null
+          training_id: string
+          training_type: string
+          user_id: string
+          user_reflection: string | null
+        }
+        Insert: {
+          areas_to_improve?: string[] | null
+          created_at?: string
+          id?: string
+          instructor_notes?: string | null
+          performance_score?: number | null
+          session_date?: string
+          session_duration_minutes?: number | null
+          strengths?: string[] | null
+          training_id: string
+          training_type: string
+          user_id: string
+          user_reflection?: string | null
+        }
+        Update: {
+          areas_to_improve?: string[] | null
+          created_at?: string
+          id?: string
+          instructor_notes?: string | null
+          performance_score?: number | null
+          session_date?: string
+          session_duration_minutes?: number | null
+          strengths?: string[] | null
+          training_id?: string
+          training_type?: string
+          user_id?: string
+          user_reflection?: string | null
+        }
+        Relationships: []
+      }
       user_song_knowledge: {
         Row: {
           id: string
@@ -998,6 +1259,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      vocal_training: {
+        Row: {
+          audio_url: string | null
+          completed_at: string | null
+          created_at: string
+          difficulty_level: number | null
+          duration_minutes: number | null
+          exercise_description: string | null
+          exercise_name: string
+          id: string
+          is_completed: boolean | null
+          progress_notes: string | null
+          target_skills: string[] | null
+          updated_at: string
+          user_id: string
+          video_url: string | null
+          voice_type: string
+        }
+        Insert: {
+          audio_url?: string | null
+          completed_at?: string | null
+          created_at?: string
+          difficulty_level?: number | null
+          duration_minutes?: number | null
+          exercise_description?: string | null
+          exercise_name: string
+          id?: string
+          is_completed?: boolean | null
+          progress_notes?: string | null
+          target_skills?: string[] | null
+          updated_at?: string
+          user_id: string
+          video_url?: string | null
+          voice_type: string
+        }
+        Update: {
+          audio_url?: string | null
+          completed_at?: string | null
+          created_at?: string
+          difficulty_level?: number | null
+          duration_minutes?: number | null
+          exercise_description?: string | null
+          exercise_name?: string
+          id?: string
+          is_completed?: boolean | null
+          progress_notes?: string | null
+          target_skills?: string[] | null
+          updated_at?: string
+          user_id?: string
+          video_url?: string | null
+          voice_type?: string
+        }
+        Relationships: []
       }
       walkie_talkie_channels: {
         Row: {
@@ -1149,10 +1464,10 @@ export type Database = {
       get_available_directors: {
         Args: { exclude_director_id: string }
         Returns: {
-          id: string
-          full_name: string
-          phone: string
           email: string
+          full_name: string
+          id: string
+          phone: string
         }[]
       }
       get_current_user_role: {
@@ -1168,7 +1483,7 @@ export type Database = {
         Returns: boolean
       }
       is_room_moderator: {
-        Args: { _user_id: string; _room_id: string }
+        Args: { _room_id: string; _user_id: string }
         Returns: boolean
       }
     }
