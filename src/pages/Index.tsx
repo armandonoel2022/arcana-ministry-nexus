@@ -95,18 +95,18 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50">
+    <div className="min-h-screen modern-gradient">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header with Personality - Centered */}
-        <div className="text-center mb-12">
-          <div className="bg-gradient-to-r from-blue-600 to-blue-500 rounded-3xl p-8 shadow-xl text-white relative overflow-hidden mx-auto max-w-4xl">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-yellow-400/20 rounded-full translate-y-24 -translate-x-24"></div>
+        <div className="text-center mb-12 animate-fade-in">
+          <div className="modern-card p-8 relative overflow-hidden mx-auto max-w-4xl">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-modern-blue-100/10 rounded-full -translate-y-32 translate-x-32"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/20 rounded-full translate-y-24 -translate-x-24"></div>
             
             <div className="relative z-10">
               <div className="flex items-center justify-center gap-8 mb-8">
                 {/* Logo Container */}
-                <div className="w-24 h-24 bg-white/20 backdrop-blur rounded-full flex items-center justify-center border border-white/30 overflow-hidden">
+                <div className="w-24 h-24 modern-glass rounded-full flex items-center justify-center border border-white/30 overflow-hidden hover-scale">
                   {/* Placeholder for ministry logo - user can upload their logo here */}
                   <div className="w-full h-full bg-white/10 rounded-full flex items-center justify-center">
                     <Heart className="w-12 h-12 text-white/70" />
@@ -115,28 +115,28 @@ const Index = () => {
                 
                 {/* ARCANA Title - Made Larger */}
                 <div>
-                  <h1 className="text-6xl font-bold text-white tracking-wide">ARCANA</h1>
+                  <h1 className="text-6xl font-bold modern-gradient-text tracking-wide">ARCANA</h1>
                 </div>
               </div>
               
-              <div className="bg-white/10 backdrop-blur rounded-2xl p-6 border border-white/20">
-                <h2 className="text-2xl font-semibold mb-3">¡Hola, Armando!</h2>
-                <p className="text-blue-100 mb-6 text-lg">
+              <div className="modern-glass rounded-2xl p-6 border border-white/20">
+                <h2 className="text-2xl font-semibold mb-3 text-white">¡Hola, Armando!</h2>
+                <p className="text-modern-blue-100 mb-6 text-lg">
                   Gestiona de forma eficiente todos los aspectos del Ministerio ADN Arca de Noé
                 </p>
                 <div className="flex flex-wrap justify-center gap-3">
                   <Link to="/agenda">
-                    <Button className="bg-white text-blue-600 hover:bg-blue-50 rounded-2xl px-6 py-3 font-semibold shadow-lg hover:shadow-xl transition-all">
+                    <Button className="modern-button rounded-2xl px-6 py-3 font-semibold shadow-lg hover:shadow-xl transition-all">
                       Ver Mi Agenda
                     </Button>
                   </Link>
                   <Link to="/repertorio">
-                    <Button className="bg-white/20 text-white border border-white/30 hover:bg-white/30 rounded-2xl px-6 py-3 backdrop-blur">
+                    <Button className="modern-button-outline rounded-2xl px-6 py-3 backdrop-blur">
                       Explorar Repertorio
                     </Button>
                   </Link>
                   <Link to="/communication">
-                    <Button className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 hover:from-yellow-500 hover:to-yellow-600 rounded-2xl px-6 py-3 font-semibold shadow-lg">
+                    <Button className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground hover:from-accent/90 hover:to-accent/70 rounded-2xl px-6 py-3 font-semibold shadow-lg">
                       Chat Grupal
                     </Button>
                   </Link>
@@ -148,30 +148,30 @@ const Index = () => {
 
         {/* Main Services with Character - Oval Cards */}
         <div className="mb-12 max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-gray-800 mb-12 text-center">Funcionalidades Principales</h2>
+          <h2 className="text-3xl font-bold text-foreground mb-12 text-center animate-fade-in">Funcionalidades Principales</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {mainServices.map((service, index) => {
               const IconComponent = service.icon;
               const isBlue = index % 2 === 0;
               return (
                 <Link key={service.id} to={service.url}>
-                  <div className="bg-white hover:shadow-2xl transition-all duration-500 border-0 shadow-lg group cursor-pointer hover:-translate-y-3 overflow-hidden rounded-[2.5rem] relative">
-                    <div className={`absolute inset-0 opacity-5 ${isBlue ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gradient-to-br from-yellow-400 to-yellow-500'}`}></div>
+                  <div className="modern-glass hover:shadow-2xl transition-all duration-500 group cursor-pointer hover:-translate-y-3 overflow-hidden rounded-[2.5rem] relative animate-fade-in hover-scale">
+                    <div className={`absolute inset-0 opacity-10 ${isBlue ? 'bg-gradient-to-br from-modern-blue-500 to-modern-blue-600' : 'bg-gradient-to-br from-accent to-accent/80'}`}></div>
                     <div className="p-8 relative z-10">
                       <div className="flex items-center gap-6">
-                        <div className={`w-20 h-20 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 group-hover:scale-110 ${
-                          isBlue ? 'bg-gradient-to-br from-blue-500 to-blue-600' : 'bg-gradient-to-br from-yellow-400 to-yellow-500'
+                        <div className={`modern-circle w-20 h-20 flex items-center justify-center shadow-xl transition-all duration-300 group-hover:scale-110 ${
+                          isBlue ? 'bg-gradient-to-br from-modern-blue-500 to-modern-blue-600' : 'bg-gradient-to-br from-accent to-accent/80'
                         }`}>
                           <IconComponent className="w-10 h-10 text-white" />
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors mb-2">
+                          <h3 className="text-xl font-bold text-foreground group-hover:text-modern-blue-600 transition-colors mb-2">
                             {service.title}
                           </h3>
-                          <p className="text-gray-500 text-sm">{service.description}</p>
+                          <p className="text-muted-foreground text-sm">{service.description}</p>
                         </div>
-                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-blue-100 transition-all duration-300 group-hover:scale-110">
-                          <span className="text-gray-400 group-hover:text-blue-500 text-lg">→</span>
+                        <div className="modern-circle w-10 h-10 bg-secondary flex items-center justify-center group-hover:bg-modern-blue-100 transition-all duration-300 group-hover:scale-110">
+                          <span className="text-muted-foreground group-hover:text-modern-blue-500 text-lg">→</span>
                         </div>
                       </div>
                     </div>
@@ -185,26 +185,26 @@ const Index = () => {
         {/* Clean Statistics - Oval Design */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           <Link to="/integrantes">
-            <div className="bg-white hover:shadow-xl transition-all duration-300 border border-gray-100 text-center cursor-pointer group rounded-[2rem] p-8 hover:-translate-y-2">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg">
+            <div className="modern-glass hover:shadow-xl transition-all duration-300 text-center cursor-pointer group rounded-[2rem] p-8 hover:-translate-y-2 animate-fade-in hover-scale">
+              <div className="w-16 h-16 bg-gradient-to-br from-modern-blue-500 to-modern-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg">
                 <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-3xl font-bold text-gray-900 mb-2">
+              <h3 className="text-3xl font-bold text-foreground mb-2">
                 {loading ? "..." : memberCount}
               </h3>
-              <p className="text-gray-600">Miembros Activos</p>
+              <p className="text-muted-foreground">Miembros Activos</p>
             </div>
           </Link>
 
           <Link to="/worship-groups">
-            <div className="bg-white hover:shadow-xl transition-all duration-300 border border-gray-100 text-center cursor-pointer group rounded-[2rem] p-8 hover:-translate-y-2">
-              <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg">
+            <div className="modern-glass hover:shadow-xl transition-all duration-300 text-center cursor-pointer group rounded-[2rem] p-8 hover:-translate-y-2 animate-fade-in hover-scale">
+              <div className="w-16 h-16 bg-gradient-to-br from-accent to-accent/80 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-all duration-300 shadow-lg">
                 <Calendar className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-3xl font-bold text-gray-900 mb-2">
+              <h3 className="text-3xl font-bold text-foreground mb-2">
                 {loading ? "..." : groupCount}
               </h3>
-              <p className="text-gray-600">Grupos de Alabanza</p>
+              <p className="text-muted-foreground">Grupos de Alabanza</p>
             </div>
           </Link>
         </div>
