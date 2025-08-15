@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Music, Mic, Play, Pause, Trophy, Calendar } from "lucide-react";
+import { Music, Mic, Play, Pause, Trophy, Calendar, Volume2, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -33,6 +33,8 @@ const VocalTraining = () => {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
 
   const voiceTypes = [
     { value: "soprano", label: "Soprano" },
@@ -48,7 +50,7 @@ const VocalTraining = () => {
       {
         id: "1",
         name: "Respiración Diafragmática",
-        description: "Ejercicio básico de respiración para control vocal",
+        description: "Coloca una mano en el pecho y otra en el diafragma. Inhala lentamente por la nariz, asegurándote de que se mueva solo la mano del diafragma. Exhala lentamente por la boca durante 8 tiempos.",
         difficulty: "beginner" as const,
         duration: 5,
         completed: false
@@ -56,7 +58,7 @@ const VocalTraining = () => {
       {
         id: "2", 
         name: "Escalas Básicas",
-        description: "Do-Re-Mi-Fa-So-La-Si-Do con respiración controlada",
+        description: "Canta Do-Re-Mi-Fa-Sol-La-Si-Do manteniendo una respiración controlada. Asegúrate de que cada nota sea clara y en el tono correcto. Repite subiendo medio tono cada vez.",
         difficulty: "beginner" as const,
         duration: 10,
         completed: false
@@ -66,7 +68,7 @@ const VocalTraining = () => {
       {
         id: "3",
         name: "Vocalización con Consonantes",
-        description: "Ma-Me-Mi-Mo-Mu en diferentes tonalidades",
+        description: "Practica Ma-Me-Mi-Mo-Mu en escalas ascendentes y descendentes. Mantén la posición de la lengua relajada y asegúrate de que cada vocal sea clara y resonante.",
         difficulty: "intermediate" as const,
         duration: 15,
         completed: false
@@ -74,7 +76,7 @@ const VocalTraining = () => {
       {
         id: "4",
         name: "Control de Vibrato",
-        description: "Ejercicios para desarrollar y controlar el vibrato",
+        description: "Sostén una nota larga y estable, luego introduce gradualmente el vibrato. Controla la velocidad y amplitud del vibrato usando el apoyo diafragmático.",
         difficulty: "intermediate" as const,
         duration: 20,
         completed: false
@@ -84,7 +86,7 @@ const VocalTraining = () => {
       {
         id: "5",
         name: "Agilidad Vocal",
-        description: "Melismas y pasajes rápidos para técnica avanzada",
+        description: "Ejecuta melismas rápidos y precisos. Practica secuencias de 16vas notas manteniendo claridad en cada nota. Aumenta gradualmente la velocidad sin perder articulación.",
         difficulty: "advanced" as const,
         duration: 25,
         completed: false
@@ -92,7 +94,7 @@ const VocalTraining = () => {
       {
         id: "6",
         name: "Expresión e Interpretación",
-        description: "Técnicas avanzadas de expresión musical",
+        description: "Trabaja dinámicas contrastantes, fraseo musical y conexión emocional. Practica crescendos, diminuendos y cambios de color vocal para expresar diferentes emociones.",
         difficulty: "advanced" as const,
         duration: 30,
         completed: false
@@ -160,6 +162,78 @@ const VocalTraining = () => {
         description: "No se pudo guardar la configuración",
         variant: "destructive",
       });
+    }
+  };
+
+  const generateAudioInstruction = async (exerciseDescription: string, exerciseName: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('text-to-speech', {
+        body: {
+          text: `Ejercicio: ${exerciseName}. ${exerciseDescription}. Respira profundamente y toma tu tiempo. Cuando estés listo, puedes comenzar.`,
+          voice: 'nova'
+        }
+      });
+
+      if (error) throw error;
+
+      // Create audio from base64
+      const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
+      return audio;
+    } catch (error) {
+      console.error('Error generating audio:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo generar la instrucción de audio.",
+        variant: "destructive"
+      });
+      return null;
+    }
+  };
+
+  const playAudioInstruction = async (exercise: Exercise) => {
+    if (currentAudio) {
+      currentAudio.pause();
+      setIsPlayingAudio(false);
+    }
+
+    setIsPlayingAudio(true);
+    const audio = await generateAudioInstruction(exercise.description, exercise.name);
+    if (!audio) {
+      setIsPlayingAudio(false);
+      return;
+    }
+
+    setCurrentAudio(audio);
+
+    audio.onended = () => {
+      setIsPlayingAudio(false);
+      setCurrentAudio(null);
+    };
+
+    audio.onerror = () => {
+      setIsPlayingAudio(false);
+      setCurrentAudio(null);
+      toast({
+        title: "Error",
+        description: "No se pudo reproducir la instrucción.",
+        variant: "destructive"
+      });
+    };
+
+    try {
+      await audio.play();
+    } catch (error) {
+      setIsPlayingAudio(false);
+      setCurrentAudio(null);
+      console.error('Error playing audio:', error);
+    }
+  };
+
+  const stopAudio = () => {
+    if (currentAudio) {
+      currentAudio.pause();
+      setIsPlayingAudio(false);
+      setCurrentAudio(null);
     }
   };
 
@@ -287,30 +361,53 @@ const VocalTraining = () => {
                     </div>
                     <CardDescription>{exercise.description}</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">{exercise.duration} min</span>
-                      <Button
-                        onClick={() => startExercise(exercise)}
-                        disabled={isRecording || exercise.completed}
-                        className="flex items-center gap-2"
-                      >
-                        {isRecording && selectedExercise?.id === exercise.id ? (
-                          <>
-                            <Pause className="h-4 w-4" />
-                            Grabando...
-                          </>
-                        ) : exercise.completed ? (
-                          "Completado"
-                        ) : (
-                          <>
-                            <Play className="h-4 w-4" />
-                            Iniciar
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </CardContent>
+                   <CardContent>
+                     <div className="flex items-center justify-between">
+                       <span className="text-sm text-muted-foreground">{exercise.duration} min</span>
+                       <div className="flex items-center gap-2">
+                         <Button
+                           variant="outline"
+                           size="sm"
+                           onClick={() => playAudioInstruction(exercise)}
+                           disabled={isPlayingAudio}
+                           className="flex items-center gap-1"
+                         >
+                           <Volume2 className="h-4 w-4" />
+                           Escuchar
+                         </Button>
+                         {isPlayingAudio && (
+                           <Button
+                             variant="outline"
+                             size="sm"
+                             onClick={stopAudio}
+                             className="flex items-center gap-1"
+                           >
+                             <Square className="h-4 w-4" />
+                             Detener
+                           </Button>
+                         )}
+                         <Button
+                           onClick={() => startExercise(exercise)}
+                           disabled={isRecording || exercise.completed}
+                           className="flex items-center gap-2"
+                         >
+                           {isRecording && selectedExercise?.id === exercise.id ? (
+                             <>
+                               <Pause className="h-4 w-4" />
+                               Practicando...
+                             </>
+                           ) : exercise.completed ? (
+                             "Completado"
+                           ) : (
+                             <>
+                               <Play className="h-4 w-4" />
+                               Iniciar
+                             </>
+                           )}
+                         </Button>
+                       </div>
+                     </div>
+                   </CardContent>
                   {exercise.completed && (
                     <div className="absolute top-2 right-2">
                       <Trophy className="h-5 w-5 text-yellow-500" />
