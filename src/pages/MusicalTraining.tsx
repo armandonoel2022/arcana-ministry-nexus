@@ -123,6 +123,142 @@ const MusicalTraining = () => {
           completed: false
         }
       ]
+    },
+    bass: {
+      beginner: [
+        {
+          id: "b1",
+          name: "Técnica de Plectro",
+          description: "Técnica básica de púa para bajo",
+          difficulty: "beginner" as const,
+          duration: 15,
+          completed: false
+        },
+        {
+          id: "b2",
+          name: "Líneas de Bajo Simples",
+          description: "Patrones rítmicos básicos",
+          difficulty: "beginner" as const,
+          duration: 20,
+          completed: false
+        }
+      ],
+      intermediate: [
+        {
+          id: "b3",
+          name: "Slap y Pop",
+          description: "Técnicas percusivas del bajo",
+          difficulty: "intermediate" as const,
+          duration: 25,
+          completed: false
+        }
+      ],
+      advanced: [
+        {
+          id: "b4",
+          name: "Walking Bass",
+          description: "Líneas de bajo jazz caminante",
+          difficulty: "advanced" as const,
+          duration: 30,
+          completed: false
+        }
+      ]
+    },
+    drums: {
+      beginner: [
+        {
+          id: "d1",
+          name: "Ritmos Básicos",
+          description: "4/4 básico con kick y snare",
+          difficulty: "beginner" as const,
+          duration: 20,
+          completed: false
+        }
+      ],
+      intermediate: [
+        {
+          id: "d2",
+          name: "Fills y Transiciones",
+          description: "Rellenos y cambios de sección",
+          difficulty: "intermediate" as const,
+          duration: 25,
+          completed: false
+        }
+      ],
+      advanced: [
+        {
+          id: "d3",
+          name: "Polirritmos",
+          description: "Ritmos complejos y independencia",
+          difficulty: "advanced" as const,
+          duration: 35,
+          completed: false
+        }
+      ]
+    },
+    violin: {
+      beginner: [
+        {
+          id: "v1",
+          name: "Postura y Arco",
+          description: "Técnica básica de violín",
+          difficulty: "beginner" as const,
+          duration: 15,
+          completed: false
+        }
+      ],
+      intermediate: [
+        {
+          id: "v2",
+          name: "Escalas y Arpegios",
+          description: "Técnica avanzada de dedos",
+          difficulty: "intermediate" as const,
+          duration: 30,
+          completed: false
+        }
+      ],
+      advanced: [
+        {
+          id: "v3",
+          name: "Vibrato y Expresión",
+          description: "Técnicas expresivas avanzadas",
+          difficulty: "advanced" as const,
+          duration: 40,
+          completed: false
+        }
+      ]
+    },
+    flute: {
+      beginner: [
+        {
+          id: "f1",
+          name: "Respiración y Embocadura",
+          description: "Técnica básica de flauta",
+          difficulty: "beginner" as const,
+          duration: 15,
+          completed: false
+        }
+      ],
+      intermediate: [
+        {
+          id: "f2",
+          name: "Articulación",
+          description: "Técnicas de lengua y fraseo",
+          difficulty: "intermediate" as const,
+          duration: 25,
+          completed: false
+        }
+      ],
+      advanced: [
+        {
+          id: "f3",
+          name: "Técnicas Extendidas",
+          description: "Multifónicos y efectos especiales",
+          difficulty: "advanced" as const,
+          duration: 35,
+          completed: false
+        }
+      ]
     }
   };
 

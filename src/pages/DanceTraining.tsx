@@ -132,6 +132,146 @@ const DanceTraining = () => {
           style: "liturgical"
         }
       ]
+    },
+    praise: {
+      beginner: [
+        {
+          id: "pr1",
+          name: "Movimientos de Alabanza",
+          description: "Gestos básicos de alabanza y celebración",
+          difficulty: "beginner" as const,
+          duration: 15,
+          completed: false,
+          style: "praise"
+        }
+      ],
+      intermediate: [
+        {
+          id: "pr2",
+          name: "Danza Espontánea",
+          description: "Libertad en el espíritu durante la alabanza",
+          difficulty: "intermediate" as const,
+          duration: 25,
+          completed: false,
+          style: "praise"
+        }
+      ],
+      advanced: [
+        {
+          id: "pr3",
+          name: "Dirección de Alabanza",
+          description: "Liderando la congregación en danza",
+          difficulty: "advanced" as const,
+          duration: 35,
+          completed: false,
+          style: "praise"
+        }
+      ]
+    },
+    prophetic: {
+      beginner: [
+        {
+          id: "pro1",
+          name: "Movimientos Proféticos",
+          description: "Gestos básicos de danza profética y guerra espiritual",
+          difficulty: "beginner" as const,
+          duration: 20,
+          completed: false,
+          style: "prophetic"
+        }
+      ],
+      intermediate: [
+        {
+          id: "pro2",
+          name: "Danza con Banderas",
+          description: "Uso de banderas en la danza profética",
+          difficulty: "intermediate" as const,
+          duration: 30,
+          completed: false,
+          style: "prophetic"
+        }
+      ],
+      advanced: [
+        {
+          id: "pro3",
+          name: "Intercesión en Danza",
+          description: "Danza de intercesión y guerra espiritual avanzada",
+          difficulty: "advanced" as const,
+          duration: 40,
+          completed: false,
+          style: "prophetic"
+        }
+      ]
+    },
+    worship: {
+      beginner: [
+        {
+          id: "w1",
+          name: "Adoración Íntima",
+          description: "Movimientos suaves para momentos de adoración",
+          difficulty: "beginner" as const,
+          duration: 15,
+          completed: false,
+          style: "worship"
+        }
+      ],
+      intermediate: [
+        {
+          id: "w2",
+          name: "Fluir en el Espíritu",
+          description: "Danza espontánea durante la adoración",
+          difficulty: "intermediate" as const,
+          duration: 25,
+          completed: false,
+          style: "worship"
+        }
+      ],
+      advanced: [
+        {
+          id: "w3",
+          name: "Ministerio de Adoración",
+          description: "Dirigiendo en danza durante la adoración",
+          difficulty: "advanced" as const,
+          duration: 35,
+          completed: false,
+          style: "worship"
+        }
+      ]
+    },
+    flags: {
+      beginner: [
+        {
+          id: "f1",
+          name: "Técnica Básica con Banderas",
+          description: "Movimientos fundamentales con banderas",
+          difficulty: "beginner" as const,
+          duration: 20,
+          completed: false,
+          style: "flags"
+        }
+      ],
+      intermediate: [
+        {
+          id: "f2",
+          name: "Coreografía con Banderas",
+          description: "Secuencias coordinadas con banderas",
+          difficulty: "intermediate" as const,
+          duration: 30,
+          completed: false,
+          style: "flags"
+        }
+      ],
+      advanced: [
+        {
+          id: "f3",
+          name: "Formaciones Grupales",
+          description: "Coreografías complejas en grupo con banderas",
+          difficulty: "advanced" as const,
+          duration: 45,
+          completed: false,
+          style: "flags"
+        }
+      ]
     }
   };
 

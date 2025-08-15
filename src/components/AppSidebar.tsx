@@ -35,103 +35,133 @@ import {
 } from "@/components/ui/sidebar"
 import { Link, useLocation } from "react-router-dom"
 
-// Menu items.
-const items = [
+// Menu items organized by categories
+const menuCategories = [
   {
-    title: "Inicio",
-    url: "/",
-    icon: Home,
+    label: "Principal",
+    items: [
+      {
+        title: "Inicio",
+        url: "/",
+        icon: Home,
+      },
+      {
+        title: "Notificaciones",
+        url: "/notificaciones",
+        icon: Bell,
+      },
+    ]
   },
   {
-    title: "Agenda Ministerial",
-    url: "/agenda",
-    icon: Calendar,
+    label: "Ministerio",
+    items: [
+      {
+        title: "Agenda Ministerial",
+        url: "/agenda",
+        icon: Calendar,
+      },
+      {
+        title: "Reemplazos de Director",
+        url: "/director-replacements",
+        icon: UserCheck,
+      },
+      {
+        title: "Repertorio Musical",
+        url: "/repertorio",
+        icon: Music,
+      },
+      {
+        title: "Eventos Especiales",
+        url: "/eventos-especiales",
+        icon: Sparkles,
+      },
+    ]
   },
   {
-    title: "Reemplazos de Director",
-    url: "/director-replacements",
-    icon: UserCheck,
+    label: "Entrenamiento",
+    items: [
+      {
+        title: "Entrenamiento Vocal",
+        url: "/vocal-training",
+        icon: Mic,
+      },
+      {
+        title: "Entrenamiento Musical",
+        url: "/musical-training",
+        icon: Guitar,
+      },
+      {
+        title: "Entrenamiento de Danza",
+        url: "/dance-training",
+        icon: Users2,
+      },
+      {
+        title: "Recomendaciones",
+        url: "/recomendaciones",
+        icon: Star,
+      },
+    ]
   },
   {
-    title: "Repertorio Musical",
-    url: "/repertorio",
-    icon: Music,
+    label: "Comunidad",
+    items: [
+      {
+        title: "Comunicación",
+        url: "/communication",
+        icon: MessageSquare,
+      },
+      {
+        title: "Integrantes",
+        url: "/integrantes",
+        icon: Users,
+      },
+      {
+        title: "Grupos de Alabanza",
+        url: "/worship-groups",
+        icon: Users,
+      },
+      {
+        title: "Cumpleaños",
+        url: "/cumpleanos",
+        icon: Gift,
+      },
+    ]
   },
   {
-    title: "Comunicación",
-    url: "/communication",
-    icon: MessageSquare,
+    label: "Personal",
+    items: [
+      {
+        title: "Asistente Personal",
+        url: "/personal-assistant",
+        icon: Bot,
+      },
+      {
+        title: "Módulo Espiritual",
+        url: "/spiritual",
+        icon: Heart,
+      },
+    ]
   },
   {
-    title: "Integrantes",
-    url: "/integrantes",
-    icon: Users,
-  },
-  {
-    title: "Grupos de Alabanza",
-    url: "/worship-groups",
-    icon: Users,
-  },
-  {
-    title: "Recomendaciones",
-    url: "/recomendaciones",
-    icon: Star,
-  },
-  {
-    title: "Eventos Especiales",
-    url: "/eventos-especiales",
-    icon: Sparkles,
-  },
-  {
-    title: "Módulo Espiritual",
-    url: "/spiritual",
-    icon: Heart,
-  },
-  {
-    title: "Cumpleaños",
-    url: "/cumpleanos",
-    icon: Gift,
-  },
-  {
-    title: "Entrenamiento Vocal",
-    url: "/vocal-training",
-    icon: Mic,
-  },
-  {
-    title: "Entrenamiento Musical",
-    url: "/musical-training",
-    icon: Guitar,
-  },
-  {
-    title: "Entrenamiento de Danza",
-    url: "/dance-training",
-    icon: Users2,
-  },
-  {
-    title: "Asistente Personal",
-    url: "/personal-assistant",
-    icon: Bot,
-  },
-  {
-    title: "Notificaciones",
-    url: "/notificaciones",
-    icon: Bell,
-  },
-  {
-    title: "Administración",
-    url: "/admin",
-    icon: Settings,
-  },
-  {
-    title: "Acerca del Ministerio",
-    url: "/about",
-    icon: Info,
-  },
-  {
-    title: "Estatutos",
-    url: "/statutes",
-    icon: FileText,
-  },
+    label: "Configuración",
+    items: [
+      {
+        title: "Administración",
+        url: "/admin",
+        icon: Settings,
+      },
+      {
+        title: "Acerca del Ministerio",
+        url: "/about",
+        icon: Info,
+      },
+      {
+        title: "Estatutos",
+        url: "/statutes",
+        icon: FileText,
+      },
+    ]
+  }
 ]
 
 export function AppSidebar() {
@@ -162,29 +192,36 @@ export function AppSidebar() {
           </div>
         </div>
 
-        <SidebarGroup className="px-3 py-4">
-          <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild 
-                    className="h-12 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 data-[active=true]:bg-blue-500 data-[active=true]:text-white data-[active=true]:shadow-lg"
-                  >
-                    <Link 
-                      to={item.url} 
-                      className="flex items-center gap-3 px-3"
-                      onClick={handleLinkClick}
+        {/* Navigation Categories */}
+        {menuCategories.map((category) => (
+          <SidebarGroup key={category.label} className="px-3 py-2">
+            <SidebarGroupLabel className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-2">
+              {category.label}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="space-y-1">
+                {category.items.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton 
+                      asChild 
+                      className="h-10 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 data-[active=true]:bg-blue-500 data-[active=true]:text-white data-[active=true]:shadow-lg"
+                      data-active={location.pathname === item.url}
                     >
-                      <item.icon className="w-5 h-5" />
-                      <span className="font-medium">{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                      <Link 
+                        to={item.url} 
+                        className="flex items-center gap-3 px-3"
+                        onClick={handleLinkClick}
+                      >
+                        <item.icon className="w-4 h-4" />
+                        <span className="font-medium text-sm">{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
     </Sidebar>
   )
