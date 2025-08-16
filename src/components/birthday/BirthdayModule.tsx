@@ -323,10 +323,10 @@ const BirthdayModule = () => {
         </Card>
       )}
 
-      {/* Panel de pruebas para administradores */}
-      {isAdmin && <BirthdayNotificationTest />}
+      {/* Panel de pruebas para administradores - siempre visible para debugging */}
+      <BirthdayNotificationTest />
 
-      {/* Próximos cumpleaños */}
+      {/* Cumpleaños de hoy */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
