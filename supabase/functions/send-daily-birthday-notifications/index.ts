@@ -100,21 +100,25 @@ serve(async (req) => {
         await new Promise(resolve => setTimeout(resolve, 60000)) // 60 seconds
       }
 
-      const notificationMessage = `🎉 ¡Hoy está de cumpleaños ${member.nombres} ${member.apellidos}! 🎂\n\nRecuerda ir a la sala de chat general y dedicarle un mensaje de felicitación. ¡Hagamos que se sienta especial en su día! ✨`
-
-      // Buscar el perfil del miembro que cumple años para excluirlo
+      // Buscar el perfil del miembro que cumple años
       const birthdayProfile = profiles?.find(profile => 
         profile.full_name?.toLowerCase().includes(member.nombres.toLowerCase()) &&
         profile.full_name?.toLowerCase().includes(member.apellidos.toLowerCase())
       )
 
+      // Mensaje para otros integrantes
+      const notificationMessageForOthers = `🎉 ¡Hoy está de cumpleaños ${member.nombres} ${member.apellidos}! 🎂\n\nRecuerda ir a la sala de chat general y dedicarle un mensaje de felicitación. ¡Hagamos que se sienta especial en su día! ✨`
+      
+      // Mensaje para el cumpleañero
+      const notificationMessageForBirthday = `🎉 ¡Feliz cumpleaños ${member.nombres}! 🎂\n\n¡Hoy es tu día especial! Que Dios te bendiga grandemente en este nuevo año de vida. ✨`
+
       // Crear notificaciones para todos los usuarios EXCEPTO el que cumple años
-      const notifications = profiles?.filter(profile => 
+      const notificationsForOthers = profiles?.filter(profile => 
         profile.id !== birthdayProfile?.id // Excluir al cumpleañero
       ).map(profile => ({
         type: 'birthday_daily',
         title: `🎂 ¡Feliz Cumpleaños ${member.nombres}!`,
-        message: notificationMessage,
+        message: notificationMessageForOthers,
         recipient_id: profile.id,
         notification_category: 'birthday',
         priority: 3,
@@ -128,26 +132,53 @@ serve(async (req) => {
         }
       })) || []
 
+      // Crear notificación especial para el cumpleañero (si tiene perfil)
+      const notificationForBirthday = birthdayProfile ? [{
+        type: 'birthday_daily',
+        title: `🎂 ¡Feliz Cumpleaños!`,
+        message: notificationMessageForBirthday,
+        recipient_id: birthdayProfile.id,
+        notification_category: 'birthday',
+        priority: 3,
+        metadata: {
+          birthday_member_id: member.id,
+          birthday_member_name: `${member.nombres} ${member.apellidos}`,
+          birthday_member_photo: member.photo_url,
+          birthday_date: new Date().toISOString().split('T')[0],
+          show_confetti: true,
+          is_test: !!birthdayMemberId,
+          is_birthday_person: true
+        }
+      }] : []
+
+      // Combinar todas las notificaciones
+      const allNotifications = [...notificationsForOthers, ...notificationForBirthday]
+
       // Insertar notificaciones
-      if (notifications.length === 0) {
-        console.log(`No notifications to send for ${member.nombres} (excluded birthday person or no profiles found)`)
+      if (allNotifications.length === 0) {
+        console.log(`No notifications to send for ${member.nombres} (no profiles found)`)
         continue
       }
 
-      console.log(`Inserting ${notifications.length} notifications for ${member.nombres} ${member.apellidos}`)
-      console.log('Sample notification:', JSON.stringify(notifications[0], null, 2))
+      console.log(`Inserting ${allNotifications.length} notifications for ${member.nombres} ${member.apellidos}`)
+      console.log(`- ${notificationsForOthers.length} for other members`)
+      console.log(`- ${notificationForBirthday.length} for birthday person`)
+      console.log('Sample notification for others:', JSON.stringify(notificationsForOthers[0], null, 2))
+      if (notificationForBirthday.length > 0) {
+        console.log('Sample notification for birthday person:', JSON.stringify(notificationForBirthday[0], null, 2))
+      }
 
       const { error: notificationError } = await supabase
         .from('system_notifications')
-        .insert(notifications)
+        .insert(allNotifications)
 
       if (notificationError) {
         console.error(`Error inserting notifications for ${member.nombres}:`, notificationError)
         continue
       }
 
-      notificationsSent += notifications.length
-      console.log(`Enviadas ${notifications.length} notificaciones para el cumpleaños de ${member.nombres} ${member.apellidos}`)
+      notificationsSent += allNotifications.length
+      console.log(`Enviadas ${allNotifications.length} notificaciones para el cumpleaños de ${member.nombres} ${member.apellidos}`)
     }
 
     return new Response(
@@ -156,7 +187,7 @@ serve(async (req) => {
         notifications_sent: notificationsSent,
         birthday_members: birthdayMembers.length,
         birthdays: birthdayMembers.map(m => `${m.nombres} ${m.apellidos}`),
-        excluded_birthday_person: true
+        sent_to_everyone: true
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

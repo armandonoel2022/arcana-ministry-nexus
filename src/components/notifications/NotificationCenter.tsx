@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Bell, Check, Clock, Music, Calendar, UserCheck, MessageSquare, Settings } from "lucide-react";
+import { Bell, Check, Clock, Music, Calendar, UserCheck, MessageSquare, Settings, Gift } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -142,6 +142,9 @@ const NotificationCenter = () => {
         return <Music className="w-5 h-5 text-green-600" />;
       case 'director_replacement_request':
         return <UserCheck className="w-5 h-5 text-orange-600" />;
+      case 'birthday_daily':
+      case 'birthday_monthly':
+        return <Gift className="w-5 h-5 text-pink-600" />;
       case 'general':
         return <MessageSquare className="w-5 h-5 text-gray-600" />;
       default:
