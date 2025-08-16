@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format, isToday, isSameDay, parseISO, isSameMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import BirthdayCard from './BirthdayCard';
+import BirthdayNotificationTest from './BirthdayNotificationTest';
 import {
   Dialog,
   DialogContent,
@@ -36,15 +37,34 @@ const BirthdayModule = () => {
   const [loading, setLoading] = useState(true);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [cardDialogOpen, setCardDialogOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchMembers();
+    checkAdminStatus();
   }, []);
 
   useEffect(() => {
     filterMembers();
   }, [searchTerm, members, showThisMonthOnly]);
+
+  const checkAdminStatus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        
+        setIsAdmin(profile?.role === 'administrator');
+      }
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+    }
+  };
 
   const fetchMembers = async () => {
     try {
@@ -302,6 +322,9 @@ const BirthdayModule = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Panel de pruebas para administradores */}
+      {isAdmin && <BirthdayNotificationTest />}
 
       {/* Próximos cumpleaños */}
       <Card>
