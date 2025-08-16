@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import ConfettiEffect from "@/components/birthday/ConfettiEffect";
 
 interface Notification {
   id: string;
@@ -26,6 +27,7 @@ const NotificationCenter = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'unread' | 'agenda' | 'repertory' | 'director_replacement'>('all');
+  const [showConfetti, setShowConfetti] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -46,6 +48,13 @@ const NotificationCenter = () => {
           
           // Show toast for new notification
           const newNotification = payload.new as Notification;
+          
+          // Check if it's a birthday notification that should trigger confetti
+          if (newNotification.metadata?.show_confetti) {
+            console.log('Triggering confetti for birthday notification');
+            setShowConfetti(true);
+          }
+          
           toast({
             title: newNotification.title,
             description: newNotification.message
@@ -61,13 +70,18 @@ const NotificationCenter = () => {
 
   const fetchNotifications = async () => {
     try {
+      console.log('Fetching notifications...');
       const { data, error } = await supabase
         .from('system_notifications')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(50);
 
+      console.log('Notifications query result:', { data, error });
+      
       if (error) throw error;
+      
+      console.log(`Loaded ${data?.length || 0} notifications`);
       setNotifications(data || []);
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -190,163 +204,204 @@ const NotificationCenter = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-arcana-gradient rounded-full flex items-center justify-center">
-            <Bell className="w-5 h-5 text-white" />
+    <>
+      <ConfettiEffect trigger={showConfetti} onComplete={() => setShowConfetti(false)} />
+      <div className="container mx-auto p-6 max-w-4xl">
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-arcana-gradient rounded-full flex items-center justify-center">
+                <Bell className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold arcana-gradient-text">Centro de Notificaciones</h1>
+                <p className="text-gray-600">
+                  {unreadCount > 0 ? `${unreadCount} notificaciones sin leer` : 'Todas las notificaciones están al día'}
+                </p>
+              </div>
+            </div>
+            {unreadCount > 0 && (
+              <Button onClick={markAllAsRead} className="flex items-center gap-2">
+                <Check className="w-4 h-4" />
+                Marcar todas como leídas
+              </Button>
+            )}
           </div>
-          <div>
-            <h1 className="text-3xl font-bold arcana-gradient-text">Centro de Notificaciones</h1>
-            <p className="text-gray-600">
-              {unreadCount > 0 ? `${unreadCount} notificaciones sin leer` : 'Todas las notificaciones están al día'}
-            </p>
-          </div>
-        </div>
-        {unreadCount > 0 && (
-          <Button onClick={markAllAsRead} className="flex items-center gap-2">
-            <Check className="w-4 h-4" />
-            Marcar todas como leídas
-          </Button>
-        )}
-      </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant={filter === 'all' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setFilter('all')}
-        >
-          Todas ({notifications.length})
-        </Button>
-        <Button
-          variant={filter === 'unread' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setFilter('unread')}
-        >
-          Sin leer ({unreadCount})
-        </Button>
-        <Button
-          variant={filter === 'agenda' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setFilter('agenda')}
-        >
-          <Calendar className="w-4 h-4 mr-1" />
-          Agenda
-        </Button>
-        <Button
-          variant={filter === 'repertory' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setFilter('repertory')}
-        >
-          <Music className="w-4 h-4 mr-1" />
-          Repertorio
-        </Button>
-        <Button
-          variant={filter === 'director_replacement' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setFilter('director_replacement')}
-        >
-          <UserCheck className="w-4 h-4 mr-1" />
-          Reemplazos
-        </Button>
-      </div>
-
-      {/* Notifications List */}
-      <div className="space-y-3">
-        {filteredNotifications.length === 0 ? (
-          <div className="text-center py-12">
-            <Bell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-600 mb-2">
-              No hay notificaciones
-            </h3>
-            <p className="text-gray-500">
-              {filter === 'unread' 
-                ? 'No tienes notificaciones sin leer'
-                : 'No hay notificaciones para mostrar'
-              }
-            </p>
-          </div>
-        ) : (
-          filteredNotifications.map((notification) => (
-            <Card 
-              key={notification.id} 
-              className={`border-l-4 ${getPriorityColor(notification.priority)} ${
-                !notification.is_read ? 'ring-2 ring-blue-100' : ''
-              } hover:shadow-md transition-shadow cursor-pointer`}
-              onClick={() => !notification.is_read && markAsRead(notification.id)}
+          {/* Filters */}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={filter === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilter('all')}
             >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    {getNotificationIcon(notification.type)}
-                    <div>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        {notification.title}
-                        {!notification.is_read && (
-                          <Badge variant="secondary" className="text-xs">
-                            Nuevo
-                          </Badge>
-                        )}
-                        <Badge variant="outline" className="text-xs">
-                          {getPriorityLabel(notification.priority)}
-                        </Badge>
-                      </CardTitle>
-                      <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {format(new Date(notification.created_at), 'dd/MM/yyyy HH:mm', { locale: es })}
+              Todas ({notifications.length})
+            </Button>
+            <Button
+              variant={filter === 'unread' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilter('unread')}
+            >
+              Sin leer ({unreadCount})
+            </Button>
+            <Button
+              variant={filter === 'agenda' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilter('agenda')}
+            >
+              <Calendar className="w-4 h-4 mr-1" />
+              Agenda
+            </Button>
+            <Button
+              variant={filter === 'repertory' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilter('repertory')}
+            >
+              <Music className="w-4 h-4 mr-1" />
+              Repertorio
+            </Button>
+            <Button
+              variant={filter === 'director_replacement' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilter('director_replacement')}
+            >
+              <UserCheck className="w-4 h-4 mr-1" />
+              Reemplazos
+            </Button>
+          </div>
+
+          {/* Notifications List */}
+          <div className="space-y-3">
+            {filteredNotifications.length === 0 ? (
+              <div className="text-center py-12">
+                <Bell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                  No hay notificaciones
+                </h3>
+                <p className="text-gray-500">
+                  {filter === 'unread' 
+                    ? 'No tienes notificaciones sin leer'
+                    : 'No hay notificaciones para mostrar'
+                  }
+                </p>
+              </div>
+            ) : (
+              filteredNotifications.map((notification) => (
+                <Card 
+                  key={notification.id} 
+                  className={`border-l-4 ${getPriorityColor(notification.priority)} ${
+                    !notification.is_read ? 'ring-2 ring-blue-100' : ''
+                  } hover:shadow-md transition-shadow cursor-pointer`}
+                  onClick={() => !notification.is_read && markAsRead(notification.id)}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        {getNotificationIcon(notification.type)}
+                        <div>
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            {notification.title}
+                            {!notification.is_read && (
+                              <Badge variant="secondary" className="text-xs">
+                                Nuevo
+                              </Badge>
+                            )}
+                            <Badge variant="outline" className="text-xs">
+                              {getPriorityLabel(notification.priority)}
+                            </Badge>
+                          </CardTitle>
+                          <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {format(new Date(notification.created_at), 'dd/MM/yyyy HH:mm', { locale: es })}
+                            </div>
+                            {notification.scheduled_for && (
+                              <div className="flex items-center gap-1">
+                                <Settings className="w-3 h-3" />
+                                Programada para: {format(new Date(notification.scheduled_for), 'dd/MM/yyyy HH:mm', { locale: es })}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        {notification.scheduled_for && (
-                          <div className="flex items-center gap-1">
-                            <Settings className="w-3 h-3" />
-                            Programada para: {format(new Date(notification.scheduled_for), 'dd/MM/yyyy HH:mm', { locale: es })}
+                      </div>
+                      {!notification.is_read && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            markAsRead(notification.id);
+                          }}
+                        >
+                          <Check className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-700 leading-relaxed mb-3">
+                      {notification.message}
+                    </p>
+                    
+                    {/* Special rendering for birthday notifications */}
+                    {(notification.type === 'birthday_daily' || notification.type === 'birthday_monthly') && notification.metadata && (
+                      <div className="mt-4 p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border border-pink-200">
+                        {notification.metadata.birthday_member_photo && (
+                          <div className="flex items-center gap-3 mb-3">
+                            <img 
+                              src={notification.metadata.birthday_member_photo} 
+                              alt={notification.metadata.birthday_member_name}
+                              className="w-12 h-12 rounded-full object-cover border-2 border-pink-300"
+                            />
+                            <div>
+                              <p className="font-semibold text-pink-800">{notification.metadata.birthday_member_name}</p>
+                              <p className="text-sm text-pink-600">¡Celebrando su día especial! 🎉</p>
+                            </div>
+                          </div>
+                        )}
+                        {notification.metadata.birthday_card && (
+                          <div className="text-sm text-pink-700 bg-white/50 p-3 rounded border border-pink-200">
+                            <strong>Cumpleaños de {notification.metadata.birthday_card.month}:</strong>
+                            <div className="grid grid-cols-2 gap-2 mt-2">
+                              {notification.metadata.birthday_card.birthdays.slice(0, 6).map((birthday: any, index: number) => (
+                                <div key={index} className="text-xs">
+                                  • {birthday.day} - {birthday.name}
+                                </div>
+                              ))}
+                            </div>
+                            {notification.metadata.birthday_card.birthdays.length > 6 && (
+                              <p className="text-xs mt-2 text-pink-600">
+                                Y {notification.metadata.birthday_card.birthdays.length - 6} más...
+                              </p>
+                            )}
                           </div>
                         )}
                       </div>
-                    </div>
-                  </div>
-                  {!notification.is_read && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        markAsRead(notification.id);
-                      }}
-                    >
-                      <Check className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-700 leading-relaxed mb-3">
-                  {notification.message}
-                </p>
-                
-                {/* Show metadata if available */}
-                {notification.metadata && (
-                  <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
-                    {notification.type === 'song_selection' && notification.metadata.song_title && (
-                      <div>Canción: <span className="font-medium">{notification.metadata.song_title}</span></div>
                     )}
-                    {notification.metadata.service_title && (
-                      <div>Servicio: <span className="font-medium">{notification.metadata.service_title}</span></div>
+                    
+                    {/* Show metadata if available */}
+                    {notification.metadata && (
+                      <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                        {notification.type === 'song_selection' && notification.metadata.song_title && (
+                          <div>Canción: <span className="font-medium">{notification.metadata.song_title}</span></div>
+                        )}
+                        {notification.metadata.service_title && (
+                          <div>Servicio: <span className="font-medium">{notification.metadata.service_title}</span></div>
+                        )}
+                        {notification.metadata.selected_by_name && (
+                          <div>Seleccionado por: <span className="font-medium">{notification.metadata.selected_by_name}</span></div>
+                        )}
+                      </div>
                     )}
-                    {notification.metadata.selected_by_name && (
-                      <div>Seleccionado por: <span className="font-medium">{notification.metadata.selected_by_name}</span></div>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))
-        )}
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
