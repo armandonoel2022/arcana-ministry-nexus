@@ -34,6 +34,7 @@ import {
   useSidebar
 } from "@/components/ui/sidebar"
 import { Link, useLocation } from "react-router-dom"
+import { useUnreadNotifications } from "@/hooks/useUnreadNotifications"
 
 // Menu items organized by categories
 const menuCategories = [
@@ -167,6 +168,7 @@ const menuCategories = [
 export function AppSidebar() {
   const { setOpenMobile } = useSidebar()
   const location = useLocation()
+  const unreadCount = useUnreadNotifications()
 
   const handleLinkClick = () => {
     // Close sidebar on mobile when a link is clicked
@@ -209,11 +211,16 @@ export function AppSidebar() {
                     >
                       <Link 
                         to={item.url} 
-                        className="flex items-center gap-3 px-3"
+                        className="flex items-center gap-3 px-3 relative"
                         onClick={handleLinkClick}
                       >
                         <item.icon className="w-4 h-4" />
                         <span className="font-medium text-sm">{item.title}</span>
+                        {item.title === "Notificaciones" && unreadCount > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                            {unreadCount > 99 ? "99+" : unreadCount}
+                          </span>
+                        )}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
