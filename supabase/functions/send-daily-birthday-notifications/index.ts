@@ -87,6 +87,8 @@ serve(async (req) => {
       throw profilesError
     }
 
+    console.log(`Found ${profiles?.length || 0} active profiles to notify`)
+
     let notificationsSent = 0
 
     // Para cada persona que cumple años, enviar notificaciones con delay
@@ -127,6 +129,14 @@ serve(async (req) => {
       })) || []
 
       // Insertar notificaciones
+      if (notifications.length === 0) {
+        console.log(`No notifications to send for ${member.nombres} (excluded birthday person or no profiles found)`)
+        continue
+      }
+
+      console.log(`Inserting ${notifications.length} notifications for ${member.nombres} ${member.apellidos}`)
+      console.log('Sample notification:', JSON.stringify(notifications[0], null, 2))
+
       const { error: notificationError } = await supabase
         .from('system_notifications')
         .insert(notifications)

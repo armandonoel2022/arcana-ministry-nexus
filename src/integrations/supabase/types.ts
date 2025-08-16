@@ -1574,6 +1574,8 @@ export type Database = {
         | "song_selection"
         | "daily_verse"
         | "system"
+        | "birthday_daily"
+        | "birthday_monthly"
       song_knowledge: "unknown" | "learning" | "known" | "expert"
       user_role:
         | "admin"
@@ -1762,6 +1764,8 @@ export const Constants = {
         "song_selection",
         "daily_verse",
         "system",
+        "birthday_daily",
+        "birthday_monthly",
       ],
       song_knowledge: ["unknown", "learning", "known", "expert"],
       user_role: [
