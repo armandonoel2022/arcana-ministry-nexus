@@ -1,14 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Bell, Calendar, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
+interface Member {
+  id: string;
+  nombres: string;
+  apellidos: string;
+  fecha_nacimiento?: string;
+}
+
 const BirthdayNotificationTest = () => {
   const [sendingMonthly, setSendingMonthly] = useState(false);
   const [sendingDaily, setSendingDaily] = useState(false);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [selectedMemberId, setSelectedMemberId] = useState<string>('');
   const { toast } = useToast();
+
+  useEffect(() => {
+    fetchMembers();
+  }, []);
+
+  const fetchMembers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('members')
+        .select('id, nombres, apellidos, fecha_nacimiento')
+        .eq('is_active', true)
+        .not('fecha_nacimiento', 'is', null)
+        .order('nombres', { ascending: true });
+
+      if (error) throw error;
+      setMembers(data || []);
+    } catch (error) {
+      console.error('Error fetching members:', error);
+    }
+  };
 
   const testMonthlyNotifications = async () => {
     setSendingMonthly(true);
@@ -34,21 +64,32 @@ const BirthdayNotificationTest = () => {
   };
 
   const testDailyNotifications = async () => {
+    if (!selectedMemberId) {
+      toast({
+        title: "⚠️ Selecciona un integrante",
+        description: "Debes seleccionar a la persona que cumple años para la prueba",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSendingDaily(true);
     try {
-      const { data, error } = await supabase.functions.invoke('send-daily-birthday-notifications');
+      const { data, error } = await supabase.functions.invoke('send-daily-birthday-notifications', {
+        body: { birthdayMemberId: selectedMemberId }
+      });
       
       if (error) throw error;
 
       if (data.birthday_members === 0) {
         toast({
-          title: "ℹ️ Sin cumpleaños hoy",
-          description: "No hay integrantes que cumplan años hoy",
+          title: "ℹ️ Sin cumpleaños",
+          description: "No se pudo procesar el cumpleaños seleccionado",
         });
       } else {
         toast({
           title: "✅ Notificaciones diarias enviadas",
-          description: `Se enviaron ${data.notifications_sent} notificaciones para ${data.birthday_members} cumpleaños de hoy: ${data.birthdays.join(', ')}`,
+          description: `Se enviaron ${data.notifications_sent} notificaciones para ${data.birthdays.join(', ')} (excluyendo al cumpleañero)`,
         });
       }
     } catch (error) {
@@ -97,11 +138,23 @@ const BirthdayNotificationTest = () => {
               Notificaciones Diarias
             </h4>
             <p className="text-sm text-muted-foreground">
-              Envía notificaciones de cumpleaños del día actual.
+              Selecciona un integrante para simular su cumpleaños.
             </p>
+            <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Seleccionar integrante..." />
+              </SelectTrigger>
+              <SelectContent>
+                {members.map((member) => (
+                  <SelectItem key={member.id} value={member.id}>
+                    {member.nombres} {member.apellidos}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button 
               onClick={testDailyNotifications}
-              disabled={sendingDaily}
+              disabled={sendingDaily || !selectedMemberId}
               variant="outline"
               className="w-full"
             >

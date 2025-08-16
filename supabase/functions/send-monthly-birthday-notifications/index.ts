@@ -66,6 +66,18 @@ serve(async (req) => {
 
     const notificationMessage = `🎉 Cumpleaños de ${currentMonthName}:\n\n${birthdayList}\n\n¡No olvides felicitarlos en sus días especiales! 🎂`
 
+    // Crear datos de la tarjeta para mostrar visualmente
+    const birthdayCard = {
+      month: currentMonthName,
+      year: now.getFullYear(),
+      birthdays: birthdayMembers.map(member => ({
+        name: `${member.nombres} ${member.apellidos}`,
+        day: new Date(member.fecha_nacimiento!).getDate(),
+        photo: member.photo_url,
+        role: member.cargo
+      }))
+    }
+
     // Obtener todos los usuarios activos del sistema
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
@@ -88,7 +100,9 @@ serve(async (req) => {
       metadata: {
         month: currentMonth,
         year: now.getFullYear(),
-        birthday_count: birthdayMembers.length
+        birthday_count: birthdayMembers.length,
+        birthday_card: birthdayCard,
+        show_card: true
       }
     })) || []
 
