@@ -102,8 +102,12 @@ const Index = () => {
           <div className="mb-12">
             {/* Logo */}
             <div className="flex items-center justify-center mb-8">
-              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg">
-                <Heart className="w-10 h-10 text-blue-600" />
+              <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center shadow-lg p-2">
+                <img 
+                  src="/lovable-uploads/43125001-4383-4612-84dd-b01a2ee6a562.png" 
+                  alt="ARCANA Logo" 
+                  className="w-full h-full object-contain"
+                />
               </div>
             </div>
             
