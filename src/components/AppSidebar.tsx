@@ -18,7 +18,8 @@ import {
   Mic,
   Guitar,
   Users2,
-  Bot
+  Bot,
+  LogOut
 } from "lucide-react"
 
 import {
@@ -35,6 +36,8 @@ import {
 } from "@/components/ui/sidebar"
 import { Link, useLocation } from "react-router-dom"
 import { useUnreadNotifications } from "@/hooks/useUnreadNotifications"
+import { useAuth } from "@/hooks/useAuth"
+import { Button } from "@/components/ui/button"
 
 // Menu items organized by categories
 const menuCategories = [
@@ -169,6 +172,7 @@ export function AppSidebar() {
   const { setOpenMobile } = useSidebar()
   const location = useLocation()
   const unreadCount = useUnreadNotifications()
+  const { signOut, user } = useAuth()
 
   const handleLinkClick = () => {
     // Close sidebar on mobile when a link is clicked
@@ -231,6 +235,23 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
+        
+        {/* Logout Button */}
+        <div className="mt-auto p-4 border-t border-gray-100">
+          <Button
+            onClick={signOut}
+            variant="ghost"
+            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+          >
+            <LogOut className="w-4 h-4 mr-3" />
+            Cerrar Sesión
+          </Button>
+          {user && (
+            <p className="text-xs text-gray-500 mt-2 px-3">
+              {user.email}
+            </p>
+          )}
+        </div>
       </SidebarContent>
     </Sidebar>
   )

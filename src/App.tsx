@@ -27,7 +27,10 @@ import VocalTraining from "./pages/VocalTraining";
 import MusicalTraining from "./pages/MusicalTraining";
 import DanceTraining from "./pages/DanceTraining";
 import PersonalAssistant from "./pages/PersonalAssistant";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import { AuthProvider } from "./hooks/useAuth";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import "./App.css";
 
 const queryClient = new QueryClient();
@@ -45,52 +48,61 @@ function HeaderTrigger() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <SidebarProvider>
-            <div className="flex h-screen w-full bg-gray-50">
-              <AppSidebar />
-              <div className="flex-1 flex flex-col">
-                {/* Global Header with Sidebar Toggle - Only on Mobile */}
-                <header className="h-12 bg-white border-b border-gray-200 flex items-center px-4 shadow-sm md:hidden">
-                  <HeaderTrigger />
-                  <div className="flex-1 flex items-center justify-center">
-                    <h1 className="text-lg font-bold text-gray-900">ARCANA</h1>
-                  </div>
-                </header>
-                
-                <main className="flex-1 overflow-auto bg-gray-50">
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/repertorio" element={<RepertoirioMusical />} />
-                    <Route path="/agenda" element={<MinisterialAgenda />} />
-                    <Route path="/director-replacements" element={<DirectorReplacements />} />
-                    <Route path="/communication" element={<Communication />} />
-                    <Route path="/integrantes" element={<Integrantes />} />
-                    <Route path="/member/:id" element={<MemberProfile />} />
-                    <Route path="/worship-groups" element={<WorshipGroups />} />
-                    <Route path="/recomendaciones" element={<Recomendaciones />} />
-                    <Route path="/eventos-especiales" element={<EventosEspeciales />} />
-                    <Route path="/spiritual" element={<SpiritualModule />} />
-                    <Route path="/admin" element={<AdminDashboard />} />
-                    <Route path="/notificaciones" element={<Notificaciones />} />
-                    <Route path="/cumpleanos" element={<BirthdayModulePage />} />
-                    <Route path="/vocal-training" element={<VocalTraining />} />
-                    <Route path="/musical-training" element={<MusicalTraining />} />
-                    <Route path="/dance-training" element={<DanceTraining />} />
-                    <Route path="/personal-assistant" element={<PersonalAssistant />} />
-                    <Route path="/about" element={<AboutMinistry />} />
-                    <Route path="/statutes" element={<Statutes />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </main>
-              </div>
-            </div>
-          </SidebarProvider>
-        </BrowserRouter>
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/*" element={
+                <ProtectedRoute>
+                  <SidebarProvider>
+                    <div className="flex h-screen w-full bg-gray-50">
+                      <AppSidebar />
+                      <div className="flex-1 flex flex-col">
+                        {/* Global Header with Sidebar Toggle - Only on Mobile */}
+                        <header className="h-12 bg-white border-b border-gray-200 flex items-center px-4 shadow-sm md:hidden">
+                          <HeaderTrigger />
+                          <div className="flex-1 flex items-center justify-center">
+                            <h1 className="text-lg font-bold text-gray-900">ARCANA</h1>
+                          </div>
+                        </header>
+                        
+                        <main className="flex-1 overflow-auto bg-gray-50">
+                          <Routes>
+                            <Route path="/" element={<Index />} />
+                            <Route path="/repertorio" element={<RepertoirioMusical />} />
+                            <Route path="/agenda" element={<MinisterialAgenda />} />
+                            <Route path="/director-replacements" element={<DirectorReplacements />} />
+                            <Route path="/communication" element={<Communication />} />
+                            <Route path="/integrantes" element={<Integrantes />} />
+                            <Route path="/member/:id" element={<MemberProfile />} />
+                            <Route path="/worship-groups" element={<WorshipGroups />} />
+                            <Route path="/recomendaciones" element={<Recomendaciones />} />
+                            <Route path="/eventos-especiales" element={<EventosEspeciales />} />
+                            <Route path="/spiritual" element={<SpiritualModule />} />
+                            <Route path="/admin" element={<AdminDashboard />} />
+                            <Route path="/notificaciones" element={<Notificaciones />} />
+                            <Route path="/cumpleanos" element={<BirthdayModulePage />} />
+                            <Route path="/vocal-training" element={<VocalTraining />} />
+                            <Route path="/musical-training" element={<MusicalTraining />} />
+                            <Route path="/dance-training" element={<DanceTraining />} />
+                            <Route path="/personal-assistant" element={<PersonalAssistant />} />
+                            <Route path="/about" element={<AboutMinistry />} />
+                            <Route path="/statutes" element={<Statutes />} />
+                            <Route path="*" element={<NotFound />} />
+                          </Routes>
+                        </main>
+                      </div>
+                    </div>
+                  </SidebarProvider>
+                </ProtectedRoute>
+              } />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
