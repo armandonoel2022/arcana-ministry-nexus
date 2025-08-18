@@ -320,8 +320,8 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
                           isBotMessage
                             ? 'bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300'
                             : isOwnMessage
-                            ? 'bg-arcana-blue-gradient text-white'
-                            : 'bg-gray-100 text-gray-800'
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-gray-100 text-gray-900'
                         }`}
                       >
                         {(!isOwnMessage || isBotMessage) && (

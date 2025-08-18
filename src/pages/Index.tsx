@@ -17,11 +17,13 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import BirthdayNotificationBanner from "@/components/notifications/BirthdayNotificationBanner";
 
 const Index = () => {
   const [memberCount, setMemberCount] = useState<number>(0);
   const [groupCount, setGroupCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [birthdayNotification, setBirthdayNotification] = useState<any>(null);
 
   const mainServices = [
     {
@@ -84,6 +86,23 @@ const Index = () => {
         } else {
           setGroupCount(groupsCount || 0);
         }
+
+        // Buscar notificaciones de cumpleaños activas para mostrar en pantalla principal
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: notifications, error: notifError } = await supabase
+            .from('system_notifications')
+            .select('*')
+            .eq('recipient_id', user.id)
+            .eq('type', 'birthday')
+            .eq('is_read', false)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          if (!notifError && notifications && notifications.length > 0) {
+            setBirthdayNotification(notifications[0]);
+          }
+        }
       } catch (error) {
         console.error('Error fetching statistics:', error);
       } finally {
@@ -94,9 +113,31 @@ const Index = () => {
     fetchStats();
   }, []);
 
+  const dismissBirthdayNotification = async () => {
+    if (birthdayNotification) {
+      // Marcar notificación como leída
+      await supabase
+        .from('system_notifications')
+        .update({ is_read: true })
+        .eq('id', birthdayNotification.id);
+      
+      setBirthdayNotification(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-600 via-blue-500 to-blue-400">
       <div className="container mx-auto px-6 py-12 max-w-6xl">
+        
+        {/* Birthday Notification Banner */}
+        {birthdayNotification && (
+          <div className="mb-8">
+            <BirthdayNotificationBanner
+              notification={birthdayNotification}
+              onDismiss={dismissBirthdayNotification}
+            />
+          </div>
+        )}
         {/* Hero Section - Clean and Institutional */}
         <div className="text-center mb-16">
           <div className="mb-12">

@@ -86,12 +86,24 @@ export class ArcanaBot {
     try {
       console.log('ARCANA consultando turnos para otro usuario:', userName);
       
-      // Buscar el usuario en la tabla members por nombre
-      const { data: members, error: membersError } = await supabase
+      // Buscar el usuario en la tabla members por nombre (búsqueda más flexible)
+      const searchTerms = userName.toLowerCase().split(' ').filter(term => term.length > 2);
+      
+      let query = supabase
         .from('members')
         .select('nombres, apellidos')
-        .or(`nombres.ilike.%${userName}%,apellidos.ilike.%${userName}%`)
-        .limit(5);
+        .eq('is_active', true);
+      
+      // Construir búsqueda OR más flexible
+      const searchConditions = [];
+      for (const term of searchTerms) {
+        searchConditions.push(`nombres.ilike.%${term}%`);
+        searchConditions.push(`apellidos.ilike.%${term}%`);
+      }
+      
+      const { data: members, error: membersError } = await query
+        .or(searchConditions.join(','))
+        .limit(10);
 
       if (membersError) {
         console.error('Error buscando miembros:', membersError);
@@ -594,12 +606,22 @@ export class ArcanaBot {
   private static handleGeneralQuery(query: string): BotResponse {
     console.log('ARCANA manejando consulta general:', query);
     
+    // Detectar consultas de cumpleaños
+    if (query.includes('cumpleaños') || query.includes('cumpleanos')) {
+      return this.handleBirthdayQuery(query);
+    }
+
+    // Detectar consultas bíblicas
+    if (query.includes('versículo') || query.includes('versiculo') || query.includes('biblia') || query.includes('cita bíblica')) {
+      return this.handleBibleQuery(query);
+    }
+    
     // Respuestas predefinidas para consultas generales relacionadas con el ministerio
     const responses = {
       'valores': '🤖 Nuestros valores fundamentales son: **Fe, Adoración, Comunidad, Servicio y Excelencia**. Cada integrante del ministerio debe reflejar estos valores en su vida y servicio.',
       'horarios': '🤖 Los horarios regulares son: Ensayos los miércoles 7:00 PM, Servicio domingo 9:00 AM. Para horarios específicos, consulta la agenda ministerial.',
       'contacto': '🤖 Para contactar a los líderes del ministerio, puedes usar este sistema de comunicación o consultar en la sección de Integrantes.',
-      'ayuda': '🤖 Puedo ayudarte con:\n• Consultar turnos: "ARCANA cuándo me toca cantar"\n• Turnos de otros: "ARCANA turno de [nombre]" o "ARCANA cuándo le toca a [nombre]"\n• Ver ensayos: "ARCANA próximos ensayos"\n• Buscar canciones: "ARCANA buscar [nombre/género]"\n• Seleccionar canciones: "ARCANA seleccionar [canción] para próximo servicio"\n• Información general del ministerio\n\n💡 Puedes escribir "ARCANA" o "@ARCANA" seguido de tu consulta.'
+      'ayuda': '🤖 ¡Hola! Soy ARCANA, tu asistente del ministerio ADN Arca de Noé.\n\n✨ **¿En qué puedo ayudarte?**\n\n🎵 **Turnos:** "¿Cuándo me toca cantar?" o "¿Cuándo le toca a [nombre]?"\n📅 **Ensayos:** "¿Cuándo es el próximo ensayo?"\n🎶 **Canciones:** "Buscar [nombre de canción]" o "Seleccionar [canción] para próximo servicio"\n🎂 **Cumpleaños:** "Cumpleaños del mes", "Cumpleaños de hoy", "Cumpleaños de [fecha]"\n📖 **Biblia:** "Versículo del día", "Cita bíblica sobre [tema]"\n\n💡 **Ejemplos de uso:**\n• "ARCANA cuándo me toca cantar"\n• "ARCANA buscar Como Lluvia"\n• "ARCANA cuándo le toca a Armando Noel"\n• "ARCANA próximo ensayo"\n• "ARCANA cumpleaños de enero"\n• "ARCANA versículo del día"\n\n¡Estoy aquí para ayudarte! 🙏'
     };
 
     // Buscar coincidencias en las consultas
@@ -614,7 +636,46 @@ export class ArcanaBot {
     console.log('ARCANA usando respuesta por defecto');
     return {
       type: 'general',
-      message: '🤖 Hola! Soy ARCANA, el asistente del Ministerio ADN. Puedo ayudarte con consultas sobre turnos, ensayos y canciones. Escribe "ARCANA ayuda" para ver todas mis funciones.'
+      message: '🤖 No entendí tu consulta. Escribe "ARCANA ayuda" para ver todas las opciones disponibles.\n\n💡 Puedo ayudarte con:\n• Turnos de canto\n• Información de ensayos\n• Búsqueda de canciones\n• Selección de repertorio\n• Cumpleaños del ministerio\n• Versículos bíblicos'
+    };
+  }
+
+  private static handleBirthdayQuery(query: string): BotResponse {
+    const today = new Date();
+    const currentMonth = today.getMonth() + 1;
+    const currentDay = today.getDate();
+
+    if (query.includes('hoy') || query.includes('día')) {
+      return {
+        type: 'general',
+        message: `🎂 **Cumpleaños de hoy (${currentDay}/${currentMonth}):**\n\n🤖 Para ver los cumpleaños específicos, visita el módulo de **[Cumpleaños](/cumpleanos)** donde encontrarás:\n\n• 🎉 Lista completa de cumpleañeros\n• 📅 Calendario de cumpleaños del mes\n• 🎁 Tarjetas personalizadas\n• 🎈 Notificaciones automáticas\n\n¡Celebremos juntos! 🙏✨`
+      };
+    }
+
+    if (query.includes('mes') || query.includes('enero') || query.includes('febrero') || query.includes('marzo') || query.includes('abril') || query.includes('mayo') || query.includes('junio') || query.includes('julio') || query.includes('agosto') || query.includes('septiembre') || query.includes('octubre') || query.includes('noviembre') || query.includes('diciembre')) {
+      return {
+        type: 'general',
+        message: `🎂 **Cumpleaños del mes:**\n\n🤖 Puedes consultar todos los cumpleaños por mes en el módulo dedicado:\n\n📅 **[Ver Módulo de Cumpleaños](/cumpleanos)**\n\nAllí encontrarás:\n• 🎉 Cumpleañeros del mes actual\n• 📊 Estadísticas de cumpleaños\n• 🎁 Tarjetas personalizadas\n• 🔔 Configurar recordatorios\n\n¡No olvides felicitar a tus hermanos en Cristo! 🙏✨`
+      };
+    }
+
+    return {
+      type: 'general',
+      message: `🎂 **Información de cumpleaños:**\n\n🤖 Para consultar cumpleaños puedes usar:\n\n• "ARCANA cumpleaños de hoy"\n• "ARCANA cumpleaños del mes"\n• "ARCANA cumpleaños de enero" (o cualquier mes)\n\n📅 **[Ir al Módulo de Cumpleaños](/cumpleanos)**\n\n¡Celebremos la vida que Dios nos ha dado! 🙏✨`
+    };
+  }
+
+  private static handleBibleQuery(query: string): BotResponse {
+    if (query.includes('día') || query.includes('hoy')) {
+      return {
+        type: 'general',
+        message: `📖 **Versículo del día:**\n\n🤖 Para el versículo diario y reflexiones espirituales, visita:\n\n✨ **[Módulo Espiritual](/modulo-espiritual)**\n\nAllí encontrarás:\n• 📖 Versículo del día con reflexión\n• 📚 Historia de versículos anteriores\n• 🙏 Meditaciones y estudios\n• 💫 Inspiración diaria\n\n"La palabra de Dios es viva y eficaz" - Hebreos 4:12 🙏✨`
+      };
+    }
+
+    return {
+      type: 'general',
+      message: `📖 **Consultas bíblicas:**\n\n🤖 Para versículos, reflexiones y estudios bíblicos:\n\n✨ **[Ir al Módulo Espiritual](/modulo-espiritual)**\n\nPuedes consultar:\n• "ARCANA versículo del día"\n• "ARCANA cita bíblica sobre amor"\n• "ARCANA biblia de hoy"\n\n"Lámpara es a mis pies tu palabra, y lumbrera a mi camino" - Salmo 119:105 🙏✨`
     };
   }
 
