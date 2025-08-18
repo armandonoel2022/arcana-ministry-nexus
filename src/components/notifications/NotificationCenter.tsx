@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import ConfettiEffect from "@/components/birthday/ConfettiEffect";
+import BirthdayNotificationBanner from "./BirthdayNotificationBanner";
 
 interface Notification {
   id: string;
@@ -346,37 +347,11 @@ const NotificationCenter = () => {
                     
                     {/* Special rendering for birthday notifications */}
                     {(notification.type === 'birthday_daily' || notification.type === 'birthday_monthly') && notification.metadata && (
-                      <div className="mt-4 p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border border-pink-200">
-                        {notification.metadata.birthday_member_photo && (
-                          <div className="flex items-center gap-3 mb-3">
-                            <img 
-                              src={notification.metadata.birthday_member_photo} 
-                              alt={notification.metadata.birthday_member_name}
-                              className="w-12 h-12 rounded-full object-cover border-2 border-pink-300"
-                            />
-                            <div>
-                              <p className="font-semibold text-pink-800">{notification.metadata.birthday_member_name}</p>
-                              <p className="text-sm text-pink-600">¡Celebrando su día especial! 🎉</p>
-                            </div>
-                          </div>
-                        )}
-                        {notification.metadata.birthday_card && (
-                          <div className="text-sm text-pink-700 bg-white/50 p-3 rounded border border-pink-200">
-                            <strong>Cumpleaños de {notification.metadata.birthday_card.month}:</strong>
-                            <div className="grid grid-cols-2 gap-2 mt-2">
-                              {notification.metadata.birthday_card.birthdays.slice(0, 6).map((birthday: any, index: number) => (
-                                <div key={index} className="text-xs">
-                                  • {birthday.day} - {birthday.name}
-                                </div>
-                              ))}
-                            </div>
-                            {notification.metadata.birthday_card.birthdays.length > 6 && (
-                              <p className="text-xs mt-2 text-pink-600">
-                                Y {notification.metadata.birthday_card.birthdays.length - 6} más...
-                              </p>
-                            )}
-                          </div>
-                        )}
+                      <div className="mt-4">
+                        <BirthdayNotificationBanner
+                          notification={notification}
+                          onDismiss={() => markAsRead(notification.id)}
+                        />
                       </div>
                     )}
                     

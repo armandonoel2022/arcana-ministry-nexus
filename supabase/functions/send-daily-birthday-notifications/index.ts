@@ -112,6 +112,16 @@ serve(async (req) => {
       // Mensaje para el cumpleañero
       const notificationMessageForBirthday = `🎉 ¡Feliz cumpleaños ${member.nombres}! 🎂\n\n¡Hoy es tu día especial! Que Dios te bendiga grandemente en este nuevo año de vida. ✨`
 
+      // Crear notificaciones programadas para las 07:30 AM
+      const birthdayDate = new Date()
+      const scheduledTime = new Date(birthdayDate)
+      scheduledTime.setHours(7, 30, 0, 0)
+      
+      // Si ya pasaron las 07:30 AM de hoy, programar para mañana (solo en modo automático)
+      if (!birthdayMemberId && birthdayDate.getHours() >= 7 && birthdayDate.getMinutes() >= 30) {
+        scheduledTime.setDate(scheduledTime.getDate() + 1)
+      }
+
       // Crear notificaciones para todos los usuarios EXCEPTO el que cumple años
       const notificationsForOthers = profiles?.filter(profile => 
         profile.id !== birthdayProfile?.id // Excluir al cumpleañero
@@ -122,13 +132,15 @@ serve(async (req) => {
         recipient_id: profile.id,
         notification_category: 'birthday',
         priority: 3,
+        scheduled_for: birthdayMemberId ? null : scheduledTime.toISOString(), // Solo programar en modo automático
         metadata: {
           birthday_member_id: member.id,
           birthday_member_name: `${member.nombres} ${member.apellidos}`,
           birthday_member_photo: member.photo_url,
           birthday_date: new Date().toISOString().split('T')[0],
           show_confetti: true,
-          is_test: !!birthdayMemberId
+          is_test: !!birthdayMemberId,
+          play_birthday_sound: true
         }
       })) || []
 
@@ -140,6 +152,7 @@ serve(async (req) => {
         recipient_id: birthdayProfile.id,
         notification_category: 'birthday',
         priority: 3,
+        scheduled_for: birthdayMemberId ? null : scheduledTime.toISOString(), // Solo programar en modo automático
         metadata: {
           birthday_member_id: member.id,
           birthday_member_name: `${member.nombres} ${member.apellidos}`,
@@ -147,7 +160,8 @@ serve(async (req) => {
           birthday_date: new Date().toISOString().split('T')[0],
           show_confetti: true,
           is_test: !!birthdayMemberId,
-          is_birthday_person: true
+          is_birthday_person: true,
+          play_birthday_sound: true
         }
       }] : []
 
