@@ -12,7 +12,7 @@ interface BirthdayNotificationBannerProps {
     title: string;
     message: string;
     metadata: {
-      birthday_member_name: string;
+      birthday_member_name?: string;
       birthday_member_photo?: string;
       birthday_date: string;
       is_birthday_person?: boolean;
@@ -95,11 +95,14 @@ const BirthdayNotificationBanner: React.FC<BirthdayNotificationBannerProps> = ({
                 <Avatar className="w-16 h-16 border-3 border-pink-300">
                   <AvatarImage
                     src={notification.metadata.birthday_member_photo}
-                    alt={notification.metadata.birthday_member_name}
+                    alt={notification.metadata.birthday_member_name || 'Integrante del ministerio'}
                     className="object-cover"
                   />
                   <AvatarFallback className="bg-gradient-to-r from-pink-400 to-purple-400 text-white text-lg font-bold">
-                    {notification.metadata.birthday_member_name.split(' ').map(n => n[0]).join('')}
+                    {notification.metadata.birthday_member_name 
+                      ? notification.metadata.birthday_member_name.split(' ').map(n => n[0]).join('')
+                      : '?'
+                    }
                   </AvatarFallback>
                 </Avatar>
               </div>
@@ -114,12 +117,12 @@ const BirthdayNotificationBanner: React.FC<BirthdayNotificationBannerProps> = ({
                 </h3>
                 {notification.metadata.is_birthday_person ? (
                   <p className="text-pink-700 font-medium">
-                    ¡{notification.metadata.birthday_member_name.split(' ')[0]}, hoy es tu día especial! 
+                    ¡{notification.metadata.birthday_member_name?.split(' ')[0] || 'Amigo/a'}, hoy es tu día especial!
                     Que Dios te bendiga grandemente en este nuevo año de vida. ✨
                   </p>
                 ) : (
                   <p className="text-pink-700">
-                    ¡Hoy está de cumpleaños <strong>{notification.metadata.birthday_member_name}</strong>! 
+                    ¡Hoy está de cumpleaños <strong>{notification.metadata.birthday_member_name || 'un integrante del ministerio'}</strong>!
                     Recuerda ir a la sala de chat general y dedicarle un mensaje de felicitación. 
                     ¡Hagamos que se sienta especial en su día! ✨
                   </p>
