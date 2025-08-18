@@ -163,14 +163,14 @@ const Auth = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signin-email" className="text-white">Email</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-blue-100" />
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                     <Input
                       id="signin-email"
                       type="email"
                       placeholder="tu@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-blue-100 focus:border-white/40 focus:ring-white/40"
+                      className="pl-10 bg-white/90 border-white/30 text-gray-900 placeholder:text-gray-500 focus:border-blue-400 focus:ring-blue-400 backdrop-blur-sm"
                       required
                     />
                   </div>
@@ -179,14 +179,14 @@ const Auth = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signin-password" className="text-white">Contraseña</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-blue-100" />
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                     <Input
                       id="signin-password"
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-blue-100 focus:border-white/40 focus:ring-white/40"
+                      className="pl-10 pr-10 bg-white/90 border-white/30 text-gray-900 placeholder:text-gray-500 focus:border-blue-400 focus:ring-blue-400 backdrop-blur-sm"
                       required
                     />
                     <Button
@@ -197,9 +197,9 @@ const Auth = () => {
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-blue-100" />
+                        <EyeOff className="h-4 w-4 text-gray-500" />
                       ) : (
-                        <Eye className="h-4 w-4 text-blue-100" />
+                        <Eye className="h-4 w-4 text-gray-500" />
                       )}
                     </Button>
                   </div>
@@ -228,14 +228,14 @@ const Auth = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signup-name" className="text-white">Nombre Completo</Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-blue-100" />
+                    <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                     <Input
                       id="signup-name"
                       type="text"
                       placeholder="Tu nombre completo"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-blue-100 focus:border-white/40 focus:ring-white/40"
+                      className="pl-10 bg-white/90 border-white/30 text-gray-900 placeholder:text-gray-500 focus:border-blue-400 focus:ring-blue-400 backdrop-blur-sm"
                       required
                     />
                   </div>
@@ -244,14 +244,14 @@ const Auth = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signup-email" className="text-white">Email</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-blue-100" />
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                     <Input
                       id="signup-email"
                       type="email"
                       placeholder="tu@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-blue-100 focus:border-white/40 focus:ring-white/40"
+                      className="pl-10 bg-white/90 border-white/30 text-gray-900 placeholder:text-gray-500 focus:border-blue-400 focus:ring-blue-400 backdrop-blur-sm"
                       required
                     />
                   </div>
@@ -260,14 +260,14 @@ const Auth = () => {
                 <div className="space-y-2">
                   <Label htmlFor="signup-password" className="text-white">Contraseña</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-blue-100" />
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                     <Input
                       id="signup-password"
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-blue-100 focus:border-white/40 focus:ring-white/40"
+                      className="pl-10 pr-10 bg-white/90 border-white/30 text-gray-900 placeholder:text-gray-500 focus:border-blue-400 focus:ring-blue-400 backdrop-blur-sm"
                       required
                       minLength={6}
                     />
@@ -279,9 +279,9 @@ const Auth = () => {
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-blue-100" />
+                        <EyeOff className="h-4 w-4 text-gray-500" />
                       ) : (
-                        <Eye className="h-4 w-4 text-blue-100" />
+                        <Eye className="h-4 w-4 text-gray-500" />
                       )}
                     </Button>
                   </div>
