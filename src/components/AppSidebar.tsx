@@ -184,13 +184,11 @@ export function AppSidebar() {
             <SidebarTrigger className="w-10 h-10 bg-white rounded-xl flex items-center justify-center hover:bg-gray-50 transition-all duration-200 hover:scale-105 group hidden md:flex shadow-md">
               <Menu className="w-6 h-6 text-blue-600 transition-transform duration-300 group-hover:rotate-90" />
             </SidebarTrigger>
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center md:hidden shadow-md p-1">
-              <img 
-                src="/lovable-uploads/43125001-4383-4612-84dd-b01a2ee6a562.png" 
-                alt="ARCANA Logo" 
-                className="w-full h-full object-contain"
-              />
-            </div>
+            <img 
+              src="/lovable-uploads/43125001-4383-4612-84dd-b01a2ee6a562.png" 
+              alt="ARCANA Logo" 
+              className="w-10 h-10 object-contain md:hidden"
+            />
             <div>
               <h1 className="text-xl font-bold text-gray-900">ARCANA</h1>
               <p className="text-sm text-gray-500">Armando</p>
