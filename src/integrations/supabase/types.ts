@@ -676,6 +676,36 @@ export type Database = {
           },
         ]
       }
+      password_reset_requests: {
+        Row: {
+          admin_notified: boolean | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          requested_by: string | null
+          status: string | null
+          user_email: string
+        }
+        Insert: {
+          admin_notified?: boolean | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          requested_by?: string | null
+          status?: string | null
+          user_email: string
+        }
+        Update: {
+          admin_notified?: boolean | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          requested_by?: string | null
+          status?: string | null
+          user_email?: string
+        }
+        Relationships: []
+      }
       personal_assistant_config: {
         Row: {
           created_at: string
@@ -766,6 +796,8 @@ export type Database = {
       profiles: {
         Row: {
           address: string | null
+          approved_at: string | null
+          approved_by: string | null
           birthdate: string | null
           created_at: string | null
           email: string | null
@@ -774,7 +806,9 @@ export type Database = {
           full_name: string
           id: string
           is_active: boolean | null
+          is_approved: boolean | null
           joined_date: string | null
+          needs_password_change: boolean | null
           notes: string | null
           phone: string | null
           repertory_view_preference: string | null
@@ -783,6 +817,8 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           birthdate?: string | null
           created_at?: string | null
           email?: string | null
@@ -791,7 +827,9 @@ export type Database = {
           full_name: string
           id: string
           is_active?: boolean | null
+          is_approved?: boolean | null
           joined_date?: string | null
+          needs_password_change?: boolean | null
           notes?: string | null
           phone?: string | null
           repertory_view_preference?: string | null
@@ -800,6 +838,8 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           birthdate?: string | null
           created_at?: string | null
           email?: string | null
@@ -808,7 +848,9 @@ export type Database = {
           full_name?: string
           id?: string
           is_active?: boolean | null
+          is_approved?: boolean | null
           joined_date?: string | null
+          needs_password_change?: boolean | null
           notes?: string | null
           phone?: string | null
           repertory_view_preference?: string | null

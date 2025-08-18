@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { ChatRoomManagement } from "@/components/admin/ChatRoomManagement";
-import { Users, MessageSquare, Shield, Settings } from "lucide-react";
+import UserApprovalManagement from "@/components/admin/UserApprovalManagement";
+import { Users, MessageSquare, Shield, Settings, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const AdminDashboard = () => {
@@ -95,8 +96,12 @@ const AdminDashboard = () => {
         </p>
       </div>
 
-      <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue="approval" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="approval" className="flex items-center gap-2">
+            <UserCheck className="w-4 h-4" />
+            Aprobación de Usuarios
+          </TabsTrigger>
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
             Gestión de Usuarios
@@ -106,6 +111,10 @@ const AdminDashboard = () => {
             Gestión de Salas
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="approval" className="mt-6">
+          <UserApprovalManagement />
+        </TabsContent>
 
         <TabsContent value="users" className="mt-6">
           <Card>

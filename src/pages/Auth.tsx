@@ -77,7 +77,7 @@ const Auth = () => {
 
       if (error) throw error;
       
-      toast.success('¡Cuenta creada! Revisa tu email para confirmar tu registro.');
+      toast.success('¡Solicitud de registro enviada! El administrador revisará tu cuenta y te contactará con una contraseña provisional.');
     } catch (error: any) {
       toast.error(error.message || 'Error al crear cuenta');
     } finally {
@@ -85,20 +85,67 @@ const Auth = () => {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast.error('Por favor ingresa tu email');
+      return;
+    }
+
+    try {
+      // Create password reset request that notifies admin
+      const { error } = await supabase
+        .from('password_reset_requests')
+        .insert([
+          {
+            user_email: email,
+            requested_by: null,
+            admin_notified: false
+          }
+        ]);
+
+      if (error) throw error;
+
+      // Send notification to admin
+      const { error: notificationError } = await supabase
+        .from('system_notifications')
+        .insert([
+          {
+            type: 'password_reset_request',
+            title: 'Solicitud de Restablecimiento de Contraseña',
+            message: `El usuario ${email} ha solicitado restablecer su contraseña.`,
+            recipient_id: null, // Admin notification
+            notification_category: 'admin'
+          }
+        ]);
+
+      if (notificationError) {
+        console.error('Error sending admin notification:', notificationError);
+      }
+
+      toast.success('Solicitud enviada. El administrador será notificado para generar una contraseña provisional.');
+    } catch (error: any) {
+      toast.error('Error al solicitar restablecimiento: ' + error.message);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-modern-gradient flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
       
-      <Card className="w-full max-w-md relative z-10 backdrop-blur-sm bg-white/95 border-white/20 shadow-2xl">
+      <Card className="w-full max-w-md relative z-10 modern-glass border-white/20 shadow-2xl">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center">
-            <Music className="w-8 h-8 text-white" />
+          <div className="mx-auto w-28 h-28 bg-white/10 backdrop-blur-sm rounded-3xl flex items-center justify-center border-4 border-white/20 shadow-xl">
+            <img 
+              src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" 
+              alt="ARCANA Logo" 
+              className="w-20 h-20 object-cover rounded-2xl"
+            />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <CardTitle className="text-3xl font-bold text-white mb-2">
               ARCANA
             </CardTitle>
-            <CardDescription className="text-gray-600">
+            <CardDescription className="text-blue-100 text-lg">
               Sistema de Gestión Musical
             </CardDescription>
           </div>
@@ -106,61 +153,69 @@ const Auth = () => {
 
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Iniciar Sesión</TabsTrigger>
-              <TabsTrigger value="signup">Registrarse</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 bg-white/10 border-white/20">
+              <TabsTrigger value="signin" className="text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Iniciar Sesión</TabsTrigger>
+              <TabsTrigger value="signup" className="text-white data-[state=active]:bg-white/20 data-[state=active]:text-white">Registrarse</TabsTrigger>
             </TabsList>
 
             <TabsContent value="signin" className="space-y-4">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
+                  <Label htmlFor="signin-email" className="text-white">Email</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-blue-100" />
                     <Input
                       id="signin-email"
                       type="email"
                       placeholder="tu@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-blue-100 focus:border-white/40 focus:ring-white/40"
                       required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signin-password">Contraseña</Label>
+                  <Label htmlFor="signin-password" className="text-white">Contraseña</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-blue-100" />
                     <Input
                       id="signin-password"
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 pr-10"
+                      className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-blue-100 focus:border-white/40 focus:ring-white/40"
                       required
                     />
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-white/10"
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
+                        <EyeOff className="h-4 w-4 text-blue-100" />
                       ) : (
-                        <Eye className="h-4 w-4 text-gray-400" />
+                        <Eye className="h-4 w-4 text-blue-100" />
                       )}
                     </Button>
                   </div>
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={handleForgotPassword}
+                    className="text-blue-100 hover:text-white text-sm p-0 h-auto"
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </Button>
                 </div>
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  className="w-full bg-white/20 hover:bg-white/30 border border-white/30 text-white font-semibold rounded-xl transition-all duration-300"
                   disabled={isLoading}
                 >
                   {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
@@ -171,48 +226,48 @@ const Auth = () => {
             <TabsContent value="signup" className="space-y-4">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-name">Nombre Completo</Label>
+                  <Label htmlFor="signup-name" className="text-white">Nombre Completo</Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <User className="absolute left-3 top-3 h-4 w-4 text-blue-100" />
                     <Input
                       id="signup-name"
                       type="text"
                       placeholder="Tu nombre completo"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-blue-100 focus:border-white/40 focus:ring-white/40"
                       required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="signup-email" className="text-white">Email</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-blue-100" />
                     <Input
                       id="signup-email"
                       type="email"
                       placeholder="tu@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-blue-100 focus:border-white/40 focus:ring-white/40"
                       required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Contraseña</Label>
+                  <Label htmlFor="signup-password" className="text-white">Contraseña</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-blue-100" />
                     <Input
                       id="signup-password"
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 pr-10"
+                      className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-blue-100 focus:border-white/40 focus:ring-white/40"
                       required
                       minLength={6}
                     />
@@ -220,24 +275,27 @@ const Auth = () => {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-white/10"
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
+                        <EyeOff className="h-4 w-4 text-blue-100" />
                       ) : (
-                        <Eye className="h-4 w-4 text-gray-400" />
+                        <Eye className="h-4 w-4 text-blue-100" />
                       )}
                     </Button>
                   </div>
+                  <p className="text-blue-100 text-xs">
+                    Los nuevos usuarios requieren aprobación del administrador antes de poder acceder al sistema.
+                  </p>
                 </div>
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  className="w-full bg-white/20 hover:bg-white/30 border border-white/30 text-white font-semibold rounded-xl transition-all duration-300"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
+                  {isLoading ? 'Creando cuenta...' : 'Solicitar Registro'}
                 </Button>
               </form>
             </TabsContent>
