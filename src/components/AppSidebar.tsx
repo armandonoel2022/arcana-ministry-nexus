@@ -185,7 +185,7 @@ export function AppSidebar() {
               <Menu className="w-6 h-6 text-blue-600 transition-transform duration-300 group-hover:rotate-90" />
             </SidebarTrigger>
             <img 
-              src="/lovable-uploads/43125001-4383-4612-84dd-b01a2ee6a562.png" 
+              src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" 
               alt="ARCANA Logo" 
               className="w-10 h-10 object-contain md:hidden"
             />

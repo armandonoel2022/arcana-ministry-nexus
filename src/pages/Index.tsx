@@ -103,7 +103,7 @@ const Index = () => {
             {/* Logo */}
             <div className="flex items-center justify-center mb-8">
               <img 
-                src="/lovable-uploads/43125001-4383-4612-84dd-b01a2ee6a562.png" 
+                src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" 
                 alt="ARCANA Logo" 
                 className="w-24 h-24 object-contain drop-shadow-lg"
               />
