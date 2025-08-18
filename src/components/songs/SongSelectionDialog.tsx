@@ -65,6 +65,8 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
         .eq('id', user.id)
         .single();
 
+      console.log('User profile:', profile);
+
       let query = supabase
         .from('services')
         .select(`
@@ -83,12 +85,20 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
         .order('service_date', { ascending: true })
         .limit(10);
 
+      console.log('User role:', profile?.role);
+      console.log('Filter date:', new Date().toISOString());
+
       // If user is not an administrator, filter services where they are the leader
       if (profile?.role !== 'administrator') {
+        console.log('Filtering by leader:', profile?.full_name);
         query = query.eq('leader', profile?.full_name);
+      } else {
+        console.log('User is administrator, showing all services');
       }
 
       const { data, error } = await query;
+
+      console.log('Services query result:', { data, error });
 
       if (error) throw error;
       
@@ -99,6 +109,8 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
           ? service.worship_groups[0] 
           : null
       }));
+      
+      console.log('Transformed services:', transformedServices);
       
       setServices(transformedServices);
       setServicesLoaded(true);
