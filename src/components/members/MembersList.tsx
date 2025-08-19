@@ -186,7 +186,7 @@ const MembersList = () => {
     return (
       <div className="flex justify-center items-center py-8">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-arcana-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-modern-blue-600 mx-auto"></div>
           <p className="text-gray-600 mt-2">Cargando integrantes...</p>
         </div>
       </div>
@@ -230,7 +230,7 @@ const MembersList = () => {
             </Select>
           </div>
           
-          <Badge variant="secondary" className="bg-arcana-blue-50 text-arcana-blue-600">
+          <Badge variant="secondary" className="bg-modern-blue-50 text-modern-blue-600">
             {filteredMembers.length} integrantes
           </Badge>
         </div>
@@ -247,12 +247,12 @@ const MembersList = () => {
                     className="cursor-pointer transition-transform hover:scale-105"
                     onClick={() => handleViewProfile(member.id)}
                   >
-                    <Avatar className="w-12 h-12 ring-2 ring-transparent hover:ring-arcana-blue-300">
+                    <Avatar className="w-12 h-12 ring-2 ring-transparent hover:ring-modern-blue-300">
                       <AvatarImage
                         src={member.photo_url || undefined}
                         alt={`${member.nombres} ${member.apellidos}`}
                       />
-                      <AvatarFallback className="bg-arcana-blue-gradient text-white">
+                      <AvatarFallback className="bg-modern-blue-gradient text-white">
                         {member.nombres.charAt(0)}{member.apellidos.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
@@ -261,7 +261,7 @@ const MembersList = () => {
                   {/* Nombre */}
                   <div className="flex-1 min-w-0">
                     <h3 
-                      className="font-semibold text-gray-800 cursor-pointer hover:text-arcana-blue-600 transition-colors truncate"
+                      className="font-semibold text-foreground cursor-pointer hover:text-modern-blue-600 transition-colors truncate"
                       onClick={() => handleViewProfile(member.id)}
                     >
                       {member.nombres} {member.apellidos}
@@ -287,7 +287,7 @@ const MembersList = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleViewProfile(member.id)}
-                    className="text-arcana-blue-600 hover:text-arcana-blue-700 hover:bg-arcana-blue-50"
+                    className="text-modern-blue-600 hover:text-modern-blue-700 hover:bg-modern-blue-50"
                   >
                     <Eye className="w-4 h-4" />
                   </Button>

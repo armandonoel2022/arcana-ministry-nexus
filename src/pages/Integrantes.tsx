@@ -17,13 +17,13 @@ const Integrantes = () => {
   };
 
   return (
-    <div className="min-h-screen ciudadconecta-gradient">
+    <div className="min-h-screen bg-modern-gradient">
       <div className="container mx-auto p-6 space-y-6">
         {/* Header Section */}
-        <div className="ciudadconecta-glass rounded-2xl p-6 mb-8">
+        <div className="modern-glass rounded-2xl p-6 mb-8">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg">
-              <Users className="w-8 h-8 text-blue-600" />
+              <Users className="w-8 h-8 text-modern-blue-600" />
             </div>
             <div>
               <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">Integrantes del Ministerio</h1>
@@ -67,10 +67,10 @@ const Integrantes = () => {
           </TabsList>
 
           <TabsContent value="view" className="space-y-4 mt-6">
-            <Card className="ciudadconecta-card ciudadconecta-shadow">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl">
-                <CardTitle className="text-blue-900">Directorio de Integrantes</CardTitle>
-                <CardDescription className="text-blue-700">
+            <Card className="modern-card modern-shadow">
+              <CardHeader className="bg-modern-gradient-soft rounded-t-2xl">
+                <CardTitle className="text-modern-blue-900">Directorio de Integrantes</CardTitle>
+                <CardDescription className="text-modern-blue-700">
                   Explora y gestiona la información de todos los miembros del ministerio
                 </CardDescription>
               </CardHeader>
@@ -81,19 +81,19 @@ const Integrantes = () => {
           </TabsContent>
 
           <TabsContent value="add" className="space-y-4 mt-6">
-            <div className="ciudadconecta-card p-6">
+            <div className="modern-card p-6">
               <AddMemberForm onSuccess={handleDataUpdate} />
             </div>
           </TabsContent>
 
           <TabsContent value="bulk" className="space-y-4 mt-6">
-            <div className="ciudadconecta-card p-6">
+            <div className="modern-card p-6">
               <BulkMemberInsert onSuccess={handleDataUpdate} />
             </div>
           </TabsContent>
 
           <TabsContent value="upload" className="space-y-4 mt-6">
-            <div className="ciudadconecta-card p-6">
+            <div className="modern-card p-6">
               <MembersCSVUpload onSuccess={handleDataUpdate} />
             </div>
           </TabsContent>
