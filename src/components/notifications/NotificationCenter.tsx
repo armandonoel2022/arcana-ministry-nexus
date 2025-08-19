@@ -346,7 +346,7 @@ const NotificationCenter = () => {
                     </p>
                     
                     {/* Special rendering for birthday notifications */}
-                    {(notification.type === 'birthday_daily' || notification.type === 'birthday_monthly') && notification.metadata && (
+                    {(notification.type === 'birthday_daily' || notification.type === 'birthday_monthly' || (notification.type === 'general' && notification.metadata?.birthday)) && notification.metadata && (
                       <div className="mt-4">
                         <BirthdayNotificationBanner
                           notification={notification}

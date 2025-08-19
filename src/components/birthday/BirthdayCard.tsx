@@ -196,7 +196,7 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
                 fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
               }}
             >
-              {getFirstName(member.nombres)}
+              {member.nombres} {member.apellidos}
             </div>
             
             <div 
