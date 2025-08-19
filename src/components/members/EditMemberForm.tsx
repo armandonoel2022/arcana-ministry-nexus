@@ -320,7 +320,7 @@ const EditMemberForm = ({ member, onSuccess }: EditMemberFormProps) => {
                 <Input
                   id="photo"
                   type="file"
-                  accept="image/*"
+                  accept=".jpg,.jpeg,.png,.gif,.webp"
                   onChange={handlePhotoChange}
                   className="w-full"
                 />

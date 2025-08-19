@@ -255,13 +255,13 @@ const AddMemberForm = ({ onSuccess }: AddMemberFormProps) => {
                   )}
                 </div>
                 <div>
-                  <Input
-                    id="photo"
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoChange}
-                    className="w-full"
-                  />
+                <Input
+                  id="photo"
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.gif,.webp"
+                  onChange={handlePhotoChange}
+                  className="w-full"
+                />
                   <p className="text-xs text-gray-500 mt-1">
                     Formatos soportados: JPG, PNG, GIF
                   </p>
