@@ -1,0 +1,1 @@
+UPDATE members SET cargo = 'musico' WHERE nombres = 'José Neftali' AND apellidos = 'Castillo';
