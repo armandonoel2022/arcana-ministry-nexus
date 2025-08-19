@@ -1,0 +1,1 @@
+INSERT INTO members (nombres, apellidos, celular, fecha_nacimiento, cargo, is_active) VALUES ('José Neftali', 'Castillo', '8094010597', CURRENT_DATE, 'corista', true);
