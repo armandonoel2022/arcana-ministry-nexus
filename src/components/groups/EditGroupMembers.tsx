@@ -136,9 +136,17 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
       const currentMemberIds = groupMembers.map(gm => gm.user_id);
       const available = (data || []).filter(member => !currentMemberIds.includes(member.id));
       
+      console.log('Available members:', available);
+      console.log('Current member IDs:', currentMemberIds);
+      
       setAvailableMembers(available);
     } catch (error) {
       console.error('Error fetching available members:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los miembros disponibles",
+        variant: "destructive",
+      });
     }
   };
 
@@ -306,10 +314,10 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
   }, [isOpen, groupId]);
 
   useEffect(() => {
-    if (groupMembers.length > 0) {
+    if (isOpen) {
       fetchAvailableMembers();
     }
-  }, [groupMembers]);
+  }, [groupMembers, isOpen]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -342,24 +350,32 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
                       <SelectValue placeholder="Selecciona un miembro" />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableMembers.map((member) => (
-                        <SelectItem key={member.id} value={member.id}>
-                          <div className="flex items-center gap-2">
-                            <Avatar className="w-6 h-6">
-                              <AvatarImage src={member.photo_url || undefined} />
-                              <AvatarFallback className="text-xs">
-                                {getInitials(member.nombres, member.apellidos)}
-                              </AvatarFallback>
-                            </Avatar>
-                            {member.nombres} {member.apellidos}
-                            {member.voz_instrumento && (
-                              <span className="text-xs text-gray-500">
-                                ({member.voz_instrumento})
-                              </span>
-                            )}
-                          </div>
+                      {availableMembers.length === 0 ? (
+                        <SelectItem value="no-members" disabled>
+                          No hay miembros disponibles
                         </SelectItem>
-                      ))}
+                      ) : (
+                        availableMembers.map((member) => (
+                          <SelectItem key={member.id} value={member.id}>
+                            <div className="flex items-center gap-3 py-2">
+                              <Avatar className="w-8 h-8">
+                                <AvatarImage src={member.photo_url || undefined} alt={`${member.nombres} ${member.apellidos}`} />
+                                <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">
+                                  {getInitials(member.nombres, member.apellidos)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex flex-col">
+                                <span className="font-medium">{member.nombres} {member.apellidos}</span>
+                                {member.voz_instrumento && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {member.voz_instrumento}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
