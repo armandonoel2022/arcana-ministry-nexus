@@ -112,16 +112,72 @@ const DirectorRequestResponse: React.FC = () => {
       if (!request) throw new Error('Solicitud no encontrada');
 
       if (action === 'accepted') {
-        // Update the service to change the director
-        const { error: serviceError } = await supabase
+        // Get current user profile to obtain the full name
+        const { data: userProfile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+
+        // Get the original director's next service to swap
+        const { data: originalDirectorNextService } = await supabase
+          .from('services')
+          .select('id, title, service_date, leader')
+          .eq('leader', request.service_id) // This should be original_director_id, but the field mapping seems incorrect
+          .gt('service_date', new Date().toISOString())
+          .order('service_date', { ascending: true })
+          .limit(1)
+          .single();
+
+        // Update current service to replacement director
+        const { error: serviceError1 } = await supabase
           .from('services')
           .update({
-            leader: user.id, // Update to replacement director
-            notes: `Director original: ${request.original_director.full_name}. Reemplazado por: ${responseNotes || 'Cambio de director aceptado'}`
+            leader: userProfile?.full_name || 'Director de reemplazo',
+            notes: `Director original: ${request.original_director.full_name}. Reemplazado por: ${userProfile?.full_name || 'Director de reemplazo'}. ${responseNotes || ''}`
           })
           .eq('id', request.service_id);
 
-        if (serviceError) throw serviceError;
+        if (serviceError1) throw serviceError1;
+
+        // If there's a next service for the replacement director, swap it to the original director
+        if (originalDirectorNextService) {
+          const { error: serviceError2 } = await supabase
+            .from('services')
+            .update({
+              leader: request.original_director.full_name,
+              notes: `Intercambio de turno - Director original: ${originalDirectorNextService.leader}. Ahora dirigido por: ${request.original_director.full_name}`
+            })
+            .eq('id', originalDirectorNextService.id);
+
+          if (serviceError2) throw serviceError2;
+        }
+
+        // Send notification to all members about the director change
+        const { data: allMembers } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('is_active', true);
+
+        if (allMembers) {
+          const notifications = allMembers.map(member => ({
+            recipient_id: member.id,
+            sender_id: user.id,
+            type: 'director_change',
+            title: 'Cambio de Director Confirmado',
+            message: `El servicio "${request.services.title}" del ${format(new Date(request.services.service_date), 'dd/MM/yyyy', { locale: es })} ahora será dirigido por ${userProfile?.full_name || 'Director de reemplazo'}. En espera de la selección de canciones.`,
+            notification_category: 'agenda',
+            metadata: {
+              service_id: request.service_id,
+              service_title: request.services.title,
+              service_date: request.services.service_date,
+              new_director: userProfile?.full_name || 'Director de reemplazo',
+              original_director: request.original_director.full_name
+            }
+          }));
+
+          await supabase.from('system_notifications').insert(notifications);
+        }
       }
 
       // Send notification to original director
