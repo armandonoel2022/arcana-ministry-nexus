@@ -84,6 +84,12 @@ const BirthdayNotificationBanner: React.FC<BirthdayNotificationBannerProps> = ({
     onDismiss();
   };
 
+  // Debug logging para identificar el problema con la foto
+  useEffect(() => {
+    console.log('Birthday notification metadata:', notification.metadata);
+    console.log('Photo URL:', notification.metadata.birthday_member_photo);
+  }, [notification.metadata]);
+
   return (
     <>
       <ConfettiEffect trigger={true} onComplete={() => {}} />
@@ -96,9 +102,13 @@ const BirthdayNotificationBanner: React.FC<BirthdayNotificationBannerProps> = ({
                 <Gift className="w-8 h-8 text-pink-500 absolute -top-2 -right-2 z-10" />
                 <Avatar className="w-16 h-16 border-3 border-pink-300">
                   <AvatarImage
-                    src={notification.metadata.birthday_member_photo}
+                    src={notification.metadata.birthday_member_photo || undefined}
                     alt={(notification.metadata.birthday_member_name || notification.metadata.member_name) || 'Integrante del ministerio'}
                     className="object-cover"
+                    onError={(e) => {
+                      console.error('Error loading birthday photo:', notification.metadata.birthday_member_photo);
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                   <AvatarFallback className="bg-gradient-to-r from-pink-400 to-purple-400 text-white text-lg font-bold">
                     {(notification.metadata.birthday_member_name || notification.metadata.member_name)

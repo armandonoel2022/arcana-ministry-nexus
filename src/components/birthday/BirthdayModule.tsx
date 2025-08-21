@@ -153,13 +153,17 @@ const BirthdayModule = () => {
           type: 'general',
           title: `🎉 ¡Cumpleaños de ${member.nombres}!`,
           message: `Hoy es el cumpleaños de ${member.nombres} ${member.apellidos} (${getRoleLabel(member.cargo)}). ¡Felicitémosle en este día especial!`,
-          notification_category: 'general',
+          notification_category: 'birthday',
           priority: 2,
           metadata: {
             member_id: member.id,
-            member_name: `${member.nombres} ${member.apellidos}`,
+            birthday_member_name: `${member.nombres} ${member.apellidos}`,
+            birthday_member_photo: member.photo_url,
             member_role: member.cargo,
-            birthday: true
+            birthday_date: new Date().toISOString().split('T')[0],
+            birthday: true,
+            show_confetti: true,
+            play_birthday_sound: true
           }
         });
 
