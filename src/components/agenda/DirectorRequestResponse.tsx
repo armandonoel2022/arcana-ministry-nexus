@@ -12,6 +12,7 @@ import { toast } from "sonner";
 interface DirectorRequest {
   id: string;
   service_id: string;
+  original_director_id: string;
   status: string;
   reason: string;
   requested_at: string;
@@ -20,13 +21,13 @@ interface DirectorRequest {
     full_name: string;
     phone: string;
     email: string;
-  };
+  } | null;
   services: {
     title: string;
     service_date: string;
     location: string;
     description: string;
-  };
+  } | null;
 }
 
 const DirectorRequestResponse: React.FC = () => {
@@ -64,7 +65,13 @@ const DirectorRequestResponse: React.FC = () => {
       const { data, error } = await supabase
         .from('director_replacement_requests')
         .select(`
-          *,
+          id,
+          service_id,
+          original_director_id,
+          status,
+          reason,
+          requested_at,
+          expires_at,
           original_director:profiles!original_director_id (
             full_name,
             phone,
@@ -82,7 +89,19 @@ const DirectorRequestResponse: React.FC = () => {
         .order('requested_at', { ascending: false });
 
       if (error) throw error;
-      setPendingRequests(data || []);
+      
+      // Transform the data to handle the relationship arrays
+      const transformedData = (data || []).map(request => ({
+        ...request,
+        original_director: Array.isArray(request.original_director) 
+          ? request.original_director[0] 
+          : request.original_director,
+        services: Array.isArray(request.services) 
+          ? request.services[0] 
+          : request.services
+      }));
+      
+      setPendingRequests(transformedData);
     } catch (error) {
       console.error('Error fetching pending requests:', error);
       toast.error('Error al cargar solicitudes pendientes');
@@ -119,11 +138,11 @@ const DirectorRequestResponse: React.FC = () => {
           .eq('id', user.id)
           .single();
 
-        // Get the original director's next service to swap
-        const { data: originalDirectorNextService } = await supabase
+        // Get the replacement director's next service to swap
+        const { data: replacementDirectorNextService } = await supabase
           .from('services')
           .select('id, title, service_date, leader')
-          .eq('leader', request.service_id) // This should be original_director_id, but the field mapping seems incorrect
+          .eq('leader', userProfile?.full_name)
           .gt('service_date', new Date().toISOString())
           .order('service_date', { ascending: true })
           .limit(1)
@@ -134,21 +153,21 @@ const DirectorRequestResponse: React.FC = () => {
           .from('services')
           .update({
             leader: userProfile?.full_name || 'Director de reemplazo',
-            notes: `Director original: ${request.original_director.full_name}. Reemplazado por: ${userProfile?.full_name || 'Director de reemplazo'}. ${responseNotes || ''}`
+            notes: `Director original: ${request.original_director?.full_name}. Reemplazado por: ${userProfile?.full_name || 'Director de reemplazo'}. ${responseNotes || ''}`
           })
           .eq('id', request.service_id);
 
         if (serviceError1) throw serviceError1;
 
         // If there's a next service for the replacement director, swap it to the original director
-        if (originalDirectorNextService) {
+        if (replacementDirectorNextService) {
           const { error: serviceError2 } = await supabase
             .from('services')
             .update({
-              leader: request.original_director.full_name,
-              notes: `Intercambio de turno - Director original: ${originalDirectorNextService.leader}. Ahora dirigido por: ${request.original_director.full_name}`
+              leader: request.original_director?.full_name,
+              notes: `Intercambio de turno - Director original: ${replacementDirectorNextService.leader}. Ahora dirigido por: ${request.original_director?.full_name}`
             })
-            .eq('id', originalDirectorNextService.id);
+            .eq('id', replacementDirectorNextService.id);
 
           if (serviceError2) throw serviceError2;
         }
@@ -165,14 +184,14 @@ const DirectorRequestResponse: React.FC = () => {
             sender_id: user.id,
             type: 'director_change',
             title: 'Cambio de Director Confirmado',
-            message: `El servicio "${request.services.title}" del ${format(new Date(request.services.service_date), 'dd/MM/yyyy', { locale: es })} ahora será dirigido por ${userProfile?.full_name || 'Director de reemplazo'}. En espera de la selección de canciones.`,
+            message: `El servicio "${request.services?.title}" del ${request.services?.service_date && format(new Date(request.services.service_date), 'dd/MM/yyyy', { locale: es })} ahora será dirigido por ${userProfile?.full_name || 'Director de reemplazo'}. En espera de la selección de canciones.`,
             notification_category: 'agenda',
             metadata: {
               service_id: request.service_id,
-              service_title: request.services.title,
-              service_date: request.services.service_date,
-              new_director: userProfile?.full_name || 'Director de reemplazo',
-              original_director: request.original_director.full_name
+               service_title: request.services?.title,
+               service_date: request.services?.service_date,
+               new_director: userProfile?.full_name || 'Director de reemplazo',
+               original_director: request.original_director?.full_name
             }
           }));
 
@@ -184,16 +203,16 @@ const DirectorRequestResponse: React.FC = () => {
       await supabase
         .from('system_notifications')
         .insert({
-          recipient_id: request.service_id, // This should be original_director_id, fixing this
+          recipient_id: request.original_director_id,
           sender_id: user.id,
           type: 'director_replacement_response',
           title: `Solicitud de Reemplazo ${action === 'accepted' ? 'Aceptada' : 'Rechazada'}`,
-          message: `Tu solicitud de reemplazo para "${request.services.title}" ha sido ${action === 'accepted' ? 'aceptada' : 'rechazada'}.`,
+          message: `Tu solicitud de reemplazo para "${request.services?.title}" ha sido ${action === 'accepted' ? 'aceptada' : 'rechazada'}.`,
           metadata: {
             request_id: requestId,
             service_id: request.service_id,
-            service_title: request.services.title,
-            service_date: request.services.service_date,
+             service_title: request.services?.title,
+             service_date: request.services?.service_date,
             action: action,
             notes: responseNotes
           }
@@ -250,14 +269,14 @@ const DirectorRequestResponse: React.FC = () => {
           <CardHeader>
             <div className="flex items-start justify-between">
               <div>
-                <CardTitle className="text-lg">{request.services.title}</CardTitle>
-                <CardDescription className="flex items-center gap-4">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    {format(new Date(request.services.service_date), 'dd/MM/yyyy HH:mm', { locale: es })}
-                  </span>
-                  <span>📍 {request.services.location}</span>
-                </CardDescription>
+                 <CardTitle className="text-lg">{request.services?.title}</CardTitle>
+                 <CardDescription className="flex items-center gap-4">
+                   <span className="flex items-center gap-1">
+                     <Calendar className="w-4 h-4" />
+                     {request.services?.service_date && format(new Date(request.services.service_date), 'dd/MM/yyyy HH:mm', { locale: es })}
+                   </span>
+                   <span>📍 {request.services?.location}</span>
+                 </CardDescription>
               </div>
               {isExpired(request.expires_at) && (
                 <Badge variant="destructive">Expirado</Badge>
@@ -269,21 +288,21 @@ const DirectorRequestResponse: React.FC = () => {
             <div className="p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <User className="w-4 h-4" />
-                <span className="font-medium">Solicitud de: {request.original_director.full_name}</span>
+                <span className="font-medium">Solicitud de: {request.original_director?.full_name}</span>
               </div>
-              <div className="text-sm text-gray-600 space-y-1">
-                <div>📞 {request.original_director.phone}</div>
-                <div>✉️ {request.original_director.email}</div>
-              </div>
+               <div className="text-sm text-gray-600 space-y-1">
+                 <div>📞 {request.original_director?.phone}</div>
+                 <div>✉️ {request.original_director?.email}</div>
+               </div>
             </div>
 
-            {/* Service Details */}
-            {request.services.description && (
-              <div className="space-y-2">
-                <h4 className="font-medium">Descripción del Servicio:</h4>
-                <p className="text-sm text-gray-600">{request.services.description}</p>
-              </div>
-            )}
+             {/* Service Details */}
+             {request.services?.description && (
+               <div className="space-y-2">
+                 <h4 className="font-medium">Descripción del Servicio:</h4>
+                 <p className="text-sm text-gray-600">{request.services.description}</p>
+               </div>
+             )}
 
             {/* Reason */}
             <div className="space-y-2">
