@@ -18,39 +18,7 @@ const SplashScreen = ({ onComplete }: SplashScreenProps) => {
     "Sistema Listo"
   ];
 
-  const playWelcomeAudio = useCallback(async () => {
-    try {
-      // Usar Web Speech API como alternativa más simple
-      if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(
-          "¡Bienvenido a ARCANA! El sistema integral para el Ministerio ADN Arca de Noé está preparando todos los servicios para ti."
-        );
-        utterance.lang = 'es-ES';
-        utterance.rate = 0.9;
-        utterance.pitch = 1;
-        utterance.volume = 0.7;
-        
-        // Buscar una voz en español
-        const voices = speechSynthesis.getVoices();
-        const spanishVoice = voices.find(voice => voice.lang.includes('es'));
-        if (spanishVoice) {
-          utterance.voice = spanishVoice;
-        }
-        
-        speechSynthesis.speak(utterance);
-      }
-    } catch (error) {
-      console.log('Audio no disponible:', error);
-    }
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      playWelcomeAudio();
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [playWelcomeAudio]);
+  // Audio removido por solicitud del usuario
 
   useEffect(() => {
     const interval = setInterval(() => {

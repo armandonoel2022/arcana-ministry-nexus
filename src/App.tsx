@@ -29,10 +29,12 @@ import VocalTraining from "./pages/VocalTraining";
 import MusicalTraining from "./pages/MusicalTraining";
 import DanceTraining from "./pages/DanceTraining";
 import PersonalAssistant from "./pages/PersonalAssistant";
+import NotificationTesting from "./pages/NotificationTesting";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import NotificationOverlay from "./components/notifications/NotificationOverlay";
 import "./App.css";
 
 const queryClient = new QueryClient();
@@ -64,6 +66,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <NotificationOverlay />
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
@@ -101,6 +104,7 @@ function App() {
                             <Route path="/musical-training" element={<MusicalTraining />} />
                             <Route path="/dance-training" element={<DanceTraining />} />
                             <Route path="/personal-assistant" element={<PersonalAssistant />} />
+                            <Route path="/notification-testing" element={<NotificationTesting />} />
                             <Route path="/about" element={<AboutMinistry />} />
                             <Route path="/statutes" element={<Statutes />} />
                             <Route path="*" element={<NotFound />} />
