@@ -116,92 +116,110 @@ const ServiceNotificationCard: React.FC<ServiceNotificationCardProps> = ({
   ];
 
   return (
-    <Card className="border-purple-200 bg-gradient-to-br from-purple-50 via-blue-50 to-purple-50 shadow-2xl border-2 max-w-lg">
+    <Card className="border-blue-200 bg-gradient-to-br from-blue-50 via-white to-blue-50 shadow-xl border-2 max-w-4xl">
       <CardContent className="p-6">
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex items-center space-x-2">
-            <Calendar className="w-6 h-6 text-purple-600" />
-            <h2 className="text-xl font-bold text-purple-800">Programa de Servicios</h2>
+        {/* Header con botón de cierre */}
+        <div className="flex justify-between items-start mb-6">
+          <div className="flex items-center gap-3">
+            <Calendar className="w-8 h-8 text-blue-600" />
+            <div>
+              <h3 className="text-2xl font-bold text-blue-800">
+                Programa de Servicios - 4to Domingo de Agosto
+              </h3>
+              <div className="flex flex-wrap items-center gap-4 mt-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">📅</span>
+                  <span className="font-medium text-blue-700">24 de Agosto de 2025</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">📌</span>
+                  <span className="font-medium text-blue-700">4to Domingo</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🎉</span>
+                  <span className="font-bold text-purple-700">Culto Misionero</span>
+                </div>
+              </div>
+            </div>
           </div>
           <Button
+            onClick={onDismiss}
             variant="ghost"
             size="sm"
-            onClick={onDismiss}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-500 hover:text-gray-700 flex-shrink-0"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </Button>
         </div>
 
-        {/* Header Info */}
-        <div className="bg-white/70 rounded-lg p-4 mb-4 space-y-2">
-          <div className="text-lg font-semibold text-purple-800">
-            4to Domingo de Agosto
-          </div>
-          <div className="flex items-center space-x-4 text-sm text-gray-600">
-            <div className="flex items-center space-x-1">
-              <Calendar className="w-4 h-4" />
-              <span>24 de Agosto de 2025</span>
-            </div>
-          </div>
-          <div className="text-sm font-medium text-purple-700">
-            🎉 Evento especial: Culto Misionero
-          </div>
-        </div>
-
-        {/* Services */}
+        {/* Servicios */}
         <div className="space-y-6">
-          {sampleServices.map((service, index) => (
-            <div key={index} className="bg-white/80 rounded-lg p-4 space-y-3">
-              <div className="flex items-center space-x-2">
-                <Clock className="w-5 h-5 text-blue-600" />
-                <span className="text-lg font-semibold text-gray-800">{service.time}</span>
+          {sampleServices.map((service, serviceIndex) => (
+            <div key={serviceIndex} className="bg-white rounded-lg border border-blue-200 p-6 shadow-md">
+              {/* Horario */}
+              <div className="flex items-center gap-2 mb-5">
+                <Clock className="w-6 h-6 text-blue-600" />
+                <span className="font-bold text-2xl text-blue-800">{service.time}</span>
               </div>
               
-              {/* Director */}
-              <div className="flex items-center space-x-3">
-                <Avatar className="w-12 h-12 border-2 border-purple-300">
+              {/* Director principal con foto más grande */}
+              <div className="flex items-center gap-6 mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+                <Avatar className="w-20 h-20 border-4 border-blue-300 shadow-lg">
                   <AvatarImage
                     src={service.director?.photo_url || undefined}
                     alt={`${service.director?.nombres} ${service.director?.apellidos}`}
                     className="object-cover"
                   />
-                  <AvatarFallback className="bg-purple-100 text-purple-700 font-semibold">
+                  <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xl font-bold">
                     {service.director ? getInitials(`${service.director.nombres} ${service.director.apellidos}`) : 'D'}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="font-semibold text-gray-800">
-                    🎤 Dirige: {service.director ? `${service.director.nombres} ${service.director.apellidos}` : 'Director Asignado'}
+                  <div className="flex items-center gap-2 mb-2">
+                    <Music className="w-5 h-5 text-blue-600" />
+                    <span className="font-bold text-blue-800">Dirige:</span>
+                    <span className="font-bold text-xl text-blue-900">
+                      {service.director ? `${service.director.nombres} ${service.director.apellidos}` : 'Director Asignado'}
+                    </span>
                   </div>
-                  <div className="text-sm text-gray-600">
-                    🎶 Grupo Asignado: Grupo Principal
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🎶</span>
+                    <span className="text-blue-700 font-medium">Grupo Asignado: Grupo Principal</span>
                   </div>
                 </div>
               </div>
 
-              {/* Vocal Members */}
-              <div>
-                <div className="flex items-center space-x-2 mb-2">
-                  <Users className="w-4 h-4 text-green-600" />
-                  <span className="font-medium text-gray-700">Responsables de voces:</span>
+              {/* Responsables de voces */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <Users className="w-5 h-5 text-blue-600" />
+                  <span className="font-bold text-blue-800">Responsables de voces:</span>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {service.members.map((member, idx) => (
-                    <div key={idx} className="flex items-center space-x-1 bg-green-50 rounded-lg px-2 py-1">
-                      <Avatar className="w-6 h-6">
+                
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                  {service.members.map((member, memberIndex) => (
+                    <div key={memberIndex} className="text-center bg-white rounded-lg p-3 shadow-sm border border-gray-200">
+                      <Avatar className="w-14 h-14 mx-auto mb-2 border-2 border-blue-200">
                         <AvatarImage
                           src={member.photo_url || undefined}
                           alt={`${member.nombres} ${member.apellidos}`}
                           className="object-cover"
                         />
-                        <AvatarFallback className="bg-green-100 text-green-700 text-xs">
+                        <AvatarFallback className="bg-gradient-to-r from-blue-400 to-purple-400 text-white font-bold text-sm">
                           {getInitials(`${member.nombres} ${member.apellidos}`)}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-xs font-medium text-green-800">
-                        {member.nombres} {member.apellidos}
-                      </span>
+                      <p className="text-sm font-semibold text-blue-900">
+                        {member.nombres}
+                      </p>
+                      <p className="text-xs text-blue-600">
+                        {member.apellidos}
+                      </p>
+                      {member.voz_instrumento && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          {member.voz_instrumento}
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -210,25 +228,24 @@ const ServiceNotificationCard: React.FC<ServiceNotificationCardProps> = ({
           ))}
         </div>
 
-        {/* Footer */}
-        <div className="mt-6 space-y-3">
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-            <div className="flex items-start space-x-2">
-              <span className="text-amber-600">⚠️</span>
-              <span className="text-sm text-amber-800">
-                En caso de no poder asistir, cada responsable de voz debe gestionar su propio suplente.
-              </span>
-            </div>
+        {/* Aviso importante */}
+        <div className="mt-6 p-4 bg-orange-50 rounded-lg border-l-4 border-orange-400">
+          <div className="flex items-start gap-3">
+            <span className="w-5 h-5 text-orange-600 text-lg flex-shrink-0 mt-0.5">⚠️</span>
+            <p className="text-orange-800 font-medium">
+              <strong>Importante:</strong> En caso de no poder asistir, cada responsable de voz debe gestionar su propio suplente.
+            </p>
           </div>
-          
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-2 text-sm text-purple-600">
-              <Music className="w-4 h-4" />
-              <span>En espera de la selección de canciones</span>
-            </div>
-            <div className="text-xs text-gray-500 mt-1">
-              📌 ¡Este es un servicio de mensajes automatizado, no es necesario responder! 🙌
-            </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg text-center border border-blue-200">
+          <div className="flex items-center justify-center gap-2">
+            <Music className="w-5 h-5 text-blue-600" />
+            <p className="text-blue-800 font-medium">
+              ¡Este es un servicio de mensajes automatizado, no es necesario responder! 
+            </p>
+            <span className="text-xl">🙌</span>
           </div>
         </div>
       </CardContent>
