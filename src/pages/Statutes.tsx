@@ -83,7 +83,7 @@ const Statutes = () => {
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Estatutos del Ministerio</h1>
           <p className="text-gray-600">Normativas y Reglamentos - Ministerio ADN Arca de Noé</p>
           <Badge className="mt-2 bg-arcana-gold-gradient text-white">
-            Versión 2024
+            Versión 2025
           </Badge>
         </div>
 
@@ -143,7 +143,7 @@ const Statutes = () => {
                 necesidades del ministerio y la dirección pastoral.
               </p>
               <p className="text-sm text-gray-600">
-                Última actualización: Enero 2024
+                Última actualización: Enero 2025
               </p>
             </div>
           </CardContent>
