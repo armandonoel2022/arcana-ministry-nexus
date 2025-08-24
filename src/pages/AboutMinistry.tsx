@@ -10,11 +10,7 @@ const AboutMinistry = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 modern-gradient rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl">
-            <img 
-                src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" 
-                alt="ARCANA Logo" 
-                className="w-28 h-28 object-cover rounded-3xl shadow-xl border-4 border-white/20"
-              />
+            <Heart className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold modern-gradient-text mb-2">Acerca del Ministerio ADN</h1>
           <p className="text-muted-foreground">Arca de Noé - Ministerio de Alabanza y Adoración</p>
