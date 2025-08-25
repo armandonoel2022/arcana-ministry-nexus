@@ -101,16 +101,16 @@ const NotificationTestMenu = () => {
   };
 
   const testWeekendService = () => {
-    testNotification('weekend_service', {
-      type: 'weekend_service',
-      title: '🎼 Programa de Servicios - 4to Domingo de Agosto',
+    testNotification('special_event', {
+      type: 'special_event',
+      title: '🎼 Programa de Servicios - 1er Domingo de Septiembre',
       message: 'Se ha publicado el programa de servicios para el fin de semana. Revisa tu participación y prepárate para un tiempo de bendición.',
       category: 'agenda',
       priority: 2,
       metadata: {
-        service_date: '2025-08-24',
-        month_order: '4to Domingo',
-        special_event: 'Culto Misionero'
+        service_date: '2025-09-01',
+        month_order: '1er Domingo',
+        special_event: 'Culto Regular'
       }
     });
   };
