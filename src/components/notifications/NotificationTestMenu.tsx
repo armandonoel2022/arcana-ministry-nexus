@@ -101,7 +101,7 @@ const NotificationTestMenu = () => {
   };
 
   const testWeekendService = () => {
-    testNotification('servicio', {
+    testNotification('weekend_service', {
       type: 'weekend_service',
       title: '🎼 Programa de Servicios - 4to Domingo de Agosto',
       message: 'Se ha publicado el programa de servicios para el fin de semana. Revisa tu participación y prepárate para un tiempo de bendición.',

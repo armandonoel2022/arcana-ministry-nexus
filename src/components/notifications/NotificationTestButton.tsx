@@ -111,13 +111,45 @@ const NotificationTestButton = () => {
     category: 'events'
   });
 
-  const testWeekendService = () => testNotification('servicio', {
+  const testWeekendService = () => testNotification('weekend_service', {
     title: "📅 Programa de Servicios - 4to Domingo de Agosto",
     message: "Consulta el programa de servicios para este fin de semana",
     metadata: {
       service_date: "2025-08-24",
       month_order: "4to Domingo",
-      special_event: "Culto Misionero"
+      special_event: "Culto Misionero",
+      services: [
+        {
+          time: "8:00 a.m.",
+          director: {
+            name: "Keyla Medrano",
+            photo: "/lovable-uploads/43125001-4383-4612-84dd-b01a2ee6a562.png"
+          },
+          group: "Grupo de Keyla",
+          voices: [
+            { name: "Keyla Medrano", photo: "/lovable-uploads/43125001-4383-4612-84dd-b01a2ee6a562.png" },
+            { name: "Carolina Santana", photo: "/lovable-uploads/74634c97-a2ef-403b-9fa0-89d9207b7b00.png" },
+            { name: "Arisoni Liriano", photo: "/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" },
+            { name: "Lorena Pacheco", photo: "/lovable-uploads/a58d8d74-4ced-444f-b402-8a028fc7f65e.png" },
+            { name: "Sugey Garó", photo: "/lovable-uploads/43125001-4383-4612-84dd-b01a2ee6a562.png" }
+          ]
+        },
+        {
+          time: "10:45 a.m.",
+          director: {
+            name: "Roosevelt Martínez",
+            photo: "/lovable-uploads/74634c97-a2ef-403b-9fa0-89d9207b7b00.png"
+          },
+          group: "Grupo de Massy",
+          voices: [
+            { name: "Damaris Castillo", photo: "/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" },
+            { name: "Jisell Mauricio", photo: "/lovable-uploads/a58d8d74-4ced-444f-b402-8a028fc7f65e.png" },
+            { name: "Abraham Valera", photo: "/lovable-uploads/43125001-4383-4612-84dd-b01a2ee6a562.png" },
+            { name: "Rosely Montero", photo: "/lovable-uploads/74634c97-a2ef-403b-9fa0-89d9207b7b00.png" },
+            { name: "Rode Santana", photo: "/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" }
+          ]
+        }
+      ]
     },
     priority: 2,
     category: 'agenda'
