@@ -111,7 +111,7 @@ const NotificationTestButton = () => {
     category: 'events'
   });
 
-  const testWeekendService = () => testNotification('weekend_service', {
+  const testWeekendService = () => testNotification('servicio', {
     title: "📅 Programa de Servicios - 4to Domingo de Agosto",
     message: "Consulta el programa de servicios para este fin de semana",
     metadata: {
