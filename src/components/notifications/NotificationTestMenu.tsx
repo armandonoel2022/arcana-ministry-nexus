@@ -101,16 +101,16 @@ const NotificationTestMenu = () => {
   };
 
   const testWeekendService = () => {
-    testNotification('special_event', {
-      type: 'special_event',
-      title: '🎼 Programa de Servicios - 1er Domingo de Septiembre',
-      message: 'Se ha publicado el programa de servicios para el fin de semana. Revisa tu participación y prepárate para un tiempo de bendición.',
+    testNotification('servicio', {
+      type: 'daily_verse',
+      title: '🎼 Programa de Servicios - 5to Domingo de Agosto',
+      message: 'Se ha publicado el programa de servicios para este fin de semana. Revisa tu participación y prepárate para un tiempo de bendición.',
       category: 'agenda',
       priority: 2,
       metadata: {
-        service_date: '2025-09-01',
-        month_order: '1er Domingo',
-        special_event: 'Culto Regular'
+        service_date: '2025-08-31',
+        month_order: '5to Domingo',
+        special_event: 'Servicio Dominical'
       }
     });
   };

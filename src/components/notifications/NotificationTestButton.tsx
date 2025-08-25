@@ -111,42 +111,42 @@ const NotificationTestButton = () => {
     category: 'events'
   });
 
-  const testWeekendService = () => testNotification('special_event', {
-    title: "📅 Programa de Servicios - 1er Domingo de Septiembre",
-    message: "Consulta el programa de servicios para este fin de semana",
+  const testWeekendService = () => testNotification('daily_verse', {
+    title: "🎼 Programa de Servicios - 5to Domingo de Agosto",
+    message: "Se ha publicado el programa de servicios para este fin de semana. Revisa tu participación y prepárate para un tiempo de bendición.",
     metadata: {
-      service_date: "2025-09-01",
-      month_order: "1er Domingo",
-      special_event: "Culto Regular",
+      service_date: "2025-08-31",
+      month_order: "5to Domingo",
+      special_event: "Servicio Dominical",
       services: [
         {
           time: "8:00 a.m.",
           director: {
             name: "Armando Noel",
-            photo: "/lovable-uploads/74634c97-a2ef-403b-9fa0-89d9207b7b00.png"
+            photo: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/d6602109-ad3e-4db6-ab4a-2984dadfc569.JPG"
           },
           group: "Grupo de Aleida",
           voices: [
-            { name: "Aleida Martínez", photo: "/lovable-uploads/43125001-4383-4612-84dd-b01a2ee6a562.png" },
-            { name: "Carolina Santana", photo: "/lovable-uploads/74634c97-a2ef-403b-9fa0-89d9207b7b00.png" },
-            { name: "Arisoni Liriano", photo: "/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" },
-            { name: "Lorena Pacheco", photo: "/lovable-uploads/a58d8d74-4ced-444f-b402-8a028fc7f65e.png" },
-            { name: "Sugey Garó", photo: "/lovable-uploads/43125001-4383-4612-84dd-b01a2ee6a562.png" }
+            { name: "Aleida Geomar Batista", photo: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/00a916a8-ab94-4cc0-81ae-668dd6071416.JPG" },
+            { name: "Ruth Esmailin Ramirez", photo: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/619c1a4e-42db-4549-8890-16392cfa2a87.JPG" },
+            { name: "Eliabi Joana Sierra", photo: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG" },
+            { name: "Fior Daliza Paniagua", photo: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/8cebc294-ea61-40d0-9b04-08d7d474332c.JPG" },
+            { name: "Félix Nicolás Peralta", photo: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG" }
           ]
         },
         {
           time: "10:45 a.m.",
           director: {
             name: "Nicolas Peralta",
-            photo: "/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png"
+            photo: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG"
           },
-          group: "Grupo de Keyla",
+          group: "Grupo de Aleida",
           voices: [
-            { name: "Keyla Medrano", photo: "/lovable-uploads/a58d8d74-4ced-444f-b402-8a028fc7f65e.png" },
-            { name: "Jisell Mauricio", photo: "/lovable-uploads/74634c97-a2ef-403b-9fa0-89d9207b7b00.png" },
-            { name: "Abraham Valera", photo: "/lovable-uploads/43125001-4383-4612-84dd-b01a2ee6a562.png" },
-            { name: "Rosely Montero", photo: "/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" },
-            { name: "Damaris Castillo", photo: "/lovable-uploads/a58d8d74-4ced-444f-b402-8a028fc7f65e.png" }
+            { name: "Aleida Geomar Batista", photo: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/00a916a8-ab94-4cc0-81ae-668dd6071416.JPG" },
+            { name: "Ruth Esmailin Ramirez", photo: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/619c1a4e-42db-4549-8890-16392cfa2a87.JPG" },
+            { name: "Eliabi Joana Sierra", photo: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG" },
+            { name: "Fior Daliza Paniagua", photo: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/8cebc294-ea61-40d0-9b04-08d7d474332c.JPG" },
+            { name: "Damaris Castillo", photo: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38.JPG" }
           ]
         }
       ]
