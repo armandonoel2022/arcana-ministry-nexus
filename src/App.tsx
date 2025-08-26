@@ -35,6 +35,7 @@ import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import NotificationOverlay from "./components/notifications/NotificationOverlay";
+import ServiceNotificationOverlay from "./components/notifications/ServiceNotificationOverlay";
 import "./App.css";
 
 const queryClient = new QueryClient();
@@ -67,6 +68,7 @@ function App() {
           <Toaster />
           <Sonner />
           <NotificationOverlay />
+          <ServiceNotificationOverlay />
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
