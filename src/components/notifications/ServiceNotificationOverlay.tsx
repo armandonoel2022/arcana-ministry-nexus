@@ -40,6 +40,8 @@ const ServiceNotificationOverlay = () => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [services, setServices] = useState<WeekendService[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isTestMode, setIsTestMode] = useState(false);
+  const [testData, setTestData] = useState<any>(null);
 
   useEffect(() => {
     // Check if user has already interacted with the notification
@@ -52,7 +54,38 @@ const ServiceNotificationOverlay = () => {
     } else {
       setIsLoading(false);
     }
+
+    // Listen for test notifications
+    const channel = supabase
+      .channel('service-test-notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'system_notifications'
+        },
+        (payload) => {
+          const notification = payload.new as any;
+          if (notification.title?.includes('Programa de Servicios') && 
+              (notification.metadata?.services || notification.type === 'service_program')) {
+            showTestNotification(notification.metadata);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
+
+  const showTestNotification = (metadata: any) => {
+    setTestData(metadata);
+    setIsTestMode(true);
+    setIsVisible(true);
+    setTimeout(() => setIsAnimating(true), 100);
+  };
 
   const getNextWeekend = () => {
     const now = new Date();
@@ -153,8 +186,12 @@ const ServiceNotificationOverlay = () => {
     setIsAnimating(false);
     setTimeout(() => {
       setIsVisible(false);
-      localStorage.setItem('serviceNotificationDismissed', 'true');
-      localStorage.setItem('serviceNotificationLastShown', new Date().toDateString());
+      if (!isTestMode) {
+        localStorage.setItem('serviceNotificationDismissed', 'true');
+        localStorage.setItem('serviceNotificationLastShown', new Date().toDateString());
+      }
+      setIsTestMode(false);
+      setTestData(null);
     }, 300);
   };
 
@@ -217,9 +254,12 @@ const ServiceNotificationOverlay = () => {
     );
   };
 
-  if (isLoading || !isVisible || services.length === 0) {
+  if (isLoading || !isVisible || (!isTestMode && services.length === 0)) {
     return null;
   }
+
+  // Use test data or real services
+  const displayServices = isTestMode ? testData?.services || [] : services;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -244,7 +284,10 @@ const ServiceNotificationOverlay = () => {
                       Programa de Servicios
                     </h2>
                     <p className="text-blue-700">
-                      {format(new Date(services[0].service_date), 'EEEE, dd \'de\' MMMM', { locale: es })}
+                      {isTestMode 
+                        ? `${testData?.month_order} - ${format(new Date(testData?.service_date), 'dd \'de\' MMMM', { locale: es })}`
+                        : format(new Date(services[0]?.service_date), 'EEEE, dd \'de\' MMMM', { locale: es })
+                      }
                     </p>
                   </div>
                 </div>
@@ -260,14 +303,19 @@ const ServiceNotificationOverlay = () => {
 
               {/* Services List */}
               <div className="space-y-4">
-                {services.map((service) => {
-                  const serviceTime = getServiceTime(service.title);
-                  const director = service.leader;
-                  const responsibleVoices = getResponsibleVoices(service.group_members);
+                {displayServices.map((service: any, index: number) => {
+                  // Handle both test data and real service data
+                  const serviceTime = isTestMode ? service.time : getServiceTime(service.title);
+                  const director = isTestMode ? service.director.name : service.leader;
+                  const directorPhoto = isTestMode ? service.director.photo : 
+                    service.group_members?.find((m: any) => m.is_leader)?.profiles?.photo_url;
+                  const groupName = isTestMode ? service.group : service.worship_groups?.name;
+                  const voices = isTestMode ? service.voices : getResponsibleVoices(service.group_members || []);
+                  const serviceKey = isTestMode ? `test-${index}` : service.id;
 
                   return (
                     <div 
-                      key={service.id}
+                      key={serviceKey}
                       className="bg-white/80 rounded-lg p-4 border border-blue-200 shadow-sm"
                     >
                       <div className="flex items-start gap-4">
@@ -277,30 +325,26 @@ const ServiceNotificationOverlay = () => {
                             <Clock className="w-4 h-4 text-blue-600" />
                             <span className="font-semibold text-blue-900">{serviceTime}</span>
                             <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                              {service.service_type}
+                              {isTestMode ? 'regular' : service.service_type}
                             </Badge>
                           </div>
                           
-                          <h3 className="font-medium text-gray-900 mb-1">{service.title}</h3>
+                          <h3 className="font-medium text-gray-900 mb-1">
+                            {isTestMode ? `Servicio de las ${serviceTime}` : service.title}
+                          </h3>
                           
-                          {service.special_activity && (
+                          {!isTestMode && service.special_activity && (
                             <p className="text-sm text-gray-600 mb-2">
                               {service.special_activity}
                             </p>
                           )}
 
                           {/* Group */}
-                          {service.worship_groups && (
+                          {groupName && (
                             <div className="flex items-center gap-2 mb-3">
                               <Users className="w-4 h-4 text-gray-500" />
-                              <Badge 
-                                style={{ 
-                                  backgroundColor: service.worship_groups.color_theme + '20',
-                                  color: service.worship_groups.color_theme,
-                                  borderColor: service.worship_groups.color_theme + '40'
-                                }}
-                              >
-                                {service.worship_groups.name}
+                              <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200">
+                                {groupName}
                               </Badge>
                             </div>
                           )}
@@ -311,45 +355,51 @@ const ServiceNotificationOverlay = () => {
                             <div>
                               <div className="text-xs font-medium text-gray-600 mb-1">Director/a de Alabanza:</div>
                               <div className="flex items-center gap-2">
-                                <Avatar className="w-10 h-10 border-2 border-blue-200">
+                                <Avatar className="w-12 h-12 border-2 border-blue-300">
                                   <AvatarImage
-                                    src={service.group_members.find(m => m.is_leader)?.profiles?.photo_url}
+                                    src={directorPhoto}
                                     alt={director}
                                     className="object-cover"
                                   />
-                                  <AvatarFallback className="bg-gradient-to-r from-blue-400 to-indigo-400 text-white text-sm font-bold">
+                                  <AvatarFallback className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-sm font-bold">
                                     {getInitials(director)}
                                   </AvatarFallback>
                                 </Avatar>
-                                <span className="font-medium text-gray-900">{director}</span>
+                                <span className="font-medium text-gray-900 text-base">{director}</span>
                               </div>
                             </div>
 
                             {/* Responsible Voices */}
-                            {responsibleVoices.length > 0 && (
+                            {voices && voices.length > 0 && (
                               <div>
                                 <div className="text-xs font-medium text-gray-600 mb-2">Responsables de Voces:</div>
                                 <div className="flex flex-wrap gap-2">
-                                  {responsibleVoices.slice(0, 4).map((member) => (
-                                    <div key={member.id} className="flex items-center gap-1 text-sm">
-                                      <Avatar className="w-6 h-6 border border-gray-200">
-                                        <AvatarImage
-                                          src={member.profiles?.photo_url}
-                                          alt={member.profiles?.full_name}
-                                          className="object-cover"
-                                        />
-                                        <AvatarFallback className="bg-gray-200 text-gray-700 text-xs">
-                                          {getInitials(member.profiles?.full_name || '')}
-                                        </AvatarFallback>
-                                      </Avatar>
-                                      <span className="text-gray-700">
-                                        {member.profiles?.full_name.split(' ')[0]}
-                                      </span>
-                                    </div>
-                                  ))}
-                                  {responsibleVoices.length > 4 && (
+                                  {voices.slice(0, 5).map((voice: any, voiceIndex: number) => {
+                                    const voiceName = isTestMode ? voice.name : voice.profiles?.full_name;
+                                    const voicePhoto = isTestMode ? voice.photo : voice.profiles?.photo_url;
+                                    const voiceKey = isTestMode ? `voice-${voiceIndex}` : voice.id;
+                                    
+                                    return (
+                                      <div key={voiceKey} className="flex items-center gap-1 text-sm">
+                                        <Avatar className="w-8 h-8 border border-gray-300">
+                                          <AvatarImage
+                                            src={voicePhoto}
+                                            alt={voiceName}
+                                            className="object-cover"
+                                          />
+                                          <AvatarFallback className="bg-gradient-to-r from-gray-400 to-gray-500 text-white text-xs font-medium">
+                                            {getInitials(voiceName || '')}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <span className="text-gray-700 font-medium">
+                                          {voiceName?.split(' ')[0]}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                  {voices.length > 5 && (
                                     <span className="text-xs text-gray-500 ml-1">
-                                      +{responsibleVoices.length - 4} más
+                                      +{voices.length - 5} más
                                     </span>
                                   )}
                                 </div>

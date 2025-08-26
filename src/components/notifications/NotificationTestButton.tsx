@@ -28,7 +28,7 @@ const NotificationTestButton = () => {
         .from('system_notifications')
         .insert({
           type: type,
-          recipient_id: user.id,
+          recipient_id: null, // Cambiar a null para que sea global
           title: data.title,
           message: data.message,
           metadata: data.metadata || {},
@@ -111,7 +111,7 @@ const NotificationTestButton = () => {
     category: 'events'
   });
 
-  const testWeekendService = () => testNotification('daily_verse', {
+  const testWeekendService = () => testNotification('service_program', {
     title: "🎼 Programa de Servicios - 5to Domingo de Agosto",
     message: "Se ha publicado el programa de servicios para este fin de semana. Revisa tu participación y prepárate para un tiempo de bendición.",
     metadata: {
