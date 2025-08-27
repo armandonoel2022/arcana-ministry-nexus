@@ -110,7 +110,48 @@ const NotificationTestMenu = () => {
       metadata: {
         service_date: '2025-08-31',
         month_order: '5to Domingo',
-        special_event: 'Servicio Dominical'
+        special_event: 'Servicio Dominical',
+        services: [
+          {
+            time: '8:00 a.m.',
+            director: {
+              name: 'Armando Noel',
+              photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/d6602109-ad3e-4db6-ab4a-2984dadfc569.JPG'
+            },
+            group: 'Grupo de Aleida',
+            voices: [
+              { name: 'Aleida Geomar Batista', photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/00a916a8-ab94-4cc0-81ae-668dd6071416.JPG' },
+              { name: 'Ruth Esmailin Ramirez', photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/619c1a4e-42db-4549-8890-16392cfa2a87.JPG' },
+              { name: 'Eliabi Joana Sierra', photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG' },
+              { name: 'Fior Daliza Paniagua', photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/8cebc294-ea61-40d0-9b04-08d7d474332c.JPG' },
+              { name: 'Félix Nicolás Peralta', photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG' }
+            ],
+            songs: [
+              { id: '1', title: 'Grande es Tu Fidelidad', artist: 'Tradicional', song_order: 1 },
+              { id: '2', title: 'Cuán Grande es Él', artist: 'Tradicional', song_order: 2 },
+              { id: '3', title: 'Sublime Gracia', artist: 'John Newton', song_order: 3 }
+            ]
+          },
+          {
+            time: '10:45 a.m.',
+            director: {
+              name: 'Nicolas Peralta',
+              photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG'
+            },
+            group: 'Grupo de Aleida',
+            voices: [
+              { name: 'Aleida Geomar Batista', photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/00a916a8-ab94-4cc0-81ae-668dd6071416.JPG' },
+              { name: 'Ruth Esmailin Ramirez', photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/619c1a4e-42db-4549-8890-16392cfa2a87.JPG' },
+              { name: 'Eliabi Joana Sierra', photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG' },
+              { name: 'Fior Daliza Paniagua', photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/8cebc294-ea61-40d0-9b04-08d7d474332c.JPG' },
+              { name: 'Damaris Castillo', photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38.JPG' }
+            ],
+            songs: [
+              { id: '4', title: 'Al mundo paz', artist: 'Isaac Watts', song_order: 1 },
+              { id: '5', title: 'Ven a mi corazón', artist: 'Contemporáneo', song_order: 2 }
+            ]
+          }
+        ]
       }
     });
   };

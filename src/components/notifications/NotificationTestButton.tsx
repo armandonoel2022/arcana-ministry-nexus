@@ -132,6 +132,11 @@ const NotificationTestButton = () => {
             { name: "Eliabi Joana Sierra", photo: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG" },
             { name: "Fior Daliza Paniagua", photo: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/8cebc294-ea61-40d0-9b04-08d7d474332c.JPG" },
             { name: "Félix Nicolás Peralta", photo: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG" }
+          ],
+          songs: [
+            { id: "1", title: "Grande es Tu Fidelidad", artist: "Tradicional", song_order: 1 },
+            { id: "2", title: "Cuán Grande es Él", artist: "Tradicional", song_order: 2 },
+            { id: "3", title: "Sublime Gracia", artist: "John Newton", song_order: 3 }
           ]
         },
         {
@@ -147,6 +152,10 @@ const NotificationTestButton = () => {
             { name: "Eliabi Joana Sierra", photo: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG" },
             { name: "Fior Daliza Paniagua", photo: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/8cebc294-ea61-40d0-9b04-08d7d474332c.JPG" },
             { name: "Damaris Castillo", photo: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38.JPG" }
+          ],
+          songs: [
+            { id: "4", title: "Al mundo paz", artist: "Isaac Watts", song_order: 1 },
+            { id: "5", title: "Ven a mi corazón", artist: "Contemporáneo", song_order: 2 }
           ]
         }
       ]

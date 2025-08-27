@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { X, Calendar, Clock, Users, Save } from "lucide-react";
+import { X, Calendar, Clock, Users, Save, Music } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays, startOfWeek, endOfWeek, getDay } from "date-fns";
 import { es } from "date-fns/locale";
@@ -33,6 +33,12 @@ interface WeekendService {
       photo_url?: string;
     };
   }[];
+  selected_songs?: {
+    id: string;
+    title: string;
+    artist: string;
+    song_order: number;
+  }[];
 }
 
 const ServiceNotificationOverlay = () => {
@@ -52,7 +58,79 @@ const ServiceNotificationOverlay = () => {
     } else {
       setIsLoading(false);
     }
+
+    // Listen for service program notifications
+    const handleNotifications = (payload: any) => {
+      if (payload.eventType === 'INSERT' && 
+          payload.new.type === 'daily_verse' && 
+          payload.new.notification_category === 'agenda' &&
+          payload.new.metadata?.service_date) {
+        // Show overlay immediately for service program notifications
+        showServiceProgramOverlay(payload.new.metadata);
+      }
+    };
+
+    const channel = supabase
+      .channel('service-notifications')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'system_notifications'
+      }, handleNotifications)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
+
+  const showServiceProgramOverlay = (metadata: any) => {
+    if (metadata.services) {
+      const formattedServices = metadata.services.map((service: any) => ({
+        id: service.id || Date.now().toString(),
+        service_date: metadata.service_date,
+        title: `Servicio ${service.time}`,
+        leader: service.director?.name || service.director,
+        service_type: 'regular',
+        location: 'Templo Principal',
+        special_activity: metadata.special_event,
+        worship_groups: {
+          id: '1',
+          name: service.group,
+          color_theme: '#3B82F6'
+        },
+        group_members: [
+          ...(service.director ? [{
+            id: 'director-' + service.id,
+            user_id: 'director',
+            instrument: 'Director',
+            is_leader: true,
+            profiles: {
+              id: 'director',
+              full_name: service.director?.name || service.director,
+              photo_url: service.director?.photo
+            }
+          }] : []),
+          ...(service.voices || []).map((voice: any, index: number) => ({
+            id: 'voice-' + index,
+            user_id: 'voice-' + index,
+            instrument: 'Soprano', // Default voice type
+            is_leader: false,
+            profiles: {
+              id: 'voice-' + index,
+              full_name: voice.name,
+              photo_url: voice.photo
+            }
+          }))
+        ],
+        selected_songs: metadata.songs || []
+      }));
+      
+      setServices(formattedServices);
+      setIsVisible(true);
+      setTimeout(() => setIsAnimating(true), 100);
+    }
+  };
 
   const getNextWeekend = () => {
     const now = new Date();
@@ -108,11 +186,14 @@ const ServiceNotificationOverlay = () => {
       if (error) throw error;
 
       if (data && data.length > 0) {
-        // For each service, get the group members with their profiles
+        // For each service, get the group members with their profiles and selected songs
         const servicesWithMembers = await Promise.all(
           data.map(async (service) => {
+            let members: any[] = [];
+            let selectedSongs: any[] = [];
+
             if (service.assigned_group_id) {
-              const { data: members, error: membersError } = await supabase
+              const { data: membersData, error: membersError } = await supabase
                 .from('group_members')
                 .select(`
                   id,
@@ -128,11 +209,40 @@ const ServiceNotificationOverlay = () => {
                 .eq('group_id', service.assigned_group_id)
                 .eq('is_active', true);
 
-              if (!membersError && members) {
-                return { ...service, group_members: members };
+              if (!membersError && membersData) {
+                members = membersData;
               }
             }
-            return { ...service, group_members: [] };
+
+            // Get selected songs for this service
+            const { data: songsData, error: songsError } = await supabase
+              .from('service_songs')
+              .select(`
+                id,
+                song_order,
+                songs (
+                  id,
+                  title,
+                  artist
+                )
+              `)
+              .eq('service_id', service.id)
+              .order('song_order');
+
+            if (!songsError && songsData) {
+              selectedSongs = songsData.map((item: any) => ({
+                id: item.songs.id,
+                title: item.songs.title,
+                artist: item.songs.artist,
+                song_order: item.song_order
+              }));
+            }
+
+            return { 
+              ...service, 
+              group_members: members,
+              selected_songs: selectedSongs
+            };
           })
         );
 
@@ -163,25 +273,40 @@ const ServiceNotificationOverlay = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const servicesList = services.map(service => 
-        `${format(new Date(service.service_date), 'EEEE dd/MM', { locale: es })} - ${service.title} (${service.leader})`
-      ).join('\n• ');
+      const servicesList = services.map(service => {
+        const time = getServiceTime(service.title);
+        const songsText = service.selected_songs && service.selected_songs.length > 0 
+          ? `\nCanciones: ${service.selected_songs.map(s => s.title).join(', ')}`
+          : '';
+        return `${time} - ${service.leader}${songsText}`;
+      }).join('\n\n• ');
 
       await supabase
         .from('system_notifications')
         .insert({
           recipient_id: user.id,
-          type: 'daily_verse',
+          type: 'service_program',
           title: 'Programa de Servicios - Fin de Semana',
-          message: `Servicios programados:\n• ${servicesList}`,
+          message: `Servicios programados para ${format(new Date(services[0].service_date), 'EEEE, dd \'de\' MMMM', { locale: es })}:\n\n• ${servicesList}`,
           notification_category: 'agenda',
           metadata: {
+            service_date: services[0].service_date,
             services: services.map(s => ({
               id: s.id,
               date: s.service_date,
               title: s.title,
               leader: s.leader,
-              group: s.worship_groups?.name
+              group: s.worship_groups?.name,
+              time: getServiceTime(s.title),
+              director: {
+                name: s.leader,
+                photo: s.group_members.find(m => m.is_leader)?.profiles?.photo_url
+              },
+              voices: getResponsibleVoices(s.group_members).map(v => ({
+                name: v.profiles?.full_name,
+                photo: v.profiles?.photo_url
+              })),
+              songs: s.selected_songs || []
             }))
           }
         });
@@ -259,103 +384,144 @@ const ServiceNotificationOverlay = () => {
               </div>
 
               {/* Services List */}
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {services.map((service) => {
                   const serviceTime = getServiceTime(service.title);
                   const director = service.leader;
+                  const directorMember = service.group_members.find(m => m.is_leader);
                   const responsibleVoices = getResponsibleVoices(service.group_members);
 
                   return (
                     <div 
                       key={service.id}
-                      className="bg-white/80 rounded-lg p-4 border border-blue-200 shadow-sm"
+                      className="bg-white/90 rounded-xl p-6 border border-blue-200 shadow-lg"
                     >
-                      <div className="flex items-start gap-4">
-                        {/* Service Info */}
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Clock className="w-4 h-4 text-blue-600" />
-                            <span className="font-semibold text-blue-900">{serviceTime}</span>
-                            <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                              {service.service_type}
-                            </Badge>
-                          </div>
-                          
-                          <h3 className="font-medium text-gray-900 mb-1">{service.title}</h3>
-                          
-                          {service.special_activity && (
-                            <p className="text-sm text-gray-600 mb-2">
-                              {service.special_activity}
-                            </p>
-                          )}
+                      {/* Service Header */}
+                      <div className="flex items-center gap-3 mb-6">
+                        <Clock className="w-5 h-5 text-blue-600" />
+                        <span className="text-xl font-bold text-blue-900">{serviceTime}</span>
+                        <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                          {service.service_type}
+                        </Badge>
+                      </div>
 
-                          {/* Group */}
-                          {service.worship_groups && (
-                            <div className="flex items-center gap-2 mb-3">
-                              <Users className="w-4 h-4 text-gray-500" />
-                              <Badge 
-                                style={{ 
-                                  backgroundColor: service.worship_groups.color_theme + '20',
-                                  color: service.worship_groups.color_theme,
-                                  borderColor: service.worship_groups.color_theme + '40'
-                                }}
-                              >
-                                {service.worship_groups.name}
-                              </Badge>
-                            </div>
-                          )}
+                      {/* Service Title */}
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">{service.title}</h3>
+                      
+                      {service.special_activity && (
+                        <p className="text-blue-700 font-medium mb-4">
+                          ⭐ {service.special_activity}
+                        </p>
+                      )}
 
-                          {/* Director and Voices */}
-                          <div className="space-y-3">
-                            {/* Director */}
-                            <div>
-                              <div className="text-xs font-medium text-gray-600 mb-1">Director/a de Alabanza:</div>
-                              <div className="flex items-center gap-2">
-                                <Avatar className="w-10 h-10 border-2 border-blue-200">
-                                  <AvatarImage
-                                    src={service.group_members.find(m => m.is_leader)?.profiles?.photo_url}
-                                    alt={director}
-                                    className="object-cover"
-                                  />
-                                  <AvatarFallback className="bg-gradient-to-r from-blue-400 to-indigo-400 text-white text-sm font-bold">
-                                    {getInitials(director)}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span className="font-medium text-gray-900">{director}</span>
-                              </div>
-                            </div>
+                      {/* Group Badge */}
+                      {service.worship_groups && (
+                        <div className="flex items-center gap-2 mb-6">
+                          <Users className="w-4 h-4 text-gray-500" />
+                          <Badge 
+                            className="text-sm px-3 py-1"
+                            style={{ 
+                              backgroundColor: service.worship_groups.color_theme + '20',
+                              color: service.worship_groups.color_theme,
+                              borderColor: service.worship_groups.color_theme + '40'
+                            }}
+                          >
+                            {service.worship_groups.name}
+                          </Badge>
+                        </div>
+                      )}
 
-                            {/* Responsible Voices */}
-                            {responsibleVoices.length > 0 && (
+                      <div className="grid md:grid-cols-2 gap-6">
+                        {/* Director Column */}
+                        <div className="space-y-4">
+                          {/* Director */}
+                          <div className="bg-blue-50 rounded-lg p-4">
+                            <div className="text-sm font-semibold text-blue-800 mb-3">Director/a de Alabanza</div>
+                            <div className="flex items-center gap-3">
+                              <Avatar className="w-16 h-16 border-3 border-blue-300 shadow-lg">
+                                <AvatarImage
+                                  src={directorMember?.profiles?.photo_url}
+                                  alt={director}
+                                  className="object-cover"
+                                />
+                                <AvatarFallback className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-lg font-bold">
+                                  {getInitials(director)}
+                                </AvatarFallback>
+                              </Avatar>
                               <div>
-                                <div className="text-xs font-medium text-gray-600 mb-2">Responsables de Voces:</div>
-                                <div className="flex flex-wrap gap-2">
-                                  {responsibleVoices.slice(0, 4).map((member) => (
-                                    <div key={member.id} className="flex items-center gap-1 text-sm">
-                                      <Avatar className="w-6 h-6 border border-gray-200">
-                                        <AvatarImage
-                                          src={member.profiles?.photo_url}
-                                          alt={member.profiles?.full_name}
-                                          className="object-cover"
-                                        />
-                                        <AvatarFallback className="bg-gray-200 text-gray-700 text-xs">
-                                          {getInitials(member.profiles?.full_name || '')}
-                                        </AvatarFallback>
-                                      </Avatar>
-                                      <span className="text-gray-700">
-                                        {member.profiles?.full_name.split(' ')[0]}
-                                      </span>
-                                    </div>
-                                  ))}
-                                  {responsibleVoices.length > 4 && (
-                                    <span className="text-xs text-gray-500 ml-1">
-                                      +{responsibleVoices.length - 4} más
-                                    </span>
-                                  )}
-                                </div>
+                                <div className="font-semibold text-gray-900">{director}</div>
+                                <div className="text-sm text-blue-600">Líder del Servicio</div>
                               </div>
-                            )}
+                            </div>
                           </div>
+
+                          {/* Selected Songs */}
+                          {service.selected_songs && service.selected_songs.length > 0 && (
+                            <div className="bg-green-50 rounded-lg p-4">
+                              <div className="flex items-center gap-2 mb-3">
+                                <Music className="w-4 h-4 text-green-600" />
+                                <div className="text-sm font-semibold text-green-800">Canciones Seleccionadas</div>
+                              </div>
+                              <div className="space-y-2">
+                                {service.selected_songs.slice(0, 3).map((song, index) => (
+                                  <div key={song.id} className="flex items-center gap-2 text-sm">
+                                    <span className="w-5 h-5 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold">
+                                      {index + 1}
+                                    </span>
+                                    <div>
+                                      <div className="font-medium text-gray-900">{song.title}</div>
+                                      {song.artist && (
+                                        <div className="text-xs text-gray-600">{song.artist}</div>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                                {service.selected_songs.length > 3 && (
+                                  <div className="text-xs text-green-700 font-medium">
+                                    +{service.selected_songs.length - 3} canciones más
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Voices Column */}
+                        <div>
+                          {responsibleVoices.length > 0 && (
+                            <div className="bg-purple-50 rounded-lg p-4">
+                              <div className="text-sm font-semibold text-purple-800 mb-3">Responsables de Voces</div>
+                              <div className="grid grid-cols-2 gap-3">
+                                {responsibleVoices.slice(0, 6).map((member) => (
+                                  <div key={member.id} className="flex items-center gap-2">
+                                    <Avatar className="w-10 h-10 border-2 border-purple-200">
+                                      <AvatarImage
+                                        src={member.profiles?.photo_url}
+                                        alt={member.profiles?.full_name}
+                                        className="object-cover"
+                                      />
+                                      <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white text-xs font-bold">
+                                        {getInitials(member.profiles?.full_name || '')}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="text-sm font-medium text-gray-900 truncate">
+                                        {member.profiles?.full_name.split(' ')[0]}
+                                      </div>
+                                      <div className="text-xs text-purple-600 truncate">
+                                        {member.instrument}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                              {responsibleVoices.length > 6 && (
+                                <div className="text-xs text-purple-700 font-medium mt-2 text-center">
+                                  +{responsibleVoices.length - 6} integrantes más
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
