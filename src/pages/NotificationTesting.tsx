@@ -1,4 +1,4 @@
-import React, { useState, useRef, LegacyRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Bell, Calendar, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,59 +6,13 @@ import NotificationTestButton from '@/components/notifications/NotificationTestB
 import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
 
-// Definir interfaces para los tipos de datos
-interface Profile {
-  id: string;
-  full_name: string;
-  photo_url?: string;
-}
-
-interface GroupMember {
-  id: string;
-  user_id: string;
-  instrument: string;
-  is_leader: boolean;
-  profiles: Profile;
-}
-
-interface Song {
-  id: string;
-  title: string;
-  artist: string;
-  song_order: number;
-}
-
-interface WorshipGroup {
-  id: string;
-  name: string;
-  color_theme: string;
-}
-
-interface Service {
-  id: string;
-  service_date: string;
-  title: string;
-  leader: string;
-  service_type: string;
-  location: string;
-  special_activity: string;
-  worship_groups: WorshipGroup;
-  group_members: GroupMember[];
-  selected_songs: Song[];
-  offering_song: { title: string; artist: string };
-}
-
-interface ServiceCardProps {
-  service: Service;
-}
-
 const NotificationTesting = () => {
   const [showServiceOverlay, setShowServiceOverlay] = useState(false);
-  const cardRef1 = useRef<HTMLDivElement>(null);
-  const cardRef2 = useRef<HTMLDivElement>(null);
+  const cardRef1 = useRef(null);
+  const cardRef2 = useRef(null);
   const { toast } = useToast();
 
-  const mockServiceData: Service[] = [
+  const mockServiceData = [
     {
       id: '1',
       service_date: '2025-08-31',
@@ -158,7 +112,7 @@ const NotificationTesting = () => {
       worship_groups: {
         id: '2',
         name: 'Grupo de Keyla',
-        color_theme: '#3B82F6'
+        color_theme: '#3B82F6' // Cambiado a azul para consistencia
       },
       group_members: [
         {
@@ -237,7 +191,7 @@ const NotificationTesting = () => {
     }
   ];
 
-  const downloadServiceCard = async (serviceId: string, ref: React.RefObject<HTMLDivElement>) => {
+  const downloadServiceCard = async (serviceId, ref) => {
     if (!ref.current) return;
 
     try {
@@ -256,8 +210,6 @@ const NotificationTesting = () => {
       });
 
       const service = mockServiceData.find(s => s.id === serviceId);
-      if (!service) return;
-
       const link = document.createElement('a');
       link.download = `servicio-${service.title.toLowerCase().replace(/\s+/g, '-')}.png`;
       link.href = canvas.toDataURL('image/png', 1.0);
@@ -279,7 +231,7 @@ const NotificationTesting = () => {
     }
   };
 
-  const ServiceCard = React.forwardRef<HTMLDivElement, ServiceCardProps>(({ service }, ref) => {
+  const ServiceCard = React.forwardRef(({ service }, ref) => {
     const directorMember = service.group_members.find(m => m.is_leader);
     const responsibleVoices = service.group_members.filter(m => !m.is_leader);
 
@@ -333,17 +285,17 @@ const NotificationTesting = () => {
               </div>
             </div>
 
-            {/* Selected Songs - Manteniendo el verde */}
+            {/* Selected Songs */}
             {service.selected_songs && service.selected_songs.length > 0 && (
-              <div className="bg-green-50 rounded-lg p-4">
+              <div className="bg-blue-50 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-4 h-4 text-green-600">🎵</div>
-                  <div className="text-sm font-semibold text-green-800">Canciones Seleccionadas</div>
+                  <div className="w-4 h-4 text-blue-600">🎵</div>
+                  <div className="text-sm font-semibold text-blue-800">Canciones Seleccionadas</div>
                 </div>
                 <div className="space-y-2">
                   {service.selected_songs.slice(0, 3).map((song, index) => (
                     <div key={song.id} className="flex items-center gap-2 text-sm">
-                      <span className="w-5 h-5 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold">
+                      <span className="w-5 h-5 bg-blue-200 text-blue-800 rounded-full flex items-center justify-center text-xs font-bold">
                         {index + 1}
                       </span>
                       <div>
@@ -355,7 +307,7 @@ const NotificationTesting = () => {
                     </div>
                   ))}
                   {service.selected_songs.length > 3 && (
-                    <div className="text-xs text-green-700 font-medium">
+                    <div className="text-xs text-blue-700 font-medium">
                       +{service.selected_songs.length - 3} canciones más
                     </div>
                   )}
@@ -363,15 +315,15 @@ const NotificationTesting = () => {
               </div>
             )}
 
-            {/* Offering Song - Manteniendo el amarillo */}
+            {/* Offering Song */}
             {service.offering_song && (
-              <div className="bg-amber-50 rounded-lg p-4">
+              <div className="bg-blue-50 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-4 h-4 text-amber-600">🎵</div>
-                  <div className="text-sm font-semibold text-amber-800">Canción de Ofrendas</div>
+                  <div className="w-4 h-4 text-blue-600">🎵</div>
+                  <div className="text-sm font-semibold text-blue-800">Canción de Ofrendas</div>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="w-5 h-5 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">
+                  <span className="w-5 h-5 bg-blue-200 text-blue-800 rounded-full flex items-center justify-center text-xs font-bold">
                     $
                   </span>
                   <div>
@@ -427,8 +379,6 @@ const NotificationTesting = () => {
       </div>
     );
   });
-
-  ServiceCard.displayName = 'ServiceCard';
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -505,9 +455,9 @@ const NotificationTesting = () => {
                     <ServiceCard service={mockServiceData[1]} ref={cardRef2} />
                   </div>
 
-                  {/* Warning Message - Manteniendo el amarillo */}
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                    <p className="text-sm text-amber-800">
+                  {/* Warning Message */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm text-blue-800">
                       ⚠️ <strong>Importante:</strong> Revise el programa completo y confirme su disponibilidad. 
                       En caso de algún inconveniente, coordine los reemplazos necesarios.
                     </p>
