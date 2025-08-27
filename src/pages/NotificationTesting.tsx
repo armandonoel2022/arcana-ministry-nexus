@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
-import { Bell, Calendar } from "lucide-react";
+import React, { useState, useRef } from 'react';
+import { Bell, Calendar, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import NotificationTestButton from '@/components/notifications/NotificationTestButton';
+import html2canvas from 'html2canvas';
+import { useToast } from '@/hooks/use-toast';
 
 const NotificationTesting = () => {
   const [showServiceOverlay, setShowServiceOverlay] = useState(false);
+  const [selectedService, setSelectedService] = useState(null);
+  const cardRef1 = useRef(null);
+  const cardRef2 = useRef(null);
+  const { toast } = useToast();
 
   const mockServiceData = [
     {
@@ -62,8 +68,8 @@ const NotificationTesting = () => {
           is_leader: false,
           profiles: {
             id: 'voice-3',
-            full_name: 'Nicolás Peralta',
-            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG'
+            full_name: 'Fredderid Abrahan Valera Montoya',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/7a1645d8-75fe-498c-a2e9-f1057ff3521f.JPG'
           }
         },
         {
@@ -90,9 +96,9 @@ const NotificationTesting = () => {
         }
       ],
       selected_songs: [
-        { id: '1', title: 'Tu nombre es Cristo', artist: '', song_order: 1 },
-        { id: '2', title: 'Libre', artist: '', song_order: 2 },
-        { id: '3', title: 'Dios eterno', artist: '', song_order: 3 }
+        { id: '1', title: 'Tu nombre es Cristo', artist: 'Marcos Witt', song_order: 1 },
+        { id: '2', title: 'Libre', artist: 'Miel San Marcos', song_order: 2 },
+        { id: '3', title: 'Desde mi interior', artist: 'Hillsong en Español', song_order: 3 }
       ],
       offering_song: { title: 'Este corito es', artist: '' }
     },
@@ -128,8 +134,8 @@ const NotificationTesting = () => {
           is_leader: false,
           profiles: {
             id: 'voice-6',
-            full_name: 'Keyla Medrano',
-            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/placeholder.jpg'
+            full_name: 'Keyla Yanira Medrano Medrano',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c24659e9-b473-4ecd-97e7-a90526d23502.JPG'
           }
         },
         {
@@ -139,8 +145,8 @@ const NotificationTesting = () => {
           is_leader: false,
           profiles: {
             id: 'voice-7',
-            full_name: 'Carolina Santana',
-            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/placeholder.jpg'
+            full_name: 'Yindia Carolina Santana Castillo',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/11328db1-559f-4dcf-9024-9aef18435700.JPG'
           }
         },
         {
@@ -151,7 +157,7 @@ const NotificationTesting = () => {
           profiles: {
             id: 'voice-8',
             full_name: 'Arizoni Liriano',
-            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/placeholder.jpg'
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/4eed809d-9437-48d5-935e-cf8b4aa8024a.png'
           }
         },
         {
@@ -161,8 +167,8 @@ const NotificationTesting = () => {
           is_leader: false,
           profiles: {
             id: 'voice-9',
-            full_name: 'Lorena Pacheco',
-            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/placeholder.jpg'
+            full_name: 'Aida Lorena Pacheco de Santana',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/82b62449-5046-455f-af7b-da8e5dbc6327.JPG'
           }
         },
         {
@@ -172,19 +178,210 @@ const NotificationTesting = () => {
           is_leader: false,
           profiles: {
             id: 'voice-10',
-            full_name: 'Sugey Garó',
-            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/placeholder.jpg'
+            full_name: 'Sugey A. Gonzalez Garo',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/be61d066-5707-4763-8d8c-16d19597dc3a.JPG'
           }
         }
       ],
       selected_songs: [
-        { id: '4', title: 'Me gozaré / Oh moradora de Sión', artist: '', song_order: 1 },
-        { id: '5', title: 'Me uno al cielo', artist: '', song_order: 2 },
+        { id: '4', title: 'Me gozaré / Oh moradora de Sión', artist: 'Marcos Witt', song_order: 1 },
+        { id: '5', title: 'Me uno al cielo', artist: 'ADN - Arca de Noé', song_order: 2 },
         { id: '6', title: 'Tu Nombre', artist: 'Miel San Marcos', song_order: 3 }
       ],
       offering_song: { title: 'Hosanna', artist: 'Marco Barrientos' }
     }
   ];
+
+  const downloadServiceCard = async (serviceId, ref) => {
+    if (!ref.current) return;
+
+    try {
+      window.scrollTo(0, 0);
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const canvas = await html2canvas(ref.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#f8fafc',
+        logging: false,
+        onclone: (clonedDoc) => {
+          const clonedElement = clonedDoc.querySelector(`[data-service-card="${serviceId}"]`);
+          if (clonedElement) {
+            clonedElement.style.transform = 'none';
+            clonedElement.style.position = 'relative';
+          }
+        }
+      });
+
+      const service = mockServiceData.find(s => s.id === serviceId);
+      const link = document.createElement('a');
+      link.download = `servicio-${service.title.toLowerCase().replace(/\s+/g, '-')}.png`;
+      link.href = canvas.toDataURL('image/png', 1.0);
+      link.click();
+
+      toast({
+        title: "¡Descarga exitosa!",
+        description: `La tarjeta del ${service.title} se ha descargado correctamente`,
+      });
+    } catch (error) {
+      console.error('Error generating image:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo generar la imagen. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const ServiceCard = ({ service, ref }) => {
+    const directorMember = service.group_members.find(m => m.is_leader);
+    const responsibleVoices = service.group_members.filter(m => !m.is_leader);
+
+    return (
+      <div 
+        ref={ref}
+        data-service-card={service.id}
+        className="bg-white/90 rounded-xl p-6 border border-blue-200 shadow-lg mx-auto"
+        style={{ maxWidth: '600px' }}
+      >
+        {/* Service Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-3 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full"></div>
+          <div>
+            <h3 className="text-xl font-bold text-blue-900">{service.title}</h3>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-sm text-blue-700 font-medium">{service.worship_groups.name}</span>
+              <span className="text-sm text-gray-500">•</span>
+              <span className="text-sm text-gray-600">{service.special_activity}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Left Column - Songs and Director */}
+          <div className="space-y-4">
+            {/* Director */}
+            <div className="bg-blue-50 rounded-lg p-4">
+              <div className="text-sm font-semibold text-blue-800 mb-3">Director/a de Alabanza</div>
+              <div className="flex items-center gap-3">
+                <div className="w-16 h-16 rounded-full border-3 border-blue-300 shadow-lg overflow-hidden bg-gradient-to-r from-blue-500 to-indigo-600">
+                  <img
+                    src={directorMember?.profiles?.photo_url}
+                    alt={service.leader}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                  <div className="w-full h-full hidden items-center justify-center text-white text-lg font-bold">
+                    {service.leader.split(' ').map(n => n[0]).join('').toUpperCase()}
+                  </div>
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-900">{service.leader}</div>
+                  <div className="text-sm text-blue-600">Líder del Servicio</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Selected Songs */}
+            {service.selected_songs && service.selected_songs.length > 0 && (
+              <div className="bg-green-50 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-4 h-4 text-green-600">🎵</div>
+                  <div className="text-sm font-semibold text-green-800">Canciones Seleccionadas</div>
+                </div>
+                <div className="space-y-2">
+                  {service.selected_songs.slice(0, 3).map((song, index) => (
+                    <div key={song.id} className="flex items-center gap-2 text-sm">
+                      <span className="w-5 h-5 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold">
+                        {index + 1}
+                      </span>
+                      <div>
+                        <div className="font-medium text-gray-900">{song.title}</div>
+                        {song.artist && (
+                          <div className="text-xs text-gray-600">{song.artist}</div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {service.selected_songs.length > 3 && (
+                    <div className="text-xs text-green-700 font-medium">
+                      +{service.selected_songs.length - 3} canciones más
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Offering Song */}
+            {service.offering_song && (
+              <div className="bg-amber-50 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-4 h-4 text-amber-600">🎵</div>
+                  <div className="text-sm font-semibold text-amber-800">Canción de Ofrendas</div>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="w-5 h-5 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">
+                    $
+                  </span>
+                  <div>
+                    <div className="font-medium text-gray-900">{service.offering_song.title}</div>
+                    {service.offering_song.artist && (
+                      <div className="text-xs text-gray-600">{service.offering_song.artist}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column - Voices */}
+          <div>
+            {responsibleVoices.length > 0 && (
+              <div className="bg-purple-50 rounded-lg p-4 h-full">
+                <div className="text-sm font-semibold text-purple-800 mb-3">Responsables de Voces</div>
+                <div className="grid grid-cols-1 gap-3">
+                  {responsibleVoices.slice(0, 6).map((member) => (
+                    <div key={member.id} className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full border-2 border-purple-200 overflow-hidden bg-gradient-to-r from-purple-400 to-pink-400">
+                        <img
+                          src={member.profiles?.photo_url}
+                          alt={member.profiles?.full_name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const fallback = target.nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
+                        />
+                        <div className="w-full h-full hidden items-center justify-center text-white text-sm font-bold">
+                          {member.profiles?.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        </div>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium text-gray-900">
+                          {member.profiles?.full_name}
+                        </div>
+                        <div className="text-xs text-purple-600">
+                          {member.instrument}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -225,7 +422,7 @@ const NotificationTesting = () => {
 
       {/* Service Overlay Mock */}
       {showServiceOverlay && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-auto">
           <div className="w-full max-w-4xl animate-in slide-in-from-bottom-4 fade-in duration-300">
             <Card className="border-blue-200 bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 shadow-2xl border-2">
               <CardContent className="p-6">
@@ -258,149 +455,9 @@ const NotificationTesting = () => {
                   {/* Services List */}
                   <div className="space-y-6">
                     {mockServiceData.map((service) => {
-                      const directorMember = service.group_members.find(m => m.is_leader);
-                      const responsibleVoices = service.group_members.filter(m => !m.is_leader);
-
+                      const ref = service.id === '1' ? cardRef1 : cardRef2;
                       return (
-                        <div 
-                          key={service.id}
-                          className="bg-white/90 rounded-xl p-6 border border-blue-200 shadow-lg"
-                        >
-                          {/* Service Header */}
-                          <div className="flex items-center gap-3 mb-6">
-                            <div className="w-3 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full"></div>
-                            <div>
-                              <h3 className="text-xl font-bold text-blue-900">{service.title}</h3>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="text-sm text-blue-700 font-medium">{service.worship_groups.name}</span>
-                                <span className="text-sm text-gray-500">•</span>
-                                <span className="text-sm text-gray-600">{service.special_activity}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="grid md:grid-cols-2 gap-6">
-                            {/* Left Column - Songs and Director */}
-                            <div className="space-y-4">
-                              {/* Director */}
-                              <div className="bg-blue-50 rounded-lg p-4">
-                                <div className="text-sm font-semibold text-blue-800 mb-3">Director/a de Alabanza</div>
-                                <div className="flex items-center gap-3">
-                                  <div className="w-16 h-16 rounded-full border-3 border-blue-300 shadow-lg overflow-hidden bg-gradient-to-r from-blue-500 to-indigo-600">
-                                    <img
-                                      src={directorMember?.profiles?.photo_url}
-                                      alt={service.leader}
-                                      className="w-full h-full object-cover"
-                                      onError={(e) => {
-                                        const target = e.target as HTMLImageElement;
-                                        target.style.display = 'none';
-                                        const fallback = target.nextElementSibling as HTMLElement;
-                                        if (fallback) fallback.style.display = 'flex';
-                                      }}
-                                    />
-                                    <div className="w-full h-full hidden items-center justify-center text-white text-lg font-bold">
-                                      {service.leader.split(' ').map(n => n[0]).join('').toUpperCase()}
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <div className="font-semibold text-gray-900">{service.leader}</div>
-                                    <div className="text-sm text-blue-600">Líder del Servicio</div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Selected Songs */}
-                              {service.selected_songs && service.selected_songs.length > 0 && (
-                                <div className="bg-green-50 rounded-lg p-4">
-                                  <div className="flex items-center gap-2 mb-3">
-                                    <div className="w-4 h-4 text-green-600">🎵</div>
-                                    <div className="text-sm font-semibold text-green-800">Canciones Seleccionadas</div>
-                                  </div>
-                                  <div className="space-y-2">
-                                    {service.selected_songs.slice(0, 3).map((song, index) => (
-                                      <div key={song.id} className="flex items-center gap-2 text-sm">
-                                        <span className="w-5 h-5 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold">
-                                          {index + 1}
-                                        </span>
-                                        <div>
-                                          <div className="font-medium text-gray-900">{song.title}</div>
-                                          {song.artist && (
-                                            <div className="text-xs text-gray-600">{song.artist}</div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    ))}
-                                    {service.selected_songs.length > 3 && (
-                                      <div className="text-xs text-green-700 font-medium">
-                                        +{service.selected_songs.length - 3} canciones más
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Offering Song */}
-                              {service.offering_song && (
-                                <div className="bg-amber-50 rounded-lg p-4">
-                                  <div className="flex items-center gap-2 mb-3">
-                                    <div className="w-4 h-4 text-amber-600">🎵</div>
-                                    <div className="text-sm font-semibold text-amber-800">Canción de Ofrendas</div>
-                                  </div>
-                                  <div className="flex items-center gap-2 text-sm">
-                                    <span className="w-5 h-5 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">
-                                      $
-                                    </span>
-                                    <div>
-                                      <div className="font-medium text-gray-900">{service.offering_song.title}</div>
-                                      {service.offering_song.artist && (
-                                        <div className="text-xs text-gray-600">{service.offering_song.artist}</div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Right Column - Voices */}
-                            <div>
-                              {responsibleVoices.length > 0 && (
-                                <div className="bg-purple-50 rounded-lg p-4 h-full">
-                                  <div className="text-sm font-semibold text-purple-800 mb-3">Responsables de Voces</div>
-                                  <div className="grid grid-cols-1 gap-3">
-                                    {responsibleVoices.slice(0, 6).map((member) => (
-                                      <div key={member.id} className="flex items-center gap-3">
-                                        <div className="w-12 h-12 rounded-full border-2 border-purple-200 overflow-hidden bg-gradient-to-r from-purple-400 to-pink-400">
-                                          <img
-                                            src={member.profiles?.photo_url}
-                                            alt={member.profiles?.full_name}
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => {
-                                              const target = e.target as HTMLImageElement;
-                                              target.style.display = 'none';
-                                              const fallback = target.nextElementSibling as HTMLElement;
-                                              if (fallback) fallback.style.display = 'flex';
-                                            }}
-                                          />
-                                          <div className="w-full h-full hidden items-center justify-center text-white text-sm font-bold">
-                                            {member.profiles?.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                                          </div>
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                          <div className="text-sm font-medium text-gray-900">
-                                            {member.profiles?.full_name}
-                                          </div>
-                                          <div className="text-xs text-purple-600">
-                                            {member.instrument}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+                        <ServiceCard key={service.id} service={service} ref={ref} />
                       );
                     })}
                   </div>
@@ -415,8 +472,19 @@ const NotificationTesting = () => {
 
                   {/* Action Buttons */}
                   <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                    <Button className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white">
-                      💾 Guardar en Notificaciones
+                    <Button 
+                      onClick={() => downloadServiceCard('1', cardRef1)}
+                      className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
+                    >
+                      <Download className="w-4 h-4" />
+                      Descargar 1er Servicio
+                    </Button>
+                    <Button 
+                      onClick={() => downloadServiceCard('2', cardRef2)}
+                      className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white"
+                    >
+                      <Download className="w-4 h-4" />
+                      Descargar 2do Servicio
                     </Button>
                     <Button
                       onClick={() => setShowServiceOverlay(false)}
