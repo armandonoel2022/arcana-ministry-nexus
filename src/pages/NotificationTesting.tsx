@@ -3,7 +3,6 @@ import { Bell, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import NotificationTestButton from '@/components/notifications/NotificationTestButton';
-import ServiceNotificationOverlay from '@/components/notifications/ServiceNotificationOverlay';
 
 const NotificationTesting = () => {
   const [showServiceOverlay, setShowServiceOverlay] = useState(false);
@@ -37,7 +36,7 @@ const NotificationTesting = () => {
         {
           id: 'voice-1',
           user_id: 'voice-1',
-          instrument: 'Soprano',
+          instrument: 'Soprano - Micrófono #1',
           is_leader: false,
           profiles: {
             id: 'voice-1',
@@ -48,23 +47,45 @@ const NotificationTesting = () => {
         {
           id: 'voice-2',
           user_id: 'voice-2',
-          instrument: 'Alto',
+          instrument: 'Soprano - Micrófono #2',
           is_leader: false,
           profiles: {
             id: 'voice-2',
-            full_name: 'Ruth Esmailin Ramirez',
-            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/619c1a4e-42db-4549-8890-16392cfa2a87.JPG'
+            full_name: 'Eliabi Joana Sierra',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG'
           }
         },
         {
           id: 'voice-3',
           user_id: 'voice-3',
-          instrument: 'Tenor',
+          instrument: 'Tenor - Micrófono #3',
           is_leader: false,
           profiles: {
             id: 'voice-3',
-            full_name: 'Eliabi Joana Sierra',
-            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG'
+            full_name: 'Nicolás Peralta',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG'
+          }
+        },
+        {
+          id: 'voice-4',
+          user_id: 'voice-4',
+          instrument: 'Contralto - Micrófono #4',
+          is_leader: false,
+          profiles: {
+            id: 'voice-4',
+            full_name: 'Fior Daliza Paniagua',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/8cebc294-ea61-40d0-9b04-08d7d474332c.JPG'
+          }
+        },
+        {
+          id: 'voice-5',
+          user_id: 'voice-5',
+          instrument: 'Contralto - Micrófono #5',
+          is_leader: false,
+          profiles: {
+            id: 'voice-5',
+            full_name: 'Ruth Esmailin Ramirez',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/619c1a4e-42db-4549-8890-16392cfa2a87.JPG'
           }
         }
       ],
@@ -84,9 +105,9 @@ const NotificationTesting = () => {
       location: 'Templo Principal',
       special_activity: 'Servicio Dominical',
       worship_groups: {
-        id: '1',
-        name: 'Grupo de Aleida',
-        color_theme: '#3B82F6'
+        id: '2',
+        name: 'Grupo de Keyla',
+        color_theme: '#8B5CF6'
       },
       group_members: [
         {
@@ -101,25 +122,58 @@ const NotificationTesting = () => {
           }
         },
         {
-          id: 'voice-4',
-          user_id: 'voice-4',
-          instrument: 'Soprano',
+          id: 'voice-6',
+          user_id: 'voice-6',
+          instrument: 'Soprano - Micrófono #1',
           is_leader: false,
           profiles: {
-            id: 'voice-4',
-            full_name: 'Fior Daliza Paniagua',
-            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/8cebc294-ea61-40d0-9b04-08d7d474332c.JPG'
+            id: 'voice-6',
+            full_name: 'Keyla Medrano',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/placeholder.jpg'
           }
         },
         {
-          id: 'voice-5',
-          user_id: 'voice-5',
-          instrument: 'Alto',
+          id: 'voice-7',
+          user_id: 'voice-7',
+          instrument: 'Soprano - Micrófono #2',
           is_leader: false,
           profiles: {
-            id: 'voice-5',
-            full_name: 'Damaris Castillo',
-            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38.JPG'
+            id: 'voice-7',
+            full_name: 'Carolina Santana',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/placeholder.jpg'
+          }
+        },
+        {
+          id: 'voice-8',
+          user_id: 'voice-8',
+          instrument: 'Bajo - Micrófono #3',
+          is_leader: false,
+          profiles: {
+            id: 'voice-8',
+            full_name: 'Arizoni Liriano',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/placeholder.jpg'
+          }
+        },
+        {
+          id: 'voice-9',
+          user_id: 'voice-9',
+          instrument: 'Contralto - Micrófono #4',
+          is_leader: false,
+          profiles: {
+            id: 'voice-9',
+            full_name: 'Lorena Pacheco',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/placeholder.jpg'
+          }
+        },
+        {
+          id: 'voice-10',
+          user_id: 'voice-10',
+          instrument: 'Contralto - Micrófono #5',
+          is_leader: false,
+          profiles: {
+            id: 'voice-10',
+            full_name: 'Sugey Garó',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/placeholder.jpg'
           }
         }
       ],
@@ -226,7 +280,7 @@ const NotificationTesting = () => {
                           </div>
 
                           <div className="grid md:grid-cols-2 gap-6">
-                            {/* Director Column */}
+                            {/* Left Column - Songs and Director */}
                             <div className="space-y-4">
                               {/* Director */}
                               <div className="bg-blue-50 rounded-lg p-4">
@@ -284,15 +338,36 @@ const NotificationTesting = () => {
                                   </div>
                                 </div>
                               )}
+
+                              {/* Offering Song */}
+                              {service.offering_song && (
+                                <div className="bg-amber-50 rounded-lg p-4">
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <div className="w-4 h-4 text-amber-600">🎵</div>
+                                    <div className="text-sm font-semibold text-amber-800">Canción de Ofrendas</div>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <span className="w-5 h-5 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">
+                                      $
+                                    </span>
+                                    <div>
+                                      <div className="font-medium text-gray-900">{service.offering_song.title}</div>
+                                      {service.offering_song.artist && (
+                                        <div className="text-xs text-gray-600">{service.offering_song.artist}</div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                             </div>
 
-                            {/* Voices Column */}
-                            <div className="space-y-4">
+                            {/* Right Column - Voices */}
+                            <div>
                               {responsibleVoices.length > 0 && (
-                                <div className="bg-purple-50 rounded-lg p-4">
+                                <div className="bg-purple-50 rounded-lg p-4 h-full">
                                   <div className="text-sm font-semibold text-purple-800 mb-3">Responsables de Voces</div>
                                   <div className="grid grid-cols-1 gap-3">
-                                    {responsibleVoices.slice(0, 4).map((member) => (
+                                    {responsibleVoices.slice(0, 6).map((member) => (
                                       <div key={member.id} className="flex items-center gap-3">
                                         <div className="w-12 h-12 rounded-full border-2 border-purple-200 overflow-hidden bg-gradient-to-r from-purple-400 to-pink-400">
                                           <img
@@ -320,27 +395,6 @@ const NotificationTesting = () => {
                                         </div>
                                       </div>
                                     ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Offering Song */}
-                              {service.offering_song && (
-                                <div className="bg-amber-50 rounded-lg p-4">
-                                  <div className="flex items-center gap-2 mb-3">
-                                    <div className="w-4 h-4 text-amber-600">🎵</div>
-                                    <div className="text-sm font-semibold text-amber-800">Canción de Ofrendas</div>
-                                  </div>
-                                  <div className="flex items-center gap-2 text-sm">
-                                    <span className="w-5 h-5 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">
-                                      $
-                                    </span>
-                                    <div>
-                                      <div className="font-medium text-gray-900">{service.offering_song.title}</div>
-                                      {service.offering_song.artist && (
-                                        <div className="text-xs text-gray-600">{service.offering_song.artist}</div>
-                                      )}
-                                    </div>
                                   </div>
                                 </div>
                               )}
