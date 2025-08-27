@@ -112,7 +112,7 @@ const NotificationTesting = () => {
       worship_groups: {
         id: '2',
         name: 'Grupo de Keyla',
-        color_theme: '#3B82F6' // Cambiado a azul para consistencia
+        color_theme: '#3B82F6'
       },
       group_members: [
         {
@@ -285,17 +285,17 @@ const NotificationTesting = () => {
               </div>
             </div>
 
-            {/* Selected Songs */}
+            {/* Selected Songs - Manteniendo el verde */}
             {service.selected_songs && service.selected_songs.length > 0 && (
-              <div className="bg-blue-50 rounded-lg p-4">
+              <div className="bg-green-50 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-4 h-4 text-blue-600">🎵</div>
-                  <div className="text-sm font-semibold text-blue-800">Canciones Seleccionadas</div>
+                  <div className="w-4 h-4 text-green-600">🎵</div>
+                  <div className="text-sm font-semibold text-green-800">Canciones Seleccionadas</div>
                 </div>
                 <div className="space-y-2">
                   {service.selected_songs.slice(0, 3).map((song, index) => (
                     <div key={song.id} className="flex items-center gap-2 text-sm">
-                      <span className="w-5 h-5 bg-blue-200 text-blue-800 rounded-full flex items-center justify-center text-xs font-bold">
+                      <span className="w-5 h-5 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold">
                         {index + 1}
                       </span>
                       <div>
@@ -307,7 +307,7 @@ const NotificationTesting = () => {
                     </div>
                   ))}
                   {service.selected_songs.length > 3 && (
-                    <div className="text-xs text-blue-700 font-medium">
+                    <div className="text-xs text-green-700 font-medium">
                       +{service.selected_songs.length - 3} canciones más
                     </div>
                   )}
@@ -315,15 +315,15 @@ const NotificationTesting = () => {
               </div>
             )}
 
-            {/* Offering Song */}
+            {/* Offering Song - Manteniendo el amarillo */}
             {service.offering_song && (
-              <div className="bg-blue-50 rounded-lg p-4">
+              <div className="bg-amber-50 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-4 h-4 text-blue-600">🎵</div>
-                  <div className="text-sm font-semibold text-blue-800">Canción de Ofrendas</div>
+                  <div className="w-4 h-4 text-amber-600">🎵</div>
+                  <div className="text-sm font-semibold text-amber-800">Canción de Ofrendas</div>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="w-5 h-5 bg-blue-200 text-blue-800 rounded-full flex items-center justify-center text-xs font-bold">
+                  <span className="w-5 h-5 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">
                     $
                   </span>
                   <div>
@@ -455,9 +455,9 @@ const NotificationTesting = () => {
                     <ServiceCard service={mockServiceData[1]} ref={cardRef2} />
                   </div>
 
-                  {/* Warning Message */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p className="text-sm text-blue-800">
+                  {/* Warning Message - Manteniendo el amarillo */}
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <p className="text-sm text-amber-800">
                       ⚠️ <strong>Importante:</strong> Revise el programa completo y confirme su disponibilidad. 
                       En caso de algún inconveniente, coordine los reemplazos necesarios.
                     </p>
