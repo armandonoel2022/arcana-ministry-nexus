@@ -12,7 +12,7 @@ const NotificationTesting = () => {
     {
       id: '1',
       service_date: '2025-08-31',
-      title: 'Primera Llamada - 8:00 AM',
+      title: 'Primer Servicio - 8:00 AM',
       leader: 'Armando Noel',
       service_type: 'regular',
       location: 'Templo Principal',
@@ -69,15 +69,16 @@ const NotificationTesting = () => {
         }
       ],
       selected_songs: [
-        { id: '1', title: 'Grande es Tu Fidelidad', artist: 'Tradicional', song_order: 1 },
-        { id: '2', title: 'Cuán Grande es Él', artist: 'Tradicional', song_order: 2 },
-        { id: '3', title: 'Sublime Gracia', artist: 'John Newton', song_order: 3 }
-      ]
+        { id: '1', title: 'Tu nombre es Cristo', artist: '', song_order: 1 },
+        { id: '2', title: 'Libre', artist: '', song_order: 2 },
+        { id: '3', title: 'Dios eterno', artist: '', song_order: 3 }
+      ],
+      offering_song: { title: 'Este corito es', artist: '' }
     },
     {
       id: '2',
       service_date: '2025-08-31',
-      title: 'Segunda Llamada - 10:45 AM',
+      title: 'Segundo Servicio - 10:45 AM',
       leader: 'Nicolas Peralta',
       service_type: 'regular',
       location: 'Templo Principal',
@@ -123,9 +124,11 @@ const NotificationTesting = () => {
         }
       ],
       selected_songs: [
-        { id: '4', title: 'Al mundo paz', artist: 'Isaac Watts', song_order: 1 },
-        { id: '5', title: 'Ven a mi corazón', artist: 'Contemporáneo', song_order: 2 }
-      ]
+        { id: '4', title: 'Me gozaré / Oh moradora de Sión', artist: '', song_order: 1 },
+        { id: '5', title: 'Me uno al cielo', artist: '', song_order: 2 },
+        { id: '6', title: 'Tu Nombre', artist: 'Miel San Marcos', song_order: 3 }
+      ],
+      offering_song: { title: 'Hosanna', artist: 'Marco Barrientos' }
     }
   ];
 
@@ -284,7 +287,7 @@ const NotificationTesting = () => {
                             </div>
 
                             {/* Voices Column */}
-                            <div>
+                            <div className="space-y-4">
                               {responsibleVoices.length > 0 && (
                                 <div className="bg-purple-50 rounded-lg p-4">
                                   <div className="text-sm font-semibold text-purple-800 mb-3">Responsables de Voces</div>
@@ -317,6 +320,27 @@ const NotificationTesting = () => {
                                         </div>
                                       </div>
                                     ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Offering Song */}
+                              {service.offering_song && (
+                                <div className="bg-amber-50 rounded-lg p-4">
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <div className="w-4 h-4 text-amber-600">🎵</div>
+                                    <div className="text-sm font-semibold text-amber-800">Canción de Ofrendas</div>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-sm">
+                                    <span className="w-5 h-5 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">
+                                      $
+                                    </span>
+                                    <div>
+                                      <div className="font-medium text-gray-900">{service.offering_song.title}</div>
+                                      {service.offering_song.artist && (
+                                        <div className="text-xs text-gray-600">{service.offering_song.artist}</div>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
                               )}
