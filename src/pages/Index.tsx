@@ -413,21 +413,10 @@ const NotificationTesting = () => {
                     </p>
                   </div>
 
-                   {/* Action Buttons */}
+                  {/* Action Buttons */}
                   <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                    <Button 
-                      onClick={() => downloadServiceCard('1', cardRef1)}
-                      className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
-                    >
-                      <Download className="w-4 h-4" />
-                      Descargar 1er Servicio
-                    </Button>
-                    <Button 
-                      onClick={() => downloadServiceCard('2', cardRef2)}
-                      className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
-                    >
-                      <Download className="w-4 h-4" />
-                      Descargar 2do Servicio
+                    <Button className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white">
+                      💾 Guardar en Notificaciones
                     </Button>
                     <Button
                       onClick={() => setShowServiceOverlay(false)}
