@@ -1,13 +1,64 @@
-import React, { useState } from 'react';
-import { Bell, Calendar } from "lucide-react";
+import React, { useState, useRef, LegacyRef } from 'react';
+import { Bell, Calendar, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import NotificationTestButton from '@/components/notifications/NotificationTestButton';
+import html2canvas from 'html2canvas';
+import { useToast } from '@/hooks/use-toast';
+
+// Definir interfaces para los tipos de datos
+interface Profile {
+  id: string;
+  full_name: string;
+  photo_url?: string;
+}
+
+interface GroupMember {
+  id: string;
+  user_id: string;
+  instrument: string;
+  is_leader: boolean;
+  profiles: Profile;
+}
+
+interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  song_order: number;
+}
+
+interface WorshipGroup {
+  id: string;
+  name: string;
+  color_theme: string;
+}
+
+interface Service {
+  id: string;
+  service_date: string;
+  title: string;
+  leader: string;
+  service_type: string;
+  location: string;
+  special_activity: string;
+  worship_groups: WorshipGroup;
+  group_members: GroupMember[];
+  selected_songs: Song[];
+  offering_song: { title: string; artist: string };
+}
+
+interface ServiceCardProps {
+  service: Service;
+}
 
 const NotificationTesting = () => {
   const [showServiceOverlay, setShowServiceOverlay] = useState(false);
+  const cardRef1 = useRef<HTMLDivElement>(null);
+  const cardRef2 = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
-  const mockServiceData = [
+  const mockServiceData: Service[] = [
     {
       id: '1',
       service_date: '2025-08-31',
@@ -107,7 +158,7 @@ const NotificationTesting = () => {
       worship_groups: {
         id: '2',
         name: 'Grupo de Keyla',
-        color_theme: '#8B5CF6'
+        color_theme: '#3B82F6'
       },
       group_members: [
         {
@@ -186,6 +237,199 @@ const NotificationTesting = () => {
     }
   ];
 
+  const downloadServiceCard = async (serviceId: string, ref: React.RefObject<HTMLDivElement>) => {
+    if (!ref.current) return;
+
+    try {
+      // Asegurarnos de que el overlay esté visible
+      setShowServiceOverlay(true);
+      
+      // Esperar un momento para que el DOM se actualice
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const canvas = await html2canvas(ref.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#f8fafc',
+        logging: false,
+      });
+
+      const service = mockServiceData.find(s => s.id === serviceId);
+      if (!service) return;
+
+      const link = document.createElement('a');
+      link.download = `servicio-${service.title.toLowerCase().replace(/\s+/g, '-')}.png`;
+      link.href = canvas.toDataURL('image/png', 1.0);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "¡Descarga exitosa!",
+        description: `La tarjeta del ${service.title} se ha descargado correctamente`,
+      });
+    } catch (error) {
+      console.error('Error generating image:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo generar la imagen. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const ServiceCard = React.forwardRef<HTMLDivElement, ServiceCardProps>(({ service }, ref) => {
+    const directorMember = service.group_members.find(m => m.is_leader);
+    const responsibleVoices = service.group_members.filter(m => !m.is_leader);
+
+    return (
+      <div 
+        ref={ref}
+        data-service-card={service.id}
+        className="bg-white/90 rounded-xl p-6 border border-blue-200 shadow-lg mx-auto"
+        style={{ maxWidth: '600px' }}
+      >
+        {/* Service Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-3 h-8 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full"></div>
+          <div>
+            <h3 className="text-xl font-bold text-blue-900">{service.title}</h3>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-sm text-blue-700 font-medium">{service.worship_groups.name}</span>
+              <span className="text-sm text-gray-500">•</span>
+              <span className="text-sm text-gray-600">{service.special_activity}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Left Column - Songs and Director */}
+          <div className="space-y-4">
+            {/* Director */}
+            <div className="bg-blue-50 rounded-lg p-4">
+              <div className="text-sm font-semibold text-blue-800 mb-3">Director/a de Alabanza</div>
+              <div className="flex items-center gap-3">
+                <div className="w-16 h-16 rounded-full border-3 border-blue-300 shadow-lg overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600">
+                  <img
+                    src={directorMember?.profiles?.photo_url}
+                    alt={service.leader}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                  <div className="w-full h-full hidden items-center justify-center text-white text-lg font-bold">
+                    {service.leader.split(' ').map(n => n[0]).join('').toUpperCase()}
+                  </div>
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-900">{service.leader}</div>
+                  <div className="text-sm text-blue-600">Líder del Servicio</div>
+                </div>
+                </div>
+            </div>
+
+            {/* Selected Songs - VERDE (como solicitaste) */}
+            {service.selected_songs && service.selected_songs.length > 0 && (
+              <div className="bg-green-50 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-4 h-4 text-green-600">🎵</div>
+                  <div className="text-sm font-semibold text-green-800">Canciones Seleccionadas</div>
+                </div>
+                <div className="space-y-2">
+                  {service.selected_songs.slice(0, 3).map((song, index) => (
+                    <div key={song.id} className="flex items-center gap-2 text-sm">
+                      <span className="w-5 h-5 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold">
+                        {index + 1}
+                      </span>
+                      <div>
+                        <div className="font-medium text-gray-900">{song.title}</div>
+                        {song.artist && (
+                          <div className="text-xs text-gray-600">{song.artist}</div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {service.selected_songs.length > 3 && (
+                    <div className="text-xs text-green-700 font-medium">
+                      +{service.selected_songs.length - 3} canciones más
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Offering Song - AMARILLO (como solicitaste) */}
+            {service.offering_song && (
+              <div className="bg-amber-50 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-4 h-4 text-amber-600">🎵</div>
+                  <div className="text-sm font-semibold text-amber-800">Canción de Ofrendas</div>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="w-5 h-5 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">
+                    $
+                  </span>
+                  <div>
+                    <div className="font-medium text-gray-900">{service.offering_song.title}</div>
+                    {service.offering_song.artist && (
+                      <div className="text-xs text-gray-600">{service.offering_song.artist}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column - Voices */}
+          <div>
+            {responsibleVoices.length > 0 && (
+              <div className="bg-blue-50 rounded-lg p-4 h-full">
+                <div className="text-sm font-semibold text-blue-800 mb-3">Responsables de Voces</div>
+                <div className="grid grid-cols-1 gap-3">
+                  {responsibleVoices.slice(0, 6).map((member) => (
+                    <div key={member.id} className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full border-2 border-blue-200 overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600">
+                        <img
+                          src={member.profiles?.photo_url}
+                          alt={member.profiles?.full_name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const fallback = target.nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
+                        />
+                        <div className="w-full h-full hidden items-center justify-center text-white text-sm font-bold">
+                          {member.profiles?.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        </div>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium text-gray-900">
+                          {member.profiles?.full_name}
+                        </div>
+                        <div className="text-xs text-blue-600">
+                          {member.instrument}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  });
+
+  ServiceCard.displayName = 'ServiceCard';
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="text-center space-y-2">
@@ -213,7 +457,7 @@ const NotificationTesting = () => {
           </p>
           <Button
             onClick={() => setShowServiceOverlay(true)}
-            className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
           >
             <Calendar className="w-4 h-4 mr-2" />
             Mostrar Overlay de Servicios
@@ -225,15 +469,15 @@ const NotificationTesting = () => {
 
       {/* Service Overlay Mock */}
       {showServiceOverlay && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-auto">
           <div className="w-full max-w-4xl animate-in slide-in-from-bottom-4 fade-in duration-300">
-            <Card className="border-blue-200 bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 shadow-2xl border-2">
+            <Card className="border-blue-200 bg-gradient-to-r from-blue-50 via-blue-50 to-blue-50 shadow-2xl border-2">
               <CardContent className="p-6">
                 <div className="space-y-6">
                   {/* Header */}
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                      <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
                         <Calendar className="w-6 h-6 text-white" />
                       </div>
                       <div>
@@ -257,166 +501,33 @@ const NotificationTesting = () => {
 
                   {/* Services List */}
                   <div className="space-y-6">
-                    {mockServiceData.map((service) => {
-                      const directorMember = service.group_members.find(m => m.is_leader);
-                      const responsibleVoices = service.group_members.filter(m => !m.is_leader);
-
-                      return (
-                        <div 
-                          key={service.id}
-                          className="bg-white/90 rounded-xl p-6 border border-blue-200 shadow-lg"
-                        >
-                          {/* Service Header */}
-                          <div className="flex items-center gap-3 mb-6">
-                            <div className="w-3 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full"></div>
-                            <div>
-                              <h3 className="text-xl font-bold text-blue-900">{service.title}</h3>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="text-sm text-blue-700 font-medium">{service.worship_groups.name}</span>
-                                <span className="text-sm text-gray-500">•</span>
-                                <span className="text-sm text-gray-600">{service.special_activity}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="grid md:grid-cols-2 gap-6">
-                            {/* Left Column - Songs and Director */}
-                            <div className="space-y-4">
-                              {/* Director */}
-                              <div className="bg-blue-50 rounded-lg p-4">
-                                <div className="text-sm font-semibold text-blue-800 mb-3">Director/a de Alabanza</div>
-                                <div className="flex items-center gap-3">
-                                  <div className="w-16 h-16 rounded-full border-3 border-blue-300 shadow-lg overflow-hidden bg-gradient-to-r from-blue-500 to-indigo-600">
-                                    <img
-                                      src={directorMember?.profiles?.photo_url}
-                                      alt={service.leader}
-                                      className="w-full h-full object-cover"
-                                      onError={(e) => {
-                                        const target = e.target as HTMLImageElement;
-                                        target.style.display = 'none';
-                                        const fallback = target.nextElementSibling as HTMLElement;
-                                        if (fallback) fallback.style.display = 'flex';
-                                      }}
-                                    />
-                                    <div className="w-full h-full hidden items-center justify-center text-white text-lg font-bold">
-                                      {service.leader.split(' ').map(n => n[0]).join('').toUpperCase()}
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <div className="font-semibold text-gray-900">{service.leader}</div>
-                                    <div className="text-sm text-blue-600">Líder del Servicio</div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Selected Songs */}
-                              {service.selected_songs && service.selected_songs.length > 0 && (
-                                <div className="bg-green-50 rounded-lg p-4">
-                                  <div className="flex items-center gap-2 mb-3">
-                                    <div className="w-4 h-4 text-green-600">🎵</div>
-                                    <div className="text-sm font-semibold text-green-800">Canciones Seleccionadas</div>
-                                  </div>
-                                  <div className="space-y-2">
-                                    {service.selected_songs.slice(0, 3).map((song, index) => (
-                                      <div key={song.id} className="flex items-center gap-2 text-sm">
-                                        <span className="w-5 h-5 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold">
-                                          {index + 1}
-                                        </span>
-                                        <div>
-                                          <div className="font-medium text-gray-900">{song.title}</div>
-                                          {song.artist && (
-                                            <div className="text-xs text-gray-600">{song.artist}</div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    ))}
-                                    {service.selected_songs.length > 3 && (
-                                      <div className="text-xs text-green-700 font-medium">
-                                        +{service.selected_songs.length - 3} canciones más
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Offering Song */}
-                              {service.offering_song && (
-                                <div className="bg-amber-50 rounded-lg p-4">
-                                  <div className="flex items-center gap-2 mb-3">
-                                    <div className="w-4 h-4 text-amber-600">🎵</div>
-                                    <div className="text-sm font-semibold text-amber-800">Canción de Ofrendas</div>
-                                  </div>
-                                  <div className="flex items-center gap-2 text-sm">
-                                    <span className="w-5 h-5 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">
-                                      $
-                                    </span>
-                                    <div>
-                                      <div className="font-medium text-gray-900">{service.offering_song.title}</div>
-                                      {service.offering_song.artist && (
-                                        <div className="text-xs text-gray-600">{service.offering_song.artist}</div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Right Column - Voices */}
-                            <div>
-                              {responsibleVoices.length > 0 && (
-                                <div className="bg-purple-50 rounded-lg p-4 h-full">
-                                  <div className="text-sm font-semibold text-purple-800 mb-3">Responsables de Voces</div>
-                                  <div className="grid grid-cols-1 gap-3">
-                                    {responsibleVoices.slice(0, 6).map((member) => (
-                                      <div key={member.id} className="flex items-center gap-3">
-                                        <div className="w-12 h-12 rounded-full border-2 border-purple-200 overflow-hidden bg-gradient-to-r from-purple-400 to-pink-400">
-                                          <img
-                                            src={member.profiles?.photo_url}
-                                            alt={member.profiles?.full_name}
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => {
-                                              const target = e.target as HTMLImageElement;
-                                              target.style.display = 'none';
-                                              const fallback = target.nextElementSibling as HTMLElement;
-                                              if (fallback) fallback.style.display = 'flex';
-                                            }}
-                                          />
-                                          <div className="w-full h-full hidden items-center justify-center text-white text-sm font-bold">
-                                            {member.profiles?.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                                          </div>
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                          <div className="text-sm font-medium text-gray-900">
-                                            {member.profiles?.full_name}
-                                          </div>
-                                          <div className="text-xs text-purple-600">
-                                            {member.instrument}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                    <ServiceCard service={mockServiceData[0]} ref={cardRef1} />
+                    <ServiceCard service={mockServiceData[1]} ref={cardRef2} />
                   </div>
 
-                  {/* Warning Message */}
+                  {/* Warning Message - Manteniendo el amarillo */}
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                     <p className="text-sm text-amber-800">
                       ⚠️ <strong>Importante:</strong> Revise el programa completo y confirme su disponibilidad. 
-                      En caso de algún inconveniente, coordine los reemplazos necesarios.
+                      En case de algún inconveniente, coordine los reemplazos necesarios.
                     </p>
                   </div>
 
-                  {/* Action Buttons */}
+                  {/* Action Buttons - Los 3 botones que solicitaste */}
                   <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                    <Button className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white">
-                      💾 Guardar en Notificaciones
+                    <Button 
+                      onClick={() => downloadServiceCard('1', cardRef1)}
+                      className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                    >
+                      <Download className="w-4 h-4" />
+                      Descargar 1er Servicio
+                    </Button>
+                    <Button 
+                      onClick={() => downloadServiceCard('2', cardRef2)}
+                      className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                    >
+                      <Download className="w-4 h-4" />
+                      Descargar 2do Servicio
                     </Button>
                     <Button
                       onClick={() => setShowServiceOverlay(false)}
@@ -429,7 +540,7 @@ const NotificationTesting = () => {
 
                   {/* Footer */}
                   <div className="text-center pt-2">
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-blue-500">
                       💒 Mensaje automatizado del Sistema ARCANA
                     </p>
                   </div>
