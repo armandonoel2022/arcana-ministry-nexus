@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const NotificationTesting = () => {
   const [showServiceOverlay, setShowServiceOverlay] = useState(false);
+  const [selectedService, setSelectedService] = useState(null);
   const cardRef1 = useRef(null);
   const cardRef2 = useRef(null);
   const { toast } = useToast();
@@ -112,7 +113,7 @@ const NotificationTesting = () => {
       worship_groups: {
         id: '2',
         name: 'Grupo de Keyla',
-        color_theme: '#3B82F6' // Cambiado a azul para consistencia
+        color_theme: '#8B5CF6'
       },
       group_members: [
         {
@@ -195,11 +196,8 @@ const NotificationTesting = () => {
     if (!ref.current) return;
 
     try {
-      // Asegurarnos de que el overlay esté visible
-      setShowServiceOverlay(true);
-      
-      // Esperar un momento para que el DOM se actualice
-      await new Promise(resolve => setTimeout(resolve, 100));
+      window.scrollTo(0, 0);
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       const canvas = await html2canvas(ref.current, {
         scale: 2,
@@ -207,15 +205,20 @@ const NotificationTesting = () => {
         allowTaint: false,
         backgroundColor: '#f8fafc',
         logging: false,
+        onclone: (clonedDoc) => {
+          const clonedElement = clonedDoc.querySelector(`[data-service-card="${serviceId}"]`);
+          if (clonedElement) {
+            clonedElement.style.transform = 'none';
+            clonedElement.style.position = 'relative';
+          }
+        }
       });
 
       const service = mockServiceData.find(s => s.id === serviceId);
       const link = document.createElement('a');
       link.download = `servicio-${service.title.toLowerCase().replace(/\s+/g, '-')}.png`;
       link.href = canvas.toDataURL('image/png', 1.0);
-      document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
 
       toast({
         title: "¡Descarga exitosa!",
@@ -231,7 +234,7 @@ const NotificationTesting = () => {
     }
   };
 
-  const ServiceCard = React.forwardRef(({ service }, ref) => {
+  const ServiceCard = ({ service, ref }) => {
     const directorMember = service.group_members.find(m => m.is_leader);
     const responsibleVoices = service.group_members.filter(m => !m.is_leader);
 
@@ -244,7 +247,7 @@ const NotificationTesting = () => {
       >
         {/* Service Header */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-3 h-8 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full"></div>
+          <div className="w-3 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full"></div>
           <div>
             <h3 className="text-xl font-bold text-blue-900">{service.title}</h3>
             <div className="flex items-center gap-2 mt-1">
@@ -262,7 +265,7 @@ const NotificationTesting = () => {
             <div className="bg-blue-50 rounded-lg p-4">
               <div className="text-sm font-semibold text-blue-800 mb-3">Director/a de Alabanza</div>
               <div className="flex items-center gap-3">
-                <div className="w-16 h-16 rounded-full border-3 border-blue-300 shadow-lg overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600">
+                <div className="w-16 h-16 rounded-full border-3 border-blue-300 shadow-lg overflow-hidden bg-gradient-to-r from-blue-500 to-indigo-600">
                   <img
                     src={directorMember?.profiles?.photo_url}
                     alt={service.leader}
@@ -287,15 +290,15 @@ const NotificationTesting = () => {
 
             {/* Selected Songs */}
             {service.selected_songs && service.selected_songs.length > 0 && (
-              <div className="bg-blue-50 rounded-lg p-4">
+              <div className="bg-green-50 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-4 h-4 text-blue-600">🎵</div>
-                  <div className="text-sm font-semibold text-blue-800">Canciones Seleccionadas</div>
+                  <div className="w-4 h-4 text-green-600">🎵</div>
+                  <div className="text-sm font-semibold text-green-800">Canciones Seleccionadas</div>
                 </div>
                 <div className="space-y-2">
                   {service.selected_songs.slice(0, 3).map((song, index) => (
                     <div key={song.id} className="flex items-center gap-2 text-sm">
-                      <span className="w-5 h-5 bg-blue-200 text-blue-800 rounded-full flex items-center justify-center text-xs font-bold">
+                      <span className="w-5 h-5 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold">
                         {index + 1}
                       </span>
                       <div>
@@ -307,7 +310,7 @@ const NotificationTesting = () => {
                     </div>
                   ))}
                   {service.selected_songs.length > 3 && (
-                    <div className="text-xs text-blue-700 font-medium">
+                    <div className="text-xs text-green-700 font-medium">
                       +{service.selected_songs.length - 3} canciones más
                     </div>
                   )}
@@ -317,13 +320,13 @@ const NotificationTesting = () => {
 
             {/* Offering Song */}
             {service.offering_song && (
-              <div className="bg-blue-50 rounded-lg p-4">
+              <div className="bg-amber-50 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-4 h-4 text-blue-600">🎵</div>
-                  <div className="text-sm font-semibold text-blue-800">Canción de Ofrendas</div>
+                  <div className="w-4 h-4 text-amber-600">🎵</div>
+                  <div className="text-sm font-semibold text-amber-800">Canción de Ofrendas</div>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="w-5 h-5 bg-blue-200 text-blue-800 rounded-full flex items-center justify-center text-xs font-bold">
+                  <span className="w-5 h-5 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">
                     $
                   </span>
                   <div>
@@ -340,12 +343,12 @@ const NotificationTesting = () => {
           {/* Right Column - Voices */}
           <div>
             {responsibleVoices.length > 0 && (
-              <div className="bg-blue-50 rounded-lg p-4 h-full">
-                <div className="text-sm font-semibold text-blue-800 mb-3">Responsables de Voces</div>
+              <div className="bg-purple-50 rounded-lg p-4 h-full">
+                <div className="text-sm font-semibold text-purple-800 mb-3">Responsables de Voces</div>
                 <div className="grid grid-cols-1 gap-3">
                   {responsibleVoices.slice(0, 6).map((member) => (
                     <div key={member.id} className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full border-2 border-blue-200 overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600">
+                      <div className="w-12 h-12 rounded-full border-2 border-purple-200 overflow-hidden bg-gradient-to-r from-purple-400 to-pink-400">
                         <img
                           src={member.profiles?.photo_url}
                           alt={member.profiles?.full_name}
@@ -365,7 +368,7 @@ const NotificationTesting = () => {
                         <div className="text-sm font-medium text-gray-900">
                           {member.profiles?.full_name}
                         </div>
-                        <div className="text-xs text-blue-600">
+                        <div className="text-xs text-purple-600">
                           {member.instrument}
                         </div>
                       </div>
@@ -378,7 +381,7 @@ const NotificationTesting = () => {
         </div>
       </div>
     );
-  });
+  };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -407,7 +410,7 @@ const NotificationTesting = () => {
           </p>
           <Button
             onClick={() => setShowServiceOverlay(true)}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+            className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
           >
             <Calendar className="w-4 h-4 mr-2" />
             Mostrar Overlay de Servicios
@@ -421,13 +424,13 @@ const NotificationTesting = () => {
       {showServiceOverlay && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-auto">
           <div className="w-full max-w-4xl animate-in slide-in-from-bottom-4 fade-in duration-300">
-            <Card className="border-blue-200 bg-gradient-to-r from-blue-50 via-blue-50 to-blue-50 shadow-2xl border-2">
+            <Card className="border-blue-200 bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 shadow-2xl border-2">
               <CardContent className="p-6">
                 <div className="space-y-6">
                   {/* Header */}
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                      <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
                         <Calendar className="w-6 h-6 text-white" />
                       </div>
                       <div>
@@ -451,13 +454,17 @@ const NotificationTesting = () => {
 
                   {/* Services List */}
                   <div className="space-y-6">
-                    <ServiceCard service={mockServiceData[0]} ref={cardRef1} />
-                    <ServiceCard service={mockServiceData[1]} ref={cardRef2} />
+                    {mockServiceData.map((service) => {
+                      const ref = service.id === '1' ? cardRef1 : cardRef2;
+                      return (
+                        <ServiceCard key={service.id} service={service} ref={ref} />
+                      );
+                    })}
                   </div>
 
                   {/* Warning Message */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p className="text-sm text-blue-800">
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <p className="text-sm text-amber-800">
                       ⚠️ <strong>Importante:</strong> Revise el programa completo y confirme su disponibilidad. 
                       En caso de algún inconveniente, coordine los reemplazos necesarios.
                     </p>
@@ -467,14 +474,14 @@ const NotificationTesting = () => {
                   <div className="flex flex-col sm:flex-row gap-3 pt-2">
                     <Button 
                       onClick={() => downloadServiceCard('1', cardRef1)}
-                      className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                      className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
                     >
                       <Download className="w-4 h-4" />
                       Descargar 1er Servicio
                     </Button>
                     <Button 
                       onClick={() => downloadServiceCard('2', cardRef2)}
-                      className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                      className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white"
                     >
                       <Download className="w-4 h-4" />
                       Descargar 2do Servicio
@@ -490,7 +497,7 @@ const NotificationTesting = () => {
 
                   {/* Footer */}
                   <div className="text-center pt-2">
-                    <p className="text-xs text-blue-500">
+                    <p className="text-xs text-gray-500">
                       💒 Mensaje automatizado del Sistema ARCANA
                     </p>
                   </div>
