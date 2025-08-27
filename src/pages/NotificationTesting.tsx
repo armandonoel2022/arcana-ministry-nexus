@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, LegacyRef } from 'react';
 import { Bell, Calendar, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,13 +6,59 @@ import NotificationTestButton from '@/components/notifications/NotificationTestB
 import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
 
+// Definir interfaces para los tipos de datos
+interface Profile {
+  id: string;
+  full_name: string;
+  photo_url?: string;
+}
+
+interface GroupMember {
+  id: string;
+  user_id: string;
+  instrument: string;
+  is_leader: boolean;
+  profiles: Profile;
+}
+
+interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  song_order: number;
+}
+
+interface WorshipGroup {
+  id: string;
+  name: string;
+  color_theme: string;
+}
+
+interface Service {
+  id: string;
+  service_date: string;
+  title: string;
+  leader: string;
+  service_type: string;
+  location: string;
+  special_activity: string;
+  worship_groups: WorshipGroup;
+  group_members: GroupMember[];
+  selected_songs: Song[];
+  offering_song: { title: string; artist: string };
+}
+
+interface ServiceCardProps {
+  service: Service;
+}
+
 const NotificationTesting = () => {
   const [showServiceOverlay, setShowServiceOverlay] = useState(false);
-  const cardRef1 = useRef(null);
-  const cardRef2 = useRef(null);
+  const cardRef1 = useRef<HTMLDivElement>(null);
+  const cardRef2 = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  const mockServiceData = [
+  const mockServiceData: Service[] = [
     {
       id: '1',
       service_date: '2025-08-31',
@@ -191,7 +237,7 @@ const NotificationTesting = () => {
     }
   ];
 
-  const downloadServiceCard = async (serviceId, ref) => {
+  const downloadServiceCard = async (serviceId: string, ref: React.RefObject<HTMLDivElement>) => {
     if (!ref.current) return;
 
     try {
@@ -210,6 +256,8 @@ const NotificationTesting = () => {
       });
 
       const service = mockServiceData.find(s => s.id === serviceId);
+      if (!service) return;
+
       const link = document.createElement('a');
       link.download = `servicio-${service.title.toLowerCase().replace(/\s+/g, '-')}.png`;
       link.href = canvas.toDataURL('image/png', 1.0);
@@ -231,7 +279,7 @@ const NotificationTesting = () => {
     }
   };
 
-  const ServiceCard = React.forwardRef(({ service }, ref) => {
+  const ServiceCard = React.forwardRef<HTMLDivElement, ServiceCardProps>(({ service }, ref) => {
     const directorMember = service.group_members.find(m => m.is_leader);
     const responsibleVoices = service.group_members.filter(m => !m.is_leader);
 
@@ -379,6 +427,8 @@ const NotificationTesting = () => {
       </div>
     );
   });
+
+  ServiceCard.displayName = 'ServiceCard';
 
   return (
     <div className="container mx-auto p-6 space-y-6">
