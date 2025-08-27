@@ -1,8 +1,134 @@
-import React from 'react';
-import { Bell } from "lucide-react";
+import React, { useState } from 'react';
+import { Bell, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import NotificationTestButton from '@/components/notifications/NotificationTestButton';
+import ServiceNotificationOverlay from '@/components/notifications/ServiceNotificationOverlay';
 
 const NotificationTesting = () => {
+  const [showServiceOverlay, setShowServiceOverlay] = useState(false);
+
+  const mockServiceData = [
+    {
+      id: '1',
+      service_date: '2025-08-31',
+      title: 'Primera Llamada - 8:00 AM',
+      leader: 'Armando Noel',
+      service_type: 'regular',
+      location: 'Templo Principal',
+      special_activity: 'Servicio Dominical',
+      worship_groups: {
+        id: '1',
+        name: 'Grupo de Aleida',
+        color_theme: '#3B82F6'
+      },
+      group_members: [
+        {
+          id: 'director-1',
+          user_id: 'director',
+          instrument: 'Director',
+          is_leader: true,
+          profiles: {
+            id: 'director',
+            full_name: 'Armando Noel',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/d6602109-ad3e-4db6-ab4a-2984dadfc569.JPG'
+          }
+        },
+        {
+          id: 'voice-1',
+          user_id: 'voice-1',
+          instrument: 'Soprano',
+          is_leader: false,
+          profiles: {
+            id: 'voice-1',
+            full_name: 'Aleida Geomar Batista',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/00a916a8-ab94-4cc0-81ae-668dd6071416.JPG'
+          }
+        },
+        {
+          id: 'voice-2',
+          user_id: 'voice-2',
+          instrument: 'Alto',
+          is_leader: false,
+          profiles: {
+            id: 'voice-2',
+            full_name: 'Ruth Esmailin Ramirez',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/619c1a4e-42db-4549-8890-16392cfa2a87.JPG'
+          }
+        },
+        {
+          id: 'voice-3',
+          user_id: 'voice-3',
+          instrument: 'Tenor',
+          is_leader: false,
+          profiles: {
+            id: 'voice-3',
+            full_name: 'Eliabi Joana Sierra',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG'
+          }
+        }
+      ],
+      selected_songs: [
+        { id: '1', title: 'Grande es Tu Fidelidad', artist: 'Tradicional', song_order: 1 },
+        { id: '2', title: 'Cuán Grande es Él', artist: 'Tradicional', song_order: 2 },
+        { id: '3', title: 'Sublime Gracia', artist: 'John Newton', song_order: 3 }
+      ]
+    },
+    {
+      id: '2',
+      service_date: '2025-08-31',
+      title: 'Segunda Llamada - 10:45 AM',
+      leader: 'Nicolas Peralta',
+      service_type: 'regular',
+      location: 'Templo Principal',
+      special_activity: 'Servicio Dominical',
+      worship_groups: {
+        id: '1',
+        name: 'Grupo de Aleida',
+        color_theme: '#3B82F6'
+      },
+      group_members: [
+        {
+          id: 'director-2',
+          user_id: 'director-2',
+          instrument: 'Director',
+          is_leader: true,
+          profiles: {
+            id: 'director-2',
+            full_name: 'Nicolas Peralta',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG'
+          }
+        },
+        {
+          id: 'voice-4',
+          user_id: 'voice-4',
+          instrument: 'Soprano',
+          is_leader: false,
+          profiles: {
+            id: 'voice-4',
+            full_name: 'Fior Daliza Paniagua',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/8cebc294-ea61-40d0-9b04-08d7d474332c.JPG'
+          }
+        },
+        {
+          id: 'voice-5',
+          user_id: 'voice-5',
+          instrument: 'Alto',
+          is_leader: false,
+          profiles: {
+            id: 'voice-5',
+            full_name: 'Damaris Castillo',
+            photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38.JPG'
+          }
+        }
+      ],
+      selected_songs: [
+        { id: '4', title: 'Al mundo paz', artist: 'Isaac Watts', song_order: 1 },
+        { id: '5', title: 'Ven a mi corazón', artist: 'Contemporáneo', song_order: 2 }
+      ]
+    }
+  ];
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="text-center space-y-2">
@@ -14,8 +140,227 @@ const NotificationTesting = () => {
           Prueba diferentes tipos de notificaciones superpuestas del sistema ARCANA
         </p>
       </div>
+
+      {/* Botón específico para mostrar el Service Overlay */}
+      <Card className="border-2 border-blue-200 bg-blue-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-blue-800">
+            <Calendar className="w-5 h-5" />
+            Vista Previa del Overlay de Servicios
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-blue-700 mb-4">
+            Este botón te mostrará directamente el overlay de servicios con datos de prueba reales, 
+            incluyendo las fotos de los directores y responsables de voces.
+          </p>
+          <Button
+            onClick={() => setShowServiceOverlay(true)}
+            className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white"
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            Mostrar Overlay de Servicios
+          </Button>
+        </CardContent>
+      </Card>
       
       <NotificationTestButton />
+
+      {/* Service Overlay Mock */}
+      {showServiceOverlay && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-4xl animate-in slide-in-from-bottom-4 fade-in duration-300">
+            <Card className="border-blue-200 bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 shadow-2xl border-2">
+              <CardContent className="p-6">
+                <div className="space-y-6">
+                  {/* Header */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                        <Calendar className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-blue-900 mb-1">
+                          Programa de Servicios
+                        </h2>
+                        <p className="text-blue-700">
+                          Domingo, 31 de Agosto - 5to Domingo
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowServiceOverlay(false)}
+                      className="text-blue-600 hover:text-blue-800 hover:bg-blue-100"
+                    >
+                      ✕
+                    </Button>
+                  </div>
+
+                  {/* Services List */}
+                  <div className="space-y-6">
+                    {mockServiceData.map((service) => {
+                      const directorMember = service.group_members.find(m => m.is_leader);
+                      const responsibleVoices = service.group_members.filter(m => !m.is_leader);
+
+                      return (
+                        <div 
+                          key={service.id}
+                          className="bg-white/90 rounded-xl p-6 border border-blue-200 shadow-lg"
+                        >
+                          {/* Service Header */}
+                          <div className="flex items-center gap-3 mb-6">
+                            <div className="w-3 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full"></div>
+                            <div>
+                              <h3 className="text-xl font-bold text-blue-900">{service.title}</h3>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-sm text-blue-700 font-medium">{service.worship_groups.name}</span>
+                                <span className="text-sm text-gray-500">•</span>
+                                <span className="text-sm text-gray-600">{service.special_activity}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="grid md:grid-cols-2 gap-6">
+                            {/* Director Column */}
+                            <div className="space-y-4">
+                              {/* Director */}
+                              <div className="bg-blue-50 rounded-lg p-4">
+                                <div className="text-sm font-semibold text-blue-800 mb-3">Director/a de Alabanza</div>
+                                <div className="flex items-center gap-3">
+                                  <div className="w-16 h-16 rounded-full border-3 border-blue-300 shadow-lg overflow-hidden bg-gradient-to-r from-blue-500 to-indigo-600">
+                                    <img
+                                      src={directorMember?.profiles?.photo_url}
+                                      alt={service.leader}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                        const fallback = target.nextElementSibling as HTMLElement;
+                                        if (fallback) fallback.style.display = 'flex';
+                                      }}
+                                    />
+                                    <div className="w-full h-full hidden items-center justify-center text-white text-lg font-bold">
+                                      {service.leader.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <div className="font-semibold text-gray-900">{service.leader}</div>
+                                    <div className="text-sm text-blue-600">Líder del Servicio</div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Selected Songs */}
+                              {service.selected_songs && service.selected_songs.length > 0 && (
+                                <div className="bg-green-50 rounded-lg p-4">
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <div className="w-4 h-4 text-green-600">🎵</div>
+                                    <div className="text-sm font-semibold text-green-800">Canciones Seleccionadas</div>
+                                  </div>
+                                  <div className="space-y-2">
+                                    {service.selected_songs.slice(0, 3).map((song, index) => (
+                                      <div key={song.id} className="flex items-center gap-2 text-sm">
+                                        <span className="w-5 h-5 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold">
+                                          {index + 1}
+                                        </span>
+                                        <div>
+                                          <div className="font-medium text-gray-900">{song.title}</div>
+                                          {song.artist && (
+                                            <div className="text-xs text-gray-600">{song.artist}</div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                    {service.selected_songs.length > 3 && (
+                                      <div className="text-xs text-green-700 font-medium">
+                                        +{service.selected_songs.length - 3} canciones más
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Voices Column */}
+                            <div>
+                              {responsibleVoices.length > 0 && (
+                                <div className="bg-purple-50 rounded-lg p-4">
+                                  <div className="text-sm font-semibold text-purple-800 mb-3">Responsables de Voces</div>
+                                  <div className="grid grid-cols-1 gap-3">
+                                    {responsibleVoices.slice(0, 4).map((member) => (
+                                      <div key={member.id} className="flex items-center gap-3">
+                                        <div className="w-12 h-12 rounded-full border-2 border-purple-200 overflow-hidden bg-gradient-to-r from-purple-400 to-pink-400">
+                                          <img
+                                            src={member.profiles?.photo_url}
+                                            alt={member.profiles?.full_name}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                              const target = e.target as HTMLImageElement;
+                                              target.style.display = 'none';
+                                              const fallback = target.nextElementSibling as HTMLElement;
+                                              if (fallback) fallback.style.display = 'flex';
+                                            }}
+                                          />
+                                          <div className="w-full h-full hidden items-center justify-center text-white text-sm font-bold">
+                                            {member.profiles?.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                          </div>
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                          <div className="text-sm font-medium text-gray-900">
+                                            {member.profiles?.full_name}
+                                          </div>
+                                          <div className="text-xs text-purple-600">
+                                            {member.instrument}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Warning Message */}
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <p className="text-sm text-amber-800">
+                      ⚠️ <strong>Importante:</strong> Revise el programa completo y confirme su disponibilidad. 
+                      En caso de algún inconveniente, coordine los reemplazos necesarios.
+                    </p>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                    <Button className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white">
+                      💾 Guardar en Notificaciones
+                    </Button>
+                    <Button
+                      onClick={() => setShowServiceOverlay(false)}
+                      variant="outline"
+                      className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                    >
+                      ✕ Cerrar
+                    </Button>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="text-center pt-2">
+                    <p className="text-xs text-gray-500">
+                      💒 Mensaje automatizado del Sistema ARCANA
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
