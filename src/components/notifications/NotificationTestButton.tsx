@@ -136,55 +136,92 @@ const NotificationTestButton = () => {
   };
 
   // Funciones específicas de prueba
-  const testBirthday = async () => {
-    setLoading(true);
-    try {
-      // Obtener datos de un miembro de ejemplo para el cumpleaños
-      const { data: members, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .limit(1);
-
-      if (error) throw error;
-
-      if (members && members.length > 0) {
-        const member = members[0];
-        setCurrentContent({
-          type: 'birthday',
-          member: {
-            id: member.id,
-            nombres: member.nombres || 'Usuario',
-            apellidos: member.apellidos || 'Ejemplo',
-            photo_url: member.photo_url,
-            cargo: member.cargo || 'corista'
-          }
-        });
-        setShowBirthdayOverlay(true);
-        
-        // También crear la notificación en BD
-        await testNotification('birthday', {
-          title: "🎉 ¡Feliz Cumpleaños! 🎂",
-          message: "¡Hoy está de cumpleaños un integrante del ministerio!",
-          metadata: {
-            birthday_member_name: `${member.nombres} ${member.apellidos}`,
-            birthday_member_photo: member.photo_url,
-            birthday_date: new Date().toISOString(),
-            is_birthday_person: false
-          },
-          priority: 3,
-          category: 'birthday'
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: `No se pudo cargar datos de cumpleaños: ${error.message}`,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const testBirthday = async () => {  
+  setLoading(true);  
+  try {  
+    const today = new Date();  
+      
+    // Buscar cumpleaños de hoy primero  
+    const { data: members, error } = await supabase  
+      .from('members')  
+      .select('*')  
+      .eq('is_active', true)  
+      .not('fecha_nacimiento', 'is', null);  
+  
+    if (error) throw error;  
+  
+    // Filtrar cumpleaños de hoy  
+    const todaysBirthdays = members?.filter(member => {  
+      if (!member.fecha_nacimiento) return false;  
+      const birthDate = new Date(member.fecha_nacimiento);  
+      return birthDate.getMonth() === today.getMonth() &&   
+             birthDate.getDate() === today.getDate();  
+    }) || [];  
+  
+    let selectedMember;  
+  
+    if (todaysBirthdays.length > 0) {  
+      // Usar cumpleaños de hoy  
+      selectedMember = todaysBirthdays[0];  
+    } else {  
+      // Buscar el próximo cumpleaños  
+      const upcomingBirthdays = members?.filter(member => {  
+        if (!member.fecha_nacimiento) return false;  
+        const birthDate = new Date(member.fecha_nacimiento);  
+        const thisYear = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());  
+        const nextYear = new Date(today.getFullYear() + 1, birthDate.getMonth(), birthDate.getDate());  
+          
+        return thisYear >= today || nextYear >= today;  
+      }).sort((a, b) => {  
+        const aDate = new Date(a.fecha_nacimiento);  
+        const bDate = new Date(b.fecha_nacimiento);  
+        const aThisYear = new Date(today.getFullYear(), aDate.getMonth(), aDate.getDate());  
+        const bThisYear = new Date(today.getFullYear(), bDate.getMonth(), bDate.getDate());  
+          
+        if (aThisYear < today) aThisYear.setFullYear(today.getFullYear() + 1);  
+        if (bThisYear < today) bThisYear.setFullYear(today.getFullYear() + 1);  
+          
+        return aThisYear.getTime() - bThisYear.getTime();  
+      });  
+  
+      selectedMember = upcomingBirthdays?.[0];  
+    }  
+  
+    if (!selectedMember) {  
+      toast({  
+        title: "No hay cumpleaños",  
+        description: "No se encontraron cumpleaños próximos",  
+        variant: "default",  
+      });  
+      return;  
+    }  
+  
+    // Crear notificación real que será capturada por NotificationOverlay  
+    await testNotification('birthday_daily', {  
+      title: `🎉 ¡Feliz Cumpleaños ${selectedMember.nombres}!`,  
+      message: `¡Hoy está de cumpleaños ${selectedMember.nombres} ${selectedMember.apellidos}! Recuerda ir a la sala de chat general y dedicarle un mensaje de felicitación.`,  
+      metadata: {  
+        birthday_member_name: `${selectedMember.nombres} ${selectedMember.apellidos}`,  
+        birthday_member_photo: selectedMember.photo_url,  
+        birthday_date: new Date().toISOString().split('T')[0],  
+        show_confetti: true,  
+        play_birthday_sound: true,  
+        is_birthday_person: todaysBirthdays.length > 0  
+      },  
+      priority: 3,  
+      category: 'birthday'  
+    });  
+  
+  } catch (error: any) {  
+    toast({  
+      title: "Error",  
+      description: `No se pudo cargar datos de cumpleaños: ${error.message}`,  
+      variant: "destructive",  
+    });  
+  } finally {  
+    setLoading(false);  
+  }  
+};
 
   const testDailyVerse = async () => {
     setLoading(true);
