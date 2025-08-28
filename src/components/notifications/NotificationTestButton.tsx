@@ -178,71 +178,104 @@ const NotificationTestButton = () => {
   }  
 };
 
-  const testDailyVerse = async () => {
-    setLoading(true);
-    try {
-      // Obtener versículo del día
-      const { data: verses, error } = await supabase
-        .from('daily_verses')
-        .select('*')
-        .order('date', { ascending: false })
-        .limit(1);
-
-      if (error) throw error;
-
-      if (verses && verses.length > 0) {
-        const verse = verses[0];
-        setCurrentContent({
-          type: 'verse',
-          verse: verse
-        });
-        setShowVerseOverlay(true);
+  const testDailyVerse = async () => {  
+  setLoading(true);  
+  try {  
+    // Obtener versículo del día usando la misma lógica que DailyVerse.tsx  
+    const today = new Date().toISOString().split('T')[0];  
+      
+    const { data: dailyVerse, error } = await supabase  
+      .from('daily_verses')  
+      .select(`  
+        *,  
+        bible_verses (  
+          book,  
+          chapter,  
+          verse,  
+          text,  
+          version  
+        )  
+      `)  
+      .eq('date', today)  
+      .single();  
+  
+    if (error && error.code !== 'PGRST116') {  
+      throw error;  
+    }  
+  
+    let verseData;  
+      
+    if (dailyVerse) {  
+      verseData = dailyVerse;  
+    } else {  
+      // Si no hay versículo para hoy, crear uno aleatorio como en DailyVerse.tsx  
+      const { data: verses, error: versesError } = await supabase  
+        .from('bible_verses')  
+        .select('*');  
+  
+      if (versesError) throw versesError;  
+  
+      if (verses && verses.length > 0) {  
+        const randomVerse = verses[Math.floor(Math.random() * verses.length)];  
+          
+        const { data: newDailyVerse, error: createError } = await supabase  
+          .from('daily_verses')  
+          .insert({  
+            verse_id: randomVerse.id,  
+            date: today,  
+            reflection: "Que este versículo te inspire y fortalezca tu fe hoy."  
+          })  
+          .select(`  
+            *,  
+            bible_verses (  
+              book,  
+              chapter,  
+              verse,  
+              text,  
+              version  
+            )  
+          `)  
+          .single();  
+  
+        if (createError) throw createError;  
+        verseData = newDailyVerse;  
+      }  
+    }  
+  
+    if (verseData && verseData.bible_verses) {  
+      // Crear mensaje formateado como en DailyVerse.tsx  
+      const verseText = `"${verseData.bible_verses.text}"\n\n${verseData.bible_verses.book} ${verseData.bible_verses.chapter}:${verseData.bible_verses.verse} (${verseData.bible_verses.version})`;  
         
-        await testNotification('daily_verse', {
-          title: "📖 Versículo del Día",
-          message: verse.verse_text,
-          metadata: {
-            verse_text: verse.verse_text,
-            verse_reference: verse.verse_reference,
-            verse_version: verse.version || "RVR1960"
-          },
-          priority: 2,
-          category: 'spiritual'
-        });
-      } else {
-        // Usar versículo de ejemplo si no hay en la base de datos
-        setCurrentContent({
-          type: 'verse',
-          verse: {
-            verse_text: "Todo lo que respira alabe a JAH. Aleluya.",
-            verse_reference: "Salmo 150:6",
-            version: "RVR1960"
-          }
-        });
-        setShowVerseOverlay(true);
+      // Mostrar overlay como en el módulo espiritual  
+      setCurrentContent({  
+        type: 'verse',  
+        verse: {  
+          verse_text: verseData.bible_verses.text,  
+          verse_reference: `${verseData.bible_verses.book} ${verseData.bible_verses.chapter}:${verseData.bible_verses.verse}`,  
+          version: verseData.bible_verses.version,  
+          reflection: verseData.reflection  
+        }  
+      });  
+      setShowVerseOverlay(true);  
         
-        await testNotification('daily_verse', {
-          title: "📖 Versículo del Día",
-          message: "Todo lo que respira alabe a JAH. Aleluya.",
-          metadata: {
-            verse_text: "Todo lo que respira alabe a JAH. Aleluya.",
-            verse_reference: "Salmo 150:6",
-            verse_version: "RVR1960"
-          },
-          priority: 2,
-          category: 'spiritual'
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: `No se pudo cargar el versículo: ${error.message}`,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      // NO enviar notificación - solo mostrar overlay como en el módulo original  
+    } else {  
+      toast({  
+        title: "Error",  
+        description: "No se pudo cargar el versículo del día",  
+        variant: "destructive",  
+      });  
+    }  
+  } catch (error: any) {  
+    toast({  
+      title: "Error",  
+      description: `No se pudo cargar el versículo: ${error.message}`,  
+      variant: "destructive",  
+    });  
+  } finally {  
+    setLoading(false);  
+  }  
+};
 
   const testDailyAdvice = async () => {  
     setLoading(true);  
