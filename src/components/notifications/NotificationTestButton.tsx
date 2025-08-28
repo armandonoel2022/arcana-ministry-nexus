@@ -316,72 +316,120 @@ const NotificationTestButton = () => {
   };
 
   const testSpecialEvent = async () => {
-    setLoading(true);
-    try {
-      // Obtener evento próximo
-      const { data: events, error } = await supabase
-        .from('events')
-        .select('*')
-        .gte('date', new Date().toISOString())
-        .order('date', { ascending: true })
-        .limit(1);
+  setLoading(true);
+  try {
+    // Obtener la fecha de hoy en formato ISO (YYYY-MM-DD)
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Consulta IDÉNTICA a la de EventosEspeciales.tsx (líneas 41-46)
+    const { data: events, error } = await supabase
+      .from('services')
+      .select('*')
+      .gte('service_date', today)
+      .ilike('leader', '%TODOS%')
+      .order('service_date', { ascending: true })
+      .limit(1); // Solo necesitamos el próximo evento
 
-      if (error) throw error;
-
-      if (events && events.length > 0) {
-        const event = events[0];
-        setCurrentContent({
-          type: 'event',
-          event: event
-        });
-        setShowEventOverlay(true);
-        
-        await testNotification('special_event', {
-          title: "🎊 Evento Especial",
-          message: event.description,
-          metadata: {
-            event_name: event.title,
-            event_date: event.date,
-            event_location: event.location
-          },
-          priority: 3,
-          category: 'events'
-        });
-      } else {
-        // Usar evento de ejemplo si no hay en la base de datos
-        setCurrentContent({
-          type: 'event',
-          event: {
-            title: "Concierto de Navidad 2025",
-            description: "Se acerca nuestro concierto navideño. ¡Prepárense para una noche llena de alabanza!",
-            date: "2025-12-20",
-            location: "Templo Principal"
-          }
-        });
-        setShowEventOverlay(true);
-        
-        await testNotification('special_event', {
-          title: "🎊 Evento Especial - Concierto de Navidad",
-          message: "Se acerca nuestro concierto navideño. ¡Prepárense para una noche llena de alabanza!",
-          metadata: {
-            event_name: "Concierto de Navidad 2025",
-            event_date: "2025-12-20",
-            event_location: "Templo Principal"
-          },
-          priority: 3,
-          category: 'events'
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: `No se pudo cargar el evento: ${error.message}`,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+    if (error) {
+      console.error('Error fetching eventos:', error);
+      throw new Error(`Error al cargar eventos: ${error.message}`);
     }
-  };
+
+    if (events && events.length > 0) {
+      const event = events[0];
+      
+      // Formatear fecha como en EventosEspeciales.tsx (líneas 83-91)
+      const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-ES', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+      };
+
+      const formatTime = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleTimeString('es-ES', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      };
+
+      const formattedDate = `${formatDate(event.service_date)} • ${formatTime(event.service_date)}`;
+      
+      // Crear mensaje formateado como se solicita
+      const message = `🎉 Próximo Evento Especial:\n\n📅 ${event.title}\n🗓️ ${formattedDate}\n📍 ${event.location || 'Templo Principal'}\n👥 Participación: ${event.leader}\n🎯 ${event.special_activity || 'Actividad especial'}`;
+
+      setCurrentContent({
+        type: 'event',
+        event: event,
+        formattedDate: formattedDate
+      });
+      setShowEventOverlay(true);
+      
+      await testNotification('special_event', {
+        title: "🎊 Evento Especial",
+        message: message,
+        metadata: {
+          event_name: event.title,
+          event_date: event.service_date,
+          event_location: event.location || 'Templo Principal',
+          event_participation: event.leader,
+          special_activity: event.special_activity || 'Actividad especial'
+        },
+        priority: 3, // high priority
+        category: 'events'
+      });
+    } else {
+      // Si no hay eventos próximos
+      toast({
+        title: "Información",
+        description: "No hay eventos especiales próximos programados",
+        variant: "default",
+      });
+      
+      // Mostrar evento de ejemplo para pruebas
+      setCurrentContent({
+        type: 'event',
+        event: {
+          title: "Concierto de Navidad 2025",
+          description: "Se acerca nuestro concierto navideño. ¡Prepárense para una noche llena de alabanza!",
+          service_date: "2025-12-20T19:00:00",
+          location: "Templo Principal",
+          leader: "TODOS los integrantes",
+          special_activity: "Presentación especial del coro navideño"
+        },
+        formattedDate: "sábado, 20 de diciembre de 2025 • 19:00"
+      });
+      setShowEventOverlay(true);
+      
+      await testNotification('special_event', {
+        title: "🎊 Evento Especial - Concierto de Navidad",
+        message: `🎉 Próximo Evento Especial:\n\n📅 Concierto de Navidad 2025\n🗓️ sábado, 20 de diciembre de 2025 • 19:00\n📍 Templo Principal\n👥 Participación: TODOS los integrantes\n🎯 Presentación especial del coro navideño`,
+        metadata: {
+          event_name: "Concierto de Navidad 2025",
+          event_date: "2025-12-20",
+          event_location: "Templo Principal",
+          event_participation: "TODOS los integrantes",
+          special_activity: "Presentación especial del coro navideño"
+        },
+        priority: 3,
+        category: 'events'
+      });
+    }
+  } catch (error: any) {
+    console.error('Error en testSpecialEvent:', error);
+    toast({
+      title: "Error",
+      description: error.message || "No se pudo cargar los eventos especiales",
+      variant: "destructive",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   const notifications = [
     {
