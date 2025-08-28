@@ -386,17 +386,7 @@ const NotificationTestButton = () => {
       });  
       setShowAdviceOverlay(true);  
         
-      await testNotification('daily_advice', {  
-        title: "💡 Consejo del Día",  
-        message: message,  
-        metadata: {  
-          advice_category: randomTip.category,  
-          tip_type: randomTip.type,  
-          tip_of_day: true  
-        },  
-        priority: 1,  
-        category: 'training'  
-      });  
+      
     
     } catch (error: any) {  
       toast({  
