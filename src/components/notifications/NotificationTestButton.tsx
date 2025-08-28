@@ -582,149 +582,107 @@ const NotificationTestButton = () => {
   };
 
   // Componente para overlay de evento
-  const EventOverlay = ({ event, onClose }) => {
-    if (!event) return null;
-    
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-        <div className="w-full max-w-md animate-in slide-in-from-bottom-4 fade-in duration-300">
-          <Card className="border-purple-200 bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 shadow-2xl border-2">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <h2 className="text-2xl font-bold text-purple-900">Evento Especial</h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onClose}
-                  className="text-purple-600 hover:text-purple-800 hover:bg-purple-100"
-                >
-                  ✕
-                </Button>
-              </div>
-              
-              <div className="bg-white rounded-lg p-6 shadow-md">
-                <div className="text-center mb-4">
-                  <Church className="w-12 h-12 text-purple-500 mx-auto mb-3" />
-                  <h3 className="text-xl font-bold text-gray-900">{event.title}</h3>
-                </div>
-                
-                <div className="text-lg text-gray-800 text-center mb-4">
-                  {event.description}
-                </div>
-                
-                <div className="text-sm text-gray-600 text-center mb-2">
-                  📅 {new Date(event.date).toLocaleDateString()}
-                </div>
-                
-                <div className="text-sm text-gray-600 text-center">
-                  📍 {event.location || "Templo Principal"}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
+  // Componente para overlay de evento
+const EventOverlay = ({ event, onClose }) => {
+  if (!event) return null;
+  
+  // Funciones de formateo consistentes con EventosEspeciales.tsx
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('es-ES', {
+        weekday: 'long',
+        year: 'numeric', 
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formateando fecha:', error, dateString);
+      return 'Fecha por definir';
+    }
   };
 
+  const formatTime = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleTimeString('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Error formateando hora:', error, dateString);
+      return 'Hora por definir';
+    }
+  };
+
+  const formattedDate = event.service_date ? formatDate(event.service_date) : 'Fecha por definir';
+  const formattedTime = event.service_date ? formatTime(event.service_date) : 'Hora por definir';
+  
   return (
-    <div className="space-y-6">
-      {/* Grid de notificaciones */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-        {notifications.map((notification, index) => (
-          <Card key={index} className="hover:shadow-lg transition-shadow duration-300 border-2 hover:border-gray-300">
-            <CardContent className="p-6">
-              <div className="flex flex-col items-center text-center space-y-4">
-                <div className={`p-4 rounded-full bg-gradient-to-r ${notification.color} text-white`}>
-                  {notification.icon}
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg text-gray-900 mb-2">
-                    {notification.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    {notification.description}
-                  </p>
-                  <Button 
-                    onClick={notification.action}
-                    disabled={loading}
-                    className={`w-full bg-gradient-to-r ${notification.color} hover:opacity-90 text-white border-0`}
-                  >
-                    <Bell className="w-4 h-4 mr-2" />
-                    Probar Notificación
-                  </Button>
-                </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md animate-in slide-in-from-bottom-4 fade-in duration-300">
+        <Card className="border-purple-200 bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 shadow-2xl border-2">
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between mb-4">
+              <h2 className="text-2xl font-bold text-purple-900">Evento Especial</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="text-purple-600 hover:text-purple-800 hover:bg-purple-100"
+              >
+                ✕
+              </Button>
+            </div>
+            
+            <div className="bg-white rounded-lg p-6 shadow-md">
+              <div className="text-center mb-4">
+                <Church className="w-12 h-12 text-purple-500 mx-auto mb-3" />
+                <h3 className="text-xl font-bold text-gray-900">{event.title || 'Evento Especial'}</h3>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Overlays */}
-      {showBirthdayOverlay && currentContent?.type === 'birthday' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="animate-in slide-in-from-bottom-4 fade-in duration-300">
-            <Card className="border-blue-200 bg-gradient-to-r from-blue-50 via-blue-50 to-blue-50 shadow-2xl border-2">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <h2 className="text-2xl font-bold text-blue-900">Tarjeta de Cumpleaños</h2>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowBirthdayOverlay(false)}
-                    className="text-blue-600 hover:text-blue-800 hover:bg-blue-100"
-                  >
-                    ✕
-                  </Button>
+              
+              {/* Actividad Especial */}
+              {event.special_activity && (
+                <div className="text-lg text-gray-800 text-center mb-4">
+                  🎯 {event.special_activity}
                 </div>
-                
-                <BirthdayCard member={currentContent.member} />
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
-
-      {showVerseOverlay && currentContent?.type === 'verse' && (
-        <VerseOverlay 
-          verse={currentContent.verse} 
-          onClose={() => setShowVerseOverlay(false)} 
-        />
-      )}
-
-      {showAdviceOverlay && currentContent?.type === 'advice' && (
-        <AdviceOverlay 
-          advice={currentContent.advice} 
-          onClose={() => setShowAdviceOverlay(false)} 
-        />
-      )}
-
-      {showEventOverlay && currentContent?.type === 'event' && (
-        <EventOverlay 
-          event={currentContent.event} 
-          onClose={() => setShowEventOverlay(false)} 
-        />
-      )}
-
-      {/* Instrucciones */}
-      <Card className="border-blue-200 bg-blue-50">
-        <CardHeader>
-          <CardTitle className="text-blue-800 flex items-center gap-2">
-            <MessageSquare className="w-5 h-5" />
-            ¿Cómo usar estas pruebas?
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2 text-blue-700">
-            <li>• Las notificaciones aparecerán superpuestas en cualquier pantalla donde estés</li>
-            <li>• También se guardarán en tu centro de notificaciones para verlas después</li>
-            <li>• Puedes cerrar las notificaciones haciendo clic en el botón de cerrar (X)</li>
-            <li>• Las notificaciones de cumpleaños incluyen confeti y sonidos especiales</li>
-          </ul>
-        </CardContent>
-      </Card>
+              )}
+              
+              {/* Fecha y Hora */}
+              <div className="text-sm text-gray-600 text-center mb-2">
+                📅 {formattedDate}
+              </div>
+              
+              <div className="text-sm text-gray-600 text-center mb-2">
+                🕒 {formattedTime}
+              </div>
+              
+              {/* Ubicación */}
+              {event.location && (
+                <div className="text-sm text-gray-600 text-center mb-2">
+                  📍 {event.location}
+                </div>
+              )}
+              
+              {/* Participación */}
+              {event.leader && (
+                <div className="text-sm text-gray-600 text-center mb-4">
+                  👥 Participación: {event.leader}
+                </div>
+              )}
+              
+              {/* Notas adicionales */}
+              {event.notes && (
+                <div className="bg-blue-50 p-3 rounded-lg mt-4">
+                  <h4 className="font-semibold text-blue-700 mb-1">📝 Notas:</h4>
+                  <p className="text-sm text-blue-600">{event.notes}</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
-
 export default NotificationTestButton;
