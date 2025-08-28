@@ -464,19 +464,7 @@ const NotificationTestButton = () => {
       });
       setShowEventOverlay(true);
       
-      await testNotification('special_event', {
-        title: `🎊 ${event.title}`,
-        message: message,
-        metadata: {
-          event_name: event.title,
-          event_date: event.service_date,
-          event_location: event.location || 'Templo Principal',
-          event_participation: event.leader,
-          special_activity: event.special_activity || 'Actividad especial'
-        },
-        priority: 3,
-        category: 'events'
-      });
+      
     } else {
       // Si no hay eventos próximos, usar datos de ejemplo
       const exampleDate = new Date();
