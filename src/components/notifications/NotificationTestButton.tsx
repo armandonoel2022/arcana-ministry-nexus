@@ -141,7 +141,7 @@ const NotificationTestButton = () => {
   try {  
     const today = new Date();  
       
-    // Buscar cumpleaños de hoy primero  
+    // Buscar cumpleaños de hoy o próximo  
     const { data: members, error } = await supabase  
       .from('members')  
       .select('*')  
@@ -150,7 +150,7 @@ const NotificationTestButton = () => {
   
     if (error) throw error;  
   
-    // Filtrar cumpleaños de hoy  
+    // Lógica para encontrar cumpleaños (hoy o próximo)  
     const todaysBirthdays = members?.filter(member => {  
       if (!member.fecha_nacimiento) return false;  
       const birthDate = new Date(member.fecha_nacimiento);  
@@ -158,21 +158,11 @@ const NotificationTestButton = () => {
              birthDate.getDate() === today.getDate();  
     }) || [];  
   
-    let selectedMember;  
-  
-    if (todaysBirthdays.length > 0) {  
-      // Usar cumpleaños de hoy  
-      selectedMember = todaysBirthdays[0];  
-    } else {  
-      // Buscar el próximo cumpleaños  
-      const upcomingBirthdays = members?.filter(member => {  
-        if (!member.fecha_nacimiento) return false;  
-        const birthDate = new Date(member.fecha_nacimiento);  
-        const thisYear = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());  
-        const nextYear = new Date(today.getFullYear() + 1, birthDate.getMonth(), birthDate.getDate());  
-          
-        return thisYear >= today || nextYear >= today;  
-      }).sort((a, b) => {  
+    let selectedMember = todaysBirthdays[0];  
+      
+    if (!selectedMember) {  
+      // Buscar próximo cumpleaños  
+      const upcomingBirthdays = members?.sort((a, b) => {  
         const aDate = new Date(a.fecha_nacimiento);  
         const bDate = new Date(b.fecha_nacimiento);  
         const aThisYear = new Date(today.getFullYear(), aDate.getMonth(), aDate.getDate());  
@@ -183,7 +173,7 @@ const NotificationTestButton = () => {
           
         return aThisYear.getTime() - bThisYear.getTime();  
       });  
-  
+        
       selectedMember = upcomingBirthdays?.[0];  
     }  
   
@@ -196,7 +186,7 @@ const NotificationTestButton = () => {
       return;  
     }  
   
-    // Crear notificación real que será capturada por NotificationOverlay  
+    // CAMBIO CLAVE: usar 'birthday_daily' en lugar de 'birthday'  
     await testNotification('birthday_daily', {  
       title: `🎉 ¡Feliz Cumpleaños ${selectedMember.nombres}!`,  
       message: `¡Hoy está de cumpleaños ${selectedMember.nombres} ${selectedMember.apellidos}! Recuerda ir a la sala de chat general y dedicarle un mensaje de felicitación.`,  
