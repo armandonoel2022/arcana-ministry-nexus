@@ -5,10 +5,11 @@ import { Gift, BookOpen, MessageSquare, Church, Lightbulb, Bell } from "lucide-r
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import confetti from 'canvas-confetti';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import html2canvas from 'html2canvas';
 
 // Importar componentes necesarios
 import BirthdayCard from '@/components/birthday/BirthdayCard';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const NotificationTestButton = () => {
   const [loading, setLoading] = useState(false);
@@ -17,9 +18,10 @@ const NotificationTestButton = () => {
   const [showAdviceOverlay, setShowAdviceOverlay] = useState(false);
   const [showEventOverlay, setShowEventOverlay] = useState(false);
   const [currentContent, setCurrentContent] = useState<any>(null);
+  const birthdayCardRef = useRef(null);
   const { toast } = useToast();
 
-  // Función para reproducir sonido de cumpleaños (desde BirthdayNotificationBanner.tsx)
+  // Función para reproducir sonido de cumpleaños
   const playBirthdaySound = () => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -111,30 +113,6 @@ const NotificationTestButton = () => {
     }
   };
 
-  // Función para obtener etiqueta del rol (desde BirthdayModule.tsx)
-  const getRoleLabel = (role: string) => {
-    const roleLabels: { [key: string]: string } = {
-      'pastor': 'Pastor',
-      'pastora': 'Pastora',
-      'director_alabanza': 'Director de Alabanza',
-      'directora_alabanza': 'Directora de Alabanza',
-      'director_musical': 'Director Musical',
-      'corista': 'Corista',
-      'directora_danza': 'Directora de Danza',
-      'director_multimedia': 'Director Multimedia',
-      'camarografo': 'Camarógrafo',
-      'camarógrafa': 'Camarógrafa',
-      'encargado_piso': 'Encargado de Piso',
-      'encargada_piso': 'Encargada de Piso',
-      'musico': 'Músico',
-      'sonidista': 'Sonidista',
-      'encargado_luces': 'Encargado de Luces',
-      'encargado_proyeccion': 'Encargado de Proyección',
-      'encargado_streaming': 'Encargado de Streaming'
-    };
-    return roleLabels[role] || role;
-  };
-
   // Funciones específicas de prueba
   const testBirthday = async () => {
     setLoading(true);
@@ -217,29 +195,6 @@ const NotificationTestButton = () => {
           priority: 2,
           category: 'spiritual'
         });
-      } else {
-        // Usar versículo de ejemplo si no hay en la base de datos
-        setCurrentContent({
-          type: 'verse',
-          verse: {
-            verse_text: "Todo lo que respira alabe a JAH. Aleluya.",
-            verse_reference: "Salmo 150:6",
-            version: "RVR1960"
-          }
-        });
-        setShowVerseOverlay(true);
-        
-        await testNotification('daily_verse', {
-          title: "📖 Versículo del Día",
-          message: "Todo lo que respira alabe a JAH. Aleluya.",
-          metadata: {
-            verse_text: "Todo lo que respira alabe a JAH. Aleluya.",
-            verse_reference: "Salmo 150:6",
-            verse_version: "RVR1960"
-          },
-          priority: 2,
-          category: 'spiritual'
-        });
       }
     } catch (error: any) {
       toast({
@@ -277,27 +232,6 @@ const NotificationTestButton = () => {
           message: tip.content,
           metadata: {
             advice_category: tip.category || "técnica_musical",
-            tip_of_day: true
-          },
-          priority: 1,
-          category: 'training'
-        });
-      } else {
-        // Usar consejo de ejemplo si no hay en la base de datos
-        setCurrentContent({
-          type: 'advice',
-          advice: {
-            content: "Practica con dedicación, pero también escucha tu cuerpo y descansa cuando sea necesario.",
-            category: "técnica_musical"
-          }
-        });
-        setShowAdviceOverlay(true);
-        
-        await testNotification('daily_advice', {
-          title: "💡 Consejo del Día",
-          message: "Practica con dedicación, pero también escucha tu cuerpo y descansa cuando sea necesario.",
-          metadata: {
-            advice_category: "técnica_musical",
             tip_of_day: true
           },
           priority: 1,
@@ -343,30 +277,6 @@ const NotificationTestButton = () => {
             event_name: event.title,
             event_date: event.date,
             event_location: event.location
-          },
-          priority: 3,
-          category: 'events'
-        });
-      } else {
-        // Usar evento de ejemplo si no hay en la base de datos
-        setCurrentContent({
-          type: 'event',
-          event: {
-            title: "Concierto de Navidad 2025",
-            description: "Se acerca nuestro concierto navideño. ¡Prepárense para una noche llena de alabanza!",
-            date: "2025-12-20",
-            location: "Templo Principal"
-          }
-        });
-        setShowEventOverlay(true);
-        
-        await testNotification('special_event', {
-          title: "🎊 Evento Especial - Concierto de Navidad",
-          message: "Se acerca nuestro concierto navideño. ¡Prepárense para una noche llena de alabanza!",
-          metadata: {
-            event_name: "Concierto de Navidad 2025",
-            event_date: "2025-12-20",
-            event_location: "Templo Principal"
           },
           priority: 3,
           category: 'events'
