@@ -155,7 +155,7 @@ const Index = () => {
               ARCANA
             </h1>
             <p className="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">
-              Sistema de gestión para el Ministerio ADN Arca de Noé
+              Transformando nuestra adoración
             </p>
             
             {/* Welcome Message */}
