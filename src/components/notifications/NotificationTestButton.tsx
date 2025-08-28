@@ -67,7 +67,7 @@ const NotificationTestButton = () => {
       if (!user) {
         toast({
           title: "Error",
-          description: "Debes estar autenticado para probar las notificaciones",
+          description: "Debes estar autenticado para probas las notificaciones",
           variant: "destructive",
         });
         return;
@@ -466,37 +466,6 @@ const NotificationTestButton = () => {
   }
 };
 
-  const notifications = [
-    {
-      icon: <Gift className="w-8 h-8" />,
-      title: "Cumpleaños",
-      description: "Notificación de cumpleaños con confeti y sonido",
-      color: "from-pink-500 to-purple-500",
-      action: testBirthday
-    },
-    {
-      icon: <BookOpen className="w-8 h-8" />,
-      title: "Versículo del Día",
-      description: "Versículo bíblico diario con reflexión",
-      color: "from-blue-500 to-indigo-500",
-      action: testDailyVerse
-    },
-    {
-      icon: <Lightbulb className="w-8 h-8" />,
-      title: "Consejo del Día",
-      description: "Consejo diario para músicos y ministerio",
-      color: "from-yellow-500 to-orange-500",
-      action: testDailyAdvice
-    },
-    {
-      icon: <Church className="w-8 h-8" />,
-      title: "Evento Especial",
-      description: "Notificación de eventos especiales del ministerio",
-      color: "from-purple-500 to-pink-500",
-      action: testSpecialEvent
-    }
-  ];
-
   // Componente para overlay de versículo
   const VerseOverlay = ({ verse, onClose }) => {
     if (!verse) return null;
@@ -581,51 +550,106 @@ const NotificationTestButton = () => {
     );
   };
 
-  // Componente para overlay de evento
-  const EventOverlay = ({ event, onClose }) => {
-    if (!event) return null;
-    
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-        <div className="w-full max-w-md animate-in slide-in-from-bottom-4 fade-in duration-300">
-          <Card className="border-purple-200 bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 shadow-2xl border-2">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <h2 className="text-2xl font-bold text-purple-900">Evento Especial</h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onClose}
-                  className="text-purple-600 hover:text-purple-800 hover:bg-purple-100"
-                >
-                  ✕
-                </Button>
-              </div>
-              
-              <div className="bg-white rounded-lg p-6 shadow-md">
-                <div className="text-center mb-4">
-                  <Church className="w-12 h-12 text-purple-500 mx-auto mb-3" />
-                  <h3 className="text-xl font-bold text-gray-900">{event.title}</h3>
-                </div>
+  // Componente para overlay de evento - CORREGIDO
+  const EventOverlay = ({ event, formattedDate, onClose }) => {  
+    if (!event) return null;  
+      
+    return (  
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">  
+        <div className="w-full max-w-md animate-in slide-in-from-bottom-4 fade-in duration-300">  
+          <Card className="border-purple-200 bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 shadow-2xl border-2">  
+            <CardContent className="p-6">  
+              <div className="flex items-start justify-between mb-4">  
+                <h2 className="text-2xl font-bold text-purple-900">Evento Especial</h2>  
+                <Button  
+                  variant="ghost"  
+                  size="sm"  
+                  onClick={onClose}  
+                  className="text-purple-600 hover:text-purple-800 hover:bg-purple-100"  
+                >  
+                  ✕  
+                </Button>  
+              </div>  
                 
-                <div className="text-lg text-gray-800 text-center mb-4">
-                  {event.description}
-                </div>
-                
-                <div className="text-sm text-gray-600 text-center mb-2">
-                  📅 {new Date(event.date).toLocaleDateString()}
-                </div>
-                
-                <div className="text-sm text-gray-600 text-center">
-                  📍 {event.location || "Templo Principal"}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
+              <div className="bg-white rounded-lg p-6 shadow-md">  
+                <div className="text-center mb-4">  
+                  <Church className="w-12 h-12 text-purple-500 mx-auto mb-3" />  
+                  <h3 className="text-xl font-bold text-gray-900">{event.title}</h3>  
+                </div>  
+                  
+                <div className="space-y-3">  
+                  <div className="text-sm text-gray-600 text-center">  
+                    📅 {formattedDate || new Date(event.service_date).toLocaleDateString('es-ES', {  
+                      weekday: 'long',  
+                      year: 'numeric',  
+                      month: 'long',   
+                      day: 'numeric'  
+                    })} • {new Date(event.service_date).toLocaleTimeString('es-ES', {   
+                      hour: '2-digit',   
+                      minute: '2-digit'   
+                    })}  
+                  </div>  
+                    
+                  <div className="text-sm text-gray-600 text-center">  
+                    📍 {event.location || "Templo Principal"}  
+                  </div>  
+                    
+                  <div className="text-sm text-gray-600 text-center">  
+                    👥 Participación: {event.leader}  
+                  </div>  
+                    
+                  {event.special_activity && (  
+                    <div className="bg-purple-50 p-3 rounded-lg">  
+                      <h4 className="font-semibold text-purple-700 mb-1">Actividad Especial:</h4>  
+                      <p className="text-sm text-purple-600">{event.special_activity}</p>  
+                    </div>  
+                  )}  
+                    
+                  {event.notes && (  
+                    <div className="bg-blue-50 p-3 rounded-lg">  
+                      <h4 className="font-semibold text-blue-700 mb-1">Notas:</h4>  
+                      <p className="text-sm text-blue-600">{event.notes}</p>  
+                    </div>  
+                  )}  
+                </div>  
+              </div>  
+            </CardContent>  
+          </Card>  
+        </div>  
+      </div>  
+    );  
   };
+
+  const notifications = [
+    {
+      icon: <Gift className="w-8 h-8" />,
+      title: "Cumpleaños",
+      description: "Notificación de cumpleaños con confeti y sonido",
+      color: "from-pink-500 to-purple-500",
+      action: testBirthday
+    },
+    {
+      icon: <BookOpen className="w-8 h-8" />,
+      title: "Versículo del Día",
+      description: "Versículo bíblico diario con reflexión",
+      color: "from-blue-500 to-indigo-500",
+      action: testDailyVerse
+    },
+    {
+      icon: <Lightbulb className="w-8 h-8" />,
+      title: "Consejo del Día",
+      description: "Consejo diario para músicos y ministerio",
+      color: "from-yellow-500 to-orange-500",
+      action: testDailyAdvice
+    },
+    {
+      icon: <Church className="w-8 h-8" />,
+      title: "Evento Especial",
+      description: "Notificación de eventos especiales del ministerio",
+      color: "from-purple-500 to-pink-500",
+      action: testSpecialEvent
+    }
+  ];
 
   return (
     <div className="space-y-6">
@@ -701,7 +725,8 @@ const NotificationTestButton = () => {
 
       {showEventOverlay && currentContent?.type === 'event' && (
         <EventOverlay 
-          event={currentContent.event} 
+          event={currentContent.event}
+          formattedDate={currentContent.formattedDate}
           onClose={() => setShowEventOverlay(false)} 
         />
       )}
