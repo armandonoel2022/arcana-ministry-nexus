@@ -146,26 +146,31 @@ const menuCategories = [
       },
     ]
   },
-  {
-    label: "Configuración",
-    items: [
-      {
-        title: "Administración",
-        url: "/admin",
-        icon: Settings,
-      },
-      {
-        title: "Acerca del Ministerio",
-        url: "/about",
-        icon: Info,
-      },
-      {
-        title: "Estatutos",
-        url: "/statutes",
-        icon: FileText,
-      },
-    ]
-  }
+  {  
+  label: "Configuración",  
+  items: [  
+    {  
+      title: "Administración",  
+      url: "/admin",  
+      icon: Settings,  
+    },  
+    {  
+      title: "Pruebas de Notificaciones",  
+      url: "/notification-testing",  
+      icon: Bell,  
+    },  
+    {  
+      title: "Acerca del Ministerio",  
+      url: "/about",  
+      icon: Info,  
+    },  
+    {  
+      title: "Estatutos",  
+      url: "/statutes",  
+      icon: FileText,  
+    },  
+  ]  
+}
 ]
 
 export function AppSidebar() {
