@@ -335,31 +335,42 @@ const NotificationTestButton = () => {
       throw new Error(`Error al cargar eventos: ${error.message}`);
     }
 
-    if (events && events.length > 0) {
-      const event = events[0];
-      
-      // Formatear fecha como en EventosEspeciales.tsx (líneas 83-91)
-      const formatDate = (dateString: string) => {
+    // Funciones de formateo IDÉNTICAS a EventosEspeciales.tsx (líneas 83-99)
+    const formatDate = (dateString: string) => {
+      try {
         const date = new Date(dateString);
         return date.toLocaleDateString('es-ES', {
           weekday: 'long',
-          year: 'numeric',
+          year: 'numeric', 
           month: 'long',
           day: 'numeric'
         });
-      };
+      } catch (error) {
+        console.error('Error formateando fecha:', error, dateString);
+        return 'Fecha por definir';
+      }
+    };
 
-      const formatTime = (dateString: string) => {
+    const formatTime = (dateString: string) => {
+      try {
         const date = new Date(dateString);
         return date.toLocaleTimeString('es-ES', {
           hour: '2-digit',
           minute: '2-digit'
         });
-      };
+      } catch (error) {
+        console.error('Error formateando hora:', error, dateString);
+        return 'Hora por definir';
+      }
+    };
 
+    if (events && events.length > 0) {
+      const event = events[0];
+      console.log('Evento obtenido:', event); // Debug
+      
       const formattedDate = `${formatDate(event.service_date)} • ${formatTime(event.service_date)}`;
       
-      // Crear mensaje formateado como se solicita
+      // Crear mensaje formateado
       const message = `🎉 Próximo Evento Especial:\n\n📅 ${event.title}\n🗓️ ${formattedDate}\n📍 ${event.location || 'Templo Principal'}\n👥 Participación: ${event.leader}\n🎯 ${event.special_activity || 'Actividad especial'}`;
 
       setCurrentContent({
@@ -370,7 +381,7 @@ const NotificationTestButton = () => {
       setShowEventOverlay(true);
       
       await testNotification('special_event', {
-        title: "🎊 Evento Especial",
+        title: `🎊 ${event.title}`,
         message: message,
         metadata: {
           event_name: event.title,
@@ -379,44 +390,68 @@ const NotificationTestButton = () => {
           event_participation: event.leader,
           special_activity: event.special_activity || 'Actividad especial'
         },
-        priority: 3, // high priority
+        priority: 3,
         category: 'events'
       });
     } else {
-      // Si no hay eventos próximos
-      toast({
-        title: "Información",
-        description: "No hay eventos especiales próximos programados",
-        variant: "default",
-      });
+      // Si no hay eventos próximos, usar datos de ejemplo
+      const exampleDate = new Date();
+      exampleDate.setDate(exampleDate.getDate() + 7); // 7 días en el futuro
       
-      // Mostrar evento de ejemplo para pruebas
+      const formatDate = (date: Date) => {
+        return date.toLocaleDateString('es-ES', {
+          weekday: 'long',
+          year: 'numeric', 
+          month: 'long',
+          day: 'numeric'
+        });
+      };
+
+      const formatTime = (date: Date) => {
+        return date.toLocaleTimeString('es-ES', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      };
+
+      const formattedDate = `${formatDate(exampleDate)} • ${formatTime(exampleDate)}`;
+      
+      const exampleEvent = {
+        title: "Concierto de Navidad 2025",
+        service_date: exampleDate.toISOString(),
+        location: "Templo Principal",
+        leader: "TODOS los integrantes",
+        special_activity: "Presentación especial del coro navideño",
+        description: "Se acerca nuestro concierto navideño. ¡Prepárense para una noche llena de alabanza!"
+      };
+
+      const message = `🎉 Próximo Evento Especial:\n\n📅 ${exampleEvent.title}\n🗓️ ${formattedDate}\n📍 ${exampleEvent.location}\n👥 Participación: ${exampleEvent.leader}\n🎯 ${exampleEvent.special_activity}`;
+
       setCurrentContent({
         type: 'event',
-        event: {
-          title: "Concierto de Navidad 2025",
-          description: "Se acerca nuestro concierto navideño. ¡Prepárense para una noche llena de alabanza!",
-          service_date: "2025-12-20T19:00:00",
-          location: "Templo Principal",
-          leader: "TODOS los integrantes",
-          special_activity: "Presentación especial del coro navideño"
-        },
-        formattedDate: "sábado, 20 de diciembre de 2025 • 19:00"
+        event: exampleEvent,
+        formattedDate: formattedDate
       });
       setShowEventOverlay(true);
       
       await testNotification('special_event', {
-        title: "🎊 Evento Especial - Concierto de Navidad",
-        message: `🎉 Próximo Evento Especial:\n\n📅 Concierto de Navidad 2025\n🗓️ sábado, 20 de diciembre de 2025 • 19:00\n📍 Templo Principal\n👥 Participación: TODOS los integrantes\n🎯 Presentación especial del coro navideño`,
+        title: `🎊 ${exampleEvent.title}`,
+        message: message,
         metadata: {
-          event_name: "Concierto de Navidad 2025",
-          event_date: "2025-12-20",
-          event_location: "Templo Principal",
-          event_participation: "TODOS los integrantes",
-          special_activity: "Presentación especial del coro navideño"
+          event_name: exampleEvent.title,
+          event_date: exampleEvent.service_date,
+          event_location: exampleEvent.location,
+          event_participation: exampleEvent.leader,
+          special_activity: exampleEvent.special_activity
         },
         priority: 3,
         category: 'events'
+      });
+
+      toast({
+        title: "Evento de ejemplo",
+        description: "No hay eventos reales próximos, mostrando ejemplo",
+        variant: "default",
       });
     }
   } catch (error: any) {
