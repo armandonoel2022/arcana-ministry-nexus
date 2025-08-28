@@ -253,143 +253,143 @@ const NotificationTestButton = () => {
   };
 
   const testDailyAdvice = async () => {  
-    setLoading(true);  
-    try {  
-      // Arrays de consejos del módulo de Recomendaciones  
-      const voiceTips = [  
-        {  
-          id: "voice-1",  
-          title: "Ejercicio de Respiración Diafragmática",  
-          description: "Acuéstate boca arriba, coloca un libro sobre tu abdomen y respira profundamente, haciendo que el libro suba y baje. Repite 10 veces.",  
-          why: "Fortalece el control del aire para notas sostenidas."  
-        },  
-        {  
-          id: "voice-2",  
-          title: "Vocalización en Escalas",  
-          description: "Canta 'Do-Re-Mi-Fa-Sol-Fa-Mi-Re-Do' en 3 tonalidades diferentes (empezando en C, D, E).",  
-          why: "Mejora tu rango y afinación."  
-        },  
-        {  
-          id: "voice-3",  
-          title: "Hidratación Profunda",  
-          description: "Té de jengibre con miel 30 minutos antes de cantar. Evita lácteos y café.",  
-          why: "Reduce la irritación de cuerdas vocales."  
-        },  
-        {  
-          id: "voice-4",  
-          title: "Ejercicio de Resonancia Nasal",  
-          description: "Canta 'Mmmmm' en una nota media, sintiendo la vibración en la nariz. Mantén 10 segundos, repite 5 veces.",  
-          why: "Mejora el tono brillante y la proyección."  
-        },  
-        {  
-          id: "voice-5",  
-          title: "Deslizamiento de Voz",  
-          description: "Desliza tu voz de la nota más grave a la más aguda que puedas (como un sirena), luego vuelve. 3 repeticiones.",  
-          why: "Flexibiliza las cuerdas vocales."  
-        }  
-      ];  
-    
-      const musicTips = [  
-        {  
-          id: "music-1",  
-          instrument: "guitarra",  
-          title: "Ejercicio de Cambios de Acordes",  
-          description: "Practica transiciones entre G, C, D y Em a 60 BPM durante 10 minutos.",  
-          why: "Mejora fluidez en alabanza contemporánea."  
-        },  
-        {  
-          id: "music-2",  
-          instrument: "batería",  
-          title: "Ritmo 6/8 con Metrónomo",  
-          description: "Toca un patrón básico de 6/8 a 80 BPM, enfocándote en el hi-hat.",  
-          why: "Esencial para himnos y baladas."  
-        },  
-        {  
-          id: "music-3",  
-          instrument: "bajo",  
-          title: "Walking Bass en C",  
-          description: "Crea una línea de bajo caminando entre C, E, G y A.",  
-          why: "Fortalece creatividad en interludios."  
-        },  
-        {  
-          id: "music-4",  
-          instrument: "teclado",  
-          title: "Acordes con Inversiones",  
-          description: "Practica C (Do), G/B (Sol/Si), Am (La menor) en secuencia, usando inversiones. 5 minutos.",  
-          why: "Suaviza transiciones en alabanza."  
-        }  
-      ];  
-    
-      const danceTips = [  
-        {  
-          id: "dance-1",  
-          style: "alabanza",  
-          title: "Flujo con Pañuelos",  
-          description: "Practica movimientos circulares con pañuelos en ambas manos al ritmo de 4/4.",  
-          why: "Añade expresión visual a la adoración."  
-        },  
-        {  
-          id: "dance-2",  
-          style: "intercesión",  
-          title: "Posturas de Quebrantamiento",  
-          description: "Combina arrodillarse, levantar manos y giros lentos en secuencia.",  
-          why: "Profundiza en la conexión espiritual."  
-        },  
-        {  
-          id: "dance-3",  
-          style: "festiva",  
-          title: "Saltos con Palmas Sincronizadas",  
-          description: "Salta en X mientras palmeas arriba y abajo (8 repeticiones).",  
-          why: "Energiza alabanza jubilosa."  
-        }  
-      ];  
-    
-      // Combinar todos los consejos en un solo array  
-      const allTips = [  
-        ...voiceTips.map(tip => ({ ...tip, type: 'voice', category: 'Técnica Vocal' })),  
-        ...musicTips.map(tip => ({ ...tip, type: 'music', category: tip.instrument || 'Música' })),  
-        ...danceTips.map(tip => ({ ...tip, type: 'dance', category: tip.style || 'Danza' }))  
-      ];  
-        
-      // Seleccionar uno aleatorio  
-      const randomTip = allTips[Math.floor(Math.random() * allTips.length)];  
-    
-      // Crear mensaje formateado  
-      const message = `💡 Consejo del Día para ${randomTip.category}:\n\n📝 ${randomTip.title}\n🎯 ${randomTip.description}\n✨ Objetivo: ${randomTip.why}`;  
-    
-      setCurrentContent({  
-        type: 'advice',  
-        advice: {  
-          title: randomTip.title,  
-          content: randomTip.description,  
-          category: randomTip.category,  
-          why: randomTip.why  
-        }  
-      });  
-      setShowAdviceOverlay(true);  
-        
-      await testNotification('daily_advice', {  
-        title: "💡 Consejo del Día",  
-        message: message,  
-        metadata: {  
-          advice_category: randomTip.category,  
-          tip_type: randomTip.type,  
-          tip_of_day: true  
-        },  
-        priority: 1,  
-        category: 'training'  
-      });  
-    
-    } catch (error: any) {  
-      toast({  
-        title: "Error",  
-        description: `No se pudo cargar el consejo: ${error.message}`,  
-        variant: "destructive",  
-      });  
-    } finally {  
-      setLoading(false);  
-    }  
-  };
+  setLoading(true);  
+  try {  
+    // Arrays de consejos del módulo de Recomendaciones  
+    const voiceTips = [  
+      {  
+        id: "voice-1",  
+        title: "Ejercicio de Respiración Diafragmática",  
+        description: "Acuéstate boca arriba, coloca un libro sobre tu abdomen y respira profundamente, haciendo que el libro suba y baje. Repite 10 veces.",  
+        why: "Fortalece el control del aire para notas sostenidas."  
+      },  
+      {  
+        id: "voice-2",  
+        title: "Vocalización en Escalas",  
+        description: "Canta 'Do-Re-Mi-Fa-Sol-Fa-Mi-Re-Do' en 3 tonalidades diferentes (empezando en C, D, E).",  
+        why: "Mejora tu rango y afinación."  
+      },  
+      {  
+        id: "voice-3",  
+        title: "Hidratación Profunda",  
+        description: "Té de jengibre con miel 30 minutos antes de cantar. Evita lácteos y café.",  
+        why: "Reduce la irritación de cuerdas vocales."  
+      },  
+      {  
+        id: "voice-4",  
+        title: "Ejercicio de Resonancia Nasal",  
+        description: "Canta 'Mmmmm' en una nota media, sintiendo la vibración en la nariz. Mantén 10 segundos, repite 5 veces.",  
+        why: "Mejora el tono brillante y la proyección."  
+      },  
+      {  
+        id: "voice-5",  
+        title: "Deslizamiento de Voz",  
+        description: "Desliza tu voz de la nota más grave a la más aguda que puedas (como un sirena), luego vuelve. 3 repeticiones.",  
+        why: "Flexibiliza las cuerdas vocales."  
+      }  
+    ];  
+  
+    const musicTips = [  
+      {  
+        id: "music-1",  
+        instrument: "guitarra",  
+        title: "Ejercicio de Cambios de Acordes",  
+        description: "Practica transiciones entre G, C, D y Em a 60 BPM durante 10 minutos.",  
+        why: "Mejora fluidez en alabanza contemporánea."  
+      },  
+      {  
+        id: "music-2",  
+        instrument: "batería",  
+        title: "Ritmo 6/8 con Metrónomo",  
+        description: "Toca un patrón básico de 6/8 a 80 BPM, enfocándote en el hi-hat.",  
+        why: "Esencial para himnos y baladas."  
+      },  
+      {  
+        id: "music-3",  
+        instrument: "bajo",  
+        title: "Walking Bass en C",  
+        description: "Crea una línea de bajo caminando entre C, E, G y A.",  
+        why: "Fortalece creatividad en interludios."  
+      },  
+      {  
+        id: "music-4",  
+        instrument: "teclado",  
+        title: "Acordes con Inversiones",  
+        description: "Practica C (Do), G/B (Sol/Si), Am (La menor) en secuencia, usando inversiones. 5 minutos.",  
+        why: "Suaviza transiciones en alabanza."  
+      }  
+    ];  
+  
+    const danceTips = [  
+      {  
+        id: "dance-1",  
+        style: "alabanza",  
+        title: "Flujo con Pañuelos",  
+        description: "Practica movimientos circulares con pañuelos en ambas manos al ritmo de 4/4.",  
+        why: "Añade expresión visual a la adoración."  
+      },  
+      {  
+        id: "dance-2",  
+        style: "intercesión",  
+        title: "Posturas de Quebrantamiento",  
+        description: "Combina arrodillarse, levantar manos y giros lentos en secuencia.",  
+        why: "Profundiza en la conexión espiritual."  
+      },  
+      {  
+        id: "dance-3",  
+        style: "festiva",  
+        title: "Saltos con Palmas Sincronizadas",  
+        description: "Salta en X mientras palmeas arriba y abajo (8 repeticiones).",  
+        why: "Energiza alabanza jubilosa."  
+      }  
+    ];  
+  
+    // Combinar todos los consejos en un solo array  
+    const allTips = [  
+      ...voiceTips.map(tip => ({ ...tip, type: 'voice', category: 'Técnica Vocal' })),  
+      ...musicTips.map(tip => ({ ...tip, type: 'music', category: tip.instrument || 'Música' })),  
+      ...danceTips.map(tip => ({ ...tip, type: 'dance', category: tip.style || 'Danza' }))  
+    ];  
+      
+    // Seleccionar uno aleatorio  
+    const randomTip = allTips[Math.floor(Math.random() * allTips.length)];  
+  
+    // Crear mensaje formateado  
+    const message = `💡 Consejo del Día para ${randomTip.category}:\n\n📝 ${randomTip.title}\n🎯 ${randomTip.description}\n✨ Objetivo: ${randomTip.why}`;  
+  
+    setCurrentContent({  
+      type: 'advice',  
+      advice: {  
+        title: randomTip.title,  
+        content: randomTip.description,  
+        category: randomTip.category,  
+        why: randomTip.why  
+      }  
+    });  
+    setShowAdviceOverlay(true);  
+      
+    await testNotification('daily_advice', {  
+      title: "💡 Consejo del Día",  
+      message: message,  
+      metadata: {  
+        advice_category: randomTip.category,  
+        tip_type: randomTip.type,  
+        tip_of_day: true  
+      },  
+      priority: 1,  
+      category: 'training'  
+    });  
+  
+  } catch (error: any) {  
+    toast({  
+      title: "Error",  
+      description: `No se pudo cargar el consejo: ${error.message}`,  
+      variant: "destructive",  
+    });  
+  } finally {  
+    setLoading(false);  
+  }  
+};
 
   const testSpecialEvent = async () => {
   setLoading(true);
@@ -617,55 +617,57 @@ const NotificationTestButton = () => {
 
   // Componente para overlay de consejo
   // Componente para overlay de consejo  
-  const AdviceOverlay = ({ advice, onClose }) => {  
-    if (!advice) return null;  
-      
-    return (  
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">  
-        <div className="w-full max-w-md animate-in slide-in-from-bottom-4 fade-in duration-300">  
-          <Card className="border-amber-200 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 shadow-2xl border-2">  
-            <CardContent className="p-6">  
-              <div className="flex items-start justify-between mb-4">  
-                <h2 className="text-2xl font-bold text-amber-900">Consejo del Día</h2>  
-                <Button  
-                  variant="ghost"  
-                  size="sm"  
-                  onClick={onClose}  
-                  className="text-amber-600 hover:text-amber-800 hover:bg-amber-100"  
-                >  
-                  ✕  
-                </Button>  
+const AdviceOverlay = ({ advice, onClose }) => {  
+  if (!advice) return null;  
+    
+  return (  
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">  
+      <div className="w-full max-w-md animate-in slide-in-from-bottom-4 fade-in duration-300">  
+        <Card className="border-amber-200 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 shadow-2xl border-2">  
+          <CardContent className="p-6">  
+            <div className="flex items-start justify-between mb-4">  
+              <h2 className="text-2xl font-bold text-amber-900">Consejo del Día</h2>  
+              <Button  
+                variant="ghost"  
+                size="sm"  
+                onClick={onClose}  
+                className="text-amber-600 hover:text-amber-800 hover:bg-amber-100"  
+              >  
+                ✕  
+              </Button>  
+            </div>  
+              
+            <div className="bg-white rounded-lg p-6 shadow-md">  
+              <div className="text-center mb-4">  
+                <Lightbulb className="w-12 h-12 text-amber-500 mx-auto mb-3" />  
+                <h3 className="text-xl font-bold text-gray-900">{advice.title}</h3>  
               </div>  
                 
-              <div className="bg-white rounded-lg p-6 shadow-md">  
-                <div className="text-center mb-4">  
-                  <Lightbulb className="w-12 h-12 text-amber-500 mx-auto mb-3" />  
-                  <h3 className="text-xl font-bold text-gray-900">{advice.title}</h3>  
+              <div className="space-y-4">  
+                <div className="text-lg text-gray-800 text-center">  
+                  {advice.content}  
                 </div>  
                   
-                <div className="space-y-4">  
-                  <div className="text-lg text-gray-800 text-center">  
-                    {advice.content}  
+                {advice.why && (  
+                  <div className="bg-amber-50 p-3 rounded-lg border-l-4 border-amber-400">  
+                    <h4 className="font-semibold text-amber-700 mb-1">✨ Objetivo:</h4>  
+                    <p className="text-sm text-amber-600">{advice.why}</p>  
                   </div>  
-                    
-                  {advice.why && (  
-                    <div className="bg-amber-50 p-3 rounded-lg border-l-4 border-amber-400">  
-                      <h4 className="font-semibold text-amber-700 mb-1">✨ Objetivo:</h4>  
-                      <p className="text-sm text-amber-600">{advice.why}</p>  
-                    </div>  
-                  )}  
-                    
-                  <div className="text-sm text-gray-600 text-center">  
-                    Categoría: {advice.category || "General"}  
-                  </div>  
+                )}  
+                  
+                <div className="text-sm text-gray-600 text-center">  
+                  Categoría: {advice.category || "General"}  
                 </div>  
               </div>  
-            </CardContent>  
-          </Card>  
-        </div>  
+            </div>  
+          </CardContent>  
+        </Card>  
       </div>  
-    );  
-  };
+    </div>  
+  );  
+};
+
+  // Componente para overlay de evento
   // Componente para overlay de evento
 const EventOverlay = ({ event, onClose }) => {
   if (!event) return null;
