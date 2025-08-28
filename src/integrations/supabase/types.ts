@@ -859,6 +859,51 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_notifications: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          day_of_week: number
+          description: string | null
+          id: string
+          is_active: boolean
+          metadata: Json | null
+          name: string
+          notification_type: string
+          target_audience: string | null
+          time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          day_of_week: number
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          metadata?: Json | null
+          name: string
+          notification_type?: string
+          target_audience?: string | null
+          time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          day_of_week?: number
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          metadata?: Json | null
+          name?: string
+          notification_type?: string
+          target_audience?: string | null
+          time?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       service_songs: {
         Row: {
           created_at: string

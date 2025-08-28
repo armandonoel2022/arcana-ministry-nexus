@@ -172,7 +172,7 @@ export function AppSidebar() {
   const { setOpenMobile } = useSidebar()
   const location = useLocation()
   const unreadCount = useUnreadNotifications()
-  const { signOut, user } = useAuth()
+  const { signOut, user, userProfile } = useAuth()
 
   const handleLinkClick = () => {
     // Close sidebar on mobile when a link is clicked
@@ -235,6 +235,35 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
+
+        {/* Admin-only section for Scheduled Notifications */}
+        {userProfile?.role === 'administrator' && (
+          <SidebarGroup className="px-3 py-2 border-t border-gray-200">
+            <SidebarGroupLabel className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-2">
+              Administración Avanzada
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="space-y-1">
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    asChild 
+                    className="h-10 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition-all duration-200 data-[active=true]:bg-orange-500 data-[active=true]:text-white data-[active=true]:shadow-lg"
+                    data-active={location.pathname === '/scheduled-notifications'}
+                  >
+                    <Link 
+                      to="/scheduled-notifications" 
+                      className="flex items-center gap-3 px-3"
+                      onClick={handleLinkClick}
+                    >
+                      <Calendar className="w-4 h-4" />
+                      <span className="font-medium text-sm">Notificaciones Programadas</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
         
         {/* Logout Button */}
         <div className="mt-auto p-4 border-t border-gray-100">

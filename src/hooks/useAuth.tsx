@@ -8,6 +8,7 @@ interface AuthContextType {
   loading: boolean;
   needsPasswordChange: boolean;
   isApproved: boolean;
+  userProfile: any | null;
   signOut: () => Promise<void>;
 }
 
@@ -19,12 +20,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
+  const [userProfile, setUserProfile] = useState<any | null>(null);
 
   const checkUserProfile = async (userId: string) => {
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('needs_password_change, is_approved')
+        .select('*')
         .eq('id', userId)
         .single();
 
@@ -32,15 +34,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.error('Error fetching user profile:', error);
         setNeedsPasswordChange(false);
         setIsApproved(false);
+        setUserProfile(null);
         return;
       }
 
       setNeedsPasswordChange(profile?.needs_password_change ?? false);
       setIsApproved(profile?.is_approved ?? false);
+      setUserProfile(profile);
     } catch (error) {
       console.error('Error checking user profile:', error);
       setNeedsPasswordChange(false);
       setIsApproved(false);
+      setUserProfile(null);
     }
   };
 
@@ -60,6 +65,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } else {
           setNeedsPasswordChange(false);
           setIsApproved(false);
+          setUserProfile(null);
         }
       }
     );
@@ -86,6 +92,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setSession(null);
     setNeedsPasswordChange(false);
     setIsApproved(false);
+    setUserProfile(null);
   };
 
   const value = {
@@ -94,6 +101,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     loading,
     needsPasswordChange,
     isApproved,
+    userProfile,
     signOut,
   };
 

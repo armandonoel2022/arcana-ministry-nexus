@@ -30,6 +30,7 @@ import MusicalTraining from "./pages/MusicalTraining";
 import DanceTraining from "./pages/DanceTraining";
 import PersonalAssistant from "./pages/PersonalAssistant";
 import NotificationTesting from "./pages/NotificationTesting";
+import ScheduledNotifications from "./pages/ScheduledNotifications";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./hooks/useAuth";
@@ -107,6 +108,7 @@ function App() {
                             <Route path="/dance-training" element={<DanceTraining />} />
                             <Route path="/personal-assistant" element={<PersonalAssistant />} />
                             <Route path="/notification-testing" element={<NotificationTesting />} />
+                            <Route path="/scheduled-notifications" element={<ScheduledNotifications />} />
                             <Route path="/about" element={<AboutMinistry />} />
                             <Route path="/statutes" element={<Statutes />} />
                             <Route path="*" element={<NotFound />} />
