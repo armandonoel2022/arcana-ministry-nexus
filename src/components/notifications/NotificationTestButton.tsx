@@ -181,7 +181,7 @@ const NotificationTestButton = () => {
   const testDailyVerse = async () => {  
   setLoading(true);  
   try {  
-    // Obtener versículo del día usando la misma lógica que DailyVerse.tsx  
+    // Usar la misma lógica que DailyVerse.tsx para obtener el versículo  
     const today = new Date().toISOString().split('T')[0];  
       
     const { data: dailyVerse, error } = await supabase  
@@ -203,11 +203,9 @@ const NotificationTestButton = () => {
       throw error;  
     }  
   
-    let verseData;  
+    let verseData = dailyVerse;  
       
-    if (dailyVerse) {  
-      verseData = dailyVerse;  
-    } else {  
+    if (!verseData) {  
       // Si no hay versículo para hoy, crear uno aleatorio como en DailyVerse.tsx  
       const { data: verses, error: versesError } = await supabase  
         .from('bible_verses')  
@@ -243,10 +241,7 @@ const NotificationTestButton = () => {
     }  
   
     if (verseData && verseData.bible_verses) {  
-      // Crear mensaje formateado como en DailyVerse.tsx  
-      const verseText = `"${verseData.bible_verses.text}"\n\n${verseData.bible_verses.book} ${verseData.bible_verses.chapter}:${verseData.bible_verses.verse} (${verseData.bible_verses.version})`;  
-        
-      // Mostrar overlay como en el módulo espiritual  
+      // Mostrar overlay como en el módulo espiritual - NO enviar notificación  
       setCurrentContent({  
         type: 'verse',  
         verse: {  
@@ -257,8 +252,6 @@ const NotificationTestButton = () => {
         }  
       });  
       setShowVerseOverlay(true);  
-        
-      // NO enviar notificación - solo mostrar overlay como en el módulo original  
     } else {  
       toast({  
         title: "Error",  
