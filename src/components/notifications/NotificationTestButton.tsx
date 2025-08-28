@@ -139,69 +139,44 @@ const NotificationTestButton = () => {
   const testBirthday = async () => {  
   setLoading(true);  
   try {  
-    const today = new Date();  
-      
-    // Buscar cumpleaños de hoy o próximo  
+    // Buscar datos reales de cumpleaños de la tabla members  
     const { data: members, error } = await supabase  
       .from('members')  
       .select('*')  
       .eq('is_active', true)  
-      .not('fecha_nacimiento', 'is', null);  
+      .not('fecha_nacimiento', 'is', null)  
+      .limit(1);  
   
     if (error) throw error;  
   
-    // Lógica para encontrar cumpleaños (hoy o próximo)  
-    const todaysBirthdays = members?.filter(member => {  
-      if (!member.fecha_nacimiento) return false;  
-      const birthDate = new Date(member.fecha_nacimiento);  
-      return birthDate.getMonth() === today.getMonth() &&   
-             birthDate.getDate() === today.getDate();  
-    }) || [];  
-  
-    let selectedMember = todaysBirthdays[0];  
-      
-    if (!selectedMember) {  
-      // Buscar próximo cumpleaños  
-      const upcomingBirthdays = members?.sort((a, b) => {  
-        const aDate = new Date(a.fecha_nacimiento);  
-        const bDate = new Date(b.fecha_nacimiento);  
-        const aThisYear = new Date(today.getFullYear(), aDate.getMonth(), aDate.getDate());  
-        const bThisYear = new Date(today.getFullYear(), bDate.getMonth(), bDate.getDate());  
-          
-        if (aThisYear < today) aThisYear.setFullYear(today.getFullYear() + 1);  
-        if (bThisYear < today) bThisYear.setFullYear(today.getFullYear() + 1);  
-          
-        return aThisYear.getTime() - bThisYear.getTime();  
+    if (members && members.length > 0) {  
+      const member = members[0];  
+      setCurrentContent({  
+        type: 'birthday',  
+        member: {  
+          id: member.id,  
+          nombres: member.nombres || 'Usuario',  
+          apellidos: member.apellidos || 'Ejemplo',  
+          photo_url: member.photo_url,  
+          cargo: member.cargo || 'corista'  
+        }  
       });  
+      setShowBirthdayOverlay(true);  
         
-      selectedMember = upcomingBirthdays?.[0];  
-    }  
-  
-    if (!selectedMember) {  
-      toast({  
-        title: "No hay cumpleaños",  
-        description: "No se encontraron cumpleaños próximos",  
-        variant: "default",  
+      // También crear la notificación en BD  
+      await testNotification('birthday', {  
+        title: "🎉 ¡Feliz Cumpleaños! 🎂",  
+        message: `¡Hoy está de cumpleaños ${member.nombres} ${member.apellidos}!`,  
+        metadata: {  
+          birthday_member_name: `${member.nombres} ${member.apellidos}`,  
+          birthday_member_photo: member.photo_url,  
+          birthday_date: new Date().toISOString(),  
+          is_birthday_person: false  
+        },  
+        priority: 3,  
+        category: 'birthday'  
       });  
-      return;  
     }  
-  
-    // CAMBIO CLAVE: usar 'birthday_daily' en lugar de 'birthday'  
-    await testNotification('birthday_daily', {  
-      title: `🎉 ¡Feliz Cumpleaños ${selectedMember.nombres}!`,  
-      message: `¡Hoy está de cumpleaños ${selectedMember.nombres} ${selectedMember.apellidos}! Recuerda ir a la sala de chat general y dedicarle un mensaje de felicitación.`,  
-      metadata: {  
-        birthday_member_name: `${selectedMember.nombres} ${selectedMember.apellidos}`,  
-        birthday_member_photo: selectedMember.photo_url,  
-        birthday_date: new Date().toISOString().split('T')[0],  
-        show_confetti: true,  
-        play_birthday_sound: true,  
-        is_birthday_person: todaysBirthdays.length > 0  
-      },  
-      priority: 3,  
-      category: 'birthday'  
-    });  
-  
   } catch (error: any) {  
     toast({  
       title: "Error",  
