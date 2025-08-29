@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -12,16 +12,21 @@ export function useBiometricAuth() {
   const [isSupported, setIsSupported] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Check if WebAuthn is supported
+  // Check if WebAuthn is supported - run once on mount
   const checkSupport = useCallback(() => {
     const supported = !!(window.PublicKeyCredential && navigator.credentials);
     setIsSupported(supported);
     return supported;
   }, []);
 
+  // Initialize support check on mount
+  useEffect(() => {
+    checkSupport();
+  }, [checkSupport]);
+
   // Register biometric credential
   const registerBiometric = useCallback(async (userEmail: string, userId: string) => {
-    if (!checkSupport()) {
+    if (!isSupported) { // Use the state value instead of calling checkSupport()
       toast.error('La autenticación biométrica no es compatible con este navegador');
       return false;
     }
@@ -93,11 +98,11 @@ export function useBiometricAuth() {
     } finally {
       setIsLoading(false);
     }
-  }, [checkSupport]);
+  }, [isSupported]); // Updated dependency
 
   // Authenticate with biometric
   const authenticateBiometric = useCallback(async (userEmail: string) => {
-    if (!checkSupport()) {
+    if (!isSupported) { // Use the state value instead of calling checkSupport()
       toast.error('La autenticación biométrica no es compatible con este navegador');
       return false;
     }
@@ -159,7 +164,7 @@ export function useBiometricAuth() {
     } finally {
       setIsLoading(false);
     }
-  }, [checkSupport]);
+  }, [isSupported]); // Updated dependency
 
   // Check if user has biometric setup - memoized to prevent infinite re-renders
   const hasBiometric = useCallback((userEmail: string) => {
@@ -167,7 +172,7 @@ export function useBiometricAuth() {
   }, []);
 
   return {
-    isSupported: checkSupport(),
+    isSupported, // Return the state value, not the function call!
     isLoading,
     registerBiometric,
     authenticateBiometric,
