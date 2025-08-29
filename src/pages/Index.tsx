@@ -18,6 +18,7 @@ import {
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import BirthdayNotificationBanner from "@/components/notifications/BirthdayNotificationBanner";
+import { BiometricSetup } from "@/components/BiometricSetup";
 
 const Index = () => {
   const [memberCount, setMemberCount] = useState<number>(0);
@@ -211,6 +212,11 @@ const Index = () => {
               );
             })}
           </div>
+        </div>
+
+        {/* Biometric Setup Section */}
+        <div className="max-w-2xl mx-auto mt-8">
+          <BiometricSetup />
         </div>
 
         {/* Statistics */}

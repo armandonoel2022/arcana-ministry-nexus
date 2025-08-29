@@ -34,6 +34,7 @@ import ScheduledNotifications from "./pages/ScheduledNotifications";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./hooks/useAuth";
+import { ThemeProvider } from "./hooks/useTheme";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import NotificationOverlay from "./components/notifications/NotificationOverlay";
 import ServiceNotificationOverlay from "./components/notifications/ServiceNotificationOverlay";
@@ -64,13 +65,14 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <NotificationOverlay />
-          <ServiceNotificationOverlay />
-          <BrowserRouter>
+      <ThemeProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <NotificationOverlay />
+            <ServiceNotificationOverlay />
+            <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/*" element={
@@ -120,9 +122,10 @@ function App() {
                 </ProtectedRoute>
               } />
             </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Music, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { BiometricAuthSection } from '@/components/BiometricAuthSection';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -220,6 +221,9 @@ const Auth = () => {
                 >
                   {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                 </Button>
+
+                {/* Biometric Authentication Section */}
+                <BiometricAuthSection userEmail={email} />
               </form>
             </TabsContent>
 
@@ -297,6 +301,13 @@ const Auth = () => {
                 >
                   {isLoading ? 'Creando cuenta...' : 'Solicitar Registro'}
                 </Button>
+
+                {/* Biometric Setup Option for New Users */}
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground">
+                    Después del registro podrás configurar autenticación biométrica para mayor seguridad
+                  </p>
+                </div>
               </form>
             </TabsContent>
           </Tabs>

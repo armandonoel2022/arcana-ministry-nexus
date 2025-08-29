@@ -38,6 +38,7 @@ import { Link, useLocation } from "react-router-dom"
 import { useUnreadNotifications } from "@/hooks/useUnreadNotifications"
 import { useAuth } from "@/hooks/useAuth"
 import { Button } from "@/components/ui/button"
+import { ThemeSelector } from "@/components/ThemeSelector"
 
 // Menu items organized by categories
 const menuCategories = [
@@ -270,8 +271,9 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
         
-        {/* Logout Button */}
-        <div className="mt-auto p-4 border-t border-gray-100">
+        {/* Theme Selector and Logout Button */}
+        <div className="mt-auto p-4 border-t border-gray-100 space-y-2">
+          <ThemeSelector />
           <Button
             onClick={signOut}
             variant="ghost"
