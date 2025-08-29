@@ -161,7 +161,7 @@ export function useBiometricAuth() {
     }
   }, [checkSupport]);
 
-  // Check if user has biometric setup
+  // Check if user has biometric setup - memoized to prevent infinite re-renders
   const hasBiometric = useCallback((userEmail: string) => {
     return !!localStorage.getItem(`biometric_${userEmail}`);
   }, []);

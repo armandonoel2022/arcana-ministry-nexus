@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Fingerprint, Scan, ShieldCheck } from 'lucide-react';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface BiometricAuthSectionProps {
@@ -14,11 +13,13 @@ export function BiometricAuthSection({ userEmail }: BiometricAuthSectionProps) {
   const { isSupported, isLoading, authenticateBiometric, hasBiometric } = useBiometricAuth();
   const [hasSetup, setHasSetup] = useState(false);
 
+  // Fixed the dependency issue to prevent infinite re-renders
   useEffect(() => {
     if (userEmail) {
-      setHasSetup(hasBiometric(userEmail));
+      const setupStatus = hasBiometric(userEmail);
+      setHasSetup(setupStatus);
     }
-  }, [userEmail, hasBiometric]);
+  }, [userEmail]); // Removed hasBiometric from dependencies
 
   const handleBiometricAuth = async () => {
     if (!userEmail) {
