@@ -209,8 +209,8 @@ const ServiceNotificationOverlay = () => {
 
       if (data && data.length > 0) {
         // For each service, get the group members with their profiles and selected songs
-        const servicesWithMembers = await Promise.all(
-          data.map(async (service) => {
+        const servicesWithMembers = await Promise.all(  
+          data.map(async (service) => {  
             let members: any[] = [];
             let selectedSongs: any[] = [];
 
@@ -260,12 +260,16 @@ const ServiceNotificationOverlay = () => {
               }));
             }
 
-            return { 
-              ...service, 
-              group_members: members,
-              selected_songs: selectedSongs
-            };
-          })
+            return {   
+              ...service,   
+              group_members: members,  
+              selected_songs: selectedSongs,  
+              // Corregir el tipo de worship_groups  
+              worship_groups: Array.isArray(service.worship_groups) && service.worship_groups.length > 0   
+                ? service.worship_groups[0]   
+                : null  
+            };  
+          })  
         );
 
         setServices(servicesWithMembers as WeekendService[]);
