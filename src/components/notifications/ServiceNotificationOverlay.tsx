@@ -489,26 +489,26 @@ const ServiceNotificationOverlay = () => {
                         {/* Voices Column */}
                         <div>
                           {responsibleVoices.length > 0 && (
-                            <div className="bg-purple-50 rounded-lg p-4">
-                              <div className="text-sm font-semibold text-purple-800 mb-3">Responsables de Voces</div>
-                              <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-blue-50 rounded-lg p-4 h-full">
+                              <div className="text-sm font-semibold text-blue-800 mb-3">Responsables de Voces</div>
+                              <div className="grid grid-cols-1 gap-3">
                                 {responsibleVoices.slice(0, 6).map((member) => (
-                                  <div key={member.id} className="flex items-center gap-2">
-                                    <Avatar className="w-10 h-10 border-2 border-purple-200">
+                                  <div key={member.id} className="flex items-center gap-3">
+                                    <Avatar className="w-12 h-12 border-2 border-blue-200">
                                       <AvatarImage
                                         src={member.profiles?.photo_url}
                                         alt={member.profiles?.full_name}
                                         className="object-cover"
                                       />
-                                      <AvatarFallback className="bg-gradient-to-r from-purple-400 to-pink-400 text-white text-xs font-bold">
+                                      <AvatarFallback className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-bold">
                                         {getInitials(member.profiles?.full_name || '')}
                                       </AvatarFallback>
                                     </Avatar>
                                     <div className="min-w-0 flex-1">
-                                      <div className="text-sm font-medium text-gray-900 truncate">
-                                        {member.profiles?.full_name.split(' ')[0]}
+                                      <div className="text-sm font-medium text-gray-900">
+                                        {member.profiles?.full_name}
                                       </div>
-                                      <div className="text-xs text-purple-600 truncate">
+                                      <div className="text-xs text-blue-600">
                                         {member.instrument}
                                       </div>
                                     </div>
@@ -516,7 +516,7 @@ const ServiceNotificationOverlay = () => {
                                 ))}
                               </div>
                               {responsibleVoices.length > 6 && (
-                                <div className="text-xs text-purple-700 font-medium mt-2 text-center">
+                                <div className="text-xs text-blue-700 font-medium mt-2 text-center">
                                   +{responsibleVoices.length - 6} integrantes más
                                 </div>
                               )}
