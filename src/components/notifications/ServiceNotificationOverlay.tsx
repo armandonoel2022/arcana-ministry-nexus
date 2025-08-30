@@ -48,6 +48,10 @@ const ServiceNotificationOverlay = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Limpiar localStorage al montar el componente para evitar conflictos
+    localStorage.removeItem('serviceNotificationDismissed');
+    localStorage.removeItem('serviceNotificationLastShown');
+    
     // Check if user has already interacted with the notification
     const hasInteracted = localStorage.getItem('serviceNotificationDismissed');
     const lastShownDate = localStorage.getItem('serviceNotificationLastShown');
@@ -89,7 +93,7 @@ const ServiceNotificationOverlay = () => {
       const formattedServices = metadata.services.map((service: any) => ({
         id: service.id || Date.now().toString(),
         service_date: metadata.service_date,
-        title: `Servicio ${service.time}`,
+        title: `${service.time === '8:00 a.m.' ? 'Primer Servicio - 8:00 AM' : 'Segundo Servicio - 10:45 AM'}`,
         leader: service.director?.name || service.director,
         service_type: 'regular',
         location: 'Templo Principal',
@@ -100,8 +104,9 @@ const ServiceNotificationOverlay = () => {
           color_theme: '#3B82F6'
         },
         group_members: [
+          // Director
           ...(service.director ? [{
-            id: 'director-' + service.id,
+            id: 'director-' + service.time,
             user_id: 'director',
             instrument: 'Director',
             is_leader: true,
@@ -111,10 +116,15 @@ const ServiceNotificationOverlay = () => {
               photo_url: service.director?.photo
             }
           }] : []),
+          // Responsables de voces
           ...(service.voices || []).map((voice: any, index: number) => ({
-            id: 'voice-' + index,
+            id: 'voice-' + service.time + '-' + index,
             user_id: 'voice-' + index,
-            instrument: 'Soprano', // Default voice type
+            instrument: index === 0 ? 'Soprano - Micrófono #1' : 
+                       index === 1 ? 'Contralto - Micrófono #2' : 
+                       index === 2 ? 'Tenor - Micrófono #3' : 
+                       index === 3 ? 'Contralto - Micrófono #4' : 
+                       `Voz ${index + 1} - Micrófono #${index + 1}`,
             is_leader: false,
             profiles: {
               id: 'voice-' + index,
@@ -123,12 +133,21 @@ const ServiceNotificationOverlay = () => {
             }
           }))
         ],
-        selected_songs: metadata.songs || []
+        selected_songs: (service.songs || []).map((song: any) => ({
+          id: song.id,
+          title: song.title,
+          artist: song.artist,
+          song_order: song.song_order
+        }))
       }));
       
       setServices(formattedServices);
       setIsVisible(true);
       setTimeout(() => setIsAnimating(true), 100);
+      
+      // Limpiar localStorage para asegurar que se muestre
+      localStorage.removeItem('serviceNotificationDismissed');
+      localStorage.removeItem('serviceNotificationLastShown');
     }
   };
 
