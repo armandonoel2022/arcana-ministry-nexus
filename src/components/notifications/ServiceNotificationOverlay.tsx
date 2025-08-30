@@ -5,245 +5,48 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { X, Calendar, Clock, Users, Save, Music } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { format, addDays, startOfWeek, endOfWeek, getDay } from "date-fns";
+import { format, addDays, startOfWeek, endOfWeek, getDay, isWithinInterval } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
-import html2canvas from 'html2canvas';  
-import { useToast } from '@/hooks/use-toast';  
-import { Download } from "lucide-react";  
 
-
-interface Profile {  
-  id: string;  
-  full_name: string;  
-  photo_url?: string;  
-}  
-  
-interface GroupMember {  
-  id: string;  
-  user_id: string;  
-  instrument: string;  
-  is_leader: boolean;  
-  profiles: Profile;  
-}  
-  
-interface Song {  
-  id: string;  
-  title: string;  
-  artist: string;  
-  song_order: number;  
-}  
-  
-interface WorshipGroup {  
-  id: string;  
-  name: string;  
-  color_theme: string;  
-}  
-  
-interface Service {  
-  id: string;  
-  service_date: string;  
-  title: string;  
-  leader: string;  
-  service_type: string;  
-  location: string;  
-  special_activity: string;  
-  worship_groups: WorshipGroup;  
-  group_members: GroupMember[];  
-  selected_songs: Song[];  
-  offering_song: { title: string; artist: string };  
+interface WeekendService {
+  id: string;
+  service_date: string;
+  title: string;
+  leader: string;
+  service_type: string;
+  location: string;
+  special_activity: string | null;
+  assigned_group_id?: string;
+  worship_groups?: {
+    id: string;
+    name: string;
+    color_theme: string;
+  };
+  group_members: {
+    id: string;
+    user_id: string;
+    instrument: string;
+    is_leader: boolean;
+    profiles: {
+      id: string;
+      full_name: string;
+      photo_url?: string;
+    };
+  }[];
+  selected_songs?: {
+    id: string;
+    title: string;
+    artist: string;
+    song_order: number;
+  }[];
 }
 
-const cardRef1 = useRef<HTMLDivElement>(null);  
-const cardRef2 = useRef<HTMLDivElement>(null);  
-const { toast } = useToast();  
-  
-const downloadServiceCard = async (serviceId: string, ref: React.RefObject<HTMLDivElement>) => {  
-  if (!ref.current) return;  
-  
-  try {  
-    const canvas = await html2canvas(ref.current, {  
-      scale: 2,  
-      useCORS: true,  
-      allowTaint: false,  
-      backgroundColor: '#f8fafc',  
-      logging: false,  
-    });  
-  
-    const service = services.find(s => s.id === serviceId);  
-    if (!service) return;  
-  
-    const link = document.createElement('a');  
-    link.download = `servicio-${service.title.toLowerCase().replace(/\s+/g, '-')}.png`;  
-    link.href = canvas.toDataURL('image/png', 1.0);  
-    document.body.appendChild(link);  
-    link.click();  
-    document.body.removeChild(link);  
-  
-    toast({  
-      title: "¡Descarga exitosa!",  
-      description: `La tarjeta del ${service.title} se ha descargado correctamente`,  
-    });  
-  } catch (error) {  
-    console.error('Error generating image:', error);  
-    toast({  
-      title: "Error",  
-      description: "No se pudo generar la imagen. Inténtalo de nuevo.",  
-      variant: "destructive",  
-    });  
-  }  
-};
-
-const ServiceCard = React.forwardRef<HTMLDivElement, { service: Service }>(({ service }, ref) => {  
-  const directorMember = service.group_members.find(m => m.is_leader);  
-  const responsibleVoices = service.group_members.filter(m => !m.is_leader);  
-  
-  return (  
-    <div   
-      ref={ref}  
-      data-service-card={service.id}  
-      className="bg-white/90 rounded-xl p-6 border border-blue-200 shadow-lg mx-auto"  
-      style={{ maxWidth: '600px' }}  
-    >  
-      {/* Service Header */}  
-      <div className="flex items-center gap-3 mb-6">  
-        <div className="w-3 h-8 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full"></div>  
-        <div>  
-          <h3 className="text-xl font-bold text-blue-900">{service.title}</h3>  
-          <div className="flex items-center gap-2 mt-1">  
-            <span className="text-sm text-blue-700 font-medium">{service.worship_groups.name}</span>  
-            <span className="text-sm text-gray-500">•</span>  
-            <span className="text-sm text-gray-600">{service.special_activity}</span>  
-          </div>  
-        </div>  
-      </div>  
-  
-      <div className="grid md:grid-cols-2 gap-6">  
-        {/* Left Column - Songs and Director */}  
-        <div className="space-y-4">  
-          {/* Director */}  
-          <div className="bg-blue-50 rounded-lg p-4">  
-            <div className="text-sm font-semibold text-blue-800 mb-3">Director/a de Alabanza</div>  
-            <div className="flex items-center gap-3">  
-              <div className="w-16 h-16 rounded-full border-3 border-blue-300 shadow-lg overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600">  
-                <img  
-                  src={directorMember?.profiles?.photo_url}  
-                  alt={service.leader}  
-                  className="w-full h-full object-cover"  
-                  onError={(e) => {  
-                    const target = e.target as HTMLImageElement;  
-                    target.style.display = 'none';  
-                    const fallback = target.nextElementSibling as HTMLElement;  
-                    if (fallback) fallback.style.display = 'flex';  
-                  }}  
-                />  
-                <div className="w-full h-full hidden items-center justify-center text-white text-lg font-bold">  
-                  {service.leader.split(' ').map(n => n[0]).join('').toUpperCase()}  
-                </div>  
-              </div>  
-              <div>  
-                <div className="font-semibold text-gray-900">{service.leader}</div>  
-                <div className="text-sm text-blue-600">Líder del Servicio</div>  
-              </div>  
-            </div>  
-          </div>  
-  
-          {/* Selected Songs */}  
-          {service.selected_songs && service.selected_songs.length > 0 && (  
-            <div className="bg-green-50 rounded-lg p-4">  
-              <div className="flex items-center gap-2 mb-3">  
-                <div className="w-4 h-4 text-green-600">🎵</div>  
-                <div className="text-sm font-semibold text-green-800">Canciones Seleccionadas</div>  
-              </div>  
-              <div className="space-y-2">  
-                {service.selected_songs.slice(0, 3).map((song, index) => (  
-                  <div key={song.id} className="flex items-center gap-2 text-sm">  
-                    <span className="w-5 h-5 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold">  
-                      {index + 1}  
-                    </span>  
-                    <div>  
-                      <div className="font-medium text-gray-900">{song.title}</div>  
-                      {song.artist && (  
-                        <div className="text-xs text-gray-600">{song.artist}</div>  
-                      )}  
-                    </div>  
-                  </div>  
-                ))}  
-                {service.selected_songs.length > 3 && (  
-                  <div className="text-xs text-green-700 font-medium">  
-                    +{service.selected_songs.length - 3} canciones más  
-                  </div>  
-                )}  
-              </div>  
-            </div>  
-          )}  
-  
-          {/* Offering Song */}  
-          {service.offering_song && (  
-            <div className="bg-amber-50 rounded-lg p-4">  
-              <div className="flex items-center gap-2 mb-3">  
-                <div className="w-4 h-4 text-amber-600">🎵</div>  
-                <div className="text-sm font-semibold text-amber-800">Canción de Ofrendas</div>  
-              </div>  
-              <div className="flex items-center gap-2 text-sm">  
-                <span className="w-5 h-5 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">  
-                  $  
-                </span>  
-                <div>  
-                  <div className="font-medium text-gray-900">{service.offering_song.title}</div>  
-                  {service.offering_song.artist && (  
-                    <div className="text-xs text-gray-600">{service.offering_song.artist}</div>  
-                  )}  
-                </div>  
-              </div>  
-            </div>  
-          )}  
-        </div>  
-  
-        {/* Right Column - Voices */}  
-        <div>  
-          {responsibleVoices.length > 0 && (  
-            <div className="bg-blue-50 rounded-lg p-4 h-full">  
-              <div className="text-sm font-semibold text-blue-800 mb-3">Responsables de Voces</div>  
-              <div className="grid grid-cols-1 gap-3">  
-                {responsibleVoices.slice(0, 6).map((member) => (  
-                  <div key={member.id} className="flex items-center gap-3">  
-                    <div className="w-12 h-12 rounded-full border-2 border-blue-200 overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600">  
-                      <img  
-                        src={member.profiles?.photo_url}  
-                        alt={member.profiles?.full_name}  
-                        className="w-full h-full object-cover"  
-                        onError={(e) => {  
-                          const target = e.target as HTMLImageElement;  
-                          target.style.display = 'none';  
-                          const fallback = target.nextElementSibling as HTMLElement;  
-                          if (fallback) fallback.style.display = 'flex';  
-                        }}  
-                      />  
-                      <div className="w-full h-full hidden items-center justify-center text-white text-sm font-bold">  
-                        {member.profiles?.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}  
-                      </div>  
-                    </div>  
-                    <div className="min-w-0 flex-1">  
-                      <div className="text-sm font-medium text-gray-900">  
-                        {member.profiles?.full_name}  
-                      </div>  
-                      <div className="text-xs text-blue-600">  
-                        {member.instrument}  
-                      </div>  
-                    </div>  
-                  </div>  
-                ))}  
-              </div>  
-            </div>  
-          )}  
-        </div>  
-      </div>  
-    </div>  
-  );  
-});  
-  
-ServiceCard.displayName = 'ServiceCard';
+interface ServiceProgramNotification {
+  service_date: string;
+  services: any[];
+  special_event?: string;
+}
 
 const ServiceNotificationOverlay = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -292,21 +95,21 @@ const ServiceNotificationOverlay = () => {
     };
   }, []);
 
-  const showServiceProgramOverlay = (metadata: any) => {
-    if (metadata.services) {
+  const showServiceProgramOverlay = (metadata: ServiceProgramNotification) => {
+    if (metadata.services && Array.isArray(metadata.services)) {
       const formattedServices = metadata.services.map((service: any) => ({
         id: service.id || Date.now().toString(),
         service_date: metadata.service_date,
         title: `${service.time === '8:00 a.m.' ? 'Primer Servicio - 8:00 AM' : 'Segundo Servicio - 10:45 AM'}`,
-        leader: service.director?.name || service.director,
+        leader: service.director?.name || service.director || 'Por asignar',
         service_type: 'regular',
         location: 'Templo Principal',
-        special_activity: metadata.special_event,
-        worship_groups: {
+        special_activity: metadata.special_event || null,
+        worship_groups: service.group ? {
           id: '1',
           name: service.group,
           color_theme: '#3B82F6'
-        },
+        } : undefined,
         group_members: [
           // Director
           ...(service.director ? [{
@@ -321,7 +124,7 @@ const ServiceNotificationOverlay = () => {
             }
           }] : []),
           // Responsables de voces
-          ...(service.voices || []).map((voice: any, index: number) => ({
+          ...((service.voices || []).map((voice: any, index: number) => ({
             id: 'voice-' + service.time + '-' + index,
             user_id: 'voice-' + index,
             instrument: index === 0 ? 'Soprano - Micrófono #1' : 
@@ -332,16 +135,16 @@ const ServiceNotificationOverlay = () => {
             is_leader: false,
             profiles: {
               id: 'voice-' + index,
-              full_name: voice.name,
+              full_name: voice.name || 'Sin nombre',
               photo_url: voice.photo
             }
-          }))
+          })))
         ],
         selected_songs: (service.songs || []).map((song: any) => ({
-          id: song.id,
-          title: song.title,
-          artist: song.artist,
-          song_order: song.song_order
+          id: song.id || `song-${Date.now()}-${Math.random()}`,
+          title: song.title || 'Sin título',
+          artist: song.artist || 'Artista desconocido',
+          song_order: song.song_order || 0
         }))
       }));
       
@@ -360,32 +163,21 @@ const ServiceNotificationOverlay = () => {
     const currentDay = getDay(now); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     const currentHour = now.getHours();
     
-    let weekStart, weekEnd;
-    
-    // Si ya pasaron las 2 PM del día actual y es después del miércoles, mostrar el próximo fin de semana
-    if ((currentDay > 3) || (currentDay === 3 && currentHour >= 14)) {
-      // Si estamos en jueves después de las 2 PM o después, mostrar el próximo fin de semana
-      const daysToAdd = currentDay === 0 ? 5 : (12 - currentDay) % 7;
-      weekStart = new Date(now);
-      weekStart.setDate(now.getDate() + daysToAdd);
-      weekStart.setHours(0, 0, 0, 0);
-      
-      weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 2);
-      weekEnd.setHours(23, 59, 59, 999);
-    } else {
-      // Mostrar el fin de semana actual/próximo
-      const daysUntilFriday = (5 - currentDay + 7) % 7;
-      weekStart = new Date(now);
-      weekStart.setDate(now.getDate() + daysUntilFriday);
-      weekStart.setHours(0, 0, 0, 0);
-      
-      weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 2);
-      weekEnd.setHours(23, 59, 59, 999);
+    // Find next Friday (5)
+    let daysUntilFriday = (5 - currentDay + 7) % 7;
+    if (daysUntilFriday === 0 && currentHour >= 14) {
+      daysUntilFriday = 7; // If it's Friday after 2 PM, show next week's weekend
     }
     
-    return { start: weekStart, end: weekEnd };
+    const friday = new Date(now);
+    friday.setDate(now.getDate() + daysUntilFriday);
+    friday.setHours(0, 0, 0, 0);
+    
+    const sunday = new Date(friday);
+    sunday.setDate(friday.getDate() + 2);
+    sunday.setHours(23, 59, 59, 999);
+    
+    return { start: friday, end: sunday };
   };
 
   const fetchWeekendServices = async () => {
@@ -395,7 +187,14 @@ const ServiceNotificationOverlay = () => {
       const { data, error } = await supabase
         .from('services')
         .select(`
-          *,
+          id,
+          service_date,
+          title,
+          leader,
+          service_type,
+          location,
+          special_activity,
+          assigned_group_id,
           worship_groups (
             id,
             name,
@@ -469,15 +268,16 @@ const ServiceNotificationOverlay = () => {
           })
         );
 
-        setServices(servicesWithMembers);
+        setServices(servicesWithMembers as WeekendService[]);
         
         // Show the overlay with animation
         setIsVisible(true);
         setTimeout(() => setIsAnimating(true), 100);
+      } else {
+        setIsLoading(false);
       }
     } catch (error) {
       console.error('Error fetching weekend services:', error);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -495,6 +295,11 @@ const ServiceNotificationOverlay = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      if (services.length === 0) {
+        toast.error('No hay servicios para guardar');
+        return;
+      }
 
       const servicesList = services.map(service => {
         const time = getServiceTime(service.title);
@@ -543,29 +348,35 @@ const ServiceNotificationOverlay = () => {
   };
 
   const getServiceTime = (serviceTitle: string) => {
-    if (serviceTitle.toLowerCase().includes('primera') || serviceTitle.toLowerCase().includes('8:00')) {
+    if (serviceTitle.toLowerCase().includes('primera') || serviceTitle.toLowerCase().includes('8:00') || serviceTitle.toLowerCase().includes('primer')) {
       return '8:00 AM';
-    } else if (serviceTitle.toLowerCase().includes('segunda') || serviceTitle.toLowerCase().includes('10:45')) {
+    } else if (serviceTitle.toLowerCase().includes('segunda') || serviceTitle.toLowerCase().includes('10:45') || serviceTitle.toLowerCase().includes('segundo')) {
       return '10:45 AM';
     }
-    return '';
+    return serviceTitle;
   };
 
   const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+    if (!name) return 'NN';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
   const getResponsibleVoices = (members: WeekendService['group_members']) => {
     return members.filter(member => 
-      member.instrument.toLowerCase().includes('soprano') ||
-      member.instrument.toLowerCase().includes('alto') ||
-      member.instrument.toLowerCase().includes('tenor') ||
-      member.instrument.toLowerCase().includes('bajo') ||
-      member.instrument.toLowerCase().includes('voice')
+      member.instrument?.toLowerCase().includes('soprano') ||
+      member.instrument?.toLowerCase().includes('alto') ||
+      member.instrument?.toLowerCase().includes('tenor') ||
+      member.instrument?.toLowerCase().includes('bajo') ||
+      member.instrument?.toLowerCase().includes('voice') ||
+      member.instrument?.toLowerCase().includes('voz')
     );
   };
 
-  if (isLoading || !isVisible || services.length === 0) {
+  if (isLoading) {
+    return null;
+  }
+
+  if (!isVisible || services.length === 0) {
     return null;
   }
 
@@ -580,15 +391,14 @@ const ServiceNotificationOverlay = () => {
       >
         <Card className="border-blue-200 bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 shadow-2xl border-2">
           <CardContent className="p-6">
-            <div className="space-y-6">  
-                  {services.map((service, index) => (  
-                    <ServiceCard   
-                      key={service.id}   
-                      service={service}   
-                      ref={index === 0 ? cardRef1 : cardRef2}   
-                    />  
-                  ))}  
-                </div>
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                    <Calendar className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
                     <h2 className="text-2xl font-bold text-blue-900 mb-1">
                       Programa de Servicios
                     </h2>
@@ -645,9 +455,9 @@ const ServiceNotificationOverlay = () => {
                           <Badge 
                             className="text-sm px-3 py-1"
                             style={{ 
-                              backgroundColor: service.worship_groups.color_theme + '20',
+                              backgroundColor: `${service.worship_groups.color_theme}20`,
                               color: service.worship_groups.color_theme,
-                              borderColor: service.worship_groups.color_theme + '40'
+                              borderColor: `${service.worship_groups.color_theme}40`
                             }}
                           >
                             {service.worship_groups.name}
@@ -762,25 +572,23 @@ const ServiceNotificationOverlay = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">  
-              {services.map((service, index) => (  
-                <Button   
-                  key={service.id}  
-                  onClick={() => downloadServiceCard(service.id, index === 0 ? cardRef1 : cardRef2)}  
-                  className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"  
-                >  
-                  <Download className="w-4 h-4" />  
-                  Descargar {service.title}  
-                </Button>  
-              ))}  
-              <Button  
-                onClick={closeOverlay}  
-                variant="outline"  
-                className="border-blue-300 text-blue-700 hover:bg-blue-50"  
-              >  
-                ✕ Cerrar  
-              </Button>  
-            </div>
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <Button
+                  onClick={saveToNotifications}
+                  className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white flex items-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  Guardar en Notificaciones
+                </Button>
+                <Button
+                  onClick={closeOverlay}
+                  variant="outline"
+                  className="border-blue-300 text-blue-700 hover:bg-blue-50 flex items-center gap-2"
+                >
+                  <X className="w-4 h-4" />
+                  Cerrar
+                </Button>
+              </div>
 
               {/* Footer */}
               <div className="text-center pt-2">
