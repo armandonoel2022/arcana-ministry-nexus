@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Download, Video } from 'lucide-react';
 import html2canvas from 'html2canvas';
-import RecordRTC from 'recordrtc';
 import { useToast } from '@/hooks/use-toast';
 import ConfettiEffect from './ConfettiEffect';
 
@@ -69,61 +68,135 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
     try {
       setIsRecording(true);
       toast({
-        title: "Iniciando grabación...",
-        description: "Grabando video con confeti y sonido de cumpleaños",
+        title: "Creando video...",
+        description: "Generando video con animación de confeti",
       });
 
-      // Crear stream de captura de pantalla del elemento
-      const stream = await (navigator.mediaDevices as any).getDisplayMedia({
-        video: { mediaSource: 'screen' },
-        audio: true
+      // Crear canvas para el video
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        throw new Error('Canvas context not available');
+        
+      }
+
+      canvas.width = 600;
+      canvas.height = 900;
+
+      // Capturar la tarjeta como imagen base
+      const cardCanvas = await html2canvas(cardRef.current, {
+        scale: 1,
+        width: 600,
+        height: 900,
+        backgroundColor: '#f8fafc',
       });
 
-      // Reproducir sonido de cumpleaños
+      // Reproducir sonido
       playBirthdaySound();
 
-      // Activar confeti durante la grabación
-      setShowConfetti(true);
-
-      const recorder = new RecordRTC(stream, {
-        type: 'video',
-        mimeType: 'video/webm;codecs=vp9',
-        videoBitsPerSecond: 128000,
+      // Configurar grabación de video del canvas
+      const stream = canvas.captureStream(30); // 30 FPS
+      const recorder = new MediaRecorder(stream, {
+        mimeType: 'video/webm;codecs=vp9'
       });
 
-      recorder.startRecording();
+      const chunks: BlobPart[] = [];
+      recorder.ondataavailable = (event) => chunks.push(event.data);
+      
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `cumpleanos-${member.nombres.toLowerCase()}-${member.apellidos.toLowerCase()}.webm`;
+        link.click();
+        
+        URL.revokeObjectURL(url);
+        setIsRecording(false);
 
-      // Grabar por 6 segundos (tiempo suficiente para confeti y sonido)
-      setTimeout(() => {
-        recorder.stopRecording(() => {
-          const blob = recorder.getBlob();
-          const url = URL.createObjectURL(blob);
-          
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `cumpleanos-video-${member.nombres.toLowerCase()}-${member.apellidos.toLowerCase()}.webm`;
-          link.click();
-          
-          URL.revokeObjectURL(url);
-          stream.getTracks().forEach(track => track.stop());
-          setIsRecording(false);
-          setShowConfetti(false);
-
-          toast({
-            title: "¡Video descargado!",
-            description: "El video de cumpleaños se ha descargado correctamente",
-          });
-
-          onDownload?.();
+        toast({
+          title: "¡Video descargado!",
+          description: "El video de cumpleaños se ha descargado correctamente",
         });
-      }, 6000);
+
+        onDownload?.();
+      };
+
+      recorder.start();
+
+      // Animar confeti en el canvas
+      let frame = 0;
+      const totalFrames = 180; // 6 segundos a 30 FPS
+      const confettiParticles: Array<{
+        x: number;
+        y: number;
+        vx: number;
+        vy: number;
+        color: string;
+        rotation: number;
+        rotationSpeed: number;
+      }> = [];
+
+      // Inicializar partículas de confeti
+      const colors = ['#FFD700', '#FF69B4', '#00CED1', '#FF6347', '#32CD32', '#DA70D6'];
+      for (let i = 0; i < 50; i++) {
+        confettiParticles.push({
+          x: Math.random() * canvas.width,
+          y: -10,
+          vx: (Math.random() - 0.5) * 4,
+          vy: Math.random() * 3 + 2,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          rotationSpeed: (Math.random() - 0.5) * 10
+        });
+      }
+
+      const animate = () => {
+        // Limpiar canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Dibujar la tarjeta base
+        ctx.drawImage(cardCanvas, 0, 0, canvas.width, canvas.height);
+        
+        // Dibujar y actualizar confeti
+        confettiParticles.forEach(particle => {
+          ctx.save();
+          ctx.translate(particle.x, particle.y);
+          ctx.rotate(particle.rotation * Math.PI / 180);
+          ctx.fillStyle = particle.color;
+          ctx.fillRect(-3, -3, 6, 6);
+          ctx.restore();
+          
+          // Actualizar posición
+          particle.x += particle.vx;
+          particle.y += particle.vy;
+          particle.rotation += particle.rotationSpeed;
+          
+          // Resetear si sale de pantalla
+          if (particle.y > canvas.height) {
+            particle.y = -10;
+            particle.x = Math.random() * canvas.width;
+          }
+        });
+
+        frame++;
+        if (frame < totalFrames) {
+          requestAnimationFrame(animate);
+        } else {
+          recorder.stop();
+        }
+      };
+
+      animate();
 
     } catch (error) {
-      console.error('Error recording video:', error);
+      console.error('Error creating video:', error);
       setIsRecording(false);
       toast({
         title: "Error",
-        description: "No se pudo grabar el video. Usa la opción de imagen PNG.",
+        description: "No se pudo crear el video. Usa la opción de imagen PNG.",
         variant: "destructive",
       });
     }
