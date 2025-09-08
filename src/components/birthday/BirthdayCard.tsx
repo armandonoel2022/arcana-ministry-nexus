@@ -2,8 +2,9 @@ import React, { useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Download, Share } from 'lucide-react';
+import { Download, Video } from 'lucide-react';
 import html2canvas from 'html2canvas';
+import RecordRTC from 'recordrtc';
 import { useToast } from '@/hooks/use-toast';
 import ConfettiEffect from './ConfettiEffect';
 
@@ -23,12 +24,110 @@ interface BirthdayCardProps {
 const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const { toast } = useToast();
 
   // Mostrar confeti cuando se monta el componente
   React.useEffect(() => {
     setShowConfetti(true);
   }, []);
+
+  const playBirthdaySound = () => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const notes = [
+      { freq: 261.63, duration: 500 }, // C4 - Happy
+      { freq: 261.63, duration: 500 }, // C4 - Birth-
+      { freq: 293.66, duration: 1000 }, // D4 - day
+      { freq: 261.63, duration: 500 }, // C4 - to
+      { freq: 349.23, duration: 1000 }, // F4 - you
+      { freq: 329.63, duration: 2000 }, // E4 - (hold)
+    ];
+
+    let startTime = audioContext.currentTime;
+    
+    notes.forEach((note, index) => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.setValueAtTime(note.freq, startTime);
+      gainNode.gain.setValueAtTime(0.1, startTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + note.duration / 1000);
+      
+      oscillator.start(startTime);
+      oscillator.stop(startTime + note.duration / 1000);
+      
+      startTime += note.duration / 1000;
+    });
+  };
+
+  const downloadVideo = async () => {
+    if (!cardRef.current) return;
+
+    try {
+      setIsRecording(true);
+      toast({
+        title: "Iniciando grabación...",
+        description: "Grabando video con confeti y sonido de cumpleaños",
+      });
+
+      // Crear stream de captura de pantalla del elemento
+      const stream = await (navigator.mediaDevices as any).getDisplayMedia({
+        video: { mediaSource: 'screen' },
+        audio: true
+      });
+
+      // Reproducir sonido de cumpleaños
+      playBirthdaySound();
+
+      // Activar confeti durante la grabación
+      setShowConfetti(true);
+
+      const recorder = new RecordRTC(stream, {
+        type: 'video',
+        mimeType: 'video/webm;codecs=vp9',
+        videoBitsPerSecond: 128000,
+      });
+
+      recorder.startRecording();
+
+      // Grabar por 6 segundos (tiempo suficiente para confeti y sonido)
+      setTimeout(() => {
+        recorder.stopRecording(() => {
+          const blob = recorder.getBlob();
+          const url = URL.createObjectURL(blob);
+          
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `cumpleanos-video-${member.nombres.toLowerCase()}-${member.apellidos.toLowerCase()}.webm`;
+          link.click();
+          
+          URL.revokeObjectURL(url);
+          stream.getTracks().forEach(track => track.stop());
+          setIsRecording(false);
+          setShowConfetti(false);
+
+          toast({
+            title: "¡Video descargado!",
+            description: "El video de cumpleaños se ha descargado correctamente",
+          });
+
+          onDownload?.();
+        });
+      }, 6000);
+
+    } catch (error) {
+      console.error('Error recording video:', error);
+      setIsRecording(false);
+      toast({
+        title: "Error",
+        description: "No se pudo grabar el video. Usa la opción de imagen PNG.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getRoleLabel = (role: string) => {
     const roleLabels: { [key: string]: string } = {
@@ -190,13 +289,15 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
             </div>
             
             <div 
-              className="text-3xl font-bold text-blue-600"
+              className="text-3xl font-bold text-blue-600 text-center"
               style={{ 
                 fontWeight: '700',
-                fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
+                fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+                lineHeight: '1.2'
               }}
             >
-              {member.nombres} {member.apellidos}
+              <div className="mb-2">{member.nombres}</div>
+              <div>{member.apellidos}</div>
             </div>
             
             <div 
@@ -256,7 +357,17 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
             size="lg"
           >
             <Download className="w-5 h-5" />
-            Descargar PNG HD para WhatsApp
+            Descargar PNG HD
+          </Button>
+          
+          <Button 
+            onClick={downloadVideo}
+            disabled={isRecording}
+            className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:opacity-50"
+            size="lg"
+          >
+            <Video className="w-5 h-5" />
+            {isRecording ? 'Grabando...' : 'Descargar Video'}
           </Button>
         </div>
       </div>
