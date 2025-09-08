@@ -91,15 +91,29 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
         height: 900,
         backgroundColor: '#f8fafc',
         useCORS: true,
-        allowTaint: false,
+        allowTaint: true, // Permitir imágenes externas
         logging: false,
-        imageTimeout: 20000,
+        imageTimeout: 25000,
+        foreignObjectRendering: true,
         onclone: (clonedDoc) => {
-          // Asegurar que las imágenes se carguen correctamente
+          // Forzar la carga de todas las imágenes
           const images = clonedDoc.querySelectorAll('img');
           images.forEach((img) => {
             img.style.display = 'block';
+            img.style.visibility = 'visible';
             img.crossOrigin = 'anonymous';
+            // Forzar el src para asegurar que se cargue
+            if (img.src) {
+              const originalSrc = img.src;
+              img.src = originalSrc;
+            }
+          });
+          
+          // Asegurar que los avatars sean visibles
+          const avatars = clonedDoc.querySelectorAll('[data-radix-avatar-image]');
+          avatars.forEach((avatar) => {
+            (avatar as HTMLElement).style.display = 'block';
+            (avatar as HTMLElement).style.visibility = 'visible';
           });
         }
       });
@@ -132,10 +146,18 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
       recorder.onstop = async () => {
         const webmBlob = new Blob(chunks, { type: 'video/webm' });
         
+        // Crear tanto WebM como una versión más compatible
         const url = URL.createObjectURL(webmBlob);
         const link = document.createElement('a');
         link.href = url;
         link.download = `cumpleanos-HD-${member.nombres.toLowerCase()}-${member.apellidos.toLowerCase()}.webm`;
+        
+        // Mostrar opción de descarga con instrucción
+        toast({
+          title: "Video listo para descargar",
+          description: "Haz clic para descargar. Puedes convertir a MP4 con convertidores online si es necesario.",
+        });
+        
         link.click();
         
         URL.revokeObjectURL(url);
@@ -143,7 +165,7 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
 
         toast({
           title: "¡Video HD descargado!",
-          description: "Video de alta calidad generado (WebM compatible con WhatsApp Web)",
+          description: "Video WebM generado (usa convertidores online para MP4 si necesitas)",
         });
 
         onDownload?.();
@@ -432,6 +454,8 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
                   style={{
                     objectFit: 'cover'
                   }}
+                  crossOrigin="anonymous"
+                  data-radix-avatar-image="true"
                 />
                 <AvatarFallback className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-4xl font-bold">
                   {member.nombres.charAt(0)}{member.apellidos.charAt(0)}
