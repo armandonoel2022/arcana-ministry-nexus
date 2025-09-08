@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Download, Video } from 'lucide-react';
+import { Download } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
 import ConfettiEffect from './ConfettiEffect';
@@ -23,7 +23,6 @@ interface BirthdayCardProps {
 const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
   const { toast } = useToast();
 
   // Mostrar confeti cuando se monta el componente
@@ -60,261 +59,6 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
       
       startTime += note.duration / 1000;
     });
-  };
-
-  const downloadVideo = async () => {
-    if (!cardRef.current) return;
-
-    try {
-      setIsRecording(true);
-      toast({
-        title: "Creando video HD...",
-        description: "Generando video en alta resolución con confeti y sonido",
-      });
-
-      // Crear canvas de alta resolución para el video
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      if (!ctx) {
-        throw new Error('Canvas context not available');
-      }
-
-      // Resolución HD para mejor calidad
-      canvas.width = 1200; // Doble resolución
-      canvas.height = 1800;
-
-      // Capturar la tarjeta en alta resolución incluyendo fotos
-      const cardCanvas = await html2canvas(cardRef.current, {
-        scale: 2, // Mayor escala para HD
-        width: 600,
-        height: 900,
-        backgroundColor: '#f8fafc',
-        useCORS: true,
-        allowTaint: true, // Permitir imágenes externas
-        logging: false,
-        imageTimeout: 25000,
-        foreignObjectRendering: true,
-        onclone: (clonedDoc) => {
-          // Forzar la carga de todas las imágenes
-          const images = clonedDoc.querySelectorAll('img');
-          images.forEach((img) => {
-            img.style.display = 'block';
-            img.style.visibility = 'visible';
-            img.crossOrigin = 'anonymous';
-            // Forzar el src para asegurar que se cargue
-            if (img.src) {
-              const originalSrc = img.src;
-              img.src = originalSrc;
-            }
-          });
-          
-          // Asegurar que los avatars sean visibles
-          const avatars = clonedDoc.querySelectorAll('[data-radix-avatar-image]');
-          avatars.forEach((avatar) => {
-            (avatar as HTMLElement).style.display = 'block';
-            (avatar as HTMLElement).style.visibility = 'visible';
-          });
-        }
-      });
-
-      // Crear contexto de audio
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      
-      // Stream de video en alta calidad
-      const videoStream = canvas.captureStream(60); // 60 FPS para mejor fluidez
-      
-      // Stream de audio
-      const audioDestination = audioContext.createMediaStreamDestination();
-      
-      // Combinar streams
-      const combinedStream = new MediaStream([
-        ...videoStream.getVideoTracks(),
-        ...audioDestination.stream.getAudioTracks()
-      ]);
-
-      // Usar WebM con alta calidad (mejor compatibilidad que MP4 en navegadores)
-      const recorder = new MediaRecorder(combinedStream, {
-        mimeType: 'video/webm;codecs=vp9,opus',
-        videoBitsPerSecond: 5000000, // 5 Mbps para alta calidad
-        audioBitsPerSecond: 128000   // 128 kbps para audio de calidad
-      });
-
-      const chunks: BlobPart[] = [];
-      recorder.ondataavailable = (event) => chunks.push(event.data);
-      
-      recorder.onstop = async () => {
-        const webmBlob = new Blob(chunks, { type: 'video/webm' });
-        
-        // Crear tanto WebM como una versión más compatible
-        const url = URL.createObjectURL(webmBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `cumpleanos-HD-${member.nombres.toLowerCase()}-${member.apellidos.toLowerCase()}.webm`;
-        
-        // Mostrar opción de descarga con instrucción
-        toast({
-          title: "Video listo para descargar",
-          description: "Haz clic para descargar. Puedes convertir a MP4 con convertidores online si es necesario.",
-        });
-        
-        link.click();
-        
-        URL.revokeObjectURL(url);
-        setIsRecording(false);
-
-        toast({
-          title: "¡Video HD descargado!",
-          description: "Video WebM generado (usa convertidores online para MP4 si necesitas)",
-        });
-
-        onDownload?.();
-      };
-
-      // Función para audio mejorado
-      const playBirthdayAudio = () => {
-        const notes = [
-          { freq: 261.63, duration: 600 }, // C4 - Happy
-          { freq: 261.63, duration: 600 }, // C4 - Birth-
-          { freq: 293.66, duration: 1200 }, // D4 - day
-          { freq: 261.63, duration: 600 }, // C4 - to
-          { freq: 349.23, duration: 1200 }, // F4 - you
-          { freq: 329.63, duration: 2400 }, // E4 - (hold)
-        ];
-
-        let startTime = audioContext.currentTime;
-        
-        notes.forEach((note) => {
-          const oscillator = audioContext.createOscillator();
-          const gainNode = audioContext.createGain();
-          
-          oscillator.connect(gainNode);
-          gainNode.connect(audioDestination);
-          gainNode.connect(audioContext.destination);
-          
-          oscillator.frequency.setValueAtTime(note.freq, startTime);
-          oscillator.type = 'sine'; // Sonido más suave
-          gainNode.gain.setValueAtTime(0.4, startTime);
-          gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + note.duration / 1000);
-          
-          oscillator.start(startTime);
-          oscillator.stop(startTime + note.duration / 1000);
-          
-          startTime += note.duration / 1000;
-        });
-      };
-
-      recorder.start();
-      playBirthdayAudio();
-
-      // Animación confeti HD
-      let frame = 0;
-      const totalFrames = 360; // 6 segundos a 60 FPS
-      const confettiParticles: Array<{
-        x: number;
-        y: number;
-        vx: number;
-        vy: number;
-        color: string;
-        rotation: number;
-        rotationSpeed: number;
-        size: number;
-        shape: 'rect' | 'circle' | 'triangle';
-      }> = [];
-
-      // Partículas HD más detalladas
-      const colors = ['#FFD700', '#FF69B4', '#00CED1', '#FF6347', '#32CD32', '#DA70D6', '#FF1493', '#00FF7F', '#FFA500', '#9370DB'];
-      for (let i = 0; i < 120; i++) {
-        confettiParticles.push({
-          x: Math.random() * canvas.width,
-          y: -20 - Math.random() * 300,
-          vx: (Math.random() - 0.5) * 12,
-          vy: Math.random() * 6 + 3,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          rotation: Math.random() * 360,
-          rotationSpeed: (Math.random() - 0.5) * 25,
-          size: Math.random() * 8 + 4,
-          shape: ['rect', 'circle', 'triangle'][Math.floor(Math.random() * 3)] as 'rect' | 'circle' | 'triangle'
-        });
-      }
-
-      const animate = () => {
-        // Limpiar canvas
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // Dibujar la tarjeta en alta resolución (escalar 2x)
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(cardCanvas, 0, 0, canvas.width, canvas.height);
-        
-        // Confeti HD con formas variadas
-        confettiParticles.forEach(particle => {
-          ctx.save();
-          ctx.translate(particle.x + particle.size/2, particle.y + particle.size/2);
-          ctx.rotate(particle.rotation * Math.PI / 180);
-          
-          ctx.fillStyle = particle.color;
-          ctx.shadowColor = particle.color;
-          ctx.shadowBlur = 3;
-          
-          switch (particle.shape) {
-            case 'rect':
-              ctx.fillRect(-particle.size/2, -particle.size/2, particle.size, particle.size);
-              break;
-            case 'circle':
-              ctx.beginPath();
-              ctx.arc(0, 0, particle.size/2, 0, Math.PI * 2);
-              ctx.fill();
-              break;
-            case 'triangle':
-              ctx.beginPath();
-              ctx.moveTo(0, -particle.size/2);
-              ctx.lineTo(-particle.size/2, particle.size/2);
-              ctx.lineTo(particle.size/2, particle.size/2);
-              ctx.closePath();
-              ctx.fill();
-              break;
-          }
-          
-          ctx.restore();
-          
-          // Física mejorada
-          particle.x += particle.vx;
-          particle.y += particle.vy;
-          particle.rotation += particle.rotationSpeed;
-          
-          // Gravedad y resistencia del aire
-          particle.vy += 0.2;
-          particle.vx *= 0.998;
-          
-          // Resetear partículas
-          if (particle.y > canvas.height + 150) {
-            particle.y = -20 - Math.random() * 300;
-            particle.x = Math.random() * canvas.width;
-            particle.vy = Math.random() * 6 + 3;
-            particle.vx = (Math.random() - 0.5) * 12;
-          }
-        });
-
-        frame++;
-        if (frame < totalFrames) {
-          requestAnimationFrame(animate);
-        } else {
-          setTimeout(() => recorder.stop(), 300);
-        }
-      };
-
-      animate();
-
-    } catch (error) {
-      console.error('Error creating HD video:', error);
-      setIsRecording(false);
-      toast({
-        title: "Error",
-        description: "No se pudo crear el video HD. Intenta con la imagen PNG.",
-        variant: "destructive",
-      });
-    }
   };
 
   const getRoleLabel = (role: string) => {
@@ -540,24 +284,14 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
         </div>
 
         {/* Botones de acción */}
-        <div className="flex justify-center space-x-4">
+        <div className="flex justify-center">
           <Button 
             onClick={downloadImage} 
             className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
             size="lg"
           >
             <Download className="w-5 h-5" />
-            Descargar PNG HD
-          </Button>
-          
-          <Button 
-            onClick={downloadVideo}
-            disabled={isRecording}
-            className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:opacity-50"
-            size="lg"
-          >
-            <Video className="w-5 h-5" />
-            {isRecording ? 'Grabando...' : 'Descargar Video'}
+            Descargar PNG HD para WhatsApp
           </Button>
         </div>
       </div>
