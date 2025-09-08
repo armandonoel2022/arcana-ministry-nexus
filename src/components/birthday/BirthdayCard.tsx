@@ -69,7 +69,7 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
       setIsRecording(true);
       toast({
         title: "Creando video...",
-        description: "Generando video con animación de confeti",
+        description: "Generando video con animación de confeti y sonido",
       });
 
       // Crear canvas para el video
@@ -78,39 +78,64 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
       
       if (!ctx) {
         throw new Error('Canvas context not available');
-        
       }
 
       canvas.width = 600;
       canvas.height = 900;
 
-      // Capturar la tarjeta como imagen base
+      // Capturar la tarjeta como imagen base con mejor configuración para incluir fotos
       const cardCanvas = await html2canvas(cardRef.current, {
         scale: 1,
         width: 600,
         height: 900,
         backgroundColor: '#f8fafc',
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        imageTimeout: 15000,
+        onclone: (clonedDoc) => {
+          // Asegurar que las imágenes se carguen correctamente
+          const images = clonedDoc.querySelectorAll('img');
+          images.forEach((img) => {
+            img.style.display = 'block';
+          });
+        }
       });
 
-      // Reproducir sonido
-      playBirthdaySound();
+      // Crear contexto de audio para el sonido
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // Configurar stream de video
+      const videoStream = canvas.captureStream(30);
+      
+      // Crear stream de audio
+      const audioDestination = audioContext.createMediaStreamDestination();
+      
+      // Combinar audio y video
+      const combinedStream = new MediaStream([
+        ...videoStream.getVideoTracks(),
+        ...audioDestination.stream.getAudioTracks()
+      ]);
 
-      // Configurar grabación de video del canvas
-      const stream = canvas.captureStream(30); // 30 FPS
-      const recorder = new MediaRecorder(stream, {
-        mimeType: 'video/webm;codecs=vp9'
-      });
+      // Intentar usar MP4 si está disponible, sino WebM
+      let mimeType = 'video/webm;codecs=vp8,opus';
+      if (MediaRecorder.isTypeSupported('video/mp4;codecs=h264,aac')) {
+        mimeType = 'video/mp4;codecs=h264,aac';
+      }
+
+      const recorder = new MediaRecorder(combinedStream, { mimeType });
 
       const chunks: BlobPart[] = [];
       recorder.ondataavailable = (event) => chunks.push(event.data);
       
-      recorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/webm' });
+      recorder.onstop = async () => {
+        const blob = new Blob(chunks, { type: mimeType });
         const url = URL.createObjectURL(blob);
         
         const link = document.createElement('a');
         link.href = url;
-        link.download = `cumpleanos-${member.nombres.toLowerCase()}-${member.apellidos.toLowerCase()}.webm`;
+        const extension = mimeType.includes('mp4') ? 'mp4' : 'webm';
+        link.download = `cumpleanos-${member.nombres.toLowerCase()}-${member.apellidos.toLowerCase()}.${extension}`;
         link.click();
         
         URL.revokeObjectURL(url);
@@ -118,15 +143,48 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
 
         toast({
           title: "¡Video descargado!",
-          description: "El video de cumpleaños se ha descargado correctamente",
+          description: `Video de cumpleaños generado en formato ${extension.toUpperCase()}`,
         });
 
         onDownload?.();
       };
 
-      recorder.start();
+      // Función para reproducir sonido conectado al stream de audio
+      const playBirthdayAudio = () => {
+        const notes = [
+          { freq: 261.63, duration: 500 }, // C4 - Happy
+          { freq: 261.63, duration: 500 }, // C4 - Birth-
+          { freq: 293.66, duration: 1000 }, // D4 - day
+          { freq: 261.63, duration: 500 }, // C4 - to
+          { freq: 349.23, duration: 1000 }, // F4 - you
+          { freq: 329.63, duration: 2000 }, // E4 - (hold)
+        ];
 
-      // Animar confeti en el canvas
+        let startTime = audioContext.currentTime;
+        
+        notes.forEach((note) => {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioDestination); // Para el video
+          gainNode.connect(audioContext.destination); // Para escuchar en tiempo real
+          
+          oscillator.frequency.setValueAtTime(note.freq, startTime);
+          gainNode.gain.setValueAtTime(0.3, startTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + note.duration / 1000);
+          
+          oscillator.start(startTime);
+          oscillator.stop(startTime + note.duration / 1000);
+          
+          startTime += note.duration / 1000;
+        });
+      };
+
+      recorder.start();
+      playBirthdayAudio();
+
+      // Animar confeti en el canvas con mejor calidad
       let frame = 0;
       const totalFrames = 180; // 6 segundos a 30 FPS
       const confettiParticles: Array<{
@@ -137,19 +195,23 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
         color: string;
         rotation: number;
         rotationSpeed: number;
+        size: number;
+        shape: 'rect' | 'circle';
       }> = [];
 
-      // Inicializar partículas de confeti
-      const colors = ['#FFD700', '#FF69B4', '#00CED1', '#FF6347', '#32CD32', '#DA70D6'];
-      for (let i = 0; i < 50; i++) {
+      // Inicializar partículas de confeti mejoradas
+      const colors = ['#FFD700', '#FF69B4', '#00CED1', '#FF6347', '#32CD32', '#DA70D6', '#FF1493', '#00FF7F'];
+      for (let i = 0; i < 80; i++) {
         confettiParticles.push({
           x: Math.random() * canvas.width,
-          y: -10,
-          vx: (Math.random() - 0.5) * 4,
-          vy: Math.random() * 3 + 2,
+          y: -10 - Math.random() * 200,
+          vx: (Math.random() - 0.5) * 8,
+          vy: Math.random() * 5 + 2,
           color: colors[Math.floor(Math.random() * colors.length)],
           rotation: Math.random() * 360,
-          rotationSpeed: (Math.random() - 0.5) * 10
+          rotationSpeed: (Math.random() - 0.5) * 20,
+          size: Math.random() * 6 + 3,
+          shape: Math.random() > 0.5 ? 'rect' : 'circle'
         });
       }
 
@@ -157,27 +219,44 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
         // Limpiar canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Dibujar la tarjeta base
+        // Dibujar la tarjeta base (incluye la foto del miembro)
         ctx.drawImage(cardCanvas, 0, 0, canvas.width, canvas.height);
         
-        // Dibujar y actualizar confeti
+        // Dibujar confeti mejorado
         confettiParticles.forEach(particle => {
           ctx.save();
-          ctx.translate(particle.x, particle.y);
+          ctx.translate(particle.x + particle.size/2, particle.y + particle.size/2);
           ctx.rotate(particle.rotation * Math.PI / 180);
+          
           ctx.fillStyle = particle.color;
-          ctx.fillRect(-3, -3, 6, 6);
+          ctx.shadowColor = particle.color;
+          ctx.shadowBlur = 2;
+          
+          if (particle.shape === 'rect') {
+            ctx.fillRect(-particle.size/2, -particle.size/2, particle.size, particle.size);
+          } else {
+            ctx.beginPath();
+            ctx.arc(0, 0, particle.size/2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          
           ctx.restore();
           
-          // Actualizar posición
+          // Actualizar posición con física mejorada
           particle.x += particle.vx;
           particle.y += particle.vy;
           particle.rotation += particle.rotationSpeed;
           
-          // Resetear si sale de pantalla
-          if (particle.y > canvas.height) {
-            particle.y = -10;
+          // Gravedad y resistencia del aire
+          particle.vy += 0.15;
+          particle.vx *= 0.999;
+          
+          // Resetear partículas que salen de pantalla
+          if (particle.y > canvas.height + 100) {
+            particle.y = -10 - Math.random() * 200;
             particle.x = Math.random() * canvas.width;
+            particle.vy = Math.random() * 5 + 2;
+            particle.vx = (Math.random() - 0.5) * 8;
           }
         });
 
@@ -185,7 +264,8 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
         if (frame < totalFrames) {
           requestAnimationFrame(animate);
         } else {
-          recorder.stop();
+          // Esperar un poco antes de parar para asegurar que todo el audio se grabe
+          setTimeout(() => recorder.stop(), 200);
         }
       };
 
@@ -196,7 +276,7 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
       setIsRecording(false);
       toast({
         title: "Error",
-        description: "No se pudo crear el video. Usa la opción de imagen PNG.",
+        description: "No se pudo crear el video. Intenta usar la opción de imagen PNG.",
         variant: "destructive",
       });
     }
