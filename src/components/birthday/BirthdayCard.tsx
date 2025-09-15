@@ -196,7 +196,12 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
                   alt={`${member.nombres} ${member.apellidos}`}
                   className="object-cover"
                   style={{
-                    objectFit: 'cover'
+                    objectFit: 'cover',
+                    objectPosition: 'center top',
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: '50%',
+                    aspectRatio: '1/1'
                   }}
                   crossOrigin="anonymous"
                   data-radix-avatar-image="true"
