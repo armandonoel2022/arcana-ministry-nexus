@@ -124,9 +124,15 @@ const BirthdayModule = () => {
   };
 
   const isBirthdayToday = (birthDate: string) => {
+    // Usar fecha local para evitar problemas de timezone con el servidor
     const today = new Date();
+    const localToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
     const birth = new Date(birthDate);
-    return today.getMonth() === birth.getMonth() && today.getDate() === birth.getDate();
+    const localBirth = new Date(birth.getFullYear(), birth.getMonth(), birth.getDate());
+    
+    return localToday.getMonth() === localBirth.getMonth() && 
+           localToday.getDate() === localBirth.getDate();
   };
 
   const getNextBirthday = (birthDate: string) => {
