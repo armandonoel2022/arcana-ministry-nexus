@@ -96,52 +96,62 @@ const BirthdayModule = () => {
       member.cargo.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // Filtrar por mes actual si está activado
+    // Filtrar por mes actual si está activado (usando fecha local, sin TZ)
     if (showThisMonthOnly) {
       const currentMonth = new Date().getMonth();
       filtered = filtered.filter(member => {
-        if (!member.fecha_nacimiento) return false;
-        const birthDate = new Date(member.fecha_nacimiento);
-        return birthDate.getMonth() === currentMonth;
+        const birth = parseDateOnly(member.fecha_nacimiento);
+        return birth ? birth.getMonth() === currentMonth : false;
       });
     }
 
-    // Ordenar por mes y día de cumpleaños
+    // Ordenar por mes y día de cumpleaños (usando fecha local, sin TZ)
     filtered = filtered.sort((a, b) => {
-      if (!a.fecha_nacimiento || !b.fecha_nacimiento) return 0;
-      
-      const dateA = new Date(a.fecha_nacimiento);
-      const dateB = new Date(b.fecha_nacimiento);
-      
-      // Primero por mes, luego por día
+      const dateA = parseDateOnly(a.fecha_nacimiento);
+      const dateB = parseDateOnly(b.fecha_nacimiento);
+      if (!dateA || !dateB) return 0;
+
       const monthDiff = dateA.getMonth() - dateB.getMonth();
       if (monthDiff !== 0) return monthDiff;
-      
+
       return dateA.getDate() - dateB.getDate();
     });
 
     setFilteredMembers(filtered);
   };
 
+  // Parse 'YYYY-MM-DD' como fecha local (sin zona horaria)
+  const parseDateOnly = (dateStr?: string) => {
+    if (!dateStr) return null;
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return null;
+    const [y, m, d] = parts.map(Number);
+    if (!y || !m || !d) return null;
+    return new Date(y, m - 1, d);
+  };
+
   const isBirthdayToday = (birthDate: string) => {
-    // Usar fecha local para evitar problemas de timezone con el servidor
+    const birth = parseDateOnly(birthDate);
+    if (!birth) return false;
+
     const today = new Date();
     const localToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    
-    const birth = new Date(birthDate);
-    const localBirth = new Date(birth.getFullYear(), birth.getMonth(), birth.getDate());
-    
-    return localToday.getMonth() === localBirth.getMonth() && 
-           localToday.getDate() === localBirth.getDate();
+
+    return (
+      localToday.getMonth() === birth.getMonth() &&
+      localToday.getDate() === birth.getDate()
+    );
   };
 
   const getNextBirthday = (birthDate: string) => {
+    const birth = parseDateOnly(birthDate);
     const today = new Date();
-    const birth = new Date(birthDate);
-    const thisYear = new Date(today.getFullYear(), birth.getMonth(), birth.getDate());
-    
-    if (thisYear < today) {
-      return new Date(today.getFullYear() + 1, birth.getMonth(), birth.getDate());
+    const localToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    if (!birth) return localToday;
+
+    const thisYear = new Date(localToday.getFullYear(), birth.getMonth(), birth.getDate());
+    if (thisYear < localToday) {
+      return new Date(localToday.getFullYear() + 1, birth.getMonth(), birth.getDate());
     }
     return thisYear;
   };
