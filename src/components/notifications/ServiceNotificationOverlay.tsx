@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { X, Calendar, Clock, Users, Save, Music } from "lucide-react";
+import { X, Calendar, Clock, Users, Save, Music, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays, startOfWeek, endOfWeek, getDay, isWithinInterval } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
+import html2canvas from 'html2canvas';
 
 interface WeekendService {
   id: string;
@@ -53,6 +54,7 @@ const ServiceNotificationOverlay = () => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [services, setServices] = useState<WeekendService[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const serviceCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   useEffect(() => {
     // Limpiar localStorage al montar el componente para evitar conflictos
@@ -130,7 +132,7 @@ const ServiceNotificationOverlay = () => {
             instrument: index === 0 ? 'Soprano - Micrófono #1' : 
                        index === 1 ? 'Contralto - Micrófono #2' : 
                        index === 2 ? 'Tenor - Micrófono #3' : 
-                       index === 3 ? 'Contralto - Micrófono #4' : 
+                       index === 3 ? 'Bajo - Micrófono #4' : 
                        `Voz ${index + 1} - Micrófono #${index + 1}`,
             is_leader: false,
             profiles: {
@@ -376,6 +378,34 @@ const ServiceNotificationOverlay = () => {
     );
   };
 
+  const downloadServiceImage = async (serviceId: string, serviceTitle: string) => {
+    try {
+      const element = serviceCardRefs.current[serviceId];
+      if (!element) {
+        toast.error('No se pudo encontrar el servicio para descargar');
+        return;
+      }
+
+      const canvas = await html2canvas(element, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        foreignObjectRendering: true,
+      });
+
+      const link = document.createElement('a');
+      link.download = `${serviceTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().getTime()}.png`;
+      link.href = canvas.toDataURL();
+      link.click();
+      
+      toast.success('Imagen descargada exitosamente');
+    } catch (error) {
+      console.error('Error downloading service image:', error);
+      toast.error('Error al descargar la imagen');
+    }
+  };
+
   if (isLoading) {
     return null;
   }
@@ -385,125 +415,149 @@ const ServiceNotificationOverlay = () => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div 
-        className={`w-full max-w-2xl transition-all duration-300 ease-out ${
-          isAnimating 
-            ? 'animate-in slide-in-from-bottom-4 fade-in duration-300' 
-            : 'animate-out slide-out-to-top-4 fade-out duration-300'
-        }`}
-      >
-        <Card className="border-blue-200 bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 shadow-2xl border-2">
-          <CardContent className="p-6">
-            <div className="space-y-6">
-              {/* Header */}
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-                    <Calendar className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-blue-900 mb-1">
-                      Programa de Servicios
-                    </h2>
-                    <p className="text-blue-700">
-                      {format(new Date(services[0].service_date), 'EEEE, dd \'de\' MMMM', { locale: es })}
-                    </p>
-                  </div>
+    <div className="fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto">
+      <div className="min-h-screen flex items-start justify-center py-8">
+        <div 
+          className={`w-full max-w-4xl transition-all duration-300 ease-out ${
+            isAnimating 
+              ? 'animate-in slide-in-from-bottom-4 fade-in duration-300' 
+              : 'animate-out slide-out-to-top-4 fade-out duration-300'
+          }`}
+        >
+          {/* Fixed Header */}
+          <div className="bg-white rounded-t-xl p-4 border-b border-gray-200 sticky top-4 z-10 shadow-md">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-white" />
                 </div>
+                <div>
+                  <h2 className="text-xl font-bold text-blue-900">
+                    Programa de Servicios
+                  </h2>
+                  <p className="text-blue-700 text-sm">
+                    {format(new Date(services[0].service_date), 'EEEE, dd \'de\' MMMM', { locale: es })}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={saveToNotifications}
+                  className="flex items-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
+                >
+                  <Save className="w-4 h-4" />
+                  Guardar
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={closeOverlay}
-                  className="text-blue-600 hover:text-blue-800 hover:bg-blue-100"
+                  className="text-red-600 hover:text-red-800 hover:bg-red-50"
                 >
                   <X className="w-4 h-4" />
                 </Button>
               </div>
+            </div>
+          </div>
 
-              {/* Services List */}
-              <div className="space-y-6">
-                {services.map((service) => {
-                  const serviceTime = getServiceTime(service.title);
-                  const director = service.leader;
-                  const directorMember = service.group_members.find(m => m.is_leader);
-                  const responsibleVoices = getResponsibleVoices(service.group_members);
+          {/* Services Cards */}
+          <div className="bg-white rounded-b-xl">
+            <div className="p-6 space-y-6">
+              {services.map((service) => {
+                const serviceTime = getServiceTime(service.title);
+                const director = service.leader;
+                const directorMember = service.group_members.find(m => m.is_leader);
+                const responsibleVoices = getResponsibleVoices(service.group_members).slice(0, 5);
+                const hasSongs = service.selected_songs && service.selected_songs.length > 0;
 
-                  return (
-                    <div 
-                      key={service.id}
-                      className="bg-white/90 rounded-xl p-6 border border-blue-200 shadow-lg"
-                    >
-                      {/* Service Header */}
-                      <div className="flex items-center gap-3 mb-6">
-                        <Clock className="w-5 h-5 text-blue-600" />
-                        <span className="text-xl font-bold text-blue-900">{serviceTime}</span>
-                        <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                          {service.service_type}
-                        </Badge>
+                return (
+                  <div 
+                    key={service.id}
+                    ref={el => serviceCardRefs.current[service.id] = el}
+                    className="bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden"
+                  >
+                    {/* Service Header */}
+                    <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                            <Clock className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold">
+                              {service.title}
+                            </h3>
+                            <div className="flex items-center gap-2 text-blue-100">
+                              {service.worship_groups && (
+                                <>
+                                  <Badge 
+                                    variant="secondary"
+                                    className="bg-white/20 text-white border-white/30 text-xs"
+                                  >
+                                    {service.worship_groups.name}
+                                  </Badge>
+                                  <span className="text-xs">•</span>
+                                </>
+                              )}
+                              <span className="text-xs">{service.service_type === 'regular' ? 'Servicio Dominical' : service.service_type}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => downloadServiceImage(service.id, service.title)}
+                          className="text-white hover:bg-white/20"
+                        >
+                          <Download className="w-4 h-4" />
+                        </Button>
                       </div>
-
-                      {/* Service Title */}
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">{service.title}</h3>
                       
                       {service.special_activity && (
-                        <p className="text-blue-700 font-medium mb-4">
-                          ⭐ {service.special_activity}
-                        </p>
-                      )}
-
-                      {/* Group Badge */}
-                      {service.worship_groups && (
-                        <div className="flex items-center gap-2 mb-6">
-                          <Users className="w-4 h-4 text-gray-500" />
-                          <Badge 
-                            className="text-sm px-3 py-1"
-                            style={{ 
-                              backgroundColor: `${service.worship_groups.color_theme}20`,
-                              color: service.worship_groups.color_theme,
-                              borderColor: `${service.worship_groups.color_theme}40`
-                            }}
-                          >
-                            {service.worship_groups.name}
-                          </Badge>
+                        <div className="mt-2 flex items-center gap-2 text-yellow-200">
+                          <span className="text-lg">⭐</span>
+                          <span className="font-medium">{service.special_activity}</span>
                         </div>
                       )}
+                    </div>
 
-                      <div className="grid md:grid-cols-2 gap-6">
-                        {/* Director Column */}
-                        <div className="space-y-4">
-                          {/* Director */}
-                          <div className="bg-blue-50 rounded-lg p-4">
-                            <div className="text-sm font-semibold text-blue-800 mb-3">Director/a de Alabanza</div>
-                            <div className="flex items-center gap-3">
-                              <Avatar className="w-16 h-16 border-3 border-blue-300 shadow-lg">
-                                <AvatarImage
-                                  src={directorMember?.profiles?.photo_url}
-                                  alt={director}
-                                  className="object-cover"
-                                />
-                                <AvatarFallback className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-lg font-bold">
-                                  {getInitials(director)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <div className="font-semibold text-gray-900">{director}</div>
-                                <div className="text-sm text-blue-600">Líder del Servicio</div>
-                              </div>
+                    <div className="p-6">
+                      <div className="grid md:grid-cols-2 gap-8">
+                        {/* Left Side - Director */}
+                        <div>
+                          <h4 className="text-blue-800 font-semibold mb-4 text-center">Director/a de Alabanza</h4>
+                          <div className="text-center mb-6">
+                            <Avatar className="w-24 h-24 mx-auto mb-3 border-4 border-blue-200">
+                              <AvatarImage
+                                src={directorMember?.profiles?.photo_url}
+                                alt={director}
+                                className="object-cover object-center"
+                                style={{ objectPosition: 'center top' }}
+                              />
+                              <AvatarFallback className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-lg font-bold">
+                                {getInitials(director)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-bold text-gray-900 text-lg">{director}</div>
+                              <div className="text-sm text-blue-600">Líder del Servicio</div>
                             </div>
                           </div>
 
                           {/* Selected Songs */}
-                          {service.selected_songs && service.selected_songs.length > 0 && (
-                            <div className="bg-green-50 rounded-lg p-4">
-                              <div className="flex items-center gap-2 mb-3">
-                                <Music className="w-4 h-4 text-green-600" />
-                                <div className="text-sm font-semibold text-green-800">Canciones Seleccionadas</div>
-                              </div>
+                          <div>
+                            <div className="flex items-center gap-2 mb-3">
+                              <Music className="w-4 h-4 text-gray-600" />
+                              <h5 className="font-semibold text-gray-800">Canciones Seleccionadas</h5>
+                            </div>
+                            
+                            {hasSongs ? (
                               <div className="space-y-2">
-                                {service.selected_songs.slice(0, 3).map((song, index) => (
-                                  <div key={song.id} className="flex items-center gap-2 text-sm">
-                                    <span className="w-5 h-5 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold">
+                                {service.selected_songs?.slice(0, 3).map((song, index) => (
+                                  <div key={song.id} className="flex items-center gap-3 p-2 bg-green-50 rounded-md">
+                                    <span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
                                       {index + 1}
                                     </span>
                                     <div>
@@ -514,95 +568,95 @@ const ServiceNotificationOverlay = () => {
                                     </div>
                                   </div>
                                 ))}
-                                {service.selected_songs.length > 3 && (
-                                  <div className="text-xs text-green-700 font-medium">
+                                {service.selected_songs && service.selected_songs.length > 3 && (
+                                  <div className="text-xs text-green-700 font-medium pl-9">
                                     +{service.selected_songs.length - 3} canciones más
                                   </div>
                                 )}
                               </div>
+                            ) : (
+                              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                                <p className="text-sm text-yellow-800 italic">
+                                  Pendiente de seleccionar las canciones
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Offering Song */}
+                            <div className="mt-4">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-lg">💰</span>
+                                <h5 className="font-semibold text-yellow-700">Canción de Ofrendas</h5>
+                              </div>
+                              <div className="p-3 bg-yellow-50 rounded-md">
+                                <div className="font-medium">Hosanna</div>
+                                <div className="text-sm text-gray-600">Marco Barrientos</div>
+                              </div>
                             </div>
-                          )}
+                          </div>
                         </div>
 
-                        {/* Voices Column */}
+                        {/* Right Side - Voices */}
                         <div>
-                          {responsibleVoices.length > 0 && (
-                            <div className="bg-blue-50 rounded-lg p-4 h-full">
-                              <div className="text-sm font-semibold text-blue-800 mb-3">Responsables de Voces</div>
-                              <div className="grid grid-cols-1 gap-3">
-                                {responsibleVoices.slice(0, 6).map((member) => (
-                                  <div key={member.id} className="flex items-center gap-3">
-                                    <Avatar className="w-12 h-12 border-2 border-blue-200">
-                                      <AvatarImage
-                                        src={member.profiles?.photo_url}
-                                        alt={member.profiles?.full_name}
-                                        className="object-cover"
-                                      />
-                                      <AvatarFallback className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-bold">
-                                        {getInitials(member.profiles?.full_name || '')}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <div className="min-w-0 flex-1">
-                                      <div className="text-sm font-medium text-gray-900">
-                                        {member.profiles?.full_name}
-                                      </div>
-                                      <div className="text-xs text-blue-600">
-                                        {member.instrument}
-                                      </div>
+                          <h4 className="text-blue-800 font-semibold mb-4 text-center">Responsables de Voces</h4>
+                          
+                          {responsibleVoices.length > 0 ? (
+                            <div className="space-y-3">
+                              {responsibleVoices.map((member, index) => (
+                                <div key={member.id} className="flex items-center gap-3">
+                                  <Avatar className="w-12 h-12 border-2 border-blue-200">
+                                    <AvatarImage
+                                      src={member.profiles?.photo_url}
+                                      alt={member.profiles?.full_name}
+                                      className="object-cover object-center"
+                                      style={{ objectPosition: 'center top' }}
+                                    />
+                                    <AvatarFallback className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-bold">
+                                      {getInitials(member.profiles?.full_name || '')}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="font-medium text-gray-900">
+                                      {member.profiles?.full_name}
+                                    </div>
+                                    <div className="text-sm text-blue-600">
+                                      {member.instrument}
                                     </div>
                                   </div>
-                                ))}
-                              </div>
-                              {responsibleVoices.length > 6 && (
-                                <div className="text-xs text-blue-700 font-medium mt-2 text-center">
-                                  +{responsibleVoices.length - 6} integrantes más
+                                </div>
+                              ))}
+                              {responsibleVoices.length > 5 && (
+                                <div className="text-xs text-blue-700 font-medium text-center pt-2">
+                                  +{responsibleVoices.length - 5} integrantes más
                                 </div>
                               )}
+                            </div>
+                          ) : (
+                            <div className="text-center p-4 bg-gray-50 rounded-md">
+                              <p className="text-sm text-gray-600 italic">
+                                No hay responsables de voces asignados
+                              </p>
                             </div>
                           )}
                         </div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                );
+              })}
+            </div>
 
-              {/* Warning Message */}
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                <p className="text-sm text-amber-800">
+            {/* Warning Message */}
+            <div className="px-6 pb-6">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <p className="text-sm text-amber-800 text-center">
                   ⚠️ <strong>Importante:</strong> Revise el programa completo y confirme su disponibilidad. 
                   En caso de algún inconveniente, coordine los reemplazos necesarios.
                 </p>
               </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <Button
-                  onClick={saveToNotifications}
-                  className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white flex items-center gap-2"
-                >
-                  <Save className="w-4 h-4" />
-                  Guardar en Notificaciones
-                </Button>
-                <Button
-                  onClick={closeOverlay}
-                  variant="outline"
-                  className="border-blue-300 text-blue-700 hover:bg-blue-50 flex items-center gap-2"
-                >
-                  <X className="w-4 h-4" />
-                  Cerrar
-                </Button>
-              </div>
-
-              {/* Footer */}
-              <div className="text-center pt-2">
-                <p className="text-xs text-gray-500">
-                  💒 Mensaje automatizado del Sistema ARCANA
-                </p>
-              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
