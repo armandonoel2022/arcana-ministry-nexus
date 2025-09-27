@@ -40,11 +40,13 @@ serve(async (req) => {
       throw membersError
     }
 
-    // Filtrar miembros que cumplen años este mes
+    // Filtrar miembros que cumplen años este mes (sin desfaces por zona horaria)
     const birthdayMembers = members?.filter(member => {
       if (!member.fecha_nacimiento) return false
-      const birthDate = new Date(member.fecha_nacimiento)
-      return birthDate.getMonth() === now.getMonth()
+      const parts = member.fecha_nacimiento.split('-')
+      if (parts.length !== 3) return false
+      const month = Number(parts[1]) - 1
+      return month === now.getMonth()
     }) || []
 
     if (birthdayMembers.length === 0) {
@@ -57,9 +59,13 @@ serve(async (req) => {
 
     // Crear mensaje con la lista de cumpleaños del mes
     const birthdayList = birthdayMembers
-      .sort((a, b) => new Date(a.fecha_nacimiento!).getDate() - new Date(b.fecha_nacimiento!).getDate())
+      .sort((a, b) => {
+        const dayA = Number(a.fecha_nacimiento!.split('-')[2])
+        const dayB = Number(b.fecha_nacimiento!.split('-')[2])
+        return dayA - dayB
+      })
       .map(member => {
-        const day = new Date(member.fecha_nacimiento!).getDate()
+        const day = Number(member.fecha_nacimiento!.split('-')[2])
         return `• ${day} - ${member.nombres} ${member.apellidos}`
       })
       .join('\n')
@@ -70,12 +76,12 @@ serve(async (req) => {
     const birthdayCard = {
       month: currentMonthName,
       year: now.getFullYear(),
-      birthdays: birthdayMembers.map(member => ({
-        name: `${member.nombres} ${member.apellidos}`,
-        day: new Date(member.fecha_nacimiento!).getDate(),
-        photo: member.photo_url,
-        role: member.cargo
-      }))
+        birthdays: birthdayMembers.map(member => ({
+          name: `${member.nombres} ${member.apellidos}`,
+          day: Number(member.fecha_nacimiento!.split('-')[2]),
+          photo: member.photo_url,
+          role: member.cargo
+        }))
     }
 
     // Obtener todos los usuarios activos del sistema

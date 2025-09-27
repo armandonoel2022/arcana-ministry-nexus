@@ -66,6 +66,7 @@ const NotificationOverlay = () => {
             onDismiss={() => dismissNotification(notification.id)}
           />
         );
+      case 'service_program':
       case 'weekend_service':
         return (
           <ServiceNotificationCard

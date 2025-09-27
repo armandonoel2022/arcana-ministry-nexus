@@ -74,11 +74,13 @@ const ServiceNotificationOverlay = () => {
 
     // Listen for service program notifications
     const handleNotifications = (payload: any) => {
-      if (payload.eventType === 'INSERT' && 
-          payload.new.type === 'daily_verse' && 
-          payload.new.notification_category === 'agenda' &&
-          payload.new.metadata?.service_date) {
-        // Show overlay immediately for service program notifications
+      if (
+        payload.eventType === 'INSERT' &&
+        payload.new.type === 'service_program' &&
+        payload.new.notification_category === 'agenda' &&
+        payload.new.metadata?.service_date
+      ) {
+        // Mostrar inmediatamente el overlay para notificaciones de programa de servicio
         showServiceProgramOverlay(payload.new.metadata);
       }
     };
