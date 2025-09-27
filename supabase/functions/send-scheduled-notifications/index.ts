@@ -111,7 +111,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in scheduled notifications function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }), 
+      JSON.stringify({ error: (error as any)?.message || String(error) }), 
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -145,7 +145,7 @@ async function processServiceOverlayNotification(supabase: any, notification: Sc
     // Create the service overlay notification metadata
     const servicesMetadata = {
       service_date: weekendServices[0].service_date,
-      services: weekendServices.map(service => ({
+      services: weekendServices.map((service: any) => ({
         id: service.id,
         date: service.service_date,
         title: service.title,

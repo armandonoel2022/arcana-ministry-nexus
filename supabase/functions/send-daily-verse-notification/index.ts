@@ -138,7 +138,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error) {
     console.error('Error in send-daily-verse-notification:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: (error as any)?.message || String(error),
       success: false 
     }), {
       status: 500,

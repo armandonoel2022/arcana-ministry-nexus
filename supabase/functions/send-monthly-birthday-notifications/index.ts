@@ -31,7 +31,7 @@ serve(async (req) => {
     // Obtener miembros con cumpleaños en el mes actual
     const { data: members, error: membersError } = await supabase
       .from('members')
-      .select('nombres, apellidos, fecha_nacimiento, cargo')
+      .select('nombres, apellidos, fecha_nacimiento, cargo, photo_url')
       .eq('is_active', true)
       .not('fecha_nacimiento', 'is', null)
 
@@ -137,7 +137,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in monthly birthday notifications:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as any)?.message || String(error) }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

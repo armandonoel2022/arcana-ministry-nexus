@@ -102,6 +102,16 @@ const MemberProfile = () => {
     return groupLabels[group] || group;
   };
 
+  const formatBirthDate = (dateStr?: string) => {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-').map(Number);
+    if (parts.length !== 3) return dateStr;
+    const [y, m, d] = parts;
+    if (!y || !m || !d) return dateStr;
+    const date = new Date(y, m - 1, d);
+    return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -202,7 +212,7 @@ const MemberProfile = () => {
                       <Calendar className="w-5 h-5 text-gray-500" />
                       <div>
                         <span className="font-medium">Fecha de nacimiento: </span>
-                        <span>{new Date(member.fecha_nacimiento).toLocaleDateString()}</span>
+                        <span>{formatBirthDate(member.fecha_nacimiento)}</span>
                       </div>
                     </div>
                   )}

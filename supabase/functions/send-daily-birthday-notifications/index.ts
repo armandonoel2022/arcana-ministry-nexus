@@ -58,11 +58,14 @@ serve(async (req) => {
         throw membersError
       }
 
-      // Filtrar miembros que cumplen años hoy
+      // Filtrar miembros que cumplen años hoy (sin desfaces por zona horaria)
       birthdayMembers = allMembers?.filter(member => {
         if (!member.fecha_nacimiento) return false
-        const birthDate = new Date(member.fecha_nacimiento)
-        return birthDate.getMonth() === today.getMonth() && birthDate.getDate() === today.getDate()
+        const parts = member.fecha_nacimiento.split('-').map(Number)
+        if (parts.length !== 3) return false
+        const month = parts[1] - 1
+        const day = parts[2]
+        return month === today.getMonth() && day === today.getDate()
       }) || []
     }
 
@@ -209,7 +212,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in daily birthday notifications:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as any)?.message || String(error) }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
