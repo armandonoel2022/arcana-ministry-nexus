@@ -165,12 +165,12 @@ export const EditServiceForm: React.FC<EditServiceFormProps> = ({
 
         <div>
           <Label htmlFor="assigned_group_id">Grupo Asignado</Label>
-          <Select value={formData.assigned_group_id} onValueChange={(value) => handleInputChange('assigned_group_id', value)}>
+          <Select value={formData.assigned_group_id || "none"} onValueChange={(value) => handleInputChange('assigned_group_id', value === "none" ? "" : value)}>
             <SelectTrigger>
               <SelectValue placeholder="Seleccionar grupo" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Sin asignar</SelectItem>
+              <SelectItem value="none">Sin asignar</SelectItem>
               {worshipGroups.map((group) => (
                 <SelectItem key={group.id} value={group.id}>
                   {group.name}
