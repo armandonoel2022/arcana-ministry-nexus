@@ -516,49 +516,49 @@ const NotificationTesting = () => {
     return (
       <div 
         ref={ref}
-        className="bg-gradient-to-br from-blue-50 via-white to-purple-50 rounded-2xl shadow-2xl mx-auto relative overflow-hidden border border-gray-100"
+        className="mx-auto relative overflow-hidden border border-gray-100"
         style={{ 
           width: '400px', 
-          minHeight: '650px',
-          fontFamily: 'system-ui, -apple-system, sans-serif'
+          height: '700px',
+          backgroundColor: '#f8fafc',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          borderRadius: '16px'
         }}
       >
-        {/* Background Pattern - Simplified for better rendering */}
-        <div className="absolute inset-0 opacity-3">
-          <div 
-            className="absolute top-10 left-10 rounded-full"
-            style={{ 
-              width: '80px', 
-              height: '80px', 
-              backgroundColor: 'rgba(147, 197, 253, 0.3)' 
-            }}
-          ></div>
-          <div 
-            className="absolute top-32 right-8 rounded-full"
-            style={{ 
-              width: '48px', 
-              height: '48px', 
-              backgroundColor: 'rgba(196, 181, 253, 0.3)' 
-            }}
-          ></div>
-          <div 
-            className="absolute bottom-20 left-8 rounded-full"
-            style={{ 
-              width: '64px', 
-              height: '64px', 
-              backgroundColor: 'rgba(129, 140, 248, 0.3)' 
-            }}
-          ></div>
-        </div>
+        {/* Background Pattern - Simplified */}
+        <div 
+          className="absolute top-10 left-10 rounded-full"
+          style={{ 
+            width: '80px', 
+            height: '80px', 
+            backgroundColor: 'rgba(147, 197, 253, 0.2)' 
+          }}
+        ></div>
+        <div 
+          className="absolute top-32 right-8 rounded-full"
+          style={{ 
+            width: '48px', 
+            height: '48px', 
+            backgroundColor: 'rgba(196, 181, 253, 0.2)' 
+          }}
+        ></div>
+        <div 
+          className="absolute bottom-20 left-8 rounded-full"
+          style={{ 
+            width: '64px', 
+            height: '64px', 
+            backgroundColor: 'rgba(129, 140, 248, 0.2)' 
+          }}
+        ></div>
 
-        <div className="relative z-10 p-8 text-center">
+        <div className="relative z-10 p-8 text-center" style={{ height: '100%' }}>
           {/* Header */}
           <div className="mb-6">
             <img 
               src={arcaNoeLogo} 
               alt="Logo ADN" 
-              className="w-16 h-16 mx-auto mb-3 opacity-90"
-              style={{ maxWidth: '64px', maxHeight: '64px' }}
+              className="mx-auto mb-3 opacity-90"
+              style={{ width: '64px', height: '64px' }}
             />
             <h1 className="text-lg font-bold text-blue-700 tracking-wide mb-1">
               MINISTERIO ADN
@@ -566,42 +566,43 @@ const NotificationTesting = () => {
             <p className="text-blue-600 font-medium">Arca de Noé</p>
           </div>
 
-          {/* Event Icon - More compatible */}
+          {/* Event Icon */}
           <div 
             className="mx-auto mb-6 rounded-full flex items-center justify-center shadow-lg"
             style={{ 
               width: '128px', 
               height: '128px',
-              background: 'linear-gradient(135deg, #fb923c 0%, #ef4444 100%)'
+              backgroundColor: '#fb923c',
+              backgroundImage: 'linear-gradient(135deg, #fb923c 0%, #ef4444 100%)'
             }}
           >
             <span style={{ fontSize: '48px', lineHeight: '1' }}>⛪</span>
           </div>
 
-          {/* Main Title */}
+          {/* Main Title - Simplified with solid background */}
           <div className="mb-6">
-            <h2 
-              className="text-3xl font-bold mb-4"
+            <div 
+              className="mx-auto rounded-lg py-3 px-4 mb-4 shadow-lg"
               style={{ 
-                background: 'linear-gradient(135deg, #f97316 0%, #ef4444 100%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                color: '#f97316'  // Fallback color
+                backgroundColor: '#ef4444',
+                backgroundImage: 'linear-gradient(135deg, #f97316 0%, #ef4444 100%)',
+                maxWidth: '350px'
               }}
             >
-              ¡{retiroEvent.description}!
-            </h2>
-            <div className="text-2xl font-bold text-blue-700 mb-2">
+              <h2 className="text-2xl font-bold text-white" style={{ margin: 0, padding: 0 }}>
+                ¡{retiroEvent.description}!
+              </h2>
+            </div>
+            <div className="text-2xl font-bold text-blue-700">
               {formatDate(retiroEvent.service_date)}
             </div>
           </div>
 
-          {/* Event Details - Simplified styling */}
-          <div className="space-y-4 mb-6">
+          {/* Event Details */}
+          <div className="space-y-3 mb-6">
             <div 
-              className="rounded-lg p-4 shadow-sm border"
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)' }}
+              className="rounded-lg p-3 shadow-sm border mx-auto"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', maxWidth: '300px' }}
             >
               <div className="flex items-center justify-center gap-2 text-blue-800">
                 <Clock className="w-5 h-5" />
@@ -610,8 +611,8 @@ const NotificationTesting = () => {
             </div>
             
             <div 
-              className="rounded-lg p-4 shadow-sm border"
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)' }}
+              className="rounded-lg p-3 shadow-sm border mx-auto"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', maxWidth: '300px' }}
             >
               <div className="flex items-center justify-center gap-2 text-blue-800">
                 <MapPin className="w-5 h-5" />
@@ -620,8 +621,8 @@ const NotificationTesting = () => {
             </div>
             
             <div 
-              className="rounded-lg p-4 shadow-sm border"
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)' }}
+              className="rounded-lg p-3 shadow-sm border mx-auto"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', maxWidth: '320px' }}
             >
               <div className="flex items-center justify-center gap-2 text-blue-800 text-center">
                 <Users className="w-5 h-5 flex-shrink-0" />
@@ -633,10 +634,11 @@ const NotificationTesting = () => {
           {/* Special Activity */}
           {retiroEvent.special_activity && (
             <div 
-              className="rounded-lg p-4 mb-6 border"
+              className="rounded-lg p-4 mb-6 border mx-auto"
               style={{ 
-                background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)',
-                borderColor: 'rgba(147, 51, 234, 0.2)'
+                backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                borderColor: 'rgba(147, 51, 234, 0.2)',
+                maxWidth: '300px'
               }}
             >
               <div className="text-purple-700 font-semibold text-sm mb-1">Actividad Especial</div>
@@ -644,7 +646,7 @@ const NotificationTesting = () => {
             </div>
           )}
 
-          {/* Decorative Elements - Simple emojis */}
+          {/* Decorative Elements */}
           <div className="flex justify-center space-x-4 mb-6">
             <span style={{ fontSize: '24px' }}>🙏</span>
             <span style={{ fontSize: '24px' }}>✝️</span>
@@ -653,12 +655,14 @@ const NotificationTesting = () => {
 
           {/* Call to Action */}
           <div 
-            className="text-white rounded-lg p-4 mb-4"
+            className="text-white rounded-lg p-4 mb-4 mx-auto"
             style={{ 
-              background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)'
+              backgroundColor: '#2563eb',
+              backgroundImage: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+              maxWidth: '320px'
             }}
           >
-            <p className="font-bold text-sm">
+            <p className="font-bold text-sm" style={{ margin: 0 }}>
               ¡Ven y sé parte de este encuentro especial con Dios!
             </p>
           </div>
@@ -669,13 +673,13 @@ const NotificationTesting = () => {
           </div>
 
           {/* Footer */}
-          <div className="pt-4 border-t border-gray-200">
+          <div className="pt-4 border-t border-gray-200 mt-auto">
             <div className="flex items-center justify-center gap-2 text-gray-500 text-xs">
               <img 
                 src={arcaNoeLogo} 
                 alt="Logo" 
-                className="w-4 h-4 opacity-70"
-                style={{ maxWidth: '16px', maxHeight: '16px' }}
+                className="opacity-70"
+                style={{ width: '16px', height: '16px' }}
               />
               <span>Sistema ARCANA • Arca de Noé</span>
             </div>
@@ -693,38 +697,29 @@ const NotificationTesting = () => {
     try {
       setShowRetiroOverlay(true);
       // Esperar más tiempo para que todos los elementos se rendericen
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       const canvas = await html2canvas(retiroRef.current, {
-        scale: 3, // Mayor escala para mejor calidad
+        scale: 2, // Escala más conservadora
         useCORS: true,
         allowTaint: false,
         backgroundColor: '#f8fafc',
         logging: false,
-        width: 400, // Ancho fijo
-        height: 650, // Alto fijo
+        width: 400, 
+        height: 700, // Altura aumentada
         scrollX: 0,
         scrollY: 0,
-        windowWidth: 400,
-        windowHeight: 650,
+        removeContainer: true,
+        foreignObjectRendering: true,
+        imageTimeout: 15000,
         ignoreElements: (element) => {
-          // Ignorar elementos problemáticos
           return element.classList?.contains('ignore-html2canvas') || false;
-        },
-        onclone: (clonedDoc) => {
-          // Asegurar que los estilos se apliquen correctamente en el clon
-          const clonedElement = clonedDoc.querySelector('[data-flyer-container]') as HTMLElement;
-          if (clonedElement) {
-            clonedElement.style.width = '400px';
-            clonedElement.style.minHeight = '650px';
-            clonedElement.style.fontFamily = 'system-ui, -apple-system, sans-serif';
-          }
         }
       });
 
       const eventDate = retiroEvent ? new Date(retiroEvent.service_date).toISOString().split('T')[0] : '2025-10-05';
       const link = document.createElement('a');
-      link.download = `retiro-congregacional-${eventDate}.png`;
+      link.download = `retiro-congregacional-${eventDate}-flyer.png`;
       link.href = canvas.toDataURL('image/png', 1.0);
       document.body.appendChild(link);
       link.click();
@@ -732,7 +727,7 @@ const NotificationTesting = () => {
 
       toast({
         title: "¡Descarga exitosa!",
-        description: "La tarjeta del Retiro Congregacional se ha descargado correctamente",
+        description: "El flyer del Retiro Congregacional se ha descargado correctamente",
       });
     } catch (error) {
       console.error('Error generating image:', error);
