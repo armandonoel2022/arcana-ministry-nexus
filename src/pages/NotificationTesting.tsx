@@ -500,12 +500,14 @@ const NotificationTesting = () => {
     if (!retiroEvent) return null;
 
     const formatDate = (dateString: string) => {
-      const date = new Date(dateString);
-      const months = [
-        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-      ];
-      return `${date.getDate()} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
+      const formatted = new Date(dateString).toLocaleDateString('es-ES', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'UTC', // Evita desfases al convertir desde UTC
+      });
+      // Capitalizar el mes
+      return formatted.replace(/ de ([a-záéíóúñ]+)/, (_m, p1) => ` de ${p1.charAt(0).toUpperCase()}${p1.slice(1)}`);
     };
 
     const getEventTime = (title: string) => {
@@ -691,30 +693,41 @@ const NotificationTesting = () => {
 
   RetiroFlyerOverlay.displayName = 'RetiroFlyerOverlay';
 
+  const waitForImages = async (container: HTMLElement) => {
+    const images = Array.from(container.querySelectorAll('img')) as HTMLImageElement[];
+    try {
+      await Promise.all(
+        images.map((img) => (img.complete ? Promise.resolve() : (img.decode ? img.decode() : Promise.resolve())))
+      );
+    } catch {
+      // ignore decode errors
+    }
+  };
+
   const downloadRetiroCard = async () => {
     if (!retiroRef.current) return;
 
     try {
       setShowRetiroOverlay(true);
       // Esperar más tiempo para que todos los elementos se rendericen
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 700));
+      await waitForImages(retiroRef.current);
 
-      const canvas = await html2canvas(retiroRef.current, {
-        scale: 2, // Escala más conservadora
+      const target = retiroRef.current as HTMLElement;
+
+      const canvas = await html2canvas(target, {
+        scale: 2,
         useCORS: true,
         allowTaint: false,
-        backgroundColor: '#f8fafc',
+        backgroundColor: '#ffffff',
         logging: false,
-        width: 400, 
-        height: 700, // Altura aumentada
+        width: target.offsetWidth,
+        height: target.offsetHeight,
         scrollX: 0,
         scrollY: 0,
-        removeContainer: true,
-        foreignObjectRendering: true,
+        removeContainer: false,
+        foreignObjectRendering: false,
         imageTimeout: 15000,
-        ignoreElements: (element) => {
-          return element.classList?.contains('ignore-html2canvas') || false;
-        }
       });
 
       const eventDate = retiroEvent ? new Date(retiroEvent.service_date).toISOString().split('T')[0] : '2025-10-05';
