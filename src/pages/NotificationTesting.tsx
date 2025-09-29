@@ -521,7 +521,7 @@ const NotificationTesting = () => {
         className="mx-auto relative overflow-hidden border border-gray-100"
         style={{ 
           width: '400px', 
-          height: '700px',
+          height: '850px',
           backgroundColor: '#f8fafc',
           fontFamily: 'system-ui, -apple-system, sans-serif',
           borderRadius: '16px'
@@ -647,6 +647,22 @@ const NotificationTesting = () => {
               <div className="text-purple-800 font-bold">{retiroEvent.special_activity}</div>
             </div>
           )}
+
+          {/* Santa Comunión */}
+          <div 
+            className="rounded-lg p-4 mb-6 border mx-auto"
+            style={{ 
+              backgroundColor: 'rgba(34, 197, 94, 0.1)',
+              borderColor: 'rgba(34, 197, 94, 0.2)',
+              maxWidth: '320px'
+            }}
+          >
+            <div className="text-green-700 font-semibold text-sm mb-1">Servicio Especial</div>
+            <div className="text-green-800 font-bold flex items-center justify-center gap-2">
+              <span>✝️</span>
+              <span>Santa Comunión</span>
+            </div>
+          </div>
 
           {/* Decorative Elements */}
           <div className="flex justify-center space-x-4 mb-6">
