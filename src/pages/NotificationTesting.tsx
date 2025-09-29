@@ -1,10 +1,11 @@
-import React, { useState, useRef, LegacyRef } from 'react';
-import { Bell, Calendar, Download } from "lucide-react";
+import React, { useState, useRef, useEffect } from 'react';
+import { Bell, Calendar, Download, MapPin, Clock, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import NotificationTestButton from '@/components/notifications/NotificationTestButton';
 import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import arcaNoeLogo from '@/assets/arca-noe-logo.png';
 
 // Definir interfaces para los tipos de datos
@@ -49,6 +50,17 @@ interface Service {
   offering_song: { title: string; artist: string };
 }
 
+interface RetiroEvent {
+  id: string;
+  title: string;
+  description: string;
+  service_date: string;
+  leader: string;
+  location: string;
+  special_activity: string;
+  service_type: string;
+}
+
 interface ServiceCardProps {
   service: Service;
 }
@@ -56,10 +68,61 @@ interface ServiceCardProps {
 const NotificationTesting = () => {
   const [showServiceOverlay, setShowServiceOverlay] = useState(false);
   const [showRetiroOverlay, setShowRetiroOverlay] = useState(false);
+  const [retiroEvent, setRetiroEvent] = useState<RetiroEvent | null>(null);
+  const [loading, setLoading] = useState(false);
   const cardRef1 = useRef<HTMLDivElement>(null);
   const cardRef2 = useRef<HTMLDivElement>(null);
   const retiroRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  // Fetch del próximo retiro desde la base de datos
+  const fetchRetiroEvent = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('services')
+        .select('*')
+        .or('service_type.eq.especial,description.ilike.%retiro%,special_activity.ilike.%retiro%')
+        .gte('service_date', new Date().toISOString())
+        .order('service_date', { ascending: true })
+        .limit(1);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const service = data[0];
+        setRetiroEvent({
+          id: service.id,
+          title: service.title,
+          description: service.description || 'Retiro Congregacional',
+          service_date: service.service_date,
+          leader: service.leader || 'Designados por el pastor Roosevelt',
+          location: service.location || 'Templo Principal',
+          special_activity: service.special_activity || 'Santa Comunión',
+          service_type: service.service_type
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching retiro event:', error);
+      // Fallback a los datos del 5 de octubre que ya sabemos que existen
+      setRetiroEvent({
+        id: '2932b9e4-e409-4f81-8d6e-065828a0ef85',
+        title: '09:00 a.m.',
+        description: 'Retiro Congregacional',
+        service_date: '2025-10-05T00:00:00+00:00',
+        leader: 'Designados por el pastor Roosevelt Martínez',
+        location: 'Templo Principal',
+        special_activity: 'Santa Comunión',
+        service_type: 'especial'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRetiroEvent();
+  }, []);
 
   const mockServiceData: Service[] = [
     {
@@ -433,107 +496,133 @@ const NotificationTesting = () => {
 
   ServiceCard.displayName = 'ServiceCard';
 
-  const RetiroOverlay = React.forwardRef<HTMLDivElement>((props, ref) => {
+  const RetiroFlyerOverlay = React.forwardRef<HTMLDivElement>((props, ref) => {
+    if (!retiroEvent) return null;
+
+    const formatDate = (dateString: string) => {
+      const date = new Date(dateString);
+      const months = [
+        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+      ];
+      return `${date.getDate()} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
+    };
+
+    const getEventTime = (title: string) => {
+      const match = title.match(/(\d{1,2}:\d{2})/);
+      return match ? match[1] : '09:00';
+    };
+
     return (
       <div 
         ref={ref}
-        className="bg-white/95 rounded-xl p-8 border border-blue-200 shadow-2xl mx-auto relative overflow-hidden"
-        style={{ maxWidth: '700px' }}
+        className="bg-gradient-to-br from-blue-50 via-white to-purple-50 rounded-2xl shadow-2xl mx-auto relative overflow-hidden"
+        style={{ maxWidth: '400px', minHeight: '600px' }}
       >
-        {/* Logo de fondo sutil */}
-        <div 
-          className="absolute top-4 right-4 opacity-10 w-16 h-16"
-          style={{
-            backgroundImage: `url(${arcaNoeLogo})`,
-            backgroundSize: 'contain',
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center'
-          }}
-        ></div>
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-10 left-10 w-20 h-20 rounded-full bg-blue-300"></div>
+          <div className="absolute top-32 right-8 w-12 h-12 rounded-full bg-purple-300"></div>
+          <div className="absolute bottom-20 left-8 w-16 h-16 rounded-full bg-indigo-300"></div>
+        </div>
 
-        {/* Header con gradiente */}
-        <div className="text-center mb-6 relative z-10">
-          <div className="flex items-center justify-center gap-3 mb-2">
+        <div className="relative z-10 p-8 text-center">
+          {/* Header */}
+          <div className="mb-6">
             <img 
               src={arcaNoeLogo} 
-              alt="Logo Arca de Noé" 
-              className="w-12 h-12 object-contain"
+              alt="Logo ADN" 
+              className="w-16 h-16 mx-auto mb-3 opacity-90"
             />
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-700 to-blue-900 bg-clip-text text-transparent">
-              Programa de Servicios
+            <h1 className="text-lg font-bold text-blue-700 tracking-wide">
+              MINISTERIO ADN
+            </h1>
+            <p className="text-blue-600 font-medium">Arca de Noé</p>
+          </div>
+
+          {/* Event Icon */}
+          <div className="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center shadow-lg">
+            <div className="text-6xl">⛪</div>
+          </div>
+
+          {/* Main Title */}
+          <div className="mb-6">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent mb-2">
+              ¡{retiroEvent.description}!
             </h2>
-          </div>
-          <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-6 py-2 rounded-full inline-block">
-            <span className="text-sm font-medium">1er Domingo de Octubre</span>
-          </div>
-        </div>
-
-        {/* Fecha y evento especial */}
-        <div className="bg-blue-50 rounded-lg p-6 mb-6 border-l-4 border-blue-500">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <div className="text-lg font-bold text-blue-900">📅 Fecha: 5 de octubre de 2025</div>
-              <div className="text-blue-700 font-medium mt-1">Evento especial: Retiro Congregacional</div>
+            <div className="text-2xl font-bold text-blue-700">
+              {formatDate(retiroEvent.service_date)}
             </div>
           </div>
-        </div>
 
-        {/* Información del servicio */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-6 border border-blue-100">
-          <div className="flex items-center gap-4">
-            <div className="w-4 h-12 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full"></div>
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="text-2xl">⏰</div>
-                <h3 className="text-xl font-bold text-blue-900">09:00 a.m.</h3>
+          {/* Event Details */}
+          <div className="space-y-4 mb-6">
+            <div className="bg-white/80 rounded-lg p-4 shadow-sm">
+              <div className="flex items-center justify-center gap-2 text-blue-800">
+                <Clock className="w-5 h-5" />
+                <span className="font-semibold">{getEventTime(retiroEvent.title)} a.m.</span>
               </div>
-              
-              <div className="grid md:grid-cols-2 gap-4 mt-4">
-                <div className="bg-white/70 rounded-lg p-4">
-                  <div className="text-sm font-semibold text-blue-800 mb-2">Dirige:</div>
-                  <div className="font-medium text-gray-900">Designados por el pastor Roosevelt</div>
-                </div>
-                
-                <div className="bg-white/70 rounded-lg p-4">
-                  <div className="text-sm font-semibold text-blue-800 mb-2">Grupo Asignado:</div>
-                  <div className="font-medium text-gray-900">Designados por el pastor Roosevelt</div>
-                </div>
+            </div>
+            
+            <div className="bg-white/80 rounded-lg p-4 shadow-sm">
+              <div className="flex items-center justify-center gap-2 text-blue-800">
+                <MapPin className="w-5 h-5" />
+                <span className="font-semibold">{retiroEvent.location}</span>
+              </div>
+            </div>
+            
+            <div className="bg-white/80 rounded-lg p-4 shadow-sm">
+              <div className="flex items-center justify-center gap-2 text-blue-800">
+                <Users className="w-5 h-5" />
+                <span className="font-semibold">{retiroEvent.leader}</span>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Mensaje automático */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-          <div className="flex items-start gap-3">
-            <div className="text-yellow-600 text-lg">📌</div>
-            <div>
-              <div className="text-yellow-800 font-medium text-sm">
-                ¡Este es un servicio de mensajes automatizado, no es necesario responder!
-              </div>
+          {/* Special Activity */}
+          {retiroEvent.special_activity && (
+            <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-lg p-4 mb-6">
+              <div className="text-purple-700 font-semibold text-sm mb-1">Actividad Especial</div>
+              <div className="text-purple-800 font-bold">{retiroEvent.special_activity}</div>
             </div>
-          </div>
-        </div>
+          )}
 
-        {/* Footer institucional */}
-        <div className="text-center pt-4 border-t border-gray-200">
-          <div className="flex items-center justify-center gap-2 text-gray-600 text-sm">
-            <img 
-              src={arcaNoeLogo} 
-              alt="Logo Arca de Noé" 
-              className="w-6 h-6 object-contain opacity-80"
-            />
-            <span>Sistema ARCANA - Arca de Noé</span>
+          {/* Decorative Elements */}
+          <div className="flex justify-center space-x-2 mb-6">
+            <div className="text-2xl">🙏</div>
+            <div className="text-2xl">✝️</div>
+            <div className="text-2xl">❤️</div>
+          </div>
+
+          {/* Call to Action */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-4 mb-4">
+            <p className="font-bold text-sm">
+              ¡Ven y sé parte de este encuentro especial con Dios!
+            </p>
+          </div>
+
+          {/* Blessing */}
+          <div className="text-blue-700 font-bold text-lg">
+            ¡Que Dios te bendiga! 🙌
+          </div>
+
+          {/* Footer */}
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <div className="flex items-center justify-center gap-2 text-gray-500 text-xs">
+              <img 
+                src={arcaNoeLogo} 
+                alt="Logo" 
+                className="w-4 h-4 opacity-70"
+              />
+              <span>Sistema ARCANA • Arca de Noé</span>
+            </div>
           </div>
         </div>
       </div>
     );
   });
 
-  RetiroOverlay.displayName = 'RetiroOverlay';
+  RetiroFlyerOverlay.displayName = 'RetiroFlyerOverlay';
 
   const downloadRetiroCard = async () => {
     if (!retiroRef.current) return;
@@ -551,7 +640,8 @@ const NotificationTesting = () => {
       });
 
       const link = document.createElement('a');
-      link.download = 'retiro-congregacional-5-octubre-2025.png';
+      const eventDate = retiroEvent ? new Date(retiroEvent.service_date).toISOString().split('T')[0] : '2025-10-05';
+      link.download = `retiro-congregacional-${eventDate}.png`;
       link.href = canvas.toDataURL('image/png', 1.0);
       document.body.appendChild(link);
       link.click();
@@ -618,15 +708,18 @@ const NotificationTesting = () => {
         </CardHeader>
         <CardContent>
           <p className="text-green-700 mb-4">
-            Overlay especial para el Retiro Congregacional del primer domingo de octubre. 
-            Incluye el logo institucional y formato moderno.
+            {retiroEvent ? 
+              `Flyer dinámico para el ${retiroEvent.description} del ${new Date(retiroEvent.service_date).toLocaleDateString('es-ES')}. Datos obtenidos en tiempo real de la agenda ministerial.` :
+              "Cargando información del próximo retiro desde la agenda ministerial..."
+            }
           </p>
           <Button
-            onClick={() => setShowRetiroOverlay(true)}
-            className="bg-green-600 hover:bg-green-700 text-white"
+            onClick={() => !loading && setShowRetiroOverlay(true)}
+            disabled={loading || !retiroEvent}
+            className="bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
           >
             <Calendar className="w-4 h-4 mr-2" />
-            Mostrar Overlay del Retiro
+            {loading ? "Cargando..." : "Mostrar Flyer del Retiro"}
           </Button>
         </CardContent>
       </Card>
@@ -715,40 +808,47 @@ const NotificationTesting = () => {
         </div>
       )}
 
-      {/* Retiro Congregacional Overlay */}
-      {showRetiroOverlay && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-green-900 flex items-center gap-2">
+      {/* Retiro Flyer Overlay */}
+      {showRetiroOverlay && retiroEvent && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl p-6 max-w-lg w-full max-h-[95vh] overflow-y-auto shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-green-900 flex items-center gap-2">
                 <img 
                   src={arcaNoeLogo} 
                   alt="Logo Arca de Noé" 
-                  className="w-8 h-8 object-contain"
+                  className="w-6 h-6 object-contain"
                 />
-                Retiro Congregacional
+                Flyer del Retiro
               </h2>
               <Button
                 onClick={() => setShowRetiroOverlay(false)}
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                className="text-gray-600 hover:text-gray-800"
+                className="text-gray-600 hover:text-gray-800 h-8 w-8 p-0"
               >
-                Cerrar
+                ✕
               </Button>
             </div>
 
-            <div className="flex justify-center mb-6">
-              <RetiroOverlay ref={retiroRef} />
+            <div className="flex justify-center mb-4">
+              <RetiroFlyerOverlay ref={retiroRef} />
             </div>
 
-            <div className="flex justify-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-center gap-3">
               <Button
                 onClick={downloadRetiroCard}
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
               >
                 <Download className="w-4 h-4 mr-2" />
-                Descargar Programa
+                Descargar Flyer
+              </Button>
+              <Button
+                onClick={() => fetchRetiroEvent()}
+                variant="outline"
+                className="border-green-300 text-green-700 hover:bg-green-50"
+              >
+                🔄 Actualizar Datos
               </Button>
             </div>
           </div>
