@@ -521,7 +521,7 @@ const NotificationTesting = () => {
         className="mx-auto relative overflow-hidden border border-gray-100"
         style={{ 
           width: '400px', 
-          height: '850px',
+          height: '900px',
           backgroundColor: '#f8fafc',
           fontFamily: 'system-ui, -apple-system, sans-serif',
           borderRadius: '16px'
