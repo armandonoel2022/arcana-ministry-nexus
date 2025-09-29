@@ -516,14 +516,39 @@ const NotificationTesting = () => {
     return (
       <div 
         ref={ref}
-        className="bg-gradient-to-br from-blue-50 via-white to-purple-50 rounded-2xl shadow-2xl mx-auto relative overflow-hidden"
-        style={{ maxWidth: '400px', minHeight: '600px' }}
+        className="bg-gradient-to-br from-blue-50 via-white to-purple-50 rounded-2xl shadow-2xl mx-auto relative overflow-hidden border border-gray-100"
+        style={{ 
+          width: '400px', 
+          minHeight: '650px',
+          fontFamily: 'system-ui, -apple-system, sans-serif'
+        }}
       >
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-10 left-10 w-20 h-20 rounded-full bg-blue-300"></div>
-          <div className="absolute top-32 right-8 w-12 h-12 rounded-full bg-purple-300"></div>
-          <div className="absolute bottom-20 left-8 w-16 h-16 rounded-full bg-indigo-300"></div>
+        {/* Background Pattern - Simplified for better rendering */}
+        <div className="absolute inset-0 opacity-3">
+          <div 
+            className="absolute top-10 left-10 rounded-full"
+            style={{ 
+              width: '80px', 
+              height: '80px', 
+              backgroundColor: 'rgba(147, 197, 253, 0.3)' 
+            }}
+          ></div>
+          <div 
+            className="absolute top-32 right-8 rounded-full"
+            style={{ 
+              width: '48px', 
+              height: '48px', 
+              backgroundColor: 'rgba(196, 181, 253, 0.3)' 
+            }}
+          ></div>
+          <div 
+            className="absolute bottom-20 left-8 rounded-full"
+            style={{ 
+              width: '64px', 
+              height: '64px', 
+              backgroundColor: 'rgba(129, 140, 248, 0.3)' 
+            }}
+          ></div>
         </div>
 
         <div className="relative z-10 p-8 text-center">
@@ -533,86 +558,124 @@ const NotificationTesting = () => {
               src={arcaNoeLogo} 
               alt="Logo ADN" 
               className="w-16 h-16 mx-auto mb-3 opacity-90"
+              style={{ maxWidth: '64px', maxHeight: '64px' }}
             />
-            <h1 className="text-lg font-bold text-blue-700 tracking-wide">
+            <h1 className="text-lg font-bold text-blue-700 tracking-wide mb-1">
               MINISTERIO ADN
             </h1>
             <p className="text-blue-600 font-medium">Arca de Noé</p>
           </div>
 
-          {/* Event Icon */}
-          <div className="w-32 h-32 mx-auto mb-6 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center shadow-lg">
-            <div className="text-6xl">⛪</div>
+          {/* Event Icon - More compatible */}
+          <div 
+            className="mx-auto mb-6 rounded-full flex items-center justify-center shadow-lg"
+            style={{ 
+              width: '128px', 
+              height: '128px',
+              background: 'linear-gradient(135deg, #fb923c 0%, #ef4444 100%)'
+            }}
+          >
+            <span style={{ fontSize: '48px', lineHeight: '1' }}>⛪</span>
           </div>
 
           {/* Main Title */}
           <div className="mb-6">
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent mb-2">
+            <h2 
+              className="text-3xl font-bold mb-4"
+              style={{ 
+                background: 'linear-gradient(135deg, #f97316 0%, #ef4444 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                color: '#f97316'  // Fallback color
+              }}
+            >
               ¡{retiroEvent.description}!
             </h2>
-            <div className="text-2xl font-bold text-blue-700">
+            <div className="text-2xl font-bold text-blue-700 mb-2">
               {formatDate(retiroEvent.service_date)}
             </div>
           </div>
 
-          {/* Event Details */}
+          {/* Event Details - Simplified styling */}
           <div className="space-y-4 mb-6">
-            <div className="bg-white/80 rounded-lg p-4 shadow-sm">
+            <div 
+              className="rounded-lg p-4 shadow-sm border"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)' }}
+            >
               <div className="flex items-center justify-center gap-2 text-blue-800">
                 <Clock className="w-5 h-5" />
                 <span className="font-semibold">{getEventTime(retiroEvent.title)} a.m.</span>
               </div>
             </div>
             
-            <div className="bg-white/80 rounded-lg p-4 shadow-sm">
+            <div 
+              className="rounded-lg p-4 shadow-sm border"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)' }}
+            >
               <div className="flex items-center justify-center gap-2 text-blue-800">
                 <MapPin className="w-5 h-5" />
                 <span className="font-semibold">{retiroEvent.location}</span>
               </div>
             </div>
             
-            <div className="bg-white/80 rounded-lg p-4 shadow-sm">
-              <div className="flex items-center justify-center gap-2 text-blue-800">
-                <Users className="w-5 h-5" />
-                <span className="font-semibold">{retiroEvent.leader}</span>
+            <div 
+              className="rounded-lg p-4 shadow-sm border"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)' }}
+            >
+              <div className="flex items-center justify-center gap-2 text-blue-800 text-center">
+                <Users className="w-5 h-5 flex-shrink-0" />
+                <span className="font-semibold text-sm leading-tight">{retiroEvent.leader}</span>
               </div>
             </div>
           </div>
 
           {/* Special Activity */}
           {retiroEvent.special_activity && (
-            <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-lg p-4 mb-6">
+            <div 
+              className="rounded-lg p-4 mb-6 border"
+              style={{ 
+                background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)',
+                borderColor: 'rgba(147, 51, 234, 0.2)'
+              }}
+            >
               <div className="text-purple-700 font-semibold text-sm mb-1">Actividad Especial</div>
               <div className="text-purple-800 font-bold">{retiroEvent.special_activity}</div>
             </div>
           )}
 
-          {/* Decorative Elements */}
-          <div className="flex justify-center space-x-2 mb-6">
-            <div className="text-2xl">🙏</div>
-            <div className="text-2xl">✝️</div>
-            <div className="text-2xl">❤️</div>
+          {/* Decorative Elements - Simple emojis */}
+          <div className="flex justify-center space-x-4 mb-6">
+            <span style={{ fontSize: '24px' }}>🙏</span>
+            <span style={{ fontSize: '24px' }}>✝️</span>
+            <span style={{ fontSize: '24px' }}>❤️</span>
           </div>
 
           {/* Call to Action */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-4 mb-4">
+          <div 
+            className="text-white rounded-lg p-4 mb-4"
+            style={{ 
+              background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)'
+            }}
+          >
             <p className="font-bold text-sm">
               ¡Ven y sé parte de este encuentro especial con Dios!
             </p>
           </div>
 
           {/* Blessing */}
-          <div className="text-blue-700 font-bold text-lg">
+          <div className="text-blue-700 font-bold text-lg mb-6">
             ¡Que Dios te bendiga! 🙌
           </div>
 
           {/* Footer */}
-          <div className="mt-6 pt-4 border-t border-gray-200">
+          <div className="pt-4 border-t border-gray-200">
             <div className="flex items-center justify-center gap-2 text-gray-500 text-xs">
               <img 
                 src={arcaNoeLogo} 
                 alt="Logo" 
                 className="w-4 h-4 opacity-70"
+                style={{ maxWidth: '16px', maxHeight: '16px' }}
               />
               <span>Sistema ARCANA • Arca de Noé</span>
             </div>
@@ -629,18 +692,38 @@ const NotificationTesting = () => {
 
     try {
       setShowRetiroOverlay(true);
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Esperar más tiempo para que todos los elementos se rendericen
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       const canvas = await html2canvas(retiroRef.current, {
-        scale: 2,
+        scale: 3, // Mayor escala para mejor calidad
         useCORS: true,
         allowTaint: false,
         backgroundColor: '#f8fafc',
         logging: false,
+        width: 400, // Ancho fijo
+        height: 650, // Alto fijo
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 400,
+        windowHeight: 650,
+        ignoreElements: (element) => {
+          // Ignorar elementos problemáticos
+          return element.classList?.contains('ignore-html2canvas') || false;
+        },
+        onclone: (clonedDoc) => {
+          // Asegurar que los estilos se apliquen correctamente en el clon
+          const clonedElement = clonedDoc.querySelector('[data-flyer-container]') as HTMLElement;
+          if (clonedElement) {
+            clonedElement.style.width = '400px';
+            clonedElement.style.minHeight = '650px';
+            clonedElement.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+          }
+        }
       });
 
-      const link = document.createElement('a');
       const eventDate = retiroEvent ? new Date(retiroEvent.service_date).toISOString().split('T')[0] : '2025-10-05';
+      const link = document.createElement('a');
       link.download = `retiro-congregacional-${eventDate}.png`;
       link.href = canvas.toDataURL('image/png', 1.0);
       document.body.appendChild(link);
@@ -832,7 +915,9 @@ const NotificationTesting = () => {
             </div>
 
             <div className="flex justify-center mb-4">
-              <RetiroFlyerOverlay ref={retiroRef} />
+              <div data-flyer-container="true">
+                <RetiroFlyerOverlay ref={retiroRef} />
+              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row justify-center gap-3">
