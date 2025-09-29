@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import ServiceActionsMenu from './ServiceActionsMenu';
 import DirectorChangeRequest from './DirectorChangeRequest';
 import SelectedSongsDisplay from './SelectedSongsDisplay';
+import { EditServiceForm } from './EditServiceForm';
 
 interface Service {
   id: string;
@@ -26,6 +27,8 @@ interface Service {
   special_activity: string | null;
   choir_breaks: string | null;
   is_confirmed: boolean;
+  description: string | null;
+  notes: string | null;
   worship_groups?: {
     name: string;
     color_theme: string;
@@ -56,6 +59,7 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
   });
   const [selectedServiceForReplacement, setSelectedServiceForReplacement] = useState<Service | null>(null);
   const [selectedServiceForSongs, setSelectedServiceForSongs] = useState<Service | null>(null);
+  const [selectedServiceForEdit, setSelectedServiceForEdit] = useState<Service | null>(null);
   const [currentUserName, setCurrentUserName] = useState<string>('');
 
   useEffect(() => {
@@ -472,13 +476,30 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <ServiceActionsMenu
-                          service={service}
-                          currentUser={currentUserName}
-                          onToggleConfirmation={toggleConfirmation}
-                          onDelete={deleteService}
-                          onRequestDirectorChange={handleRequestDirectorChange}
-                        />
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedServiceForEdit(service)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => deleteService(service.id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                          <ServiceActionsMenu
+                            service={service}
+                            currentUser={currentUserName}
+                            onToggleConfirmation={toggleConfirmation}
+                            onDelete={deleteService}
+                            onRequestDirectorChange={handleRequestDirectorChange}
+                          />
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -555,6 +576,28 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
               serviceId={selectedServiceForSongs.id} 
               serviceTitle={selectedServiceForSongs.title}
               compact={false} 
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Service Dialog */}
+      <Dialog open={!!selectedServiceForEdit} onOpenChange={() => setSelectedServiceForEdit(null)}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="w-5 h-5" />
+              Editar Servicio
+            </DialogTitle>
+          </DialogHeader>
+          {selectedServiceForEdit && (
+            <EditServiceForm
+              service={selectedServiceForEdit}
+              onServiceUpdated={() => {
+                setSelectedServiceForEdit(null);
+                fetchServices();
+              }}
+              onCancel={() => setSelectedServiceForEdit(null)}
             />
           )}
         </DialogContent>
