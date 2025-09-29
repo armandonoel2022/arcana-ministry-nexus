@@ -658,7 +658,7 @@ const NotificationTesting = () => {
 
           {/* Call to Action */}
           <div 
-            className="text-white rounded-lg p-4 mb-4 mx-auto"
+            className="text-white rounded-lg p-3 mb-3 mx-auto"
             style={{ 
               backgroundColor: '#2563eb',
               backgroundImage: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
@@ -666,12 +666,27 @@ const NotificationTesting = () => {
             }}
           >
             <p className="font-bold text-sm" style={{ margin: 0 }}>
-              ¡Ven y sé parte de este encuentro especial con Dios!
+              Ven y adoremos juntos a nuestro Dios
             </p>
           </div>
 
+          {/* Ensayo General */}
+          <div 
+            className="rounded-lg p-3 mb-3 border mx-auto"
+            style={{ 
+              backgroundColor: 'rgba(220, 38, 38, 0.1)',
+              borderColor: 'rgba(220, 38, 38, 0.2)',
+              maxWidth: '340px'
+            }}
+          >
+            <div className="text-red-700 font-bold text-xs text-center leading-tight">
+              ENSAYO GENERAL EL VIERNES 03 DE OCTUBRE<br />
+              A LAS 07:00 P.M. NO FALTES
+            </div>
+          </div>
+
           {/* Blessing */}
-          <div className="text-blue-700 font-bold text-lg mb-6">
+          <div className="text-blue-700 font-bold text-base mb-3">
             ¡Que Dios te bendiga! 🙌
           </div>
 
