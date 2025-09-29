@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import NotificationTestButton from '@/components/notifications/NotificationTestButton';
 import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
+import arcaNoeLogo from '@/assets/arca-noe-logo.png';
 
 // Definir interfaces para los tipos de datos
 interface Profile {
@@ -54,8 +55,10 @@ interface ServiceCardProps {
 
 const NotificationTesting = () => {
   const [showServiceOverlay, setShowServiceOverlay] = useState(false);
+  const [showRetiroOverlay, setShowRetiroOverlay] = useState(false);
   const cardRef1 = useRef<HTMLDivElement>(null);
   const cardRef2 = useRef<HTMLDivElement>(null);
+  const retiroRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const mockServiceData: Service[] = [
@@ -430,6 +433,144 @@ const NotificationTesting = () => {
 
   ServiceCard.displayName = 'ServiceCard';
 
+  const RetiroOverlay = React.forwardRef<HTMLDivElement>((props, ref) => {
+    return (
+      <div 
+        ref={ref}
+        className="bg-white/95 rounded-xl p-8 border border-blue-200 shadow-2xl mx-auto relative overflow-hidden"
+        style={{ maxWidth: '700px' }}
+      >
+        {/* Logo de fondo sutil */}
+        <div 
+          className="absolute top-4 right-4 opacity-10 w-16 h-16"
+          style={{
+            backgroundImage: `url(${arcaNoeLogo})`,
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center'
+          }}
+        ></div>
+
+        {/* Header con gradiente */}
+        <div className="text-center mb-6 relative z-10">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <img 
+              src={arcaNoeLogo} 
+              alt="Logo Arca de Noé" 
+              className="w-12 h-12 object-contain"
+            />
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-700 to-blue-900 bg-clip-text text-transparent">
+              Programa de Servicios
+            </h2>
+          </div>
+          <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-6 py-2 rounded-full inline-block">
+            <span className="text-sm font-medium">1er Domingo de Octubre</span>
+          </div>
+        </div>
+
+        {/* Fecha y evento especial */}
+        <div className="bg-blue-50 rounded-lg p-6 mb-6 border-l-4 border-blue-500">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <div className="text-lg font-bold text-blue-900">📅 Fecha: 5 de octubre de 2025</div>
+              <div className="text-blue-700 font-medium mt-1">Evento especial: Retiro Congregacional</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Información del servicio */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-6 border border-blue-100">
+          <div className="flex items-center gap-4">
+            <div className="w-4 h-12 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full"></div>
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="text-2xl">⏰</div>
+                <h3 className="text-xl font-bold text-blue-900">09:00 a.m.</h3>
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-4 mt-4">
+                <div className="bg-white/70 rounded-lg p-4">
+                  <div className="text-sm font-semibold text-blue-800 mb-2">Dirige:</div>
+                  <div className="font-medium text-gray-900">Designados por el pastor Roosevelt</div>
+                </div>
+                
+                <div className="bg-white/70 rounded-lg p-4">
+                  <div className="text-sm font-semibold text-blue-800 mb-2">Grupo Asignado:</div>
+                  <div className="font-medium text-gray-900">Designados por el pastor Roosevelt</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mensaje automático */}
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+          <div className="flex items-start gap-3">
+            <div className="text-yellow-600 text-lg">📌</div>
+            <div>
+              <div className="text-yellow-800 font-medium text-sm">
+                ¡Este es un servicio de mensajes automatizado, no es necesario responder!
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer institucional */}
+        <div className="text-center pt-4 border-t border-gray-200">
+          <div className="flex items-center justify-center gap-2 text-gray-600 text-sm">
+            <img 
+              src={arcaNoeLogo} 
+              alt="Logo Arca de Noé" 
+              className="w-6 h-6 object-contain opacity-80"
+            />
+            <span>Sistema ARCANA - Arca de Noé</span>
+          </div>
+        </div>
+      </div>
+    );
+  });
+
+  RetiroOverlay.displayName = 'RetiroOverlay';
+
+  const downloadRetiroCard = async () => {
+    if (!retiroRef.current) return;
+
+    try {
+      setShowRetiroOverlay(true);
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const canvas = await html2canvas(retiroRef.current, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#f8fafc',
+        logging: false,
+      });
+
+      const link = document.createElement('a');
+      link.download = 'retiro-congregacional-5-octubre-2025.png';
+      link.href = canvas.toDataURL('image/png', 1.0);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "¡Descarga exitosa!",
+        description: "La tarjeta del Retiro Congregacional se ha descargado correctamente",
+      });
+    } catch (error) {
+      console.error('Error generating image:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo generar la imagen. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="text-center space-y-2">
@@ -466,6 +607,29 @@ const NotificationTesting = () => {
       </Card>
       
       <NotificationTestButton />
+
+      {/* Nuevo Card para el Retiro Congregacional */}
+      <Card className="border-2 border-green-200 bg-green-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-green-800">
+            <Calendar className="w-5 h-5" />
+            Retiro Congregacional - 5 de Octubre
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-green-700 mb-4">
+            Overlay especial para el Retiro Congregacional del primer domingo de octubre. 
+            Incluye el logo institucional y formato moderno.
+          </p>
+          <Button
+            onClick={() => setShowRetiroOverlay(true)}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            Mostrar Overlay del Retiro
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Service Overlay Mock */}
       {showServiceOverlay && (
@@ -547,6 +711,46 @@ const NotificationTesting = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        </div>
+      )}
+
+      {/* Retiro Congregacional Overlay */}
+      {showRetiroOverlay && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-green-900 flex items-center gap-2">
+                <img 
+                  src={arcaNoeLogo} 
+                  alt="Logo Arca de Noé" 
+                  className="w-8 h-8 object-contain"
+                />
+                Retiro Congregacional
+              </h2>
+              <Button
+                onClick={() => setShowRetiroOverlay(false)}
+                variant="outline"
+                size="sm"
+                className="text-gray-600 hover:text-gray-800"
+              >
+                Cerrar
+              </Button>
+            </div>
+
+            <div className="flex justify-center mb-6">
+              <RetiroOverlay ref={retiroRef} />
+            </div>
+
+            <div className="flex justify-center gap-4">
+              <Button
+                onClick={downloadRetiroCard}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Descargar Programa
+              </Button>
+            </div>
           </div>
         </div>
       )}
