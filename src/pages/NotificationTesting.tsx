@@ -635,7 +635,7 @@ const NotificationTesting = () => {
 
           {/* Santa Comunión */}
           <div 
-            className="rounded-lg p-4 mb-6 border mx-auto"
+            className="rounded-lg p-3 mb-4 border mx-auto"
             style={{ 
               backgroundColor: 'rgba(147, 51, 234, 0.1)',
               borderColor: 'rgba(147, 51, 234, 0.2)',
@@ -650,10 +650,10 @@ const NotificationTesting = () => {
           </div>
 
           {/* Decorative Elements */}
-          <div className="flex justify-center space-x-4 mb-6">
-            <span style={{ fontSize: '24px' }}>🙏</span>
-            <span style={{ fontSize: '24px' }}>✝️</span>
-            <span style={{ fontSize: '24px' }}>❤️</span>
+          <div className="flex justify-center space-x-4 mb-3">
+            <span style={{ fontSize: '20px' }}>🙏</span>
+            <span style={{ fontSize: '20px' }}>✝️</span>
+            <span style={{ fontSize: '20px' }}>❤️</span>
           </div>
 
           {/* Call to Action */}
