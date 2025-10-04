@@ -19,14 +19,15 @@ serve(async (req) => {
 
     console.log('Iniciando envío de notificaciones mensuales de cumpleaños...')
 
-    // Obtener el mes actual
-    const now = new Date()
-    const currentMonth = now.getMonth() + 1
+    // Obtener el mes actual en zona horaria de República Dominicana
+    const nowTzStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Santo_Domingo', year: 'numeric', month: '2-digit', day: '2-digit' })
+    const [yearStr, monthStr] = nowTzStr.split('-')
+    const currentMonth = Number(monthStr)
     const monthNames = [
       'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
     ]
-    const currentMonthName = monthNames[now.getMonth()]
+    const currentMonthName = monthNames[currentMonth - 1]
 
     // Obtener miembros con cumpleaños en el mes actual
     const { data: members, error: membersError } = await supabase
@@ -40,13 +41,13 @@ serve(async (req) => {
       throw membersError
     }
 
-    // Filtrar miembros que cumplen años este mes (sin desfaces por zona horaria)
+    // Filtrar miembros que cumplen años este mes usando zona horaria RD
     const birthdayMembers = members?.filter(member => {
       if (!member.fecha_nacimiento) return false
       const parts = member.fecha_nacimiento.split('-')
       if (parts.length !== 3) return false
-      const month = Number(parts[1]) - 1
-      return month === now.getMonth()
+      const month = Number(parts[1]) // 1-12
+      return month === currentMonth
     }) || []
 
     if (birthdayMembers.length === 0) {
@@ -75,7 +76,7 @@ serve(async (req) => {
     // Crear datos de la tarjeta para mostrar visualmente
     const birthdayCard = {
       month: currentMonthName,
-      year: now.getFullYear(),
+      year: Number(yearStr),
         birthdays: birthdayMembers.map(member => ({
           name: `${member.nombres} ${member.apellidos}`,
           day: Number(member.fecha_nacimiento!.split('-')[2]),
@@ -105,7 +106,7 @@ serve(async (req) => {
       priority: 2,
       metadata: {
         month: currentMonth,
-        year: now.getFullYear(),
+        year: Number(yearStr),
         birthday_count: birthdayMembers.length,
         birthday_card: birthdayCard,
         show_card: true

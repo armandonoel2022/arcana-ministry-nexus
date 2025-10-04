@@ -58,14 +58,19 @@ serve(async (req) => {
         throw membersError
       }
 
-      // Filtrar miembros que cumplen años hoy (sin desfaces por zona horaria)
+      // Filtrar miembros que cumplen años hoy usando zona horaria de República Dominicana
+      const tzDateStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Santo_Domingo', year: 'numeric', month: '2-digit', day: '2-digit' })
+      const [, tzMonthStr, tzDayStr] = tzDateStr.split('-')
+      const tzMonth = Number(tzMonthStr) - 1
+      const tzDay = Number(tzDayStr)
+
       birthdayMembers = allMembers?.filter(member => {
         if (!member.fecha_nacimiento) return false
         const parts = member.fecha_nacimiento.split('-').map(Number)
         if (parts.length !== 3) return false
         const month = parts[1] - 1
         const day = parts[2]
-        return month === today.getMonth() && day === today.getDate()
+        return month === tzMonth && day === tzDay
       }) || []
     }
 

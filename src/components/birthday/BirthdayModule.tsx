@@ -96,12 +96,16 @@ const BirthdayModule = () => {
       member.cargo.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // Filtrar por mes actual si está activado (usando fecha local, sin TZ)
+    // Filtrar por mes actual si está activado (usando fecha en zona horaria RD)
     if (showThisMonthOnly) {
-      const currentMonth = new Date().getMonth();
+      const tzMonth = (() => {
+        const str = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Santo_Domingo', year: 'numeric', month: '2-digit', day: '2-digit' });
+        const [, m] = str.split('-');
+        return Number(m) - 1;
+      })();
       filtered = filtered.filter(member => {
         const birth = parseDateOnly(member.fecha_nacimiento);
-        return birth ? birth.getMonth() === currentMonth : false;
+        return birth ? birth.getMonth() === tzMonth : false;
       });
     }
 
@@ -134,13 +138,18 @@ const BirthdayModule = () => {
     const birth = parseDateOnly(birthDate);
     if (!birth) return false;
 
-    const today = new Date();
-    const localToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    // Obtener día y mes actuales en zona horaria de República Dominicana
+    const todayStr = new Date().toLocaleDateString('en-CA', {
+      timeZone: 'America/Santo_Domingo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    const [, monthStr, dayStr] = todayStr.split('-');
+    const tzMonth = Number(monthStr) - 1;
+    const tzDay = Number(dayStr);
 
-    return (
-      localToday.getMonth() === birth.getMonth() &&
-      localToday.getDate() === birth.getDate()
-    );
+    return tzMonth === birth.getMonth() && tzDay === birth.getDate();
   };
 
   const getNextBirthday = (birthDate: string) => {
