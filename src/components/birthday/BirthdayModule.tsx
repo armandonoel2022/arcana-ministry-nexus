@@ -149,9 +149,10 @@ const BirthdayModule = () => {
     const localToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     if (!birth) return localToday;
 
-    const thisYear = new Date(localToday.getFullYear(), birth.getMonth(), birth.getDate());
+    // Crear fecha del cumpleaños en el año actual SIN zona horaria
+    const thisYear = new Date(localToday.getFullYear(), birth.getMonth(), birth.getDate(), 12, 0, 0);
     if (thisYear < localToday) {
-      return new Date(localToday.getFullYear() + 1, birth.getMonth(), birth.getDate());
+      return new Date(localToday.getFullYear() + 1, birth.getMonth(), birth.getDate(), 12, 0, 0);
     }
     return thisYear;
   };
@@ -377,11 +378,16 @@ const BirthdayModule = () => {
                     <div>
                       <h4 className="font-semibold">{member.nombres} {member.apellidos}</h4>
                       <p className="text-sm text-gray-600">{getRoleLabel(member.cargo)}</p>
-                      {member.fecha_nacimiento && (
-                        <p className="text-xs text-gray-500">
-                          {format(getNextBirthday(member.fecha_nacimiento), 'dd \'de\' MMMM', { locale: es })}
-                        </p>
-                      )}
+                      {member.fecha_nacimiento && (() => {
+                        const birth = parseDateOnly(member.fecha_nacimiento);
+                        if (!birth) return null;
+                        const monthNames = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+                        return (
+                          <p className="text-xs text-gray-500">
+                            {birth.getDate()} de {monthNames[birth.getMonth()]}
+                          </p>
+                        );
+                      })()}
                     </div>
                   </div>
                   <div className="flex gap-2">
