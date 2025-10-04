@@ -104,21 +104,19 @@ const BirthdayModule = () => {
         return Number(m) - 1;
       })();
       filtered = filtered.filter(member => {
-        const birth = parseDateOnly(member.fecha_nacimiento);
-        return birth ? birth.getMonth() === tzMonth : false;
+        const parts = getDateParts(member.fecha_nacimiento);
+        return parts ? (parts.m - 1) === tzMonth : false;
       });
     }
 
-    // Ordenar por mes y día de cumpleaños (usando fecha local, sin TZ)
+    // Ordenar por mes y día de cumpleaños usando valores crudos del string
     filtered = filtered.sort((a, b) => {
-      const dateA = parseDateOnly(a.fecha_nacimiento);
-      const dateB = parseDateOnly(b.fecha_nacimiento);
+      const dateA = getDateParts(a.fecha_nacimiento);
+      const dateB = getDateParts(b.fecha_nacimiento);
       if (!dateA || !dateB) return 0;
-
-      const monthDiff = dateA.getMonth() - dateB.getMonth();
+      const monthDiff = dateA.m - dateB.m; // m es 1-12
       if (monthDiff !== 0) return monthDiff;
-
-      return dateA.getDate() - dateB.getDate();
+      return dateA.d - dateB.d;
     });
 
     setFilteredMembers(filtered);
@@ -132,6 +130,16 @@ const BirthdayModule = () => {
     const [y, m, d] = parts.map(Number);
     if (!y || !m || !d) return null;
     return new Date(y, m - 1, d);
+  };
+
+  // Obtener partes numéricas exactas desde el string de base de datos
+  const getDateParts = (dateStr?: string): { y: number; m: number; d: number } | null => {
+    if (!dateStr) return null;
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return null;
+    const [y, m, d] = parts.map(Number);
+    if (!y || !m || !d) return null;
+    return { y, m, d };
   };
 
   const isBirthdayToday = (birthDate: string) => {
