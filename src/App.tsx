@@ -32,6 +32,7 @@ import PersonalAssistant from "./pages/PersonalAssistant";
 import NotificationTesting from "./pages/NotificationTesting";
 import ScheduledNotifications from "./pages/ScheduledNotifications";
 import GroupRehearsal from "./pages/GroupRehearsal";
+import RehearsalSession from "./pages/RehearsalSession";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./hooks/useAuth";
@@ -94,7 +95,8 @@ function App() {
                           <Routes>
                             <Route path="/" element={<Index />} />
                             <Route path="/repertorio" element={<RepertoirioMusical />} />
-                            <Route path="/rehearsals" element={<GroupRehearsal />} />
+              <Route path="/rehearsals" element={<GroupRehearsal />} />
+              <Route path="/rehearsals/:sessionId" element={<RehearsalSession />} />
                             <Route path="/agenda" element={<MinisterialAgenda />} />
                             <Route path="/director-replacements" element={<DirectorReplacements />} />
                             <Route path="/communication" element={<Communication />} />

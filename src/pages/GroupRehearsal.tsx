@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,49 +11,43 @@ import {
   Mic, 
   Video,
   Users,
-  Headphones
+  Headphones,
+  Trash2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
 interface RehearsalSession {
   id: string;
   title: string;
+  session_name: string;
   description: string;
   group_id: string;
   status: string;
   backing_track_url: string | null;
   song_id: string | null;
   created_at: string;
+  created_by: string;
   songs?: {
     title: string;
     artist: string;
   };
+  profiles?: {
+    full_name: string;
+  };
 }
 
 const GroupRehearsal = () => {
+  const navigate = useNavigate();
+  const { user, userProfile } = useAuth();
   const [sessions, setSessions] = useState<RehearsalSession[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userGroup, setUserGroup] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchUserGroup();
     fetchSessions();
   }, []);
-
-  const fetchUserGroup = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        // Aquí puedes implementar lógica para determinar el grupo del usuario
-        // Por ahora, estableceremos un grupo por defecto
-        setUserGroup("grupo_massy");
-      }
-    } catch (error) {
-      console.error("Error fetching user group:", error);
-    }
-  };
 
   const fetchSessions = async () => {
     try {
@@ -64,6 +59,9 @@ const GroupRehearsal = () => {
           songs (
             title,
             artist
+          ),
+          profiles!rehearsal_sessions_created_by_fkey (
+            full_name
           )
         `)
         .order("created_at", { ascending: false });
@@ -83,16 +81,19 @@ const GroupRehearsal = () => {
   };
 
   const createNewSession = async () => {
+    if (!user) return;
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const now = new Date();
+      const sessionName = `Ensayo - ${now.toLocaleDateString('es-ES')} ${now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
 
       const { data, error } = await supabase
         .from("rehearsal_sessions")
         .insert({
           title: "Nueva Sesión de Ensayo",
-          description: "Sesión creada",
-          group_id: userGroup || "grupo_massy",
+          session_name: sessionName,
+          description: "Sesión de ensayo colaborativo",
+          group_id: "general",
           status: "draft",
           created_by: user.id,
         })
@@ -106,7 +107,8 @@ const GroupRehearsal = () => {
         description: "Se ha creado una nueva sesión de ensayo",
       });
 
-      fetchSessions();
+      // Navigate to the new session
+      navigate(`/rehearsals/${data.id}`);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -114,6 +116,42 @@ const GroupRehearsal = () => {
         variant: "destructive",
       });
       console.error("Error creating session:", error);
+    }
+  };
+
+  const deleteSession = async (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (!userProfile || userProfile.role !== 'administrator') {
+      toast({
+        title: "Error",
+        description: "Solo los administradores pueden eliminar sesiones",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("rehearsal_sessions")
+        .delete()
+        .eq("id", sessionId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sesión eliminada",
+        description: "La sesión ha sido eliminada exitosamente",
+      });
+
+      fetchSessions();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar la sesión",
+        variant: "destructive",
+      });
+      console.error("Error deleting session:", error);
     }
   };
 
@@ -179,33 +217,49 @@ const GroupRehearsal = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {sessions.map((session) => (
-                  <Card key={session.id} className="hover:shadow-lg transition-shadow">
+                  <Card 
+                    key={session.id} 
+                    className="hover:shadow-lg transition-shadow cursor-pointer"
+                    onClick={() => navigate(`/rehearsals/${session.id}`)}
+                  >
                     <CardHeader>
                       <div className="flex items-start justify-between mb-2">
                         <Music2 className="w-8 h-8 text-purple-600" />
-                        {getStatusBadge(session.status)}
+                        <div className="flex items-center gap-2">
+                          {getStatusBadge(session.status)}
+                          {userProfile?.role === 'administrator' && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={(e) => deleteSession(session.id, e)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
-                      <CardTitle className="text-xl">{session.title}</CardTitle>
+                      <CardTitle className="text-xl">
+                        {session.session_name || session.title}
+                      </CardTitle>
                       <CardDescription>
                         {session.songs?.title || "Sin canción asignada"}
                         {session.songs?.artist && ` - ${session.songs.artist}`}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                           <Users className="w-4 h-4" />
-                          <span className="capitalize">{session.group_id.replace('_', ' ')}</span>
+                          <span>Creado por {session.profiles?.full_name || 'Usuario'}</span>
                         </div>
-                        {session.description && (
-                          <p className="text-sm text-gray-600">{session.description}</p>
-                        )}
-                        <div className="flex gap-2 pt-4">
-                          <Button className="flex-1" variant="outline">
-                            <Play className="w-4 h-4 mr-2" />
-                            Abrir
-                          </Button>
-                        </div>
+                        <p className="text-xs text-gray-500">
+                          {new Date(session.created_at).toLocaleString('es-ES')}
+                        </p>
+                        <Button className="w-full mt-4" variant="outline">
+                          <Play className="w-4 h-4 mr-2" />
+                          Abrir Sesión
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
