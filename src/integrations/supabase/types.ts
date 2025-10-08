@@ -859,6 +859,44 @@ export type Database = {
         }
         Relationships: []
       }
+      rehearsal_participants: {
+        Row: {
+          id: string
+          invitation_status: string | null
+          invited_by: string | null
+          joined_at: string | null
+          role: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          invitation_status?: string | null
+          invited_by?: string | null
+          joined_at?: string | null
+          role?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          invitation_status?: string | null
+          invited_by?: string | null
+          joined_at?: string | null
+          role?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rehearsal_participants_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "rehearsal_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rehearsal_sessions: {
         Row: {
           backing_track_url: string | null
@@ -867,6 +905,8 @@ export type Database = {
           description: string | null
           group_id: string
           id: string
+          is_published: boolean | null
+          session_name: string | null
           song_id: string | null
           status: string
           title: string
@@ -879,6 +919,8 @@ export type Database = {
           description?: string | null
           group_id: string
           id?: string
+          is_published?: boolean | null
+          session_name?: string | null
           song_id?: string | null
           status?: string
           title: string
@@ -891,6 +933,8 @@ export type Database = {
           description?: string | null
           group_id?: string
           id?: string
+          is_published?: boolean | null
+          session_name?: string | null
           song_id?: string | null
           status?: string
           title?: string
@@ -913,6 +957,8 @@ export type Database = {
           duration_seconds: number | null
           id: string
           is_muted: boolean | null
+          is_published: boolean | null
+          participant_id: string | null
           session_id: string
           track_type: string
           updated_at: string
@@ -926,6 +972,8 @@ export type Database = {
           duration_seconds?: number | null
           id?: string
           is_muted?: boolean | null
+          is_published?: boolean | null
+          participant_id?: string | null
           session_id: string
           track_type: string
           updated_at?: string
@@ -939,6 +987,8 @@ export type Database = {
           duration_seconds?: number | null
           id?: string
           is_muted?: boolean | null
+          is_published?: boolean | null
+          participant_id?: string | null
           session_id?: string
           track_type?: string
           updated_at?: string
@@ -947,6 +997,13 @@ export type Database = {
           volume_level?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "rehearsal_tracks_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "rehearsal_participants"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "rehearsal_tracks_session_id_fkey"
             columns: ["session_id"]
