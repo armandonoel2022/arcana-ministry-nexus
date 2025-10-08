@@ -859,6 +859,103 @@ export type Database = {
         }
         Relationships: []
       }
+      rehearsal_sessions: {
+        Row: {
+          backing_track_url: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          group_id: string
+          id: string
+          song_id: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          backing_track_url?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          group_id: string
+          id?: string
+          song_id?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          backing_track_url?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          group_id?: string
+          id?: string
+          song_id?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rehearsal_sessions_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rehearsal_tracks: {
+        Row: {
+          audio_url: string | null
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          is_muted: boolean | null
+          session_id: string
+          track_type: string
+          updated_at: string
+          user_id: string
+          video_url: string | null
+          volume_level: number | null
+        }
+        Insert: {
+          audio_url?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          is_muted?: boolean | null
+          session_id: string
+          track_type: string
+          updated_at?: string
+          user_id: string
+          video_url?: string | null
+          volume_level?: number | null
+        }
+        Update: {
+          audio_url?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          is_muted?: boolean | null
+          session_id?: string
+          track_type?: string
+          updated_at?: string
+          user_id?: string
+          video_url?: string | null
+          volume_level?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rehearsal_tracks_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "rehearsal_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scheduled_notifications: {
         Row: {
           created_at: string

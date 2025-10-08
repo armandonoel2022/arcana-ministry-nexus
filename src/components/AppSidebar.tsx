@@ -19,7 +19,8 @@ import {
   Guitar,
   Users2,
   Bot,
-  LogOut
+  LogOut,
+  Radio
 } from "lucide-react"
 
 import {
@@ -74,6 +75,11 @@ const menuCategories = [
         title: "Repertorio Musical",
         url: "/repertorio",
         icon: Music,
+      },
+      {
+        title: "Ensayos Colaborativos",
+        url: "/rehearsals",
+        icon: Radio,
       },
       {
         title: "Eventos Especiales",

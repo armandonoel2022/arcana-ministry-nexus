@@ -13,7 +13,8 @@ import {
   CheckCircle,
   TrendingUp,
   Star,
-  Bell
+  Bell,
+  Radio
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,6 +43,14 @@ const Index = () => {
       icon: Music,
       url: "/repertorio",
       gradient: "service-card-blue-light"
+    },
+    {
+      id: "rehearsals",
+      title: "Ensayos Colaborativos",
+      description: "Graba y practica en grupo",
+      icon: Radio,
+      url: "/rehearsals",
+      gradient: "service-card-blue"
     },
     {
       id: "integrantes",
@@ -185,6 +194,7 @@ const Index = () => {
               const colors = [
                 'bg-gradient-to-r from-blue-500 to-blue-600',
                 'bg-gradient-to-r from-blue-600 to-blue-700', 
+                'bg-gradient-to-r from-indigo-500 to-indigo-600',
                 'bg-gradient-to-r from-blue-400 to-blue-500',
                 'bg-gradient-to-r from-blue-700 to-blue-800'
               ];
