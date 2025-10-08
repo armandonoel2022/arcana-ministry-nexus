@@ -20,7 +20,7 @@ import {
   Users2,
   Bot,
   LogOut,
-  Radio
+  Headphones
 } from "lucide-react"
 
 import {
@@ -79,7 +79,7 @@ const menuCategories = [
       {
         title: "Ensayos Colaborativos",
         url: "/rehearsals",
-        icon: Radio,
+        icon: Headphones,
       },
       {
         title: "Eventos Especiales",
