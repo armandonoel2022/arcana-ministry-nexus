@@ -889,10 +889,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "rehearsal_participants_invited_by_fk"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "rehearsal_participants_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "rehearsal_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rehearsal_participants_user_id_fk"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -941,6 +955,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "rehearsal_sessions_created_by_fk"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "rehearsal_sessions_song_id_fkey"
             columns: ["song_id"]
@@ -1015,6 +1036,13 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "rehearsal_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rehearsal_tracks_user_id_fk"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1740,6 +1768,14 @@ export type Database = {
       }
     }
     Functions: {
+      can_access_rehearsal_file: {
+        Args: { object_name: string }
+        Returns: boolean
+      }
+      can_manage_rehearsal_file: {
+        Args: { object_name: string }
+        Returns: boolean
+      }
       expire_pending_replacements: {
         Args: Record<PropertyKey, never>
         Returns: undefined
