@@ -45,6 +45,8 @@ const GroupRehearsal = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  console.log("GroupRehearsal: Component mounted", { user: user?.id, userProfile: userProfile?.id });
+
   useEffect(() => {
     fetchSessions();
   }, []);
@@ -52,6 +54,7 @@ const GroupRehearsal = () => {
   const fetchSessions = async () => {
     try {
       setLoading(true);
+      console.log("GroupRehearsal: Fetching sessions...");
       const { data, error } = await supabase
         .from("rehearsal_sessions")
         .select(`
@@ -66,24 +69,37 @@ const GroupRehearsal = () => {
         `)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("GroupRehearsal: Error fetching sessions:", error);
+        throw error;
+      }
+      console.log("GroupRehearsal: Sessions fetched:", data?.length);
       setSessions(data || []);
     } catch (error: any) {
+      console.error("GroupRehearsal: Catch block error:", error);
       toast({
         title: "Error",
         description: "No se pudieron cargar las sesiones de ensayo",
         variant: "destructive",
       });
-      console.error("Error fetching sessions:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const createNewSession = async () => {
-    if (!user) return;
+    if (!user) {
+      console.error("GroupRehearsal: Cannot create session - no user");
+      toast({
+        title: "Error",
+        description: "Debes estar autenticado para crear una sesión",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
+      console.log("GroupRehearsal: Creating new session...");
       const now = new Date();
       const sessionName = `Ensayo - ${now.toLocaleDateString('es-ES')} ${now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
 
@@ -100,8 +116,12 @@ const GroupRehearsal = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("GroupRehearsal: Error creating session:", error);
+        throw error;
+      }
 
+      console.log("GroupRehearsal: Session created successfully:", data.id);
       toast({
         title: "Sesión creada",
         description: "Se ha creado una nueva sesión de ensayo",
@@ -110,12 +130,12 @@ const GroupRehearsal = () => {
       // Navigate to the new session
       navigate(`/rehearsals/${data.id}`);
     } catch (error: any) {
+      console.error("GroupRehearsal: Catch block error:", error);
       toast({
         title: "Error",
         description: "No se pudo crear la sesión",
         variant: "destructive",
       });
-      console.error("Error creating session:", error);
     }
   };
 

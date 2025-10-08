@@ -61,10 +61,6 @@ function App() {
     setShowSplash(false);
   };
 
-  if (showSplash) {
-    return <SplashScreen onComplete={handleSplashComplete} />;
-  }
-
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
@@ -74,6 +70,9 @@ function App() {
             <Sonner />
             <NotificationOverlay />
             <ServiceNotificationOverlay />
+            {showSplash ? (
+              <SplashScreen onComplete={handleSplashComplete} />
+            ) : (
             <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
@@ -127,6 +126,7 @@ function App() {
               } />
             </Routes>
             </BrowserRouter>
+            )}
           </TooltipProvider>
         </AuthProvider>
       </ThemeProvider>

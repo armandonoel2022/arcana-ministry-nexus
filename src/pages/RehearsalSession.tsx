@@ -53,6 +53,8 @@ const RehearsalSession = () => {
   const { user, userProfile } = useAuth();
   const { toast } = useToast();
   
+  console.log("RehearsalSession: Component mounted", { sessionId, user: user?.id });
+  
   const [session, setSession] = useState<SessionData | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,8 +64,11 @@ const RehearsalSession = () => {
 
   useEffect(() => {
     if (sessionId) {
+      console.log("RehearsalSession: Fetching data for session:", sessionId);
       fetchSessionData();
       fetchParticipants();
+    } else {
+      console.error("RehearsalSession: No sessionId provided");
     }
   }, [sessionId]);
 
@@ -124,6 +129,15 @@ const RehearsalSession = () => {
       description: "Tu pista ha sido guardada exitosamente",
     });
   };
+
+  // Early return if user is not loaded yet
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500">Verificando usuario...</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
