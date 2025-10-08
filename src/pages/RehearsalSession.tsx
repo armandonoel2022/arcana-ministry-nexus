@@ -109,7 +109,7 @@ const RehearsalSession = () => {
         .from("rehearsal_participants")
         .select(`
           *,
-          profiles (
+          profiles!rehearsal_participants_user_id_fk (
             full_name,
             photo_url
           )

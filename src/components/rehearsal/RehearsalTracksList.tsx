@@ -49,7 +49,7 @@ const RehearsalTracksList = ({ sessionId, refreshTrigger, onTrackDeleted }: Rehe
         .from("rehearsal_tracks")
         .select(`
           *,
-          profiles (
+          profiles!rehearsal_tracks_user_id_fk (
             full_name,
             photo_url
           )
