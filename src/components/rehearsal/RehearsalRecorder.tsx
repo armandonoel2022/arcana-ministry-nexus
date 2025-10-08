@@ -1,18 +1,28 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Mic, Square, Play, Pause, Upload, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Mic, Square, Play, Pause, Upload, X, Music } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface RehearsalRecorderProps {
   sessionId: string;
   onComplete: () => void;
   onCancel: () => void;
+  backingTrackUrl?: string | null;
 }
 
-const RehearsalRecorder = ({ sessionId, onComplete, onCancel }: RehearsalRecorderProps) => {
+const RehearsalRecorder = ({ sessionId, onComplete, onCancel, backingTrackUrl }: RehearsalRecorderProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isRecording, setIsRecording] = useState(false);
@@ -20,13 +30,49 @@ const RehearsalRecorder = ({ sessionId, onComplete, onCancel }: RehearsalRecorde
   const [audioURL, setAudioURL] = useState<string | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [trackName, setTrackName] = useState("Pista principal");
+  const [voiceType, setVoiceType] = useState<string>("main");
+  const [isPlayingBackingTrack, setIsPlayingBackingTrack] = useState(false);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const backingTrackRef = useRef<HTMLAudioElement | null>(null);
+
+  const voiceTypes = [
+    { value: "main", label: "Pista Principal" },
+    { value: "soprano", label: "Soprano" },
+    { value: "alto", label: "Alto/Contralto" },
+    { value: "tenor", label: "Tenor" },
+    { value: "bajo", label: "Bajo" },
+    { value: "piano", label: "Piano" },
+    { value: "guitarra", label: "Guitarra" },
+    { value: "bateria", label: "Batería" },
+    { value: "bajo_electrico", label: "Bajo Eléctrico" },
+    { value: "otro", label: "Otro" },
+  ];
+
+  const toggleBackingTrack = () => {
+    if (!backingTrackUrl || !backingTrackRef.current) return;
+
+    if (isPlayingBackingTrack) {
+      backingTrackRef.current.pause();
+      setIsPlayingBackingTrack(false);
+    } else {
+      backingTrackRef.current.play();
+      setIsPlayingBackingTrack(true);
+    }
+  };
 
   const startRecording = async () => {
     try {
+      // Start backing track if available
+      if (backingTrackUrl && backingTrackRef.current && !isPlayingBackingTrack) {
+        backingTrackRef.current.currentTime = 0;
+        backingTrackRef.current.play();
+        setIsPlayingBackingTrack(true);
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           sampleRate: 44100,
@@ -56,6 +102,12 @@ const RehearsalRecorder = ({ sessionId, onComplete, onCancel }: RehearsalRecorde
         
         // Stop all tracks
         stream.getTracks().forEach(track => track.stop());
+        
+        // Stop backing track
+        if (backingTrackRef.current) {
+          backingTrackRef.current.pause();
+          setIsPlayingBackingTrack(false);
+        }
       };
 
       mediaRecorder.start(100); // Collect data every 100ms
@@ -144,6 +196,9 @@ const RehearsalRecorder = ({ sessionId, onComplete, onCancel }: RehearsalRecorde
       if (participantError) throw participantError;
 
       // Create track record
+      const trackNameToSave = voiceType === "main" ? trackName : 
+        voiceTypes.find(v => v.value === voiceType)?.label || trackName;
+
       const { error: trackError } = await supabase
         .from('rehearsal_tracks')
         .insert({
@@ -152,8 +207,10 @@ const RehearsalRecorder = ({ sessionId, onComplete, onCancel }: RehearsalRecorde
           participant_id: participantData.id,
           audio_url: publicUrl,
           track_type: 'audio',
+          track_name: trackNameToSave,
           duration_seconds: recordingTime,
           is_published: true,
+          is_backing_track: false,
         });
 
       if (trackError) throw trackError;
@@ -189,6 +246,65 @@ const RehearsalRecorder = ({ sessionId, onComplete, onCancel }: RehearsalRecorde
 
   return (
     <div className="space-y-4">
+      {/* Hidden audio element for backing track */}
+      {backingTrackUrl && (
+        <audio
+          ref={backingTrackRef}
+          src={backingTrackUrl}
+          loop
+          className="hidden"
+        />
+      )}
+
+      {/* Track naming and type selection */}
+      {!isRecording && !audioURL && (
+        <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+          <div className="space-y-2">
+            <Label htmlFor="voiceType">Tipo de pista</Label>
+            <Select value={voiceType} onValueChange={setVoiceType}>
+              <SelectTrigger id="voiceType">
+                <SelectValue placeholder="Selecciona el tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                {voiceTypes.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {voiceType === "main" && (
+            <div className="space-y-2">
+              <Label htmlFor="trackName">Nombre de la pista</Label>
+              <Input
+                id="trackName"
+                value={trackName}
+                onChange={(e) => setTrackName(e.target.value)}
+                placeholder="Ej: Mi grabación, Pista 1..."
+              />
+            </div>
+          )}
+
+          {backingTrackUrl && !isRecording && (
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Music className="w-5 h-5 text-blue-600" />
+                <span className="text-sm text-blue-900">Pista base disponible</span>
+              </div>
+              <Button
+                size="sm"
+                variant={isPlayingBackingTrack ? "default" : "outline"}
+                onClick={toggleBackingTrack}
+              >
+                {isPlayingBackingTrack ? "Pausar" : "Reproducir"}
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Recording controls */}
       {!audioURL && (
         <div className="flex flex-col items-center gap-4">

@@ -956,10 +956,12 @@ export type Database = {
           created_at: string
           duration_seconds: number | null
           id: string
+          is_backing_track: boolean | null
           is_muted: boolean | null
           is_published: boolean | null
           participant_id: string | null
           session_id: string
+          track_name: string | null
           track_type: string
           updated_at: string
           user_id: string
@@ -971,10 +973,12 @@ export type Database = {
           created_at?: string
           duration_seconds?: number | null
           id?: string
+          is_backing_track?: boolean | null
           is_muted?: boolean | null
           is_published?: boolean | null
           participant_id?: string | null
           session_id: string
+          track_name?: string | null
           track_type: string
           updated_at?: string
           user_id: string
@@ -986,10 +990,12 @@ export type Database = {
           created_at?: string
           duration_seconds?: number | null
           id?: string
+          is_backing_track?: boolean | null
           is_muted?: boolean | null
           is_published?: boolean | null
           participant_id?: string | null
           session_id?: string
+          track_name?: string | null
           track_type?: string
           updated_at?: string
           user_id?: string

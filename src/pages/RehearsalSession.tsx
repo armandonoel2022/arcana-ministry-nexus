@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import RehearsalRecorder from "@/components/rehearsal/RehearsalRecorder";
 import RehearsalTracksList from "@/components/rehearsal/RehearsalTracksList";
 import InviteParticipantDialog from "@/components/rehearsal/InviteParticipantDialog";
+import BackingTrackUpload from "@/components/rehearsal/BackingTrackUpload";
 
 interface Participant {
   id: string;
@@ -40,6 +41,7 @@ interface SessionData {
   status: string;
   created_by: string;
   created_at: string;
+  backing_track_url: string | null;
   song_id?: string;
   songs?: {
     title: string;
@@ -225,6 +227,7 @@ const RehearsalSession = () => {
                 {isRecording ? (
                   <RehearsalRecorder
                     sessionId={sessionId!}
+                    backingTrackUrl={session.backing_track_url}
                     onComplete={handleRecordingComplete}
                     onCancel={() => setIsRecording(false)}
                   />
@@ -235,6 +238,20 @@ const RehearsalSession = () => {
                 )}
               </CardContent>
             </Card>
+
+            {/* Backing track upload */}
+            <BackingTrackUpload
+              sessionId={sessionId!}
+              existingTrackUrl={session.backing_track_url}
+              onTrackUploaded={(url) => {
+                setSession(prev => prev ? { ...prev, backing_track_url: url } : null);
+                setRefreshTracks(prev => prev + 1);
+              }}
+              onTrackRemoved={() => {
+                setSession(prev => prev ? { ...prev, backing_track_url: null } : null);
+                setRefreshTracks(prev => prev + 1);
+              }}
+            />
 
             {/* Tracks list */}
             <Card>

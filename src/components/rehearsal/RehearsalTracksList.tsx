@@ -15,6 +15,8 @@ interface Track {
   duration_seconds: number;
   is_published: boolean;
   created_at: string;
+  track_name: string;
+  is_backing_track: boolean;
   profiles: {
     full_name: string;
     photo_url?: string;
@@ -143,6 +145,7 @@ const RehearsalTracksList = ({ sessionId, refreshTrigger, onTrackDeleted }: Rehe
 
             <div className="flex-1 min-w-0">
               <p className="font-medium truncate">{track.profiles.full_name}</p>
+              <p className="text-sm text-gray-500">{track.track_name}</p>
               <div className="flex items-center gap-4 mt-2">
                 <audio
                   id={`audio-${track.id}`}
