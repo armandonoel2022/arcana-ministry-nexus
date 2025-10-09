@@ -127,8 +127,7 @@ const RehearsalSession = () => {
         .select(`
           *,
           profiles!rehearsal_participants_user_id_fk (
-            full_name,
-            photo_url
+            full_name
           )
         `)
         .eq("session_id", sessionId)
@@ -148,8 +147,7 @@ const RehearsalSession = () => {
         .select(`
           *,
           profiles!rehearsal_tracks_user_id_fk (
-            full_name,
-            photo_url
+            full_name
           )
         `)
         .eq("session_id", sessionId)
