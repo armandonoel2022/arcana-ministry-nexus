@@ -1801,6 +1801,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      is_participant_in_session: {
+        Args: { _session_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_room_moderator: {
         Args: { _room_id: string; _user_id: string }
         Returns: boolean
