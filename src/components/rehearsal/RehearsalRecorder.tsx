@@ -20,9 +20,15 @@ interface RehearsalRecorderProps {
   onComplete: () => void;
   onCancel: () => void;
   backingTrackUrl?: string | null;
+  existingTracks?: Array<{
+    id: string;
+    audio_url: string;
+    volume_level: number;
+    is_muted: boolean;
+  }>;
 }
 
-const RehearsalRecorder = ({ sessionId, onComplete, onCancel, backingTrackUrl }: RehearsalRecorderProps) => {
+const RehearsalRecorder = ({ sessionId, onComplete, onCancel, backingTrackUrl, existingTracks = [] }: RehearsalRecorderProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isRecording, setIsRecording] = useState(false);
@@ -38,6 +44,7 @@ const RehearsalRecorder = ({ sessionId, onComplete, onCancel, backingTrackUrl }:
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const backingTrackRef = useRef<HTMLAudioElement | null>(null);
+  const existingTracksRefs = useRef<HTMLAudioElement[]>([]);
 
   const voiceTypes = [
     { value: "main", label: "Pista Principal" },
@@ -73,6 +80,12 @@ const RehearsalRecorder = ({ sessionId, onComplete, onCancel, backingTrackUrl }:
         setIsPlayingBackingTrack(true);
       }
 
+      // Start all existing tracks for reference
+      existingTracksRefs.current.forEach(audio => {
+        audio.currentTime = 0;
+        audio.play();
+      });
+
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           sampleRate: 44100,
@@ -103,11 +116,12 @@ const RehearsalRecorder = ({ sessionId, onComplete, onCancel, backingTrackUrl }:
         // Stop all tracks
         stream.getTracks().forEach(track => track.stop());
         
-        // Stop backing track
+        // Stop backing track and existing tracks
         if (backingTrackRef.current) {
           backingTrackRef.current.pause();
           setIsPlayingBackingTrack(false);
         }
+        existingTracksRefs.current.forEach(audio => audio.pause());
       };
 
       mediaRecorder.start(100); // Collect data every 100ms
@@ -247,7 +261,7 @@ const RehearsalRecorder = ({ sessionId, onComplete, onCancel, backingTrackUrl }:
 
   return (
     <div className="space-y-4">
-      {/* Hidden audio element for backing track */}
+      {/* Hidden audio elements for backing track and existing tracks */}
       {backingTrackUrl && (
         <audio
           ref={backingTrackRef}
@@ -256,6 +270,21 @@ const RehearsalRecorder = ({ sessionId, onComplete, onCancel, backingTrackUrl }:
           className="hidden"
         />
       )}
+      {existingTracks.map((track, index) => (
+        <audio
+          key={track.id}
+          ref={el => {
+            if (el) {
+              existingTracksRefs.current[index] = el;
+              el.volume = track.volume_level;
+              el.muted = track.is_muted;
+            }
+          }}
+          src={track.audio_url}
+          loop
+          className="hidden"
+        />
+      ))}
 
       {/* Track naming and type selection */}
       {!isRecording && !audioURL && (

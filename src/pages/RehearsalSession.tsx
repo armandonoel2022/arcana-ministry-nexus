@@ -79,6 +79,7 @@ const RehearsalSession = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [refreshTracks, setRefreshTracks] = useState(0);
+  const [triggerPlayMix, setTriggerPlayMix] = useState(false);
 
   useEffect(() => {
     if (sessionId) {
@@ -277,6 +278,7 @@ const RehearsalSession = () => {
             <Button 
               variant="default"
               className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              onClick={() => setTriggerPlayMix(prev => !prev)}
             >
               <Play className="w-4 h-4 mr-2" />
               Reproducir mezcla
@@ -323,6 +325,7 @@ const RehearsalSession = () => {
                   <RehearsalRecorder
                     sessionId={sessionId!}
                     backingTrackUrl={session?.backing_track_url || null}
+                    existingTracks={tracks}
                     onComplete={handleRecordingComplete}
                     onCancel={() => setIsRecording(false)}
                   />
@@ -415,6 +418,7 @@ const RehearsalSession = () => {
       <AudioPlayer
         tracks={tracks}
         backingTrackUrl={session?.backing_track_url || null}
+        triggerPlay={triggerPlayMix}
       />
 
       <InviteParticipantDialog

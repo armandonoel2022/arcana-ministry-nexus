@@ -11,9 +11,10 @@ interface AudioPlayerProps {
     is_muted: boolean;
   }>;
   backingTrackUrl: string | null;
+  triggerPlay?: boolean;
 }
 
-const AudioPlayer = ({ tracks, backingTrackUrl }: AudioPlayerProps) => {
+const AudioPlayer = ({ tracks, backingTrackUrl, triggerPlay }: AudioPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -64,6 +65,13 @@ const AudioPlayer = ({ tracks, backingTrackUrl }: AudioPlayerProps) => {
       }
     });
   }, [volume, isMuted, tracks]);
+
+  useEffect(() => {
+    // Trigger play when triggerPlay changes
+    if (triggerPlay !== undefined && Object.keys(audioRefs.current).length > 0) {
+      handlePlayPause();
+    }
+  }, [triggerPlay]);
 
   const updateTime = () => {
     const audios = Object.values(audioRefs.current);
