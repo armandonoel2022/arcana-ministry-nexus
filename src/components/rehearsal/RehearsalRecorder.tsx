@@ -185,15 +185,15 @@ const RehearsalRecorder = ({ sessionId, onComplete, onCancel, backingTrackUrl }:
         .from('rehearsal-media')
         .getPublicUrl(fileName);
 
-      // Get participant ID
-      const { data: participantData, error: participantError } = await supabase
+      // Get participant ID (optional)
+      const { data: participantData } = await supabase
         .from('rehearsal_participants')
         .select('id')
         .eq('session_id', sessionId)
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (participantError) throw participantError;
+      const participantId = participantData?.id ?? null;
 
       // Create track record
       const trackNameToSave = voiceType === "main" ? trackName : 
@@ -204,7 +204,7 @@ const RehearsalRecorder = ({ sessionId, onComplete, onCancel, backingTrackUrl }:
         .insert({
           session_id: sessionId,
           user_id: user.id,
-          participant_id: participantData.id,
+          participant_id: participantId,
           audio_url: publicUrl,
           track_type: 'audio',
           track_name: trackNameToSave,
@@ -227,9 +227,10 @@ const RehearsalRecorder = ({ sessionId, onComplete, onCancel, backingTrackUrl }:
       onComplete();
 
     } catch (error: any) {
+      const message = typeof error?.message === 'string' ? error.message : JSON.stringify(error);
       toast({
         title: "Error",
-        description: "No se pudo subir la grabación",
+        description: `No se pudo subir la grabación: ${message}`,
         variant: "destructive",
       });
       console.error("Error uploading recording:", error);
