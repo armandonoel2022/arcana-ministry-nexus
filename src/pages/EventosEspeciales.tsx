@@ -56,11 +56,11 @@ const EventosEspeciales = () => {
   });
 
   const [itemForm, setItemForm] = useState({
-    time_slot: '',
+    start_time: '',
+    end_time: '',
     title: '',
     description: '',
     responsible_person: '',
-    duration_minutes: 30,
     notes: '',
   });
 
@@ -137,18 +137,42 @@ const EventosEspeciales = () => {
     }
   };
 
+  const calculateDuration = (startTime: string, endTime: string): number => {
+    if (!startTime || !endTime) return 0;
+    
+    const [startHour, startMin] = startTime.split(':').map(Number);
+    const [endHour, endMin] = endTime.split(':').map(Number);
+    
+    const startMinutes = startHour * 60 + startMin;
+    const endMinutes = endHour * 60 + endMin;
+    
+    return endMinutes - startMinutes;
+  };
+
   const createProgramItem = async () => {
     if (!selectedEvent) return;
 
     try {
+      const duration = calculateDuration(itemForm.start_time, itemForm.end_time);
+      
+      if (duration <= 0) {
+        toast.error('La hora de finalización debe ser posterior a la hora de inicio');
+        return;
+      }
+
       const nextOrder = programItems.length + 1;
       
       const { error } = await supabase
         .from('event_program_items')
         .insert([{
-          ...itemForm,
           event_id: selectedEvent.id,
+          time_slot: `${itemForm.start_time} - ${itemForm.end_time}`,
+          title: itemForm.title,
+          description: itemForm.description,
+          responsible_person: itemForm.responsible_person,
+          duration_minutes: duration,
           item_order: nextOrder,
+          notes: itemForm.notes,
         }]);
 
       if (error) throw error;
@@ -156,11 +180,11 @@ const EventosEspeciales = () => {
       toast.success('Item agregado al programa');
       setIsCreatingItem(false);
       setItemForm({
-        time_slot: '',
+        start_time: '',
+        end_time: '',
         title: '',
         description: '',
         responsible_person: '',
-        duration_minutes: 30,
         notes: '',
       });
       fetchProgramItems(selectedEvent.id);
@@ -256,12 +280,17 @@ const EventosEspeciales = () => {
       }
       
       // Tabla de programa
-      const tableData = programItems.map(item => [
-        `${item.time_slot || 'N/A'}\n${item.duration_minutes} min`,
-        item.title,
-        item.responsible_person || '',
-        item.notes || item.description || ''
-      ]);
+      const tableData = programItems.map(item => {
+        const timeRange = item.time_slot || 'N/A';
+        const durationText = `${item.duration_minutes} minutos`;
+        
+        return [
+          `${timeRange}\n${durationText}`,
+          item.title,
+          item.responsible_person || '',
+          item.notes || item.description || ''
+        ];
+      });
       
       autoTable(doc, {
         startY: yPosition,
@@ -403,9 +432,9 @@ const EventosEspeciales = () => {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <Clock className="w-4 h-4 text-muted-foreground" />
-                            <span className="font-semibold">{item.time_slot}</span>
+                            <span className="font-semibold text-lg">{item.time_slot}</span>
                             <span className="text-sm text-muted-foreground">
-                              ({item.duration_minutes} min)
+                              ({item.duration_minutes} minutos)
                             </span>
                           </div>
                           <h3 className="text-lg font-bold">{item.title}</h3>
@@ -419,7 +448,7 @@ const EventosEspeciales = () => {
                           )}
                           {item.notes && (
                             <p className="text-sm text-muted-foreground mt-1">
-                              <span className="font-medium">Notas:</span> {item.notes}
+                              <span className="font-medium">Observaciones:</span> {item.notes}
                             </p>
                           )}
                         </div>
@@ -511,24 +540,42 @@ const EventosEspeciales = () => {
             <DialogTitle>Agregar Item al Programa</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <Label>Hora</Label>
-              <Input
-                type="time"
-                value={itemForm.time_slot}
-                onChange={(e) => setItemForm({ ...itemForm, time_slot: e.target.value })}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Hora de Inicio</Label>
+                <Input
+                  type="time"
+                  value={itemForm.start_time}
+                  onChange={(e) => setItemForm({ ...itemForm, start_time: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <Label>Hora de Finalización</Label>
+                <Input
+                  type="time"
+                  value={itemForm.end_time}
+                  onChange={(e) => setItemForm({ ...itemForm, end_time: e.target.value })}
+                  required
+                />
+              </div>
             </div>
+            {itemForm.start_time && itemForm.end_time && (
+              <div className="text-sm text-muted-foreground">
+                Duración: {calculateDuration(itemForm.start_time, itemForm.end_time)} minutos
+              </div>
+            )}
             <div>
               <Label>Título</Label>
               <Input
                 value={itemForm.title}
                 onChange={(e) => setItemForm({ ...itemForm, title: e.target.value })}
-                placeholder="Ej: Alabanza congregacional"
+                placeholder="Ej: Adoración y Alabanzas"
+                required
               />
             </div>
             <div>
-              <Label>Descripción</Label>
+              <Label>Descripción (opcional)</Label>
               <Textarea
                 value={itemForm.description}
                 onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
@@ -544,19 +591,11 @@ const EventosEspeciales = () => {
               />
             </div>
             <div>
-              <Label>Duración (minutos)</Label>
-              <Input
-                type="number"
-                value={itemForm.duration_minutes}
-                onChange={(e) => setItemForm({ ...itemForm, duration_minutes: parseInt(e.target.value) })}
-              />
-            </div>
-            <div>
-              <Label>Notas</Label>
+              <Label>Observaciones (opcional)</Label>
               <Textarea
                 value={itemForm.notes}
                 onChange={(e) => setItemForm({ ...itemForm, notes: e.target.value })}
-                placeholder="Notas adicionales..."
+                placeholder="Notas adicionales, canciones específicas, etc."
               />
             </div>
             <Button onClick={createProgramItem} className="w-full">
