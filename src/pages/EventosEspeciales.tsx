@@ -6,11 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar, Clock, MapPin, Plus, Save, Trash2, FileText } from 'lucide-react';
+import { Calendar, Clock, MapPin, Plus, Save, Trash2, FileText, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface SpecialEvent {
   id: string;
@@ -48,6 +50,9 @@ const EventosEspeciales = () => {
     location: 'Templo Principal',
     description: '',
     event_type: 'special',
+    subtitle: '', // Para "70 años de Gracia y Fidelidad"
+    total_duration: '', // Duración total del evento
+    formal_start_time: '', // Hora de inicio formal
   });
 
   const [itemForm, setItemForm] = useState({
@@ -122,6 +127,9 @@ const EventosEspeciales = () => {
         location: 'Templo Principal',
         description: '',
         event_type: 'special',
+        subtitle: '',
+        total_duration: '',
+        formal_start_time: '',
       });
       fetchEvents();
     } catch (error: any) {
@@ -180,9 +188,127 @@ const EventosEspeciales = () => {
   };
 
   const generatePDF = () => {
-    if (!selectedEvent) return;
-    
-    toast.info('Función de generación de PDF en desarrollo');
+    if (!selectedEvent || programItems.length === 0) {
+      toast.error('Selecciona un evento con items en el programa');
+      return;
+    }
+
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      
+      // Logo/Header - ARCA DE NOE
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('ARCA DE NOE', 15, 15);
+      
+      // Título principal
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      const titleLines = doc.splitTextToSize(selectedEvent.title, pageWidth - 30);
+      doc.text(titleLines, pageWidth / 2, 30, { align: 'center' });
+      
+      // Subtítulo (si existe)
+      let yPosition = 30 + (titleLines.length * 7);
+      if (selectedEvent.description) {
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'normal');
+        const subtitleLines = doc.splitTextToSize(selectedEvent.description, pageWidth - 30);
+        doc.text(subtitleLines, pageWidth / 2, yPosition + 5, { align: 'center' });
+        yPosition += subtitleLines.length * 6 + 5;
+      }
+      
+      // Programación
+      yPosition += 10;
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Programación', pageWidth / 2, yPosition, { align: 'center' });
+      
+      // Información general
+      yPosition += 10;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      
+      const eventDate = format(new Date(selectedEvent.event_date), "EEEE d 'de' MMMM yyyy", { locale: es });
+      doc.text(`Fecha: ${eventDate}`, 15, yPosition);
+      yPosition += 6;
+      
+      if (selectedEvent.location) {
+        doc.text(`Lugar: ${selectedEvent.location}`, 15, yPosition);
+        yPosition += 6;
+      }
+      
+      // Calcular duración total
+      const totalMinutes = programItems.reduce((sum, item) => sum + (item.duration_minutes || 0), 0);
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      const durationText = hours > 0 
+        ? `${hours} hora${hours > 1 ? 's' : ''}, ${minutes} minutos`
+        : `${minutes} minutos`;
+      doc.text(`Tiempo de programa: ${durationText}`, 15, yPosition);
+      yPosition += 6;
+      
+      if (programItems[0]?.time_slot) {
+        doc.text(`Inicio formal: ${programItems[0].time_slot}`, 15, yPosition);
+        yPosition += 10;
+      } else {
+        yPosition += 6;
+      }
+      
+      // Tabla de programa
+      const tableData = programItems.map(item => [
+        `${item.time_slot || 'N/A'}\n${item.duration_minutes} min`,
+        item.title,
+        item.responsible_person || '',
+        item.notes || item.description || ''
+      ]);
+      
+      autoTable(doc, {
+        startY: yPosition,
+        head: [['Hora / Duración', 'Actividad', 'Responsable', 'Observaciones']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: {
+          fillColor: [41, 128, 185],
+          textColor: 255,
+          fontStyle: 'bold',
+          halign: 'center'
+        },
+        styles: {
+          fontSize: 9,
+          cellPadding: 4,
+          overflow: 'linebreak',
+          valign: 'top'
+        },
+        columnStyles: {
+          0: { cellWidth: 35, halign: 'center' },
+          1: { cellWidth: 45 },
+          2: { cellWidth: 40 },
+          3: { cellWidth: 'auto' }
+        },
+        margin: { left: 15, right: 15 }
+      });
+      
+      // Footer
+      const finalY = (doc as any).lastAutoTable.finalY || yPosition + 20;
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'italic');
+      doc.text(
+        'Nota: Al finalizar el servicio, tendremos música de ambientación mientras los invitados se despiden.',
+        15,
+        finalY + 10,
+        { maxWidth: pageWidth - 30 }
+      );
+      
+      // Guardar PDF
+      const fileName = `Programa_${selectedEvent.title.replace(/\s+/g, '_')}_${format(new Date(), 'ddMMyyyy')}.pdf`;
+      doc.save(fileName);
+      
+      toast.success('PDF generado exitosamente');
+    } catch (error: any) {
+      console.error('Error generando PDF:', error);
+      toast.error('Error al generar PDF: ' + error.message);
+    }
   };
 
   if (loading) {
@@ -249,10 +375,15 @@ const EventosEspeciales = () => {
                 )}
               </div>
               {selectedEvent && (
-                <div className="space-x-2">
-                  <Button variant="outline" onClick={generatePDF}>
-                    <FileText className="w-4 h-4 mr-2" />
-                    Generar PDF
+                <div className="flex gap-2">
+                  <Button 
+                    variant="default" 
+                    onClick={generatePDF}
+                    disabled={programItems.length === 0}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Descargar PDF
                   </Button>
                   <Button onClick={() => setIsCreatingItem(true)}>
                     <Plus className="w-4 h-4 mr-2" />
@@ -347,6 +478,14 @@ const EventosEspeciales = () => {
                 value={eventForm.location}
                 onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
                 placeholder="Templo Principal"
+              />
+            </div>
+            <div>
+              <Label>Subtítulo</Label>
+              <Input
+                value={eventForm.subtitle}
+                onChange={(e) => setEventForm({ ...eventForm, subtitle: e.target.value })}
+                placeholder="Ej: 70 años de Gracia y Fidelidad"
               />
             </div>
             <div>
