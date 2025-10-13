@@ -64,10 +64,11 @@ const Auth = () => {
 
     try {
       const redirectUrl = `${window.location.origin}/`;
+      const genericPassword = 'ADN_2025'; // Contraseña genérica para todos los usuarios
       
       const { error } = await supabase.auth.signUp({
         email,
-        password,
+        password: genericPassword, // Usar contraseña genérica
         options: {
           emailRedirectTo: redirectUrl,
           data: {
@@ -78,7 +79,7 @@ const Auth = () => {
 
       if (error) throw error;
       
-      toast.success('¡Solicitud de registro enviada! El administrador revisará tu cuenta y te contactará con una contraseña provisional.');
+      toast.success('¡Registro exitoso! Usa la contraseña "ADN_2025" para iniciar sesión. Deberás cambiarla en tu primer inicio de sesión.');
     } catch (error: any) {
       toast.error(error.message || 'Error al crear cuenta');
     } finally {
@@ -259,36 +260,12 @@ const Auth = () => {
                       required
                     />
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Contraseña</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="signup-password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 pr-10"
-                      required
-                      minLength={6}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-gray-400" />
-                      )}
-                    </Button>
-                  </div>
+                  <p className="text-blue-600 text-sm font-medium">
+                    ℹ️ Contraseña inicial: <span className="font-bold">ADN_2025</span>
+                  </p>
+                  <p className="text-gray-600 text-xs">
+                    Deberás cambiar esta contraseña en tu primer inicio de sesión.
+                  </p>
                   <p className="text-gray-600 text-xs">
                     Los nuevos usuarios requieren aprobación del administrador antes de poder acceder al sistema.
                   </p>

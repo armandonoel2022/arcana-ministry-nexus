@@ -452,6 +452,56 @@ export type Database = {
           },
         ]
       }
+      event_program_items: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          duration_minutes: number | null
+          event_id: string
+          id: string
+          item_order: number | null
+          notes: string | null
+          responsible_person: string | null
+          time_slot: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          event_id: string
+          id?: string
+          item_order?: number | null
+          notes?: string | null
+          responsible_person?: string | null
+          time_slot?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          event_id?: string
+          id?: string
+          item_order?: number | null
+          notes?: string | null
+          responsible_person?: string | null
+          time_slot?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_program_items_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "special_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_members: {
         Row: {
           created_at: string | null
@@ -632,6 +682,39 @@ export type Database = {
           tipo_sangre?: Database["public"]["Enums"]["blood_type"] | null
           updated_at?: string | null
           voz_instrumento?: string | null
+        }
+        Relationships: []
+      }
+      ministry_members: {
+        Row: {
+          created_at: string | null
+          department: string | null
+          id: string
+          is_exempt_from_subscription: boolean | null
+          notes: string | null
+          position: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          department?: string | null
+          id?: string
+          is_exempt_from_subscription?: boolean | null
+          notes?: string | null
+          position: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          department?: string | null
+          id?: string
+          is_exempt_from_subscription?: boolean | null
+          notes?: string | null
+          position?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -1349,6 +1432,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      special_events: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          event_date: string
+          event_type: string | null
+          id: string
+          location: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          event_date: string
+          event_type?: string | null
+          id?: string
+          location?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          event_date?: string
+          event_type?: string | null
+          id?: string
+          location?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       system_notifications: {
         Row: {
