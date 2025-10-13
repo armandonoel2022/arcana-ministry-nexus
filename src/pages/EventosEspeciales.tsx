@@ -50,9 +50,6 @@ const EventosEspeciales = () => {
     location: 'Templo Principal',
     description: '',
     event_type: 'special',
-    subtitle: '', // Para "70 años de Gracia y Fidelidad"
-    total_duration: '', // Duración total del evento
-    formal_start_time: '', // Hora de inicio formal
   });
 
   const [itemForm, setItemForm] = useState({
@@ -127,9 +124,6 @@ const EventosEspeciales = () => {
         location: 'Templo Principal',
         description: '',
         event_type: 'special',
-        subtitle: '',
-        total_duration: '',
-        formal_start_time: '',
       });
       fetchEvents();
     } catch (error: any) {
@@ -490,15 +484,17 @@ const EventosEspeciales = () => {
               <Input
                 value={eventForm.title}
                 onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
-                placeholder="Ej: Vigilia de Año Nuevo"
+                placeholder="Ej: Aniversario Iglesia Arca de Noé"
+                required
               />
             </div>
             <div>
-              <Label>Fecha</Label>
+              <Label>Fecha y Hora</Label>
               <Input
                 type="datetime-local"
                 value={eventForm.event_date}
                 onChange={(e) => setEventForm({ ...eventForm, event_date: e.target.value })}
+                required
               />
             </div>
             <div>
@@ -507,23 +503,20 @@ const EventosEspeciales = () => {
                 value={eventForm.location}
                 onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
                 placeholder="Templo Principal"
+                required
               />
             </div>
             <div>
-              <Label>Subtítulo</Label>
-              <Input
-                value={eventForm.subtitle}
-                onChange={(e) => setEventForm({ ...eventForm, subtitle: e.target.value })}
-                placeholder="Ej: 70 años de Gracia y Fidelidad"
-              />
-            </div>
-            <div>
-              <Label>Descripción</Label>
+              <Label>Descripción / Subtítulo</Label>
               <Textarea
                 value={eventForm.description}
                 onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
-                placeholder="Descripción del evento..."
+                placeholder="Ej: 70 años de Gracia y Fidelidad - Retiro para conmemorar la Reforma Protestante"
+                rows={3}
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Puedes incluir el subtítulo y detalles adicionales del evento
+              </p>
             </div>
             <Button onClick={createEvent} className="w-full">
               <Save className="w-4 h-4 mr-2" />
