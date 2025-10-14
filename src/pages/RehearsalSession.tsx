@@ -249,7 +249,7 @@ const RehearsalSession = () => {
         <div className="mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate("/rehearsals")}
+            onClick={() => navigate("/rehearsals?tab=sesiones")}
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,10 +40,12 @@ interface RehearsalSession {
 
 const GroupRehearsal = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, userProfile } = useAuth();
   const [sessions, setSessions] = useState<RehearsalSession[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const defaultTab = searchParams.get("tab") || "instrucciones";
 
   console.log("GroupRehearsal: Component mounted", { user: user?.id, userProfile: userProfile?.id });
 
@@ -147,7 +149,32 @@ const GroupRehearsal = () => {
       return;
     }
 
+    if (!confirm("¿Estás seguro de que deseas eliminar esta sesión? Esta acción no se puede deshacer.")) {
+      return;
+    }
+
     try {
+      // First delete all tracks associated with the session
+      const { error: tracksError } = await supabase
+        .from("rehearsal_tracks")
+        .delete()
+        .eq("session_id", sessionId);
+
+      if (tracksError) {
+        console.error("Error deleting tracks:", tracksError);
+      }
+
+      // Then delete all participants
+      const { error: participantsError } = await supabase
+        .from("rehearsal_participants")
+        .delete()
+        .eq("session_id", sessionId);
+
+      if (participantsError) {
+        console.error("Error deleting participants:", participantsError);
+      }
+
+      // Finally delete the session
       const { error } = await supabase
         .from("rehearsal_sessions")
         .delete()
@@ -207,7 +234,7 @@ const GroupRehearsal = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="instrucciones" className="space-y-6">
+        <Tabs defaultValue={defaultTab} className="space-y-6">
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="instrucciones">Instrucciones</TabsTrigger>
             <TabsTrigger value="sesiones">Sesiones</TabsTrigger>
