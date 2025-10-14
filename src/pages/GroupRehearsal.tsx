@@ -63,7 +63,7 @@ const GroupRehearsal = () => {
             title,
             artist
           ),
-          profiles!rehearsal_sessions_created_by_fkey (
+          profiles:created_by (
             full_name
           )
         `)
@@ -77,11 +77,7 @@ const GroupRehearsal = () => {
       setSessions(data || []);
     } catch (error: any) {
       console.error("GroupRehearsal: Catch block error:", error);
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar las sesiones de ensayo",
-        variant: "destructive",
-      });
+      setSessions([]);
     } finally {
       setLoading(false);
     }
@@ -211,10 +207,10 @@ const GroupRehearsal = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="sesiones" className="space-y-6">
+        <Tabs defaultValue="instrucciones" className="space-y-6">
           <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="sesiones">Sesiones</TabsTrigger>
             <TabsTrigger value="instrucciones">Instrucciones</TabsTrigger>
+            <TabsTrigger value="sesiones">Sesiones</TabsTrigger>
           </TabsList>
 
           <TabsContent value="sesiones" className="space-y-6">
