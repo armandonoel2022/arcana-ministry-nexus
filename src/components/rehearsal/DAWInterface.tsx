@@ -71,8 +71,6 @@ const DAWInterface = ({
   const [isPaused, setIsPaused] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
-  const [trackName, setTrackName] = useState("");
-  const [voiceType, setVoiceType] = useState<string>("main");
   const [isUploading, setIsUploading] = useState(false);
 
   // Solo state
@@ -86,18 +84,22 @@ const DAWInterface = ({
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const voiceTypes = [
-    { value: "main", label: "Pista Principal" },
-    { value: "soprano", label: "Soprano" },
-    { value: "alto", label: "Alto/Contralto" },
-    { value: "tenor", label: "Tenor" },
-    { value: "bajo", label: "Bajo" },
-    { value: "piano", label: "Piano" },
-    { value: "guitarra", label: "Guitarra" },
-    { value: "bateria", label: "Batería" },
-    { value: "bajo_electrico", label: "Bajo Eléctrico" },
-    { value: "otro", label: "Otro" },
-  ];
+  // Get user's profile for auto-naming
+  const [userProfile, setUserProfile] = useState<{ full_name: string } | null>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", user.id)
+          .single();
+        setUserProfile(data);
+      }
+    };
+    fetchProfile();
+  }, [user]);
 
   const allTracks = [
     ...(backingTrackUrl
@@ -227,30 +229,23 @@ const DAWInterface = ({
 
   // Recording functions
   const startRecording = async () => {
-    if (!trackName.trim()) {
-      toast({
-        title: "Error",
-        description: "Por favor ingresa un nombre para la pista",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       // Start playback of all tracks
       handlePlay();
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          sampleRate: 44100,
-          channelCount: 2,
-          echoCancellation: true,
-          noiseSuppression: true,
+          sampleRate: 48000,
+          channelCount: 1, // Mono recording
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
         },
       });
 
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: "audio/webm",
+        mimeType: "audio/webm;codecs=opus",
+        audioBitsPerSecond: 128000,
       });
 
       mediaRecorderRef.current = mediaRecorder;
@@ -320,7 +315,7 @@ const DAWInterface = ({
   };
 
   const uploadRecording = async () => {
-    if (!recordedBlob || !user) return;
+    if (!recordedBlob || !user || !userProfile) return;
 
     try {
       setIsUploading(true);
@@ -346,10 +341,16 @@ const DAWInterface = ({
         .eq("user_id", user.id)
         .maybeSingle();
 
-      const trackNameToSave =
-        voiceType === "main"
-          ? trackName
-          : voiceTypes.find((v) => v.value === voiceType)?.label || trackName;
+      // Count existing tracks by this user
+      const { data: existingTracks } = await supabase
+        .from("rehearsal_tracks")
+        .select("id")
+        .eq("session_id", sessionId)
+        .eq("user_id", user.id)
+        .eq("is_backing_track", false);
+
+      const trackNumber = (existingTracks?.length || 0) + 1;
+      const autoTrackName = `${userProfile.full_name} Voz ${trackNumber}`;
 
       const { error: trackError } = await supabase
         .from("rehearsal_tracks")
@@ -359,7 +360,7 @@ const DAWInterface = ({
           participant_id: participantData?.id ?? null,
           audio_url: publicUrl,
           track_type: "audio",
-          track_name: trackNameToSave,
+          track_name: autoTrackName,
           duration_seconds: recordingTime,
           is_published: true,
           is_backing_track: false,
@@ -374,8 +375,6 @@ const DAWInterface = ({
 
       setRecordedBlob(null);
       setRecordingTime(0);
-      setTrackName("");
-      setVoiceType("main");
       onTracksRefresh();
     } catch (error: any) {
       toast({
@@ -402,7 +401,7 @@ const DAWInterface = ({
       .padStart(2, "0")}`;
   };
 
-  const initWaveform = (containerId: string, audioUrl: string) => {
+  const initWaveform = (containerId: string, audioUrl: string, isBackingTrack: boolean = false) => {
     const container = document.getElementById(containerId);
     if (!container || waveformRefs.current[containerId]) return;
 
@@ -510,39 +509,6 @@ const DAWInterface = ({
           {!recordedBlob && (
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <Label className="text-sm whitespace-nowrap">Tipo:</Label>
-                <Select
-                  value={voiceType}
-                  onValueChange={setVoiceType}
-                  disabled={isRecording}
-                >
-                  <SelectTrigger className="w-[140px] h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {voiceTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {voiceType === "main" && (
-                <div className="flex items-center gap-2 flex-1">
-                  <Label className="text-sm whitespace-nowrap">Nombre:</Label>
-                  <Input
-                    value={trackName}
-                    onChange={(e) => setTrackName(e.target.value)}
-                    placeholder="Nombre de la pista"
-                    className="h-8"
-                    disabled={isRecording}
-                  />
-                </div>
-              )}
-
-              <div className="flex items-center gap-2">
                 {!isRecording ? (
                   <Button
                     onClick={startRecording}
@@ -551,7 +517,7 @@ const DAWInterface = ({
                     className="bg-red-600 hover:bg-red-700"
                   >
                     <Mic className="w-4 h-4 mr-2" />
-                    Grabar
+                    Grabar Nueva Pista
                   </Button>
                 ) : (
                   <>
@@ -715,7 +681,7 @@ const DAWInterface = ({
                         if (el && track.audio_url) {
                           setTimeout(
                             () =>
-                              initWaveform(`waveform-${track.id}`, track.audio_url),
+                              initWaveform(`waveform-${track.id}`, track.audio_url, isBackingTrack),
                             100
                           );
                         }
