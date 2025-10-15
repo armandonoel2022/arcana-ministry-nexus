@@ -6,21 +6,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { 
   ArrowLeft,
-  Mic, 
-  UserPlus, 
-  Trash2,
-  Play,
-  Headphones,
-  Download
+  UserPlus
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import RehearsalRecorder from "@/components/rehearsal/RehearsalRecorder";
 import InviteParticipantDialog from "@/components/rehearsal/InviteParticipantDialog";
 import BackingTrackUpload from "@/components/rehearsal/BackingTrackUpload";
-import MultitrackView from "@/components/rehearsal/MultitrackView";
-import AudioPlayer from "@/components/rehearsal/AudioPlayer";
+import DAWInterface from "@/components/rehearsal/DAWInterface";
 
 interface Participant {
   id: string;
@@ -76,10 +69,8 @@ const RehearsalSession = () => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isRecording, setIsRecording] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [refreshTracks, setRefreshTracks] = useState(0);
-  const [triggerPlayMix, setTriggerPlayMix] = useState(false);
 
   useEffect(() => {
     if (sessionId) {
@@ -163,14 +154,6 @@ const RehearsalSession = () => {
   };
 
 
-  const handleRecordingComplete = () => {
-    setIsRecording(false);
-    setRefreshTracks(prev => prev + 1);
-    toast({
-      title: "Grabación guardada",
-      description: "Tu pista ha sido guardada exitosamente",
-    });
-  };
 
   const handleTrackDelete = async (trackId: string) => {
     try {
@@ -273,66 +256,12 @@ const RehearsalSession = () => {
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2 mt-6">
-            <Button 
-              variant="default"
-              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-              onClick={() => setTriggerPlayMix(prev => !prev)}
-            >
-              <Play className="w-4 h-4 mr-2" />
-              Reproducir mezcla
-            </Button>
-            <Button variant="outline">
-              <Headphones className="w-4 h-4 mr-2" />
-              Solo pista base
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => setIsRecording(!isRecording)}
-              className={isRecording ? "bg-red-50 text-red-600 border-red-600" : ""}
-            >
-              <Mic className="w-4 h-4 mr-2" />
-              {isRecording ? "Cancelar grabación" : "Grabar nueva pista"}
-            </Button>
-            <Button variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Exportar mezcla
-            </Button>
-            {isCreator && (
-              <Button variant="outline" className="text-destructive hover:text-destructive">
-                <Trash2 className="w-4 h-4 mr-2" />
-                Eliminar sesión
-              </Button>
-            )}
-          </div>
         </div>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Main Area - 3 columns */}
           <div className="lg:col-span-3 space-y-6">
-            {/* Recording Section */}
-            {isRecording && (
-              <Card className="border-2 border-red-500">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Mic className="w-5 h-5 text-red-600" />
-                    Grabando nueva pista
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <RehearsalRecorder
-                    sessionId={sessionId!}
-                    backingTrackUrl={session?.backing_track_url || null}
-                    existingTracks={tracks}
-                    onComplete={handleRecordingComplete}
-                    onCancel={() => setIsRecording(false)}
-                  />
-                </CardContent>
-              </Card>
-            )}
-
             {/* Backing Track Upload */}
             <BackingTrackUpload
               sessionId={sessionId!}
@@ -347,17 +276,19 @@ const RehearsalSession = () => {
               }}
             />
 
-            {/* Multitrack View */}
+            {/* DAW Interface */}
             <Card>
               <CardHeader>
-                <CardTitle>Vista Multipista DAW</CardTitle>
+                <CardTitle>Estudio Multipista</CardTitle>
               </CardHeader>
               <CardContent>
-                <MultitrackView
+                <DAWInterface
+                  sessionId={sessionId!}
                   tracks={tracks}
                   backingTrackUrl={session?.backing_track_url || null}
                   onTrackDelete={handleTrackDelete}
                   onTrackUpdate={handleTrackUpdate}
+                  onTracksRefresh={() => setRefreshTracks(prev => prev + 1)}
                 />
               </CardContent>
             </Card>
@@ -413,13 +344,6 @@ const RehearsalSession = () => {
           </div>
         </div>
       </div>
-
-      {/* Bottom Audio Player */}
-      <AudioPlayer
-        tracks={tracks}
-        backingTrackUrl={session?.backing_track_url || null}
-        triggerPlay={triggerPlayMix}
-      />
 
       <InviteParticipantDialog
         open={showInviteDialog}
