@@ -42,8 +42,13 @@ const BackingTrackUpload = ({
     try {
       setIsUploading(true);
 
+      // Sanitize file name: remove special characters and replace spaces with underscores
+      const sanitizedFileName = file.name
+        .replace(/[^a-zA-Z0-9._-]/g, '_')
+        .replace(/\s+/g, '_');
+
       // Upload to storage
-      const fileName = `${sessionId}/backing-track/${Date.now()}-${file.name}`;
+      const fileName = `${sessionId}/backing-track/${Date.now()}-${sanitizedFileName}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('rehearsal-media')
         .upload(fileName, file, {
