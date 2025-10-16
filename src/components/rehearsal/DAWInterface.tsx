@@ -101,6 +101,9 @@ const DAWInterface = ({
     fetchProfile();
   }, [user]);
 
+  // Filter out backing tracks from database to avoid duplicates
+  const voiceTracks = tracks.filter(track => !track.is_backing_track);
+  
   const allTracks = [
     ...(backingTrackUrl
       ? [
@@ -117,7 +120,7 @@ const DAWInterface = ({
           },
         ]
       : []),
-    ...tracks,
+    ...voiceTracks,
   ];
 
   // Initialize audio elements
