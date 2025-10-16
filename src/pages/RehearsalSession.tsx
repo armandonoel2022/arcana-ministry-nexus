@@ -179,6 +179,9 @@ const RehearsalSession = () => {
   };
 
   const handleTrackUpdate = async (trackId: string, updates: Partial<Track>) => {
+    // No actualizar el backing track ya que es un track virtual
+    if (trackId === "backing-track") return;
+    
     try {
       const { error } = await supabase
         .from("rehearsal_tracks")
