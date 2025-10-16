@@ -230,8 +230,13 @@ const DAWInterface = ({
   // Recording functions
   const startRecording = async () => {
     try {
-      // Start playback of all tracks
-      handlePlay();
+      // Capture current time before starting
+      const startTime = currentTime;
+      
+      // If not playing, start from current position
+      if (!isPlaying) {
+        handlePlay();
+      }
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
