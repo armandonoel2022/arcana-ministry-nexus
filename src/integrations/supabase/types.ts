@@ -1065,6 +1065,7 @@ export type Database = {
           is_published: boolean | null
           participant_id: string | null
           session_id: string
+          start_offset: number
           track_name: string | null
           track_type: string
           updated_at: string
@@ -1082,6 +1083,7 @@ export type Database = {
           is_published?: boolean | null
           participant_id?: string | null
           session_id: string
+          start_offset?: number
           track_name?: string | null
           track_type: string
           updated_at?: string
@@ -1099,6 +1101,7 @@ export type Database = {
           is_published?: boolean | null
           participant_id?: string | null
           session_id?: string
+          start_offset?: number
           track_name?: string | null
           track_type?: string
           updated_at?: string
