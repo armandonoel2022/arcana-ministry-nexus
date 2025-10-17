@@ -14,7 +14,6 @@ import {
   RotateCcw,
 } from "lucide-react";
 import WaveSurfer from "wavesurfer.js";
-import RecordPlugin from "wavesurfer.js/dist/plugins/record";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -72,9 +71,11 @@ export default function DAWInterface({
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [recordedStartOffset, setRecordedStartOffset] = useState<number>(0);
   const [showRecordingPreview, setShowRecordingPreview] = useState(false);
-  const recordPluginRef = useRef<RecordPlugin | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const recordingWavesurferRef = useRef<WaveSurfer | null>(null);
   const timerRef = useRef<number | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   // Solo/mute
   const [soloTrack, setSoloTrack] = useState<string | null>(null);
@@ -113,8 +114,8 @@ export default function DAWInterface({
         (window as any).webkitAudioContext)();
     }
     return () => {
-      recordPluginRef.current?.destroy();
       recordingWavesurferRef.current?.destroy();
+      streamRef.current?.getTracks().forEach(track => track.stop());
       audioContextRef.current?.close();
     };
   }, []);
@@ -218,49 +219,6 @@ export default function DAWInterface({
     animationRef.current = requestAnimationFrame(updateProgress);
   };
 
-  // Inicializar visualización de grabación
-  const initRecordingVisualization = () => {
-    const container = document.getElementById("recording-waveform");
-    if (!container) return;
-
-    // Limpiar instancia anterior
-    if (recordingWavesurferRef.current) {
-      recordingWavesurferRef.current.destroy();
-    }
-
-    const ws = WaveSurfer.create({
-      container: "#recording-waveform",
-      waveColor: "hsl(var(--destructive))",
-      progressColor: "hsl(var(--destructive) / 0.8)",
-      cursorColor: "hsl(var(--destructive))",
-      barWidth: 2,
-      barRadius: 3,
-      cursorWidth: 2,
-      height: 100,
-      barGap: 2,
-      normalize: true,
-    });
-
-    recordingWavesurferRef.current = ws;
-
-    const recordPlugin = ws.registerPlugin(
-      RecordPlugin.create({
-        scrollingWaveform: true,
-        renderRecordedAudio: false,
-      })
-    );
-
-    recordPluginRef.current = recordPlugin;
-
-    recordPlugin.on("record-end", (blob) => {
-      setRecordedBlob(blob);
-      setShowRecordingPreview(true);
-      
-      // Cargar el audio grabado en el wavesurfer para preview
-      ws.loadBlob(blob);
-    });
-  };
-
   // Grabación con offset sincronizado
   const startRecording = async () => {
     if (isRecording) {
@@ -273,20 +231,67 @@ export default function DAWInterface({
     }
 
     try {
-      initRecordingVisualization();
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+          sampleRate: 48000,
+          channelCount: 1,
+        },
+      });
 
-      // Guardar el offset de inicio
+      streamRef.current = stream;
+
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: "audio/webm;codecs=opus",
+        audioBitsPerSecond: 128000,
+      });
+
+      audioChunksRef.current = [];
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) audioChunksRef.current.push(event.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        setRecordedBlob(blob);
+        setShowRecordingPreview(true);
+        
+        // Cargar el blob en wavesurfer para preview
+        const container = document.getElementById("recording-waveform");
+        if (container && !recordingWavesurferRef.current) {
+          const ws = WaveSurfer.create({
+            container: "#recording-waveform",
+            waveColor: "hsl(var(--destructive))",
+            progressColor: "hsl(var(--destructive) / 0.8)",
+            cursorColor: "hsl(var(--destructive))",
+            barWidth: 2,
+            barRadius: 3,
+            cursorWidth: 2,
+            height: 100,
+            barGap: 2,
+            normalize: true,
+          });
+          recordingWavesurferRef.current = ws;
+          ws.loadBlob(blob);
+        } else if (recordingWavesurferRef.current) {
+          recordingWavesurferRef.current.loadBlob(blob);
+        }
+        
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      // Guardar offset de inicio
       const startOffset = Math.max(currentTime - LATENCY_COMPENSATION, 0);
       setRecordedStartOffset(startOffset);
 
-      // Iniciar reproducción si no está activa
       if (!isPlaying) handleGlobalPlay();
 
-      // Iniciar grabación
-      await recordPluginRef.current?.startRecording();
+      mediaRecorder.start();
+      mediaRecorderRef.current = mediaRecorder;
       setIsRecording(true);
 
-      // Timer de visualización
       timerRef.current = window.setInterval(
         () => setRecordingTime((p) => p + 1),
         1000
@@ -306,9 +311,9 @@ export default function DAWInterface({
     }
   };
 
-  const stopRecording = async () => {
-    if (recordPluginRef.current && isRecording) {
-      await recordPluginRef.current.stopRecording();
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
       setIsRecording(false);
       setRecordingTime(0);
       if (timerRef.current) clearInterval(timerRef.current);
