@@ -10,8 +10,11 @@ import {
   Volume2,
   VolumeX,
   Trash2,
+  Upload,
+  RotateCcw,
 } from "lucide-react";
 import WaveSurfer from "wavesurfer.js";
+import RecordPlugin from "wavesurfer.js/dist/plugins/record";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -66,10 +69,12 @@ export default function DAWInterface({
   // Recording
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const [recordedStartOffset, setRecordedStartOffset] = useState<number>(0);
+  const [showRecordingPreview, setShowRecordingPreview] = useState(false);
+  const recordPluginRef = useRef<RecordPlugin | null>(null);
+  const recordingWavesurferRef = useRef<WaveSurfer | null>(null);
   const timerRef = useRef<number | null>(null);
-  const recordStartTimeRef = useRef<number>(0);
 
   // Solo/mute
   const [soloTrack, setSoloTrack] = useState<string | null>(null);
@@ -108,6 +113,8 @@ export default function DAWInterface({
         (window as any).webkitAudioContext)();
     }
     return () => {
+      recordPluginRef.current?.destroy();
+      recordingWavesurferRef.current?.destroy();
       audioContextRef.current?.close();
     };
   }, []);
@@ -211,9 +218,51 @@ export default function DAWInterface({
     animationRef.current = requestAnimationFrame(updateProgress);
   };
 
+  // Inicializar visualización de grabación
+  const initRecordingVisualization = () => {
+    const container = document.getElementById("recording-waveform");
+    if (!container) return;
+
+    // Limpiar instancia anterior
+    if (recordingWavesurferRef.current) {
+      recordingWavesurferRef.current.destroy();
+    }
+
+    const ws = WaveSurfer.create({
+      container: "#recording-waveform",
+      waveColor: "hsl(var(--destructive))",
+      progressColor: "hsl(var(--destructive) / 0.8)",
+      cursorColor: "hsl(var(--destructive))",
+      barWidth: 2,
+      barRadius: 3,
+      cursorWidth: 2,
+      height: 100,
+      barGap: 2,
+      normalize: true,
+    });
+
+    recordingWavesurferRef.current = ws;
+
+    const recordPlugin = ws.registerPlugin(
+      RecordPlugin.create({
+        scrollingWaveform: true,
+        renderRecordedAudio: false,
+      })
+    );
+
+    recordPluginRef.current = recordPlugin;
+
+    recordPlugin.on("record-end", (blob) => {
+      setRecordedBlob(blob);
+      setShowRecordingPreview(true);
+      
+      // Cargar el audio grabado en el wavesurfer para preview
+      ws.loadBlob(blob);
+    });
+  };
+
   // Grabación con offset sincronizado
   const startRecording = async () => {
-    // Evitar múltiples grabaciones simultáneas
     if (isRecording) {
       toast({
         title: "Advertencia",
@@ -222,54 +271,30 @@ export default function DAWInterface({
       });
       return;
     }
-    
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false,
-          sampleRate: 48000,
-          channelCount: 1,
-        },
-      });
+      initRecordingVisualization();
 
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: "audio/webm;codecs=opus",
-        audioBitsPerSecond: 128000,
-      });
+      // Guardar el offset de inicio
+      const startOffset = Math.max(currentTime - LATENCY_COMPENSATION, 0);
+      setRecordedStartOffset(startOffset);
 
-      audioChunksRef.current = [];
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) audioChunksRef.current.push(event.data);
-      };
-
-      mediaRecorder.onstop = async () => {
-        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        await uploadRecording(blob, recordStartTimeRef.current);
-        stream.getTracks().forEach((track) => track.stop());
-      };
-
-      // Sincronizar inicio con compensación
-      recordStartTimeRef.current = Math.max(
-        currentTime - LATENCY_COMPENSATION,
-        0
-      );
-
+      // Iniciar reproducción si no está activa
       if (!isPlaying) handleGlobalPlay();
 
-      mediaRecorder.start();
-      mediaRecorderRef.current = mediaRecorder;
+      // Iniciar grabación
+      await recordPluginRef.current?.startRecording();
       setIsRecording(true);
 
+      // Timer de visualización
       timerRef.current = window.setInterval(
         () => setRecordingTime((p) => p + 1),
         1000
       );
 
       toast({
-        title: "Grabación iniciada",
-        description: "Grabando nueva pista...",
+        title: "🎙️ Grabando",
+        description: "Nueva pista en grabación...",
       });
     } catch (error) {
       console.error("Error al iniciar grabación:", error);
@@ -281,20 +306,38 @@ export default function DAWInterface({
     }
   };
 
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
+  const stopRecording = async () => {
+    if (recordPluginRef.current && isRecording) {
+      await recordPluginRef.current.stopRecording();
       setIsRecording(false);
       setRecordingTime(0);
       if (timerRef.current) clearInterval(timerRef.current);
-      
-      // Detener reproducción global al detener grabación
+
+      // Detener reproducción global
       handleGlobalStop();
+
+      toast({
+        title: "⏸️ Grabación detenida",
+        description: "Revisa tu grabación y decide si publicarla",
+      });
     }
   };
 
-  const uploadRecording = async (blob: Blob, startOffset: number) => {
-    if (!user?.id) return;
+  const discardRecording = () => {
+    setRecordedBlob(null);
+    setShowRecordingPreview(false);
+    setRecordedStartOffset(0);
+    recordingWavesurferRef.current?.destroy();
+    recordingWavesurferRef.current = null;
+    
+    toast({
+      title: "Grabación descartada",
+      description: "Puedes grabar una nueva pista",
+    });
+  };
+
+  const publishRecording = async () => {
+    if (!user?.id || !recordedBlob) return;
 
     try {
       const { data: profile } = await supabase
@@ -313,7 +356,7 @@ export default function DAWInterface({
       const fileName = `${sessionId}/${user.id}-${Date.now()}.webm`;
       const { error: uploadError } = await supabase.storage
         .from("rehearsal-tracks")
-        .upload(fileName, blob);
+        .upload(fileName, recordedBlob);
 
       if (uploadError) throw uploadError;
 
@@ -330,18 +373,30 @@ export default function DAWInterface({
           track_type: "voice",
           audio_url: urlData.publicUrl,
           is_backing_track: false,
-          start_offset: startOffset, // guardar offset en segundos
+          start_offset: recordedStartOffset,
+          is_published: true,
         });
 
       if (insertError) throw insertError;
 
-      toast({ title: "Éxito", description: "Pista grabada y guardada" });
+      toast({ 
+        title: "✅ Pista publicada", 
+        description: "Tu grabación está ahora en la sesión" 
+      });
+
+      // Limpiar estado
+      setRecordedBlob(null);
+      setShowRecordingPreview(false);
+      setRecordedStartOffset(0);
+      recordingWavesurferRef.current?.destroy();
+      recordingWavesurferRef.current = null;
+
       onTracksRefresh();
     } catch (error) {
-      console.error("Error al subir grabación:", error);
+      console.error("Error al publicar grabación:", error);
       toast({
         title: "Error",
-        description: "No se pudo guardar la grabación",
+        description: "No se pudo publicar la grabación",
         variant: "destructive",
       });
     }
@@ -403,17 +458,17 @@ export default function DAWInterface({
 
           <div className="flex-1" />
 
-          {!isRecording ? (
+          {!isRecording && !showRecordingPreview ? (
             <Button onClick={startRecording} variant="destructive" className="gap-2">
               <Mic className="h-4 w-4" />
               Grabar Nueva Pista
             </Button>
-          ) : (
+          ) : isRecording ? (
             <Button onClick={stopRecording} variant="outline" className="gap-2">
               <Square className="h-4 w-4" />
-              Detener Grabación ({formatTime(recordingTime)})
+              Detener ({formatTime(recordingTime)})
             </Button>
-          )}
+          ) : null}
         </div>
 
         <div className="relative h-2 bg-muted rounded-full overflow-hidden">
@@ -426,7 +481,62 @@ export default function DAWInterface({
         </div>
       </div>
 
-      {/* Lista de pistas */}
+      {/* Preview de grabación con opciones */}
+      {showRecordingPreview && (
+        <div className="bg-destructive/10 border-2 border-destructive rounded-lg p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-base text-destructive">
+                📼 Grabación Lista
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Revisa tu grabación antes de publicarla
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={discardRecording}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Volver a Grabar
+              </Button>
+              <Button
+                onClick={publishRecording}
+                variant="default"
+                size="sm"
+                className="gap-2"
+              >
+                <Upload className="h-4 w-4" />
+                Publicar Pista
+              </Button>
+            </div>
+          </div>
+          <div id="recording-waveform" className="bg-card rounded" />
+        </div>
+      )}
+
+      {/* Canal de grabación en tiempo real */}
+      {isRecording && (
+        <div className="bg-destructive/10 border-2 border-destructive rounded-lg p-4 space-y-3 animate-pulse">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-base text-destructive flex items-center gap-2">
+                <Mic className="h-5 w-5 animate-pulse" />
+                🔴 GRABANDO
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Tiempo: {formatTime(recordingTime)}
+              </p>
+            </div>
+          </div>
+          <div id="recording-waveform" className="bg-card rounded" />
+        </div>
+      )}
+
+      {/* Lista de pistas publicadas */}
       <div className="space-y-4">
         {allTracks.map((track) => (
           <div key={track.id} className="bg-card rounded-lg border p-4">
