@@ -213,6 +213,16 @@ export default function DAWInterface({
 
   // Grabación con offset sincronizado
   const startRecording = async () => {
+    // Evitar múltiples grabaciones simultáneas
+    if (isRecording) {
+      toast({
+        title: "Advertencia",
+        description: "Ya hay una grabación en curso",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -277,6 +287,9 @@ export default function DAWInterface({
       setIsRecording(false);
       setRecordingTime(0);
       if (timerRef.current) clearInterval(timerRef.current);
+      
+      // Detener reproducción global al detener grabación
+      handleGlobalStop();
     }
   };
 
