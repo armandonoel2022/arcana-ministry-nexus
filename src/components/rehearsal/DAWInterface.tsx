@@ -120,7 +120,7 @@ export default function DAWInterface({
         cursorWidth: 2,
         height: 80,
         barGap: 2,
-        backend: "MediaElement", // 🔊 CAMBIO CLAVE
+        backend: "MediaElement",
         normalize: true,
         interact: true,
       });
@@ -129,12 +129,8 @@ export default function DAWInterface({
 
       ws.once("ready", () => {
         const trackDuration = ws.getDuration();
-        if (trackDuration > duration) setDuration(trackDuration);
-
-        // ✅ Aplicar offset real
-        if (!track.is_backing_track && track.start_offset) {
-          ws.setCurrentTime(track.start_offset);
-        }
+        const offsetDuration = track.is_backing_track ? trackDuration : (trackDuration + (track.start_offset || 0));
+        if (offsetDuration > duration) setDuration(offsetDuration);
 
         const audio = ws.getMediaElement()!;
         audioRefs.current[track.id] = audio;
@@ -156,33 +152,73 @@ export default function DAWInterface({
     };
   }, [allTracks.length]);
 
-  const syncAllTracksTo = (time: number) => {
-    Object.values(wavesurferRefs.current).forEach((ws) => {
-      if (ws) ws.setCurrentTime(time);
+  const syncAllTracksTo = (globalTime: number) => {
+    allTracks.forEach((track) => {
+      const ws = wavesurferRefs.current[track.id];
+      if (!ws) return;
+      
+      if (track.is_backing_track) {
+        ws.seekTo(globalTime / ws.getDuration());
+      } else {
+        const offset = track.start_offset || 0;
+        const localTime = globalTime - offset;
+        if (localTime >= 0 && localTime <= ws.getDuration()) {
+          ws.seekTo(localTime / ws.getDuration());
+        }
+      }
     });
-    setCurrentTime(time);
+    setCurrentTime(globalTime);
   };
 
   const handleGlobalPlay = () => {
     if (isPlaying) {
-      Object.values(wavesurferRefs.current).forEach((ws) => ws?.pause());
+      allTracks.forEach((track) => {
+        const audio = audioRefs.current[track.id];
+        if (audio) audio.pause();
+      });
       setIsPlaying(false);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     } else {
-      Object.values(wavesurferRefs.current).forEach((ws) => ws?.play());
+      allTracks.forEach((track) => {
+        const audio = audioRefs.current[track.id];
+        const ws = wavesurferRefs.current[track.id];
+        if (!audio || !ws) return;
+
+        if (track.is_backing_track) {
+          audio.currentTime = currentTime;
+        } else {
+          const offset = track.start_offset || 0;
+          const localTime = currentTime - offset;
+          if (localTime >= 0) {
+            audio.currentTime = localTime;
+            audio.play();
+          } else {
+            setTimeout(() => {
+              audio.currentTime = 0;
+              audio.play();
+            }, Math.abs(localTime) * 1000);
+            return;
+          }
+        }
+        audio.play();
+      });
       setIsPlaying(true);
       updateProgress();
     }
   };
 
   const handleGlobalStop = () => {
-    Object.values(wavesurferRefs.current).forEach((ws) => {
-      ws?.pause();
-      ws?.setCurrentTime(0);
+    allTracks.forEach((track) => {
+      const audio = audioRefs.current[track.id];
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
     });
     setIsPlaying(false);
     setCurrentTime(0);
     if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    syncAllTracksTo(0);
   };
 
   const handleGlobalRestart = () => {
@@ -190,8 +226,10 @@ export default function DAWInterface({
   };
 
   const updateProgress = () => {
-    const firstWs = Object.values(wavesurferRefs.current)[0];
-    if (firstWs) setCurrentTime(firstWs.getCurrentTime());
+    const backingAudio = audioRefs.current["backing-track"];
+    if (backingAudio && !isNaN(backingAudio.currentTime)) {
+      setCurrentTime(backingAudio.currentTime);
+    }
     animationRef.current = requestAnimationFrame(updateProgress);
   };
 
@@ -337,8 +375,69 @@ export default function DAWInterface({
 
   const handleVolumeChange = (track: Track, value: number[]) => {
     const audio = audioRefs.current[track.id];
-    if (audio) audio.volume = value[0];
-    onTrackUpdate(track.id, { volume_level: value[0] });
+    if (audio) {
+      audio.volume = value[0];
+    }
+    if (!track.is_backing_track) {
+      onTrackUpdate(track.id, { volume_level: value[0] });
+    }
+  };
+
+  const handleExportMix = async () => {
+    if (allTracks.length === 0) return;
+    
+    toast({ title: "🎵 Preparando mezcla..." });
+    
+    try {
+      const audioContext = new AudioContext();
+      const destination = audioContext.createMediaStreamDestination();
+      
+      const sources = await Promise.all(
+        allTracks.map(async (track) => {
+          const response = await fetch(track.audio_url);
+          const arrayBuffer = await response.arrayBuffer();
+          const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+          
+          const source = audioContext.createBufferSource();
+          source.buffer = audioBuffer;
+          
+          const gainNode = audioContext.createGain();
+          gainNode.gain.value = track.is_muted ? 0 : track.volume_level;
+          
+          source.connect(gainNode);
+          gainNode.connect(destination);
+          
+          return { source, offset: track.is_backing_track ? 0 : (track.start_offset || 0) };
+        })
+      );
+      
+      const mediaRecorder = new MediaRecorder(destination.stream);
+      const chunks: Blob[] = [];
+      
+      mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: "audio/webm" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `mezcla-${sessionId}-${Date.now()}.webm`;
+        a.click();
+        toast({ title: "✅ Mezcla exportada" });
+      };
+      
+      mediaRecorder.start();
+      sources.forEach(({ source, offset }) => source.start(audioContext.currentTime + offset));
+      
+      setTimeout(() => {
+        mediaRecorder.stop();
+        sources.forEach(({ source }) => source.stop());
+        audioContext.close();
+      }, duration * 1000);
+      
+    } catch (error) {
+      console.error(error);
+      toast({ title: "Error al exportar", variant: "destructive" });
+    }
   };
 
   return (
@@ -365,9 +464,14 @@ export default function DAWInterface({
           </div>
           <div className="flex-1" />
           {!isRecording && !showRecordingPreview ? (
-            <Button onClick={startRecording} variant="destructive" className="gap-2">
-              <Mic /> Grabar Nueva Pista
-            </Button>
+            <>
+              <Button onClick={handleExportMix} variant="outline" className="gap-2" disabled={allTracks.length === 0}>
+                <Upload /> Exportar Mezcla
+              </Button>
+              <Button onClick={startRecording} variant="destructive" className="gap-2">
+                <Mic /> Grabar Nueva Pista
+              </Button>
+            </>
           ) : isRecording ? (
             <Button onClick={stopRecording} variant="outline">
               <Square /> Detener ({formatTime(recordingTime)})
