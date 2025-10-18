@@ -378,9 +378,8 @@ export default function DAWInterface({
     if (audio) {
       audio.volume = value[0];
     }
-    if (!track.is_backing_track) {
-      onTrackUpdate(track.id, { volume_level: value[0] });
-    }
+    // Actualizar en Supabase para todas las pistas (excepto backing-track que se maneja en el padre)
+    onTrackUpdate(track.id, { volume_level: value[0] });
   };
 
   const handleExportMix = async () => {

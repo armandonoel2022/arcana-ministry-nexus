@@ -182,6 +182,14 @@ const RehearsalSession = () => {
     // No actualizar el backing track ya que es un track virtual
     if (trackId === "backing-track") return;
     
+    // Actualizar estado local inmediatamente para feedback instantáneo
+    setTracks(prevTracks => 
+      prevTracks.map(track => 
+        track.id === trackId ? { ...track, ...updates } : track
+      )
+    );
+    
+    // Actualizar en Supabase en segundo plano
     try {
       const { error } = await supabase
         .from("rehearsal_tracks")
@@ -189,9 +197,15 @@ const RehearsalSession = () => {
         .eq("id", trackId);
 
       if (error) throw error;
-      setRefreshTracks(prev => prev + 1);
+      
+      // Solo refrescar si no es un cambio de volumen o mute (para evitar recargas innecesarias)
+      if (!('volume_level' in updates) && !('is_muted' in updates)) {
+        setRefreshTracks(prev => prev + 1);
+      }
     } catch (error: any) {
       console.error("Error updating track:", error);
+      // Revertir el cambio local en caso de error
+      fetchTracks();
     }
   };
 
