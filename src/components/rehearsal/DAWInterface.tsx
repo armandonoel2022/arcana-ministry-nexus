@@ -129,8 +129,14 @@ export default function DAWInterface({
 
       ws.once("ready", () => {
         const trackDuration = ws.getDuration();
-        const offsetDuration = track.is_backing_track ? trackDuration : (trackDuration + (track.start_offset || 0));
-        if (offsetDuration > duration) setDuration(offsetDuration);
+        // La duración total debe ser la de la pista backing
+        if (track.is_backing_track && trackDuration > duration) {
+          setDuration(trackDuration);
+        } else if (!track.is_backing_track) {
+          // Para pistas de voz, verificar que no excedan la duración total
+          const endTime = (track.start_offset || 0) + trackDuration;
+          if (endTime > duration) setDuration(endTime);
+        }
 
         const audio = ws.getMediaElement()!;
         audioRefs.current[track.id] = audio;
@@ -337,6 +343,7 @@ export default function DAWInterface({
         audio_url: urlData.publicUrl,
         start_offset: recordedStartOffset,
         is_backing_track: false,
+        is_published: true, // Publicar inmediatamente
       });
       if (insertError) throw insertError;
 
@@ -509,46 +516,68 @@ export default function DAWInterface({
       )}
 
       {/* Lista de pistas */}
-      {allTracks.map((track) => (
-        <div key={track.id} className="bg-card border rounded-lg p-4">
-          <div className="flex justify-between items-center mb-2">
-            <div>
-              <h3 className="font-semibold">{track.track_name}</h3>
-              <p className="text-xs text-muted-foreground">{track.profiles.full_name}</p>
-            </div>
-            <div className="flex gap-2 items-center">
-              <Button variant="ghost" size="icon" onClick={() => handleMuteToggle(track)}>
-                {track.is_muted ? <VolumeX /> : <Volume2 />}
-              </Button>
-              <Button
-                variant={soloTrack === track.id ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => handleSoloToggle(track.id)}
-              >
-                S
-              </Button>
-              {!track.is_backing_track && (
-                <Button variant="ghost" size="icon" onClick={() => onTrackDelete(track.id)}>
-                  <Trash2 />
+      {allTracks.map((track) => {
+        // Calcular el ancho y posición para visualización alineada
+        const startPercent = track.is_backing_track ? 0 : ((track.start_offset || 0) / duration) * 100;
+        const trackDuration = wavesurferRefs.current[track.id]?.getDuration() || 0;
+        const widthPercent = duration > 0 ? (trackDuration / duration) * 100 : 100;
+        
+        return (
+          <div key={track.id} className="bg-card border rounded-lg p-4">
+            <div className="flex justify-between items-center mb-2">
+              <div>
+                <h3 className="font-semibold">{track.track_name}</h3>
+                <p className="text-xs text-muted-foreground">{track.profiles.full_name}</p>
+                {!track.is_backing_track && track.start_offset && (
+                  <p className="text-xs text-muted-foreground">Offset: {track.start_offset.toFixed(2)}s</p>
+                )}
+              </div>
+              <div className="flex gap-2 items-center">
+                <Button variant="ghost" size="icon" onClick={() => handleMuteToggle(track)}>
+                  {track.is_muted ? <VolumeX /> : <Volume2 />}
                 </Button>
-              )}
+                <Button
+                  variant={soloTrack === track.id ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => handleSoloToggle(track.id)}
+                >
+                  S
+                </Button>
+                {!track.is_backing_track && (
+                  <Button variant="ghost" size="icon" onClick={() => onTrackDelete(track.id)}>
+                    <Trash2 />
+                  </Button>
+                )}
+              </div>
+            </div>
+            
+            {/* Contenedor con timeline visual */}
+            <div className="mb-3 relative h-20 bg-muted/20 rounded overflow-hidden">
+              <div 
+                id={`waveform-${track.id}`}
+                className="absolute h-full"
+                style={{
+                  left: `${startPercent}%`,
+                  width: track.is_backing_track ? '100%' : `${widthPercent}%`,
+                }}
+              />
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <Volume2 className="text-muted-foreground" />
+              <Slider
+                value={[track.volume_level]}
+                min={0}
+                max={1}
+                step={0.01}
+                onValueChange={(v) => handleVolumeChange(track, v)}
+                className="flex-1"
+              />
+              <span className="text-xs w-12 text-right">{Math.round(track.volume_level * 100)}%</span>
             </div>
           </div>
-          <div id={`waveform-${track.id}`} className="mb-3" />
-          <div className="flex items-center gap-3">
-            <Volume2 className="text-muted-foreground" />
-            <Slider
-              value={[track.volume_level]}
-              min={0}
-              max={1}
-              step={0.01}
-              onValueChange={(v) => handleVolumeChange(track, v)}
-              className="flex-1"
-            />
-            <span className="text-xs w-12 text-right">{Math.round(track.volume_level * 100)}%</span>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
