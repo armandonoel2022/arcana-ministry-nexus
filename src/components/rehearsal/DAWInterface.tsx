@@ -64,6 +64,8 @@ export default function DAWInterface({
   const timerRef = useRef<number | null>(null);
 
   const [soloTrack, setSoloTrack] = useState<string | null>(null);
+  const [backingTrackVolume, setBackingTrackVolume] = useState(1);
+  const [backingTrackMuted, setBackingTrackMuted] = useState(false);
 
   const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
   const wavesurferRefs = useRef<Record<string, WaveSurfer | null>>({});
@@ -83,8 +85,8 @@ export default function DAWInterface({
             audio_url: backingTrackUrl,
             user_id: "system",
             is_backing_track: true,
-            volume_level: 1,
-            is_muted: false,
+            volume_level: backingTrackVolume,
+            is_muted: backingTrackMuted,
             profiles: { full_name: "Sistema" },
           },
         ]
@@ -408,8 +410,14 @@ export default function DAWInterface({
 
   const handleMuteToggle = (track: Track) => {
     const audio = audioRefs.current[track.id];
-    if (audio) audio.muted = !track.is_muted;
-    onTrackUpdate(track.id, { is_muted: !track.is_muted });
+    const newMuted = !track.is_muted;
+    if (audio) audio.muted = newMuted;
+    
+    if (track.id === "backing-track") {
+      setBackingTrackMuted(newMuted);
+    } else {
+      onTrackUpdate(track.id, { is_muted: newMuted });
+    }
   };
 
   const handleSoloToggle = (trackId: string) => {
@@ -433,8 +441,12 @@ export default function DAWInterface({
     if (audio) {
       audio.volume = value[0];
     }
-    // Actualizar en Supabase para todas las pistas (excepto backing-track que se maneja en el padre)
-    onTrackUpdate(track.id, { volume_level: value[0] });
+    
+    if (track.id === "backing-track") {
+      setBackingTrackVolume(value[0]);
+    } else {
+      onTrackUpdate(track.id, { volume_level: value[0] });
+    }
   };
 
   const handleExportMix = async () => {

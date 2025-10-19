@@ -179,17 +179,8 @@ const RehearsalSession = () => {
   };
 
   const handleTrackUpdate = async (trackId: string, updates: Partial<Track>) => {
-    // Para el backing track (virtual), solo actualizar estado local
+    // Para el backing track (virtual), no hacer nada - se maneja localmente en DAW
     if (trackId === "backing-track") {
-      setSession(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          // Mantener el volumen y mute del backing track en el estado de la sesión
-          backing_track_volume: updates.volume_level ?? 1,
-          backing_track_muted: updates.is_muted ?? false,
-        };
-      });
       return;
     }
     
