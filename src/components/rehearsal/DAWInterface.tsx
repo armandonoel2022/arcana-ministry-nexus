@@ -66,11 +66,16 @@ export default function DAWInterface({
   const [soloTrack, setSoloTrack] = useState<string | null>(null);
   const [backingTrackVolume, setBackingTrackVolume] = useState(1);
   const [backingTrackMuted, setBackingTrackMuted] = useState(false);
+  const [draggingTrack, setDraggingTrack] = useState<string | null>(null);
+  const [dragStartX, setDragStartX] = useState(0);
+  const [dragStartOffset, setDragStartOffset] = useState(0);
+  const [noiseReduction, setNoiseReduction] = useState(true);
 
   const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
   const wavesurferRefs = useRef<Record<string, WaveSurfer | null>>({});
   const animationRef = useRef<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const audioNodesRef = useRef<Record<string, { source: MediaElementAudioSourceNode; filters: BiquadFilterNode[] }>>({});
 
   const LATENCY_COMPENSATION = 0.25;
 
@@ -101,9 +106,35 @@ export default function DAWInterface({
     return () => {
       recordingWavesurferRef.current?.destroy();
       streamRef.current?.getTracks().forEach((track) => track.stop());
+      Object.values(audioNodesRef.current).forEach(({ source }) => source.disconnect());
       audioContextRef.current?.close();
     };
   }, []);
+
+  // Aplicar filtros de audio para reducción de ruido
+  const applyAudioFilters = (audio: HTMLAudioElement, trackId: string) => {
+    if (!audioContextRef.current || audioNodesRef.current[trackId]) return;
+
+    const ctx = audioContextRef.current;
+    const source = ctx.createMediaElementSource(audio);
+    
+    // High-pass filter para eliminar ruido de baja frecuencia
+    const highpass = ctx.createBiquadFilter();
+    highpass.type = "highpass";
+    highpass.frequency.value = noiseReduction ? 80 : 20;
+    
+    // Low-pass filter para eliminar ruido de alta frecuencia
+    const lowpass = ctx.createBiquadFilter();
+    lowpass.type = "lowpass";
+    lowpass.frequency.value = noiseReduction ? 12000 : 20000;
+    
+    // Conectar la cadena de audio
+    source.connect(highpass);
+    highpass.connect(lowpass);
+    lowpass.connect(ctx.destination);
+    
+    audioNodesRef.current[trackId] = { source, filters: [highpass, lowpass] };
+  };
 
   // 🎧 Inicialización de WaveSurfer
   useEffect(() => {
@@ -144,6 +175,11 @@ export default function DAWInterface({
         audioRefs.current[track.id] = audio;
         audio.volume = track.volume_level;
         audio.muted = track.is_muted;
+        
+        // Aplicar filtros de audio si no es backing track
+        if (!track.is_backing_track) {
+          applyAudioFilters(audio, track.id);
+        }
       });
 
       ws.on("interaction", () => {
@@ -520,8 +556,74 @@ export default function DAWInterface({
     }
   };
 
+  const handleDragStart = (e: React.MouseEvent, track: Track) => {
+    if (track.is_backing_track) return;
+    e.preventDefault();
+    setDraggingTrack(track.id);
+    setDragStartX(e.clientX);
+    setDragStartOffset(track.start_offset || 0);
+  };
+
+  const handleDragMove = (e: React.MouseEvent) => {
+    if (!draggingTrack || !duration) return;
+    
+    const container = document.getElementById(`track-container-${draggingTrack}`);
+    if (!container) return;
+    
+    const containerWidth = container.offsetWidth;
+    const deltaX = e.clientX - dragStartX;
+    const deltaTime = (deltaX / containerWidth) * duration;
+    const newOffset = Math.max(0, Math.min(duration, dragStartOffset + deltaTime));
+    
+    // Actualizar visualmente
+    const track = voiceTracks.find(t => t.id === draggingTrack);
+    if (track) {
+      const waveformContainer = document.getElementById(`waveform-${track.id}`)?.parentElement;
+      if (waveformContainer) {
+        const startPercent = (newOffset / duration) * 100;
+        waveformContainer.style.left = `${startPercent}%`;
+      }
+    }
+  };
+
+  const handleDragEnd = async () => {
+    if (!draggingTrack || !duration) return;
+    
+    const track = voiceTracks.find(t => t.id === draggingTrack);
+    if (!track) return;
+    
+    const waveformContainer = document.getElementById(`waveform-${track.id}`)?.parentElement;
+    if (waveformContainer) {
+      const leftPercent = parseFloat(waveformContainer.style.left);
+      const newOffset = (leftPercent / 100) * duration;
+      
+      // Guardar en la base de datos
+      try {
+        const { error } = await supabase
+          .from("rehearsal_tracks")
+          .update({ start_offset: newOffset })
+          .eq("id", track.id);
+        
+        if (error) throw error;
+        
+        onTrackUpdate(track.id, { start_offset: newOffset });
+        toast({ title: "✅ Pista reposicionada" });
+      } catch (error) {
+        console.error(error);
+        toast({ title: "Error al reposicionar", variant: "destructive" });
+      }
+    }
+    
+    setDraggingTrack(null);
+  };
+
   return (
-    <div className="space-y-6">
+    <div 
+      className="space-y-6"
+      onMouseMove={handleDragMove}
+      onMouseUp={handleDragEnd}
+      onMouseLeave={handleDragEnd}
+    >
       {/* 🎚️ Transporte Global */}
       <div className="bg-card rounded-lg border p-4">
         <div className="flex items-center gap-4 mb-4">
@@ -543,6 +645,17 @@ export default function DAWInterface({
             {formatTime(currentTime)} / {formatTime(duration)}
           </div>
           <div className="flex-1" />
+          <div className="flex items-center gap-2 mr-4">
+            <label className="text-xs flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={noiseReduction}
+                onChange={(e) => setNoiseReduction(e.target.checked)}
+                className="rounded"
+              />
+              Reducción de Ruido
+            </label>
+          </div>
           {!isRecording && !showRecordingPreview ? (
             <>
               <Button onClick={handleExportMix} variant="outline" className="gap-2" disabled={allTracks.length === 0}>
@@ -602,8 +715,11 @@ export default function DAWInterface({
               <div>
                 <h3 className="font-semibold">{track.track_name}</h3>
                 <p className="text-xs text-muted-foreground">{track.profiles.full_name}</p>
-                {!track.is_backing_track && track.start_offset && (
-                  <p className="text-xs text-muted-foreground">Offset: {track.start_offset.toFixed(2)}s</p>
+                {!track.is_backing_track && (
+                  <p className="text-xs text-muted-foreground">
+                    Offset: {(track.start_offset || 0).toFixed(2)}s
+                    {!track.is_backing_track && <span className="ml-2 text-xs opacity-50">🔄 Arrastra para ajustar</span>}
+                  </p>
                 )}
               </div>
               <div className="flex gap-2 items-center">
@@ -626,15 +742,23 @@ export default function DAWInterface({
             </div>
             
             {/* Contenedor con timeline visual */}
-            <div className="mb-3 relative h-20 bg-muted/20 rounded overflow-hidden">
+            <div 
+              id={`track-container-${track.id}`}
+              className="mb-3 relative h-20 bg-muted/20 rounded overflow-visible"
+            >
               <div 
-                id={`waveform-${track.id}`}
-                className="absolute h-full"
+                className={`absolute h-full ${!track.is_backing_track ? 'cursor-move hover:opacity-80 transition-opacity' : ''}`}
                 style={{
                   left: `${startPercent}%`,
                   width: track.is_backing_track ? '100%' : `${widthPercent}%`,
                 }}
-              />
+                onMouseDown={(e) => !track.is_backing_track && handleDragStart(e, track)}
+              >
+                <div 
+                  id={`waveform-${track.id}`}
+                  className="w-full h-full"
+                />
+              </div>
             </div>
             
             <div className="flex items-center gap-3">
