@@ -147,8 +147,27 @@ export default function DAWInterface({
       });
 
       ws.on("interaction", () => {
-        const time = ws.getCurrentTime();
-        syncAllTracksTo(time);
+        // Cuando el usuario hace clic en una forma de onda, pausar y sincronizar
+        if (isPlaying) {
+          allTracks.forEach((t) => {
+            const a = audioRefs.current[t.id];
+            if (a) a.pause();
+          });
+          setIsPlaying(false);
+        }
+        
+        const clickedTime = ws.getCurrentTime();
+        let globalTime;
+        
+        if (track.is_backing_track) {
+          globalTime = clickedTime;
+        } else {
+          // Convertir tiempo local a tiempo global
+          const offset = track.start_offset || 0;
+          globalTime = clickedTime + offset;
+        }
+        
+        syncAllTracksTo(globalTime);
       });
 
       wavesurferRefs.current[track.id] = ws;
@@ -195,13 +214,30 @@ export default function DAWInterface({
       setIsPlaying(false);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     } else {
-      const startTime = Date.now();
-      const startGlobalTime = currentTime;
-      
-      // Primero sincronizar todas las pistas al tiempo actual
-      syncAllTracksTo(currentTime);
-      
-      // Luego reproducir todas las pistas que deberían estar activas
+      // Sincronizar posiciones antes de reproducir
+      allTracks.forEach((track) => {
+        const audio = audioRefs.current[track.id];
+        if (!audio) return;
+
+        if (track.is_backing_track) {
+          // La pista backing usa el tiempo global directamente
+          audio.currentTime = currentTime;
+        } else {
+          // Las pistas de voz usan su offset
+          const offset = track.start_offset || 0;
+          const localTime = currentTime - offset;
+          
+          if (localTime >= 0) {
+            // Si ya pasó el offset, posicionar en el tiempo local
+            audio.currentTime = localTime;
+          } else {
+            // Si aún no llega el offset, posicionar al inicio
+            audio.currentTime = 0;
+          }
+        }
+      });
+
+      // Reproducir las pistas
       allTracks.forEach((track) => {
         const audio = audioRefs.current[track.id];
         if (!audio) return;
@@ -213,15 +249,15 @@ export default function DAWInterface({
           const localTime = currentTime - offset;
           
           if (localTime >= 0) {
-            // La pista ya debería estar sonando
+            // Reproducir inmediatamente
             audio.play().catch(e => console.error("Error playing voice track:", e));
           } else {
-            // La pista debe empezar después
+            // Programar reproducción futura
             const delayMs = Math.abs(localTime) * 1000;
             setTimeout(() => {
-              if (isPlaying) {
-                audio.currentTime = 0;
-                audio.play().catch(e => console.error("Error playing delayed track:", e));
+              const currentAudio = audioRefs.current[track.id];
+              if (currentAudio && isPlaying) {
+                currentAudio.play().catch(e => console.error("Error playing delayed track:", e));
               }
             }, delayMs);
           }
@@ -256,28 +292,6 @@ export default function DAWInterface({
     if (backingAudio && !isNaN(backingAudio.currentTime) && isFinite(backingAudio.currentTime)) {
       const newTime = backingAudio.currentTime;
       setCurrentTime(newTime);
-      
-      // Sincronizar visualmente todas las pistas
-      allTracks.forEach((track) => {
-        const ws = wavesurferRefs.current[track.id];
-        if (!ws) return;
-        
-        if (track.is_backing_track) {
-          const progress = newTime / ws.getDuration();
-          if (isFinite(progress)) {
-            ws.seekTo(progress);
-          }
-        } else {
-          const offset = track.start_offset || 0;
-          const localTime = newTime - offset;
-          if (localTime >= 0 && localTime <= ws.getDuration()) {
-            const progress = localTime / ws.getDuration();
-            if (isFinite(progress)) {
-              ws.seekTo(progress);
-            }
-          }
-        }
-      });
       
       // Detener reproducción si llegamos al final
       if (newTime >= duration) {
