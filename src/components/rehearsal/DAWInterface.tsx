@@ -161,15 +161,23 @@ export default function DAWInterface({
   const syncAllTracksTo = (globalTime: number) => {
     allTracks.forEach((track) => {
       const ws = wavesurferRefs.current[track.id];
-      if (!ws) return;
+      const audio = audioRefs.current[track.id];
+      if (!ws || !audio) return;
       
       if (track.is_backing_track) {
-        ws.seekTo(globalTime / ws.getDuration());
+        const seekPosition = Math.min(Math.max(globalTime / ws.getDuration(), 0), 1);
+        ws.seekTo(seekPosition);
+        audio.currentTime = globalTime;
       } else {
         const offset = track.start_offset || 0;
         const localTime = globalTime - offset;
         if (localTime >= 0 && localTime <= ws.getDuration()) {
-          ws.seekTo(localTime / ws.getDuration());
+          const seekPosition = Math.min(Math.max(localTime / ws.getDuration(), 0), 1);
+          ws.seekTo(seekPosition);
+          audio.currentTime = localTime;
+        } else if (localTime < 0) {
+          ws.seekTo(0);
+          audio.currentTime = 0;
         }
       }
     });
@@ -185,29 +193,39 @@ export default function DAWInterface({
       setIsPlaying(false);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     } else {
+      const startTime = Date.now();
+      const startGlobalTime = currentTime;
+      
+      // Primero sincronizar todas las pistas al tiempo actual
+      syncAllTracksTo(currentTime);
+      
+      // Luego reproducir todas las pistas que deberían estar activas
       allTracks.forEach((track) => {
         const audio = audioRefs.current[track.id];
-        const ws = wavesurferRefs.current[track.id];
-        if (!audio || !ws) return;
+        if (!audio) return;
 
         if (track.is_backing_track) {
-          audio.currentTime = currentTime;
+          audio.play().catch(e => console.error("Error playing backing track:", e));
         } else {
           const offset = track.start_offset || 0;
           const localTime = currentTime - offset;
+          
           if (localTime >= 0) {
-            audio.currentTime = localTime;
-            audio.play();
+            // La pista ya debería estar sonando
+            audio.play().catch(e => console.error("Error playing voice track:", e));
           } else {
+            // La pista debe empezar después
+            const delayMs = Math.abs(localTime) * 1000;
             setTimeout(() => {
-              audio.currentTime = 0;
-              audio.play();
-            }, Math.abs(localTime) * 1000);
-            return;
+              if (isPlaying) {
+                audio.currentTime = 0;
+                audio.play().catch(e => console.error("Error playing delayed track:", e));
+              }
+            }, delayMs);
           }
         }
-        audio.play();
       });
+      
       setIsPlaying(true);
       updateProgress();
     }
@@ -233,10 +251,40 @@ export default function DAWInterface({
 
   const updateProgress = () => {
     const backingAudio = audioRefs.current["backing-track"];
-    if (backingAudio && !isNaN(backingAudio.currentTime)) {
-      setCurrentTime(backingAudio.currentTime);
+    if (backingAudio && !isNaN(backingAudio.currentTime) && isFinite(backingAudio.currentTime)) {
+      const newTime = backingAudio.currentTime;
+      setCurrentTime(newTime);
+      
+      // Sincronizar visualmente todas las pistas
+      allTracks.forEach((track) => {
+        const ws = wavesurferRefs.current[track.id];
+        if (!ws) return;
+        
+        if (track.is_backing_track) {
+          const progress = newTime / ws.getDuration();
+          if (isFinite(progress)) {
+            ws.seekTo(progress);
+          }
+        } else {
+          const offset = track.start_offset || 0;
+          const localTime = newTime - offset;
+          if (localTime >= 0 && localTime <= ws.getDuration()) {
+            const progress = localTime / ws.getDuration();
+            if (isFinite(progress)) {
+              ws.seekTo(progress);
+            }
+          }
+        }
+      });
+      
+      // Detener reproducción si llegamos al final
+      if (newTime >= duration) {
+        handleGlobalStop();
+      }
     }
-    animationRef.current = requestAnimationFrame(updateProgress);
+    if (isPlaying) {
+      animationRef.current = requestAnimationFrame(updateProgress);
+    }
   };
 
   // 🟥 Grabación
