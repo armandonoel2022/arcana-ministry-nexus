@@ -71,14 +71,25 @@ export default function DAWInterface({
   const [dragStartOffset, setDragStartOffset] = useState(0);
   const [tempOffsets, setTempOffsets] = useState<Record<string, number>>({});
   const [noiseReduction, setNoiseReduction] = useState(true);
-
+  const [precisionSync, setPrecisionSync] = useState(true);
+  
   const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
   const wavesurferRefs = useRef<Record<string, WaveSurfer | null>>({});
   const animationRef = useRef<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  
+  // MediaElement filter chain (existing)
   const audioNodesRef = useRef<Record<string, { source: MediaElementAudioSourceNode; filters: BiquadFilterNode[] }>>({});
-
-  const LATENCY_COMPENSATION = 0.25;
+  
+  // WebAudio precision playback refs
+  const buffersRef = useRef<Record<string, AudioBuffer | null>>({});
+  const bufferNodesRef = useRef<Record<string, { gain: GainNode; filters: BiquadFilterNode[] }>>({});
+  const sourcesRef = useRef<Record<string, AudioBufferSourceNode | null>>({});
+  const masterStartRef = useRef<number | null>(null);
+  const startAtGlobalRef = useRef<number>(0);
+  
+  const LATENCY_COMPENSATION = 0.25; // for recording alignment
+  const LOOKAHEAD = 0.2; // schedule ahead for stable sync
 
   const voiceTracks = tracks.filter((t) => !t.is_backing_track);
   const allTracks = [
@@ -227,7 +238,7 @@ export default function DAWInterface({
         ws.seekTo(seekPosition);
         audio.currentTime = globalTime;
       } else {
-        const offset = track.start_offset || 0;
+        const offset = tempOffsets[track.id] ?? track.start_offset ?? 0;
         const localTime = globalTime - offset;
         if (localTime >= 0 && localTime <= ws.getDuration()) {
           const seekPosition = Math.min(Math.max(localTime / ws.getDuration(), 0), 1);
@@ -242,8 +253,114 @@ export default function DAWInterface({
     setCurrentTime(globalTime);
   };
 
-  const handleGlobalPlay = () => {
+  // Helper: effective offset (temporal durante arrastre o persistido)
+  const getEffectiveOffset = (track: Track) => (tempOffsets[track.id] ?? track.start_offset ?? 0);
+
+  const stopAllScheduled = () => {
+    Object.keys(sourcesRef.current).forEach((id) => {
+      try { sourcesRef.current[id]?.stop(); } catch {}
+      sourcesRef.current[id] = null;
+    });
+    masterStartRef.current = null;
+  };
+
+  const loadAllBuffers = async () => {
+    if (!audioContextRef.current) return;
+    for (const track of allTracks) {
+      if (!buffersRef.current[track.id]) {
+        try {
+          const res = await fetch(track.audio_url);
+          const ab = await res.arrayBuffer();
+          const buf = await audioContextRef.current.decodeAudioData(ab);
+          buffersRef.current[track.id] = buf;
+        } catch (e) {
+          console.warn("No se pudo decodificar buffer:", track.track_name, e);
+        }
+      }
+    }
+  };
+
+  const schedulePrecisionPlayback = async () => {
+    const ctx = audioContextRef.current;
+    if (!ctx) return;
+
+    // Asegurar buffers cargados
+    const pending = allTracks.some(t => !buffersRef.current[t.id]);
+    if (pending) {
+      toast({ title: "Cargando pistas…", description: "Preparando sincronización precisa" });
+      await loadAllBuffers();
+    }
+
+    const globalStart = ctx.currentTime + LOOKAHEAD;
+    masterStartRef.current = globalStart;
+    startAtGlobalRef.current = currentTime;
+
+    allTracks.forEach((track) => {
+      const buffer = buffersRef.current[track.id];
+      if (!buffer) return;
+
+      // Crear cadena de salida (gain + filtros si aplica)
+      let chain = bufferNodesRef.current[track.id];
+      if (!chain) {
+        const gain = ctx.createGain();
+        gain.connect(ctx.destination);
+        const filters: BiquadFilterNode[] = [];
+        if (!track.is_backing_track) {
+          const highpass = ctx.createBiquadFilter();
+          highpass.type = "highpass";
+          highpass.frequency.value = noiseReduction ? 80 : 20;
+          const lowpass = ctx.createBiquadFilter();
+          lowpass.type = "lowpass";
+          lowpass.frequency.value = noiseReduction ? 12000 : 20000;
+          chain = { gain, filters: [highpass, lowpass] };
+        } else {
+          chain = { gain, filters: [] };
+        }
+        bufferNodesRef.current[track.id] = chain;
+      } else {
+        // Actualizar parámetros de filtros si existen
+        if (chain.filters[0]) chain.filters[0].frequency.value = noiseReduction ? 80 : 20;
+        if (chain.filters[1]) chain.filters[1].frequency.value = noiseReduction ? 12000 : 20000;
+      }
+
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+
+      // Conectar source -> filtros -> gain -> destino
+      if (chain.filters.length) {
+        source.connect(chain.filters[0]);
+        chain.filters[0].connect(chain.filters[1]);
+        chain.filters[1].connect(chain.gain);
+      } else {
+        source.connect(chain.gain);
+      }
+
+      chain.gain.gain.value = track.is_muted ? 0 : track.volume_level;
+
+      const offset = getEffectiveOffset(track);
+      const localTime = track.is_backing_track ? currentTime : currentTime - offset;
+
+      let when = globalStart;
+      let startOffset = Math.max(localTime, 0);
+
+      if (!track.is_backing_track && localTime < 0) {
+        when = globalStart + (-localTime);
+        startOffset = 0;
+      }
+
+      try {
+        source.start(when, startOffset);
+        sourcesRef.current[track.id] = source;
+      } catch (e) {
+        console.error("Error al iniciar fuente:", e);
+      }
+    });
+  };
+
+  const handleGlobalPlay = async () => {
     if (isPlaying) {
+      // Pausa/Detener reproducción
+      stopAllScheduled();
       allTracks.forEach((track) => {
         const audio = audioRefs.current[track.id];
         if (audio) audio.pause();
@@ -251,62 +368,55 @@ export default function DAWInterface({
       setIsPlaying(false);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     } else {
-      // Sincronizar posiciones antes de reproducir
+      // Posicionar elementos visuales en el tiempo correcto
       allTracks.forEach((track) => {
         const audio = audioRefs.current[track.id];
         if (!audio) return;
 
         if (track.is_backing_track) {
-          // La pista backing usa el tiempo global directamente
           audio.currentTime = currentTime;
         } else {
-          // Las pistas de voz usan su offset
-          const offset = track.start_offset || 0;
-          const localTime = currentTime - offset;
-          
-          if (localTime >= 0) {
-            // Si ya pasó el offset, posicionar en el tiempo local
-            audio.currentTime = localTime;
-          } else {
-            // Si aún no llega el offset, posicionar al inicio
-            audio.currentTime = 0;
-          }
+          const localTime = currentTime - getEffectiveOffset(track);
+          audio.currentTime = Math.max(localTime, 0);
         }
       });
 
-      // Reproducir las pistas
-      allTracks.forEach((track) => {
-        const audio = audioRefs.current[track.id];
-        if (!audio) return;
+      if (precisionSync) {
+        await schedulePrecisionPlayback();
+        setIsPlaying(true);
+        updateProgress();
+      } else {
+        // Fallback: reproducción con MediaElement (menos precisa)
+        allTracks.forEach((track) => {
+          const audio = audioRefs.current[track.id];
+          if (!audio) return;
 
-        if (track.is_backing_track) {
-          audio.play().catch(e => console.error("Error playing backing track:", e));
-        } else {
-          const offset = track.start_offset || 0;
-          const localTime = currentTime - offset;
-          
-          if (localTime >= 0) {
-            // Reproducir inmediatamente
-            audio.play().catch(e => console.error("Error playing voice track:", e));
+          if (track.is_backing_track) {
+            audio.play().catch((e) => console.error("Error playing backing track:", e));
           } else {
-            // Programar reproducción futura
-            const delayMs = Math.abs(localTime) * 1000;
-            setTimeout(() => {
-              const currentAudio = audioRefs.current[track.id];
-              if (currentAudio && isPlaying) {
-                currentAudio.play().catch(e => console.error("Error playing delayed track:", e));
-              }
-            }, delayMs);
+            const localTime = currentTime - getEffectiveOffset(track);
+            if (localTime >= 0) {
+              audio.play().catch((e) => console.error("Error playing voice track:", e));
+            } else {
+              const delayMs = Math.abs(localTime) * 1000;
+              setTimeout(() => {
+                const currentAudio = audioRefs.current[track.id];
+                if (currentAudio && isPlaying) {
+                  currentAudio.play().catch((e) => console.error("Error playing delayed track:", e));
+                }
+              }, delayMs);
+            }
           }
-        }
-      });
-      
-      setIsPlaying(true);
-      updateProgress();
+        });
+
+        setIsPlaying(true);
+        updateProgress();
+      }
     }
   };
 
   const handleGlobalStop = () => {
+    stopAllScheduled();
     allTracks.forEach((track) => {
       const audio = audioRefs.current[track.id];
       if (audio) {
@@ -325,14 +435,21 @@ export default function DAWInterface({
   };
 
   const updateProgress = () => {
-    const backingAudio = audioRefs.current["backing-track"];
-    if (backingAudio && !isNaN(backingAudio.currentTime) && isFinite(backingAudio.currentTime)) {
-      const newTime = backingAudio.currentTime;
-      setCurrentTime(newTime);
-      
-      // Detener reproducción si llegamos al final
+    if (precisionSync && masterStartRef.current !== null && audioContextRef.current) {
+      const elapsed = Math.max(0, audioContextRef.current.currentTime - masterStartRef.current);
+      const newTime = startAtGlobalRef.current + elapsed;
+      setCurrentTime(Math.min(newTime, duration));
       if (newTime >= duration) {
         handleGlobalStop();
+      }
+    } else {
+      const backingAudio = audioRefs.current["backing-track"];
+      if (backingAudio && isFinite(backingAudio.currentTime)) {
+        const newTime = backingAudio.currentTime;
+        setCurrentTime(newTime);
+        if (newTime >= duration) {
+          handleGlobalStop();
+        }
       }
     }
     if (isPlaying) {
