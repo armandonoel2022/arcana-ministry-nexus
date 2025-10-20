@@ -69,6 +69,7 @@ export default function DAWInterface({
   const [draggingTrack, setDraggingTrack] = useState<string | null>(null);
   const [dragStartX, setDragStartX] = useState(0);
   const [dragStartOffset, setDragStartOffset] = useState(0);
+  const [tempOffsets, setTempOffsets] = useState<Record<string, number>>({});
   const [noiseReduction, setNoiseReduction] = useState(true);
 
   const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
@@ -575,46 +576,42 @@ export default function DAWInterface({
     const deltaTime = (deltaX / containerWidth) * duration;
     const newOffset = Math.max(0, Math.min(duration, dragStartOffset + deltaTime));
     
-    // Actualizar visualmente
-    const track = voiceTracks.find(t => t.id === draggingTrack);
-    if (track) {
-      const waveformContainer = document.getElementById(`waveform-${track.id}`)?.parentElement;
-      if (waveformContainer) {
-        const startPercent = (newOffset / duration) * 100;
-        waveformContainer.style.left = `${startPercent}%`;
-      }
-    }
+    // Actualizar solo el estado temporal, sin refrescar componentes
+    setTempOffsets(prev => ({ ...prev, [draggingTrack]: newOffset }));
   };
 
   const handleDragEnd = async () => {
     if (!draggingTrack || !duration) return;
     
-    const track = voiceTracks.find(t => t.id === draggingTrack);
-    if (!track) return;
+    const newOffset = tempOffsets[draggingTrack];
+    if (newOffset === undefined) {
+      setDraggingTrack(null);
+      return;
+    }
     
-    const waveformContainer = document.getElementById(`waveform-${track.id}`)?.parentElement;
-    if (waveformContainer) {
-      const leftPercent = parseFloat(waveformContainer.style.left);
-      const newOffset = (leftPercent / 100) * duration;
+    // Guardar en la base de datos sin refrescar todas las pistas
+    try {
+      const { error } = await supabase
+        .from("rehearsal_tracks")
+        .update({ start_offset: newOffset })
+        .eq("id", draggingTrack);
       
-      // Guardar en la base de datos
-      try {
-        const { error } = await supabase
-          .from("rehearsal_tracks")
-          .update({ start_offset: newOffset })
-          .eq("id", track.id);
-        
-        if (error) throw error;
-        
-        onTrackUpdate(track.id, { start_offset: newOffset });
-        toast({ title: "✅ Pista reposicionada" });
-      } catch (error) {
-        console.error(error);
-        toast({ title: "Error al reposicionar", variant: "destructive" });
-      }
+      if (error) throw error;
+      
+      // Actualizar solo esta pista sin refrescar
+      onTrackUpdate(draggingTrack, { start_offset: newOffset });
+      toast({ title: "✅ Pista reposicionada" });
+    } catch (error) {
+      console.error(error);
+      toast({ title: "Error al reposicionar", variant: "destructive" });
     }
     
     setDraggingTrack(null);
+    setTempOffsets(prev => {
+      const next = { ...prev };
+      delete next[draggingTrack];
+      return next;
+    });
   };
 
   return (
@@ -704,8 +701,9 @@ export default function DAWInterface({
 
       {/* Lista de pistas */}
       {allTracks.map((track) => {
-        // Calcular el ancho y posición para visualización alineada
-        const startPercent = track.is_backing_track ? 0 : ((track.start_offset || 0) / duration) * 100;
+        // Usar offset temporal durante arrastre, sino el offset real
+        const currentOffset = tempOffsets[track.id] ?? track.start_offset ?? 0;
+        const startPercent = track.is_backing_track ? 0 : (currentOffset / duration) * 100;
         const trackDuration = wavesurferRefs.current[track.id]?.getDuration() || 0;
         const widthPercent = duration > 0 ? (trackDuration / duration) * 100 : 100;
         
@@ -717,8 +715,8 @@ export default function DAWInterface({
                 <p className="text-xs text-muted-foreground">{track.profiles.full_name}</p>
                 {!track.is_backing_track && (
                   <p className="text-xs text-muted-foreground">
-                    Offset: {(track.start_offset || 0).toFixed(2)}s
-                    {!track.is_backing_track && <span className="ml-2 text-xs opacity-50">🔄 Arrastra para ajustar</span>}
+                    Offset: {(tempOffsets[track.id] ?? track.start_offset ?? 0).toFixed(2)}s
+                    <span className="ml-2 text-xs opacity-50">🔄 Arrastra para ajustar</span>
                   </p>
                 )}
               </div>

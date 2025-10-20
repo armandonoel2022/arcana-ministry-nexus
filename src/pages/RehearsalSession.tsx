@@ -200,8 +200,8 @@ const RehearsalSession = () => {
 
       if (error) throw error;
       
-      // Solo refrescar si no es un cambio de volumen o mute (para evitar recargas innecesarias)
-      if (!('volume_level' in updates) && !('is_muted' in updates)) {
+      // Solo refrescar si no es un cambio de volumen, mute o start_offset (para evitar recargas innecesarias)
+      if (!('volume_level' in updates) && !('is_muted' in updates) && !('start_offset' in updates)) {
         setRefreshTracks(prev => prev + 1);
       }
     } catch (error: any) {
