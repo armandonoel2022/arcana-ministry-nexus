@@ -165,7 +165,7 @@ export default function DAWInterface({
         cursorWidth: 2,
         height: 80,
         barGap: 2,
-        backend: "MediaElement",
+        backend: "WebAudio",
         normalize: true,
         interact: true,
       });
@@ -182,26 +182,14 @@ export default function DAWInterface({
           const endTime = (track.start_offset || 0) + trackDuration;
           if (endTime > duration) setDuration(endTime);
         }
-
-        const audio = ws.getMediaElement()!;
-        audioRefs.current[track.id] = audio;
-        audio.volume = track.volume_level;
-        audio.muted = track.is_muted;
-        
-        // Aplicar filtros de audio si no es backing track
-        if (!track.is_backing_track) {
-          applyAudioFilters(audio, track.id);
-        }
       });
 
       ws.on("interaction", () => {
         // Cuando el usuario hace clic en una forma de onda, pausar y sincronizar
         if (isPlaying) {
-          allTracks.forEach((t) => {
-            const a = audioRefs.current[t.id];
-            if (a) a.pause();
-          });
+          stopAllScheduled();
           setIsPlaying(false);
+          if (animationRef.current) cancelAnimationFrame(animationRef.current);
         }
         
         const clickedTime = ws.getCurrentTime();
@@ -215,6 +203,7 @@ export default function DAWInterface({
           globalTime = clickedTime + offset;
         }
         
+        setCurrentTime(globalTime);
         syncAllTracksTo(globalTime);
       });
 
@@ -230,23 +219,19 @@ export default function DAWInterface({
   const syncAllTracksTo = (globalTime: number) => {
     allTracks.forEach((track) => {
       const ws = wavesurferRefs.current[track.id];
-      const audio = audioRefs.current[track.id];
-      if (!ws || !audio) return;
+      if (!ws) return;
       
       if (track.is_backing_track) {
         const seekPosition = Math.min(Math.max(globalTime / ws.getDuration(), 0), 1);
         ws.seekTo(seekPosition);
-        audio.currentTime = globalTime;
       } else {
         const offset = tempOffsets[track.id] ?? track.start_offset ?? 0;
         const localTime = globalTime - offset;
         if (localTime >= 0 && localTime <= ws.getDuration()) {
           const seekPosition = Math.min(Math.max(localTime / ws.getDuration(), 0), 1);
           ws.seekTo(seekPosition);
-          audio.currentTime = localTime;
         } else if (localTime < 0) {
           ws.seekTo(0);
-          audio.currentTime = 0;
         }
       }
     });
@@ -361,69 +346,18 @@ export default function DAWInterface({
     if (isPlaying) {
       // Pausa/Detener reproducción
       stopAllScheduled();
-      allTracks.forEach((track) => {
-        const audio = audioRefs.current[track.id];
-        if (audio) audio.pause();
-      });
       setIsPlaying(false);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     } else {
-      // Posicionar elementos visuales en el tiempo correcto
-      allTracks.forEach((track) => {
-        const audio = audioRefs.current[track.id];
-        if (!audio) return;
-
-        if (track.is_backing_track) {
-          audio.currentTime = currentTime;
-        } else {
-          const localTime = currentTime - getEffectiveOffset(track);
-          audio.currentTime = Math.max(localTime, 0);
-        }
-      });
-
-      if (precisionSync) {
-        await schedulePrecisionPlayback();
-        setIsPlaying(true);
-        updateProgress();
-      } else {
-        // Fallback: reproducción con MediaElement (menos precisa)
-        allTracks.forEach((track) => {
-          const audio = audioRefs.current[track.id];
-          if (!audio) return;
-
-          if (track.is_backing_track) {
-            audio.play().catch((e) => console.error("Error playing backing track:", e));
-          } else {
-            const localTime = currentTime - getEffectiveOffset(track);
-            if (localTime >= 0) {
-              audio.play().catch((e) => console.error("Error playing voice track:", e));
-            } else {
-              const delayMs = Math.abs(localTime) * 1000;
-              setTimeout(() => {
-                const currentAudio = audioRefs.current[track.id];
-                if (currentAudio && isPlaying) {
-                  currentAudio.play().catch((e) => console.error("Error playing delayed track:", e));
-                }
-              }, delayMs);
-            }
-          }
-        });
-
-        setIsPlaying(true);
-        updateProgress();
-      }
+      // Iniciar reproducción con sincronización precisa
+      await schedulePrecisionPlayback();
+      setIsPlaying(true);
+      updateProgress();
     }
   };
 
   const handleGlobalStop = () => {
     stopAllScheduled();
-    allTracks.forEach((track) => {
-      const audio = audioRefs.current[track.id];
-      if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-      }
-    });
     setIsPlaying(false);
     setCurrentTime(0);
     if (animationRef.current) cancelAnimationFrame(animationRef.current);
@@ -435,21 +369,24 @@ export default function DAWInterface({
   };
 
   const updateProgress = () => {
-    if (precisionSync && masterStartRef.current !== null && audioContextRef.current) {
+    if (masterStartRef.current !== null && audioContextRef.current) {
       const elapsed = Math.max(0, audioContextRef.current.currentTime - masterStartRef.current);
       const newTime = startAtGlobalRef.current + elapsed;
       setCurrentTime(Math.min(newTime, duration));
+      
+      // Sincronizar cursores visuales de WaveSurfer
+      allTracks.forEach((track) => {
+        const ws = wavesurferRefs.current[track.id];
+        if (ws) {
+          const offset = getEffectiveOffset(track);
+          const localTime = track.is_backing_track ? newTime : Math.max(newTime - offset, 0);
+          const pos = localTime / ws.getDuration();
+          ws.seekTo(Math.min(Math.max(pos, 0), 1));
+        }
+      });
+      
       if (newTime >= duration) {
         handleGlobalStop();
-      }
-    } else {
-      const backingAudio = audioRefs.current["backing-track"];
-      if (backingAudio && isFinite(backingAudio.currentTime)) {
-        const newTime = backingAudio.currentTime;
-        setCurrentTime(newTime);
-        if (newTime >= duration) {
-          handleGlobalStop();
-        }
       }
     }
     if (isPlaying) {
@@ -457,7 +394,7 @@ export default function DAWInterface({
     }
   };
 
-  // 🟥 Grabación
+  // 🟥 Grabación con medición de latencia real
   const startRecording = async () => {
     if (isRecording) {
       toast({ title: "Ya estás grabando", variant: "destructive" });
@@ -493,7 +430,7 @@ export default function DAWInterface({
             progressColor: "hsl(var(--destructive) / 0.8)",
             cursorColor: "hsl(var(--destructive))",
             height: 100,
-            backend: "MediaElement",
+            backend: "WebAudio",
           });
           recordingWavesurferRef.current = ws;
           ws.loadBlob(blob);
@@ -502,18 +439,36 @@ export default function DAWInterface({
         stream.getTracks().forEach((track) => track.stop());
       };
 
-      const startOffset = Math.max(currentTime - LATENCY_COMPENSATION, 0);
-      setRecordedStartOffset(startOffset);
+      const ctx = audioContextRef.current!;
+      const globalNow = ctx.currentTime;
 
-      if (!isPlaying) handleGlobalPlay();
+      // 🔹 Iniciar playback bajo control preciso
+      if (!isPlaying) await schedulePrecisionPlayback();
 
+      // 🔹 Marca el tiempo real de inicio de grabación
+      const recordStartCtxTime = ctx.currentTime;
+
+      // 🔹 Iniciar grabación inmediatamente después
       mediaRecorder.start();
       mediaRecorderRef.current = mediaRecorder;
+      
+      if (!isPlaying) {
+        setIsPlaying(true);
+        updateProgress();
+      }
+
+      // Calcular latencia real en segundos
+      const latency = recordStartCtxTime - globalNow;
+      const realStartOffset = currentTime + latency;
+      setRecordedStartOffset(realStartOffset);
       setIsRecording(true);
 
       timerRef.current = window.setInterval(() => setRecordingTime((t) => t + 1), 1000);
 
-      toast({ title: "🎙️ Grabando..." });
+      toast({ 
+        title: "🎙️ Grabando...", 
+        description: `Latencia compensada: ${(latency * 1000).toFixed(0)}ms` 
+      });
     } catch (error) {
       toast({ title: "Error al grabar", variant: "destructive" });
       console.error(error);
@@ -577,9 +532,12 @@ export default function DAWInterface({
   };
 
   const handleMuteToggle = (track: Track) => {
-    const audio = audioRefs.current[track.id];
     const newMuted = !track.is_muted;
-    if (audio) audio.muted = newMuted;
+    
+    // Actualizar el gain node si está en reproducción
+    if (bufferNodesRef.current[track.id]) {
+      bufferNodesRef.current[track.id].gain.gain.value = newMuted ? 0 : track.volume_level;
+    }
     
     if (track.id === "backing-track") {
       setBackingTrackMuted(newMuted);
@@ -592,22 +550,24 @@ export default function DAWInterface({
     if (soloTrack === trackId) {
       setSoloTrack(null);
       allTracks.forEach((t) => {
-        const audio = audioRefs.current[t.id];
-        if (audio) audio.muted = t.is_muted;
+        if (bufferNodesRef.current[t.id]) {
+          bufferNodesRef.current[t.id].gain.gain.value = t.is_muted ? 0 : t.volume_level;
+        }
       });
     } else {
       setSoloTrack(trackId);
       allTracks.forEach((t) => {
-        const audio = audioRefs.current[t.id];
-        if (audio) audio.muted = t.id !== trackId;
+        if (bufferNodesRef.current[t.id]) {
+          bufferNodesRef.current[t.id].gain.gain.value = t.id === trackId ? t.volume_level : 0;
+        }
       });
     }
   };
 
   const handleVolumeChange = (track: Track, value: number[]) => {
-    const audio = audioRefs.current[track.id];
-    if (audio) {
-      audio.volume = value[0];
+    // Actualizar el gain node si está en reproducción
+    if (bufferNodesRef.current[track.id]) {
+      bufferNodesRef.current[track.id].gain.gain.value = track.is_muted ? 0 : value[0];
     }
     
     if (track.id === "backing-track") {
@@ -641,7 +601,9 @@ export default function DAWInterface({
           source.connect(gainNode);
           gainNode.connect(destination);
           
-          return { source, offset: track.is_backing_track ? 0 : (track.start_offset || 0) };
+          // Usar el offset real (persistido) en lugar de temporal
+          const realOffset = track.start_offset || 0;
+          return { source, offset: track.is_backing_track ? 0 : realOffset };
         })
       );
       
