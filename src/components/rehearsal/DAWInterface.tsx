@@ -653,11 +653,11 @@ export default function DAWInterface({
       const userTracksCount = voiceTracks.filter((t) => t.user_id === user.id).length;
       const trackName = `${userName} Voz ${userTracksCount + 1}`;
 
-      const fileName = `${sessionId}/${user.id}-${Date.now()}.webm`;
+      const fileName = `${sessionId}/${user.id}/${Date.now()}.webm`;
       
       const { error: uploadError } = await supabase.storage
         .from("rehearsal-tracks")
-        .upload(fileName, recordedBlob);
+        .upload(fileName, recordedBlob, { contentType: "audio/webm" });
       
       if (uploadError) {
         console.error("Error al subir archivo:", uploadError);
