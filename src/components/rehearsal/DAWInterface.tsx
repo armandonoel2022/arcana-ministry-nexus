@@ -551,14 +551,19 @@ export default function DAWInterface({
 
           if (isFinite(bestLag) && bestScore > 0.02) {
             const lagSec = bestLag / sr;
-            const newOffset = (recordedStartOffset || 0) + lagSec;
+            // Nota: bestLag > 0 => la grabación está retrasada vs la referencia
+            //       bestLag < 0 => la grabación está adelantada vs la referencia
+            // Para alinear, restamos lagSec a recordedStartOffset (invirtiendo el signo).
+            const proposed = (recordedStartOffset || 0) - lagSec;
+            const newOffset = Math.max(0, Math.min(duration, proposed));
             setRecordedStartOffset(newOffset);
+            const ms = (-(lagSec) * 1000).toFixed(0);
             toast({
               title: "Autoalineado",
-              description: `Ajuste de ${(lagSec * 1000).toFixed(0)} ms • Confianza ${(bestScore * 100).toFixed(0)}%`,
+              description: `Corrección ${lagSec < 0 ? "+" : "-"}${ms} ms (rec ${lagSec < 0 ? "adelantada" : "atrasada"}) • Confianza ${(bestScore * 100).toFixed(0)}%`,
             });
           } else {
-            const fallback = (recordedStartOffset || 0) + 0.12;
+            const fallback = Math.max(0, Math.min(duration, (recordedStartOffset || 0) + 0.12));
             setRecordedStartOffset(fallback);
             toast({
               title: "Alineación básica aplicada",
