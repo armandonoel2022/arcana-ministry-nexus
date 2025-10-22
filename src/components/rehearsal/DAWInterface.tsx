@@ -657,7 +657,7 @@ export default function DAWInterface({
       
       const { error: uploadError } = await supabase.storage
         .from("rehearsal-tracks")
-        .upload(fileName, recordedBlob, { contentType: "audio/webm" });
+        .upload(fileName, recordedBlob, { contentType: "audio/webm", upsert: true });
       
       if (uploadError) {
         console.error("Error al subir archivo:", uploadError);
