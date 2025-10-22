@@ -628,39 +628,71 @@ export default function DAWInterface({
 
   const publishRecording = async () => {
     if (!user?.id || !recordedBlob) return;
+    
     try {
-      const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
+      toast({ title: "📤 Subiendo pista...", description: "Por favor espera" });
+      
+      // Intentar obtener el perfil, pero continuar si falla
+      let userName = "Usuario";
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", user.id)
+          .maybeSingle();
+        userName = profile?.full_name || "Usuario";
+      } catch (profileError) {
+        console.warn("No se pudo obtener el perfil, usando nombre por defecto:", profileError);
+      }
 
-      const userName = profile?.full_name || "Usuario";
       const userTracksCount = voiceTracks.filter((t) => t.user_id === user.id).length;
       const trackName = `${userName} Voz ${userTracksCount + 1}`;
 
       const fileName = `${sessionId}/${user.id}-${Date.now()}.webm`;
-      const { error: uploadError } = await supabase.storage.from("rehearsal-tracks").upload(fileName, recordedBlob);
-      if (uploadError) throw uploadError;
+      
+      const { error: uploadError } = await supabase.storage
+        .from("rehearsal-tracks")
+        .upload(fileName, recordedBlob);
+      
+      if (uploadError) {
+        console.error("Error al subir archivo:", uploadError);
+        throw new Error(`No se pudo subir el archivo: ${uploadError.message}`);
+      }
 
-      const { data: urlData } = supabase.storage.from("rehearsal-tracks").getPublicUrl(fileName);
+      const { data: urlData } = supabase.storage
+        .from("rehearsal-tracks")
+        .getPublicUrl(fileName);
 
-      const { error: insertError } = await supabase.from("rehearsal_tracks").insert({
-        session_id: sessionId,
-        user_id: user.id,
-        track_name: trackName,
-        track_type: "voice",
-        audio_url: urlData.publicUrl,
-        start_offset: recordedStartOffset,
-        is_backing_track: false,
-        is_published: true, // Publicar inmediatamente
-      });
-      if (insertError) throw insertError;
+      const { error: insertError } = await supabase
+        .from("rehearsal_tracks")
+        .insert({
+          session_id: sessionId,
+          user_id: user.id,
+          track_name: trackName,
+          track_type: "voice",
+          audio_url: urlData.publicUrl,
+          start_offset: recordedStartOffset,
+          is_backing_track: false,
+          is_published: true,
+        });
+      
+      if (insertError) {
+        console.error("Error al insertar registro:", insertError);
+        throw new Error(`No se pudo guardar la pista: ${insertError.message}`);
+      }
 
-      toast({ title: "✅ Pista publicada" });
+      toast({ title: "✅ Pista publicada", description: "Tu grabación está lista" });
       setRecordedBlob(null);
       setShowRecordingPreview(false);
       recordingWavesurferRef.current?.destroy();
       onTracksRefresh();
-    } catch (e) {
-      console.error(e);
-      toast({ title: "Error al publicar", variant: "destructive" });
+    } catch (e: any) {
+      console.error("Error completo al publicar:", e);
+      toast({ 
+        title: "Error al publicar", 
+        description: e?.message || "Intenta de nuevo",
+        variant: "destructive" 
+      });
     }
   };
 
