@@ -403,11 +403,7 @@ export default function DAWInterface({
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false,
-        },
+        audio: true,
       });
       streamRef.current = stream;
 
@@ -438,140 +434,6 @@ export default function DAWInterface({
           });
           recordingWavesurferRef.current = ws;
           ws.loadBlob(blob);
-        }
-
-        // Autoalineación de la nueva toma respecto a referencias existentes
-        try {
-          const ctx = audioContextRef.current!;
-          const arrayBuf = await blob.arrayBuffer();
-          const recBuffer = await ctx.decodeAudioData(arrayBuf.slice(0));
-          const sr = recBuffer.sampleRate;
-
-          const toMono = (buffer: AudioBuffer) => {
-            const ch0 = buffer.getChannelData(0);
-            if (buffer.numberOfChannels === 1) return ch0;
-            const ch1 = buffer.getChannelData(1);
-            const out = new Float32Array(buffer.length);
-            for (let i = 0; i < buffer.length; i++) out[i] = (ch0[i] + ch1[i]) * 0.5;
-            return out;
-          };
-
-          const makeEnvelope = (data: Float32Array, winSize = 1024) => {
-            const env = new Float32Array(data.length);
-            let acc = 0;
-            for (let i = 0; i < data.length; i++) {
-              const v = Math.abs(data[i]);
-              acc += v;
-              if (i >= winSize) acc -= Math.abs(data[i - winSize]);
-              env[i] = acc / Math.min(i + 1, winSize);
-            }
-            return env;
-          };
-
-          const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
-
-          const buildReference = (globalStartSec: number, lenSec: number) => {
-            const len = Math.floor(lenSec * sr);
-            const ref = new Float32Array(len);
-            const hasVoices = voiceTracks.length > 0;
-            const candidates = hasVoices ? voiceTracks : allTracks.filter(t => t.is_backing_track);
-            candidates.forEach((t) => {
-              const buf = buffersRef.current[t.id];
-              if (!buf) return;
-              const bufSr = buf.sampleRate;
-              const ratio = bufSr / sr;
-              const tOffset = getEffectiveOffset(t);
-              const localStartInBuf = Math.floor((globalStartSec - (t.is_backing_track ? 0 : tOffset)) * bufSr);
-              const ch0 = buf.getChannelData(0);
-              const ch1 = buf.numberOfChannels > 1 ? buf.getChannelData(1) : null;
-              for (let i = 0; i < len; i++) {
-                const srcIdx = Math.floor(localStartInBuf + i * ratio);
-                if (srcIdx >= 0 && srcIdx < buf.length) {
-                  const s = ch1 ? (ch0[srcIdx] + ch1[srcIdx]) * 0.5 : ch0[srcIdx];
-                  ref[i] += s;
-                }
-              }
-            });
-            return ref;
-          };
-
-          const xcorrBestLag = (a: Float32Array, b: Float32Array, maxLagSamples: number) => {
-            const norm = (x: Float32Array) => {
-              let mean = 0;
-              for (let i = 0; i < x.length; i++) mean += x[i];
-              mean /= x.length;
-              let sq = 0;
-              const y = new Float32Array(x.length);
-              for (let i = 0; i < x.length; i++) {
-                const v = x[i] - mean;
-                y[i] = v;
-                sq += v * v;
-              }
-              const s = Math.sqrt(sq) || 1;
-              for (let i = 0; i < y.length; i++) y[i] /= s;
-              return y;
-            };
-            const A = norm(a);
-            const B = norm(b);
-            let bestLag = 0;
-            let bestScore = -Infinity;
-            for (let lag = -maxLagSamples; lag <= maxLagSamples; lag++) {
-              let sum = 0;
-              let count = 0;
-              for (let i = 0; i < A.length; i++) {
-                const j = i - lag;
-                if (j >= 0 && j < B.length) {
-                  sum += A[i] * B[j];
-                  count++;
-                }
-              }
-              const score = count > 0 ? sum / count : -Infinity;
-              if (score > bestScore) {
-                bestScore = score;
-                bestLag = lag;
-              }
-            }
-            return { bestLag, bestScore };
-          };
-
-          const WINDOW_SEC = Math.min(8, recBuffer.duration);
-          const PRE_SEC = 0.75;
-          const refStartGlobal = clamp((recordedStartOffset || 0) - PRE_SEC, 0, Math.max(0, duration - WINDOW_SEC));
-          const ref = buildReference(refStartGlobal, WINDOW_SEC);
-
-          const recMono = toMono(recBuffer);
-          const recLen = Math.min(recMono.length, Math.floor(WINDOW_SEC * sr));
-          const recSeg = recMono.subarray(0, recLen);
-
-          const envRec = makeEnvelope(recSeg, 1024);
-          const envRef = makeEnvelope(ref.subarray(0, recLen), 1024);
-
-          const MAX_LAG_SEC = 0.35;
-          const { bestLag, bestScore } = xcorrBestLag(envRec, envRef, Math.floor(MAX_LAG_SEC * sr));
-
-          if (isFinite(bestLag) && bestScore > 0.02) {
-            const lagSec = bestLag / sr;
-            // Nota: bestLag > 0 => la grabación está retrasada vs la referencia
-            //       bestLag < 0 => la grabación está adelantada vs la referencia
-            // Para alinear, restamos lagSec a recordedStartOffset (invirtiendo el signo).
-            const proposed = (recordedStartOffset || 0) - lagSec;
-            const newOffset = Math.max(0, Math.min(duration, proposed));
-            setRecordedStartOffset(newOffset);
-            const ms = (-(lagSec) * 1000).toFixed(0);
-            toast({
-              title: "Autoalineado",
-              description: `Corrección ${lagSec < 0 ? "+" : "-"}${ms} ms (rec ${lagSec < 0 ? "adelantada" : "atrasada"}) • Confianza ${(bestScore * 100).toFixed(0)}%`,
-            });
-          } else {
-            const fallback = Math.max(0, Math.min(duration, (recordedStartOffset || 0) + 0.12));
-            setRecordedStartOffset(fallback);
-            toast({
-              title: "Alineación básica aplicada",
-              description: "No se detectó correlación clara; se aplicó un ajuste estándar (+120 ms).",
-            });
-          }
-        } catch (err) {
-          console.warn("Autoalineación falló:", err);
         }
 
         stream.getTracks().forEach((track) => track.stop());
@@ -633,71 +495,39 @@ export default function DAWInterface({
 
   const publishRecording = async () => {
     if (!user?.id || !recordedBlob) return;
-    
     try {
-      toast({ title: "📤 Subiendo pista...", description: "Por favor espera" });
-      
-      // Intentar obtener el perfil, pero continuar si falla
-      let userName = "Usuario";
-      try {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("full_name")
-          .eq("id", user.id)
-          .maybeSingle();
-        userName = profile?.full_name || "Usuario";
-      } catch (profileError) {
-        console.warn("No se pudo obtener el perfil, usando nombre por defecto:", profileError);
-      }
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
 
+      const userName = profile?.full_name || "Usuario";
       const userTracksCount = voiceTracks.filter((t) => t.user_id === user.id).length;
       const trackName = `${userName} Voz ${userTracksCount + 1}`;
 
       const fileName = `${sessionId}/${user.id}-${Date.now()}.webm`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from("rehearsal-tracks")
-        .upload(fileName, recordedBlob);
-      
-      if (uploadError) {
-        console.error("Error al subir archivo:", uploadError);
-        throw new Error(`No se pudo subir el archivo: ${uploadError.message}`);
-      }
+      const { error: uploadError } = await supabase.storage.from("rehearsal-tracks").upload(fileName, recordedBlob);
+      if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from("rehearsal-tracks")
-        .getPublicUrl(fileName);
+      const { data: urlData } = supabase.storage.from("rehearsal-tracks").getPublicUrl(fileName);
 
-      const { error: insertError } = await supabase
-        .from("rehearsal_tracks")
-        .insert({
-          session_id: sessionId,
-          user_id: user.id,
-          track_name: trackName,
-          track_type: "voice",
-          audio_url: urlData.publicUrl,
-          start_offset: recordedStartOffset,
-          is_backing_track: false,
-          is_published: true,
-        });
-      
-      if (insertError) {
-        console.error("Error al insertar registro:", insertError);
-        throw new Error(`No se pudo guardar la pista: ${insertError.message}`);
-      }
+      const { error: insertError } = await supabase.from("rehearsal_tracks").insert({
+        session_id: sessionId,
+        user_id: user.id,
+        track_name: trackName,
+        track_type: "voice",
+        audio_url: urlData.publicUrl,
+        start_offset: recordedStartOffset,
+        is_backing_track: false,
+        is_published: true, // Publicar inmediatamente
+      });
+      if (insertError) throw insertError;
 
-      toast({ title: "✅ Pista publicada", description: "Tu grabación está lista" });
+      toast({ title: "✅ Pista publicada" });
       setRecordedBlob(null);
       setShowRecordingPreview(false);
       recordingWavesurferRef.current?.destroy();
       onTracksRefresh();
-    } catch (e: any) {
-      console.error("Error completo al publicar:", e);
-      toast({ 
-        title: "Error al publicar", 
-        description: e?.message || "Intenta de nuevo",
-        variant: "destructive" 
-      });
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Error al publicar", variant: "destructive" });
     }
   };
 
