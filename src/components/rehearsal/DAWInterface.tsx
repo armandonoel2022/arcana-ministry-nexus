@@ -425,24 +425,6 @@ export default function DAWInterface({
       mediaRecorder.onstop = async () => {
         const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         setRecordedBlob(blob);
-        setShowRecordingPreview(true);
-
-        const container = document.getElementById("recording-waveform");
-        if (container) {
-          if (recordingWavesurferRef.current) {
-            recordingWavesurferRef.current.destroy();
-          }
-          const ws = WaveSurfer.create({
-            container: "#recording-waveform",
-            waveColor: "hsl(var(--destructive))",
-            progressColor: "hsl(var(--destructive) / 0.8)",
-            cursorColor: "hsl(var(--destructive))",
-            height: 100,
-            backend: "WebAudio",
-          });
-          recordingWavesurferRef.current = ws;
-          ws.loadBlob(blob);
-        }
 
         // Autoalineación de la nueva toma respecto a referencias existentes
         try {
@@ -557,23 +539,19 @@ export default function DAWInterface({
             const lagSec = bestLag / sr;
             const newOffset = (recordedStartOffset || 0) + lagSec;
             setRecordedStartOffset(newOffset);
-            toast({
-              title: "Autoalineado",
-              description: `Ajuste de ${(lagSec * 1000).toFixed(0)} ms • Confianza ${(bestScore * 100).toFixed(0)}%`,
-            });
           } else {
             const fallback = (recordedStartOffset || 0) + 0.12;
             setRecordedStartOffset(fallback);
-            toast({
-              title: "Alineación básica aplicada",
-              description: "No se detectó correlación clara; se aplicó un ajuste estándar (+120 ms).",
-            });
           }
         } catch (err) {
           console.warn("Autoalineación falló:", err);
         }
 
         stream.getTracks().forEach((track) => track.stop());
+        
+        // ✅ Auto-publicar inmediatamente después de alinear
+        toast({ title: "📤 Publicando pista automáticamente..." });
+        await autoPublishRecording(blob);
       };
 
       const ctx = audioContextRef.current!;
@@ -630,8 +608,12 @@ export default function DAWInterface({
     toast({ title: "Grabación descartada" });
   };
 
-  const publishRecording = async () => {
-    if (!user?.id || !recordedBlob) return;
+  const autoPublishRecording = async (blob: Blob) => {
+    if (!user?.id || !blob) {
+      toast({ title: "Error: usuario o grabación no disponible", variant: "destructive" });
+      return;
+    }
+    
     try {
       const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
 
@@ -640,7 +622,7 @@ export default function DAWInterface({
       const trackName = `${userName} Voz ${userTracksCount + 1}`;
 
       const fileName = `${sessionId}/${user.id}-${Date.now()}.webm`;
-      const { error: uploadError } = await supabase.storage.from("rehearsal-tracks").upload(fileName, recordedBlob);
+      const { error: uploadError } = await supabase.storage.from("rehearsal-tracks").upload(fileName, blob);
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage.from("rehearsal-tracks").getPublicUrl(fileName);
@@ -653,14 +635,13 @@ export default function DAWInterface({
         audio_url: urlData.publicUrl,
         start_offset: recordedStartOffset,
         is_backing_track: false,
-        is_published: true, // Publicar inmediatamente
+        is_published: true,
       });
       if (insertError) throw insertError;
 
-      toast({ title: "✅ Pista publicada" });
+      toast({ title: "✅ Pista publicada correctamente" });
       setRecordedBlob(null);
       setShowRecordingPreview(false);
-      recordingWavesurferRef.current?.destroy();
       onTracksRefresh();
     } catch (e) {
       console.error(e);
@@ -887,27 +868,6 @@ export default function DAWInterface({
           />
         </div>
       </div>
-
-      {/* Preview de grabación */}
-      {showRecordingPreview && (
-        <div className="bg-destructive/10 border-2 border-destructive rounded-lg p-4 space-y-3">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-destructive font-semibold">📼 Grabación Lista</h3>
-              <p className="text-xs text-muted-foreground">Revisa antes de publicar</p>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={discardRecording} variant="outline" size="sm">
-                <RotateCcw /> Repetir
-              </Button>
-              <Button onClick={publishRecording} size="sm">
-                <Upload /> Publicar
-              </Button>
-            </div>
-          </div>
-          <div id="recording-waveform" className="bg-card rounded" />
-        </div>
-      )}
 
       {/* Lista de pistas */}
       {allTracks.map((track) => {
