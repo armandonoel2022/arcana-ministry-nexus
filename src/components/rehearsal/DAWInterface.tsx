@@ -423,6 +423,7 @@ export default function DAWInterface({
         const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         setRecordedBlob(blob);
         setShowRecordingPreview(true);
+        setIsPublishing(false); // asegurar que el botón quede habilitado tras grabar
 
         const container = document.getElementById("recording-waveform");
         if (container) {
@@ -950,7 +951,7 @@ export default function DAWInterface({
               <Button onClick={discardRecording} variant="outline" size="sm">
                 <RotateCcw /> Repetir
               </Button>
-              <Button onClick={publishRecording} size="sm" disabled={isPublishing}>
+              <Button onClick={publishRecording} size="sm" disabled={isPublishing} className="pointer-events-auto">
                 <Upload /> {isPublishing ? "Publicando..." : "Publicar"}
               </Button>
             </div>
