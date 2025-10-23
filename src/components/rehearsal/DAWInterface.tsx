@@ -399,7 +399,7 @@ export default function DAWInterface({
   };
 
   // 🟥 Grabación con medición de latencia real
-  const startRecording = async () => {
+    const startRecording = async () => {
     if (isRecording) {
       toast({ title: "Ya estás grabando", variant: "destructive" });
       return;
@@ -425,7 +425,7 @@ export default function DAWInterface({
       mediaRecorder.onstop = async () => {
         const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         setRecordedBlob(blob);
-      
+
         // 🔥 PUBLICACIÓN INMEDIATA - Alineación en segundo plano
         toast({ title: "📤 Publicando pista automáticamente..." });
         
@@ -438,9 +438,45 @@ export default function DAWInterface({
             updateTrackOffset(refinedOffset);
           }
         });
-      
+
         stream.getTracks().forEach((track) => track.stop());
       };
+
+      const ctx = audioContextRef.current!;
+      const globalNow = ctx.currentTime;
+
+      // 🔹 Iniciar playback bajo control preciso
+      if (!isPlaying) await schedulePrecisionPlayback();
+
+      // 🔹 Marca el tiempo real de inicio de grabación
+      const recordStartCtxTime = ctx.currentTime;
+
+      // 🔹 Iniciar grabación inmediatamente después
+      mediaRecorder.start();
+      mediaRecorderRef.current = mediaRecorder;
+
+      if (!isPlaying) {
+        setIsPlaying(true);
+        updateProgress();
+      }
+
+      // Calcular latencia real en segundos
+      const latency = recordStartCtxTime - globalNow;
+      const realStartOffset = currentTime + latency;
+      setRecordedStartOffset(realStartOffset);
+      setIsRecording(true);
+
+      timerRef.current = window.setInterval(() => setRecordingTime((t) => t + 1), 1000);
+
+      toast({
+        title: "🎙️ Grabando...",
+        description: `Latencia compensada: ${(latency * 1000).toFixed(0)}ms`,
+      });
+    } catch (error) {
+      toast({ title: "Error al grabar", variant: "destructive" });
+      console.error(error);
+    }
+  };
 
           const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
@@ -577,23 +613,6 @@ export default function DAWInterface({
       console.error(error);
     }
   };
-
-    const performBackgroundAlignment = async (blob: Blob): Promise<number | null> => {
-      try {
-        // (pega aquí toda la función performBackgroundAlignment que te envié antes)
-      } catch (err) {
-        console.warn("Alineación en segundo plano falló:", err);
-        return null;
-      }
-    };
-    
-    const updateTrackOffset = async (newOffset: number) => {
-      try {
-        // (pega aquí toda la función updateTrackOffset que te envié antes)
-      } catch (error) {
-        console.error("Error al actualizar offset:", error);
-      }
-    };
 
   const stopRecording = () => {
     mediaRecorderRef.current?.stop();
@@ -874,7 +893,8 @@ export default function DAWInterface({
         </div>
       </div>
 
-      {/* Lista de pistas */}      {allTracks.map((track) => {
+      {/* Lista de pistas */}
+      {allTracks.map((track) => {
         // Usar offset temporal durante arrastre, sino el offset real
         const currentOffset = tempOffsets[track.id] ?? track.start_offset ?? 0;
         const startPercent = track.is_backing_track ? 0 : (currentOffset / duration) * 100;
