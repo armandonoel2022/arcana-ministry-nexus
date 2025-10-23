@@ -425,34 +425,22 @@ export default function DAWInterface({
       mediaRecorder.onstop = async () => {
         const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         setRecordedBlob(blob);
-
-        // Autoalineación de la nueva toma respecto a referencias existentes
-        try {
-          const ctx = audioContextRef.current!;
-          const arrayBuf = await blob.arrayBuffer();
-          const recBuffer = await ctx.decodeAudioData(arrayBuf.slice(0));
-          const sr = recBuffer.sampleRate;
-
-          const toMono = (buffer: AudioBuffer) => {
-            const ch0 = buffer.getChannelData(0);
-            if (buffer.numberOfChannels === 1) return ch0;
-            const ch1 = buffer.getChannelData(1);
-            const out = new Float32Array(buffer.length);
-            for (let i = 0; i < buffer.length; i++) out[i] = (ch0[i] + ch1[i]) * 0.5;
-            return out;
-          };
-
-          const makeEnvelope = (data: Float32Array, winSize = 1024) => {
-            const env = new Float32Array(data.length);
-            let acc = 0;
-            for (let i = 0; i < data.length; i++) {
-              const v = Math.abs(data[i]);
-              acc += v;
-              if (i >= winSize) acc -= Math.abs(data[i - winSize]);
-              env[i] = acc / Math.min(i + 1, winSize);
-            }
-            return env;
-          };
+      
+        // 🔥 PUBLICACIÓN INMEDIATA - Alineación en segundo plano
+        toast({ title: "📤 Publicando pista automáticamente..." });
+        
+        // Publicar inmediatamente con el offset calculado por latencia
+        await autoPublishRecording(blob);
+        
+        // Alineación opcional en segundo plano (no bloqueante)
+        performBackgroundAlignment(blob).then(refinedOffset => {
+          if (refinedOffset && Math.abs(refinedOffset - recordedStartOffset) > 0.1) {
+            updateTrackOffset(refinedOffset);
+          }
+        });
+      
+        stream.getTracks().forEach((track) => track.stop());
+      };
 
           const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
@@ -589,6 +577,23 @@ export default function DAWInterface({
       console.error(error);
     }
   };
+
+    const performBackgroundAlignment = async (blob: Blob): Promise<number | null> => {
+      try {
+        // (pega aquí toda la función performBackgroundAlignment que te envié antes)
+      } catch (err) {
+        console.warn("Alineación en segundo plano falló:", err);
+        return null;
+      }
+    };
+    
+    const updateTrackOffset = async (newOffset: number) => {
+      try {
+        // (pega aquí toda la función updateTrackOffset que te envié antes)
+      } catch (error) {
+        console.error("Error al actualizar offset:", error);
+      }
+    };
 
   const stopRecording = () => {
     mediaRecorderRef.current?.stop();
@@ -869,8 +874,7 @@ export default function DAWInterface({
         </div>
       </div>
 
-      {/* Lista de pistas */}
-      {allTracks.map((track) => {
+      {/* Lista de pistas */}      {allTracks.map((track) => {
         // Usar offset temporal durante arrastre, sino el offset real
         const currentOffset = tempOffsets[track.id] ?? track.start_offset ?? 0;
         const startPercent = track.is_backing_track ? 0 : (currentOffset / duration) * 100;
