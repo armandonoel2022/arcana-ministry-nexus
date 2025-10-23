@@ -551,19 +551,14 @@ export default function DAWInterface({
 
           if (isFinite(bestLag) && bestScore > 0.02) {
             const lagSec = bestLag / sr;
-            // Nota: bestLag > 0 => la grabación está retrasada vs la referencia
-            //       bestLag < 0 => la grabación está adelantada vs la referencia
-            // Para alinear, restamos lagSec a recordedStartOffset (invirtiendo el signo).
-            const proposed = (recordedStartOffset || 0) - lagSec;
-            const newOffset = Math.max(0, Math.min(duration, proposed));
+            const newOffset = (recordedStartOffset || 0) + lagSec;
             setRecordedStartOffset(newOffset);
-            const ms = (-(lagSec) * 1000).toFixed(0);
             toast({
               title: "Autoalineado",
-              description: `Corrección ${lagSec < 0 ? "+" : "-"}${ms} ms (rec ${lagSec < 0 ? "adelantada" : "atrasada"}) • Confianza ${(bestScore * 100).toFixed(0)}%`,
+              description: `Ajuste de ${(lagSec * 1000).toFixed(0)} ms • Confianza ${(bestScore * 100).toFixed(0)}%`,
             });
           } else {
-            const fallback = Math.max(0, Math.min(duration, (recordedStartOffset || 0) + 0.12));
+            const fallback = (recordedStartOffset || 0) + 0.12;
             setRecordedStartOffset(fallback);
             toast({
               title: "Alineación básica aplicada",
@@ -633,71 +628,39 @@ export default function DAWInterface({
 
   const publishRecording = async () => {
     if (!user?.id || !recordedBlob) return;
-    
     try {
-      toast({ title: "📤 Subiendo pista...", description: "Por favor espera" });
-      
-      // Intentar obtener el perfil, pero continuar si falla
-      let userName = "Usuario";
-      try {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("full_name")
-          .eq("id", user.id)
-          .maybeSingle();
-        userName = profile?.full_name || "Usuario";
-      } catch (profileError) {
-        console.warn("No se pudo obtener el perfil, usando nombre por defecto:", profileError);
-      }
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
 
+      const userName = profile?.full_name || "Usuario";
       const userTracksCount = voiceTracks.filter((t) => t.user_id === user.id).length;
       const trackName = `${userName} Voz ${userTracksCount + 1}`;
 
       const fileName = `${sessionId}/${user.id}-${Date.now()}.webm`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from("rehearsal-tracks")
-        .upload(fileName, recordedBlob);
-      
-      if (uploadError) {
-        console.error("Error al subir archivo:", uploadError);
-        throw new Error(`No se pudo subir el archivo: ${uploadError.message}`);
-      }
+      const { error: uploadError } = await supabase.storage.from("rehearsal-tracks").upload(fileName, recordedBlob);
+      if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from("rehearsal-tracks")
-        .getPublicUrl(fileName);
+      const { data: urlData } = supabase.storage.from("rehearsal-tracks").getPublicUrl(fileName);
 
-      const { error: insertError } = await supabase
-        .from("rehearsal_tracks")
-        .insert({
-          session_id: sessionId,
-          user_id: user.id,
-          track_name: trackName,
-          track_type: "voice",
-          audio_url: urlData.publicUrl,
-          start_offset: recordedStartOffset,
-          is_backing_track: false,
-          is_published: true,
-        });
-      
-      if (insertError) {
-        console.error("Error al insertar registro:", insertError);
-        throw new Error(`No se pudo guardar la pista: ${insertError.message}`);
-      }
+      const { error: insertError } = await supabase.from("rehearsal_tracks").insert({
+        session_id: sessionId,
+        user_id: user.id,
+        track_name: trackName,
+        track_type: "voice",
+        audio_url: urlData.publicUrl,
+        start_offset: recordedStartOffset,
+        is_backing_track: false,
+        is_published: true, // Publicar inmediatamente
+      });
+      if (insertError) throw insertError;
 
-      toast({ title: "✅ Pista publicada", description: "Tu grabación está lista" });
+      toast({ title: "✅ Pista publicada" });
       setRecordedBlob(null);
       setShowRecordingPreview(false);
       recordingWavesurferRef.current?.destroy();
       onTracksRefresh();
-    } catch (e: any) {
-      console.error("Error completo al publicar:", e);
-      toast({ 
-        title: "Error al publicar", 
-        description: e?.message || "Intenta de nuevo",
-        variant: "destructive" 
-      });
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Error al publicar", variant: "destructive" });
     }
   };
 
