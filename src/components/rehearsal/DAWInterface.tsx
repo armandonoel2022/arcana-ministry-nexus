@@ -399,7 +399,7 @@ export default function DAWInterface({
   };
 
   // 🟥 Grabación con medición de latencia real
-    const startRecording = async () => {
+  const startRecording = async () => {
     if (isRecording) {
       toast({ title: "Ya estás grabando", variant: "destructive" });
       return;
@@ -426,57 +426,33 @@ export default function DAWInterface({
         const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         setRecordedBlob(blob);
 
-        // 🔥 PUBLICACIÓN INMEDIATA - Alineación en segundo plano
-        toast({ title: "📤 Publicando pista automáticamente..." });
-        
-        // Publicar inmediatamente con el offset calculado por latencia
-        await autoPublishRecording(blob);
-        
-        // Alineación opcional en segundo plano (no bloqueante)
-        performBackgroundAlignment(blob).then(refinedOffset => {
-          if (refinedOffset && Math.abs(refinedOffset - recordedStartOffset) > 0.1) {
-            updateTrackOffset(refinedOffset);
-          }
-        });
+        // Autoalineación de la nueva toma respecto a referencias existentes
+        try {
+          const ctx = audioContextRef.current!;
+          const arrayBuf = await blob.arrayBuffer();
+          const recBuffer = await ctx.decodeAudioData(arrayBuf.slice(0));
+          const sr = recBuffer.sampleRate;
 
-        stream.getTracks().forEach((track) => track.stop());
-      };
+          const toMono = (buffer: AudioBuffer) => {
+            const ch0 = buffer.getChannelData(0);
+            if (buffer.numberOfChannels === 1) return ch0;
+            const ch1 = buffer.getChannelData(1);
+            const out = new Float32Array(buffer.length);
+            for (let i = 0; i < buffer.length; i++) out[i] = (ch0[i] + ch1[i]) * 0.5;
+            return out;
+          };
 
-      const ctx = audioContextRef.current!;
-      const globalNow = ctx.currentTime;
-
-      // 🔹 Iniciar playback bajo control preciso
-      if (!isPlaying) await schedulePrecisionPlayback();
-
-      // 🔹 Marca el tiempo real de inicio de grabación
-      const recordStartCtxTime = ctx.currentTime;
-
-      // 🔹 Iniciar grabación inmediatamente después
-      mediaRecorder.start();
-      mediaRecorderRef.current = mediaRecorder;
-
-      if (!isPlaying) {
-        setIsPlaying(true);
-        updateProgress();
-      }
-
-      // Calcular latencia real en segundos
-      const latency = recordStartCtxTime - globalNow;
-      const realStartOffset = currentTime + latency;
-      setRecordedStartOffset(realStartOffset);
-      setIsRecording(true);
-
-      timerRef.current = window.setInterval(() => setRecordingTime((t) => t + 1), 1000);
-
-      toast({
-        title: "🎙️ Grabando...",
-        description: `Latencia compensada: ${(latency * 1000).toFixed(0)}ms`,
-      });
-    } catch (error) {
-      toast({ title: "Error al grabar", variant: "destructive" });
-      console.error(error);
-    }
-  };
+          const makeEnvelope = (data: Float32Array, winSize = 1024) => {
+            const env = new Float32Array(data.length);
+            let acc = 0;
+            for (let i = 0; i < data.length; i++) {
+              const v = Math.abs(data[i]);
+              acc += v;
+              if (i >= winSize) acc -= Math.abs(data[i - winSize]);
+              env[i] = acc / Math.min(i + 1, winSize);
+            }
+            return env;
+          };
 
           const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
@@ -892,8 +868,7 @@ export default function DAWInterface({
           />
         </div>
       </div>
-
-      {/* Lista de pistas */}
+      {/* Lista de pistas */}å{" "}
       {allTracks.map((track) => {
         // Usar offset temporal durante arrastre, sino el offset real
         const currentOffset = tempOffsets[track.id] ?? track.start_offset ?? 0;
