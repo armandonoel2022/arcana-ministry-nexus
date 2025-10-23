@@ -72,6 +72,7 @@ export default function DAWInterface({
   const [tempOffsets, setTempOffsets] = useState<Record<string, number>>({});
   const [noiseReduction, setNoiseReduction] = useState(true);
   const [precisionSync, setPrecisionSync] = useState(true);
+  const [isPublishing, setIsPublishing] = useState(false);
   
   const audioRefs = useRef<Record<string, HTMLAudioElement>>({});
   const wavesurferRefs = useRef<Record<string, WaveSurfer | null>>({});
@@ -632,8 +633,16 @@ export default function DAWInterface({
   };
 
   const publishRecording = async () => {
-    if (!user?.id || !recordedBlob) return;
-    
+    if (!user?.id) {
+      toast({ title: "Sesión no encontrada", description: "Vuelve a iniciar sesión", variant: "destructive" });
+      return;
+    }
+    if (!recordedBlob) {
+      toast({ title: "No hay grabación", description: "Graba algo antes de publicar", variant: "destructive" });
+      return;
+    }
+
+    setIsPublishing(true);
     try {
       toast({ title: "📤 Subiendo pista...", description: "Por favor espera" });
       
@@ -698,6 +707,8 @@ export default function DAWInterface({
         description: e?.message || "Intenta de nuevo",
         variant: "destructive" 
       });
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -939,8 +950,8 @@ export default function DAWInterface({
               <Button onClick={discardRecording} variant="outline" size="sm">
                 <RotateCcw /> Repetir
               </Button>
-              <Button onClick={publishRecording} size="sm">
-                <Upload /> Publicar
+              <Button onClick={publishRecording} size="sm" disabled={isPublishing}>
+                <Upload /> {isPublishing ? "Publicando..." : "Publicar"}
               </Button>
             </div>
           </div>
