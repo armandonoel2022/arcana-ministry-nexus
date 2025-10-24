@@ -487,6 +487,117 @@ export default function DAWInterface({
     toast({ title: "Grabación descartada" });
   };
 
+  // 🎯 Detectar onsets (sílabas) en un AudioBuffer
+  const detectOnsets = (buffer: AudioBuffer, threshold = 0.1): number[] => {
+    const channelData = buffer.getChannelData(0);
+    const sampleRate = buffer.sampleRate;
+    const hopSize = 512; // Análisis cada 512 muestras (~11ms a 44.1kHz)
+    const onsets: number[] = [];
+    
+    let prevEnergy = 0;
+    
+    for (let i = 0; i < channelData.length; i += hopSize) {
+      let energy = 0;
+      const end = Math.min(i + hopSize, channelData.length);
+      
+      // Calcular energía RMS en esta ventana
+      for (let j = i; j < end; j++) {
+        energy += channelData[j] * channelData[j];
+      }
+      energy = Math.sqrt(energy / (end - i));
+      
+      // Detectar onset si hay un incremento súbito de energía
+      const delta = energy - prevEnergy;
+      if (delta > threshold && energy > threshold * 0.5) {
+        const timeInSeconds = i / sampleRate;
+        onsets.push(timeInSeconds);
+      }
+      
+      prevEnergy = energy * 0.7; // Decay para no capturar múltiples onsets del mismo sonido
+    }
+    
+    return onsets;
+  };
+
+  // 🎯 Calcular offset óptimo comparando onsets entre dos pistas
+  const calculateOptimalOffset = (referenceOnsets: number[], targetOnsets: number[], maxOffset = 2): number => {
+    if (referenceOnsets.length === 0 || targetOnsets.length === 0) return 0;
+    
+    let bestOffset = 0;
+    let bestScore = 0;
+    const step = 0.01; // Precisión de 10ms
+    
+    // Probar diferentes offsets
+    for (let offset = -maxOffset; offset <= maxOffset; offset += step) {
+      let score = 0;
+      
+      // Para cada onset de referencia, buscar coincidencias en target con el offset aplicado
+      for (const refTime of referenceOnsets) {
+        for (const targetTime of targetOnsets) {
+          const alignedTargetTime = targetTime + offset;
+          const timeDiff = Math.abs(refTime - alignedTargetTime);
+          
+          // Si están muy cerca (dentro de 50ms), sumar a score
+          if (timeDiff < 0.05) {
+            score += 1 / (timeDiff + 0.001); // Mayor peso a coincidencias más precisas
+          }
+        }
+      }
+      
+      if (score > bestScore) {
+        bestScore = score;
+        bestOffset = offset;
+      }
+    }
+    
+    return bestOffset;
+  };
+
+  // 🎯 Auto-sincronizar una pista nueva contra la pista de referencia
+  const autoSyncNewTrack = async (newTrackUrl: string): Promise<number> => {
+    if (!audioContextRef.current) return recordedStartOffset;
+    
+    try {
+      // Obtener pista de referencia (backing track o primera voz)
+      const referenceTrack = backingTrackUrl 
+        ? { url: backingTrackUrl, offset: 0 }
+        : voiceTracks.length > 0
+        ? { url: voiceTracks[0].audio_url, offset: voiceTracks[0].start_offset || 0 }
+        : null;
+      
+      if (!referenceTrack) return recordedStartOffset;
+      
+      toast({ title: "🔍 Analizando pistas...", description: "Detectando sílabas para sincronización" });
+      
+      // Cargar y analizar pista de referencia
+      const refResponse = await fetch(referenceTrack.url);
+      const refArrayBuffer = await refResponse.arrayBuffer();
+      const refAudioBuffer = await audioContextRef.current.decodeAudioData(refArrayBuffer);
+      const refOnsets = detectOnsets(refAudioBuffer);
+      
+      // Cargar y analizar pista nueva
+      const newResponse = await fetch(newTrackUrl);
+      const newArrayBuffer = await newResponse.arrayBuffer();
+      const newAudioBuffer = await audioContextRef.current.decodeAudioData(newArrayBuffer);
+      const newOnsets = detectOnsets(newAudioBuffer);
+      
+      // Calcular offset óptimo
+      const calculatedOffset = calculateOptimalOffset(refOnsets, newOnsets);
+      const finalOffset = recordedStartOffset + calculatedOffset;
+      
+      toast({ 
+        title: "✅ Sincronización calculada", 
+        description: `Offset ajustado: ${finalOffset.toFixed(2)}s (ajuste: ${calculatedOffset > 0 ? '+' : ''}${calculatedOffset.toFixed(2)}s)` 
+      });
+      
+      return finalOffset;
+    } catch (error) {
+      console.error("Error en auto-sincronización:", error);
+      toast({ title: "⚠️ Usando offset de grabación", description: "No se pudo calcular sincronización automática" });
+      return recordedStartOffset;
+    }
+  };
+
   const autoPublishRecording = async (blob: Blob) => {
     if (!user?.id || !blob) {
       toast({ title: "Error: usuario o grabación no disponible", variant: "destructive" });
@@ -506,19 +617,22 @@ export default function DAWInterface({
 
       const { data: urlData } = supabase.storage.from("rehearsal-tracks").getPublicUrl(fileName);
 
+      // 🎯 Calcular offset con auto-sincronización
+      const syncedOffset = await autoSyncNewTrack(urlData.publicUrl);
+
       const { error: insertError } = await supabase.from("rehearsal_tracks").insert({
         session_id: sessionId,
         user_id: user.id,
         track_name: trackName,
         track_type: "voice",
         audio_url: urlData.publicUrl,
-        start_offset: recordedStartOffset,
+        start_offset: syncedOffset,
         is_backing_track: false,
         is_published: true,
       });
       if (insertError) throw insertError;
 
-      toast({ title: "✅ Pista publicada correctamente" });
+      toast({ title: "✅ Pista publicada y sincronizada" });
       setRecordedBlob(null);
       setShowRecordingPreview(false);
       onTracksRefresh();
@@ -689,6 +803,56 @@ export default function DAWInterface({
     });
   };
 
+  // 🎯 Auto-sincronizar todas las pistas vocales existentes
+  const autoSyncAllTracks = async () => {
+    if (voiceTracks.length < 2) return;
+    
+    toast({ title: "🔄 Sincronizando todas las pistas...", description: "Esto puede tomar unos segundos" });
+    
+    try {
+      if (!audioContextRef.current) return;
+      
+      // Usar backing track o primera voz como referencia
+      const referenceTrack = backingTrackUrl 
+        ? { url: backingTrackUrl, offset: 0 }
+        : { url: voiceTracks[0].audio_url, offset: voiceTracks[0].start_offset || 0 };
+      
+      // Cargar y analizar pista de referencia
+      const refResponse = await fetch(referenceTrack.url);
+      const refArrayBuffer = await refResponse.arrayBuffer();
+      const refAudioBuffer = await audioContextRef.current.decodeAudioData(refArrayBuffer);
+      const refOnsets = detectOnsets(refAudioBuffer);
+      
+      // Sincronizar cada pista de voz (excepto la primera si no hay backing track)
+      const tracksToSync = backingTrackUrl ? voiceTracks : voiceTracks.slice(1);
+      
+      for (const track of tracksToSync) {
+        const trackResponse = await fetch(track.audio_url);
+        const trackArrayBuffer = await trackResponse.arrayBuffer();
+        const trackAudioBuffer = await audioContextRef.current.decodeAudioData(trackArrayBuffer);
+        const trackOnsets = detectOnsets(trackAudioBuffer);
+        
+        const calculatedOffset = calculateOptimalOffset(refOnsets, trackOnsets);
+        const currentOffset = track.start_offset || 0;
+        const newOffset = currentOffset + calculatedOffset;
+        
+        // Actualizar en base de datos
+        await supabase
+          .from("rehearsal_tracks")
+          .update({ start_offset: newOffset })
+          .eq("id", track.id);
+        
+        onTrackUpdate(track.id, { start_offset: newOffset });
+      }
+      
+      toast({ title: "✅ Todas las pistas sincronizadas", description: "Las sílabas están alineadas" });
+      onTracksRefresh();
+    } catch (error) {
+      console.error(error);
+      toast({ title: "Error al sincronizar", variant: "destructive" });
+    }
+  };
+
   return (
     <div className="space-y-6" onMouseMove={handleDragMove} onMouseUp={handleDragEnd} onMouseLeave={handleDragEnd}>
       {/* 🎚️ Transporte Global */}
@@ -727,6 +891,9 @@ export default function DAWInterface({
             <>
               <Button onClick={handleExportMix} variant="outline" className="gap-2" disabled={allTracks.length === 0}>
                 <Upload /> Exportar Mezcla
+              </Button>
+              <Button onClick={autoSyncAllTracks} variant="outline" className="gap-2" disabled={voiceTracks.length < 2}>
+                <RotateCcw /> Auto-sincronizar Todo
               </Button>
               <Button onClick={startRecording} variant="destructive" className="gap-2">
                 <Mic /> Grabar Nueva Pista
