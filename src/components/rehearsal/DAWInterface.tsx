@@ -856,7 +856,8 @@ export default function DAWInterface({
   return (
     <div className="space-y-6" onMouseMove={handleDragMove} onMouseUp={handleDragEnd} onMouseLeave={handleDragEnd}>
       {/* 🎚️ Transporte Global */}
-      <div className="bg-card rounded-lg border p-4">
+      <div className="bg-card rounded-lg border p-6">
+        {/* Controles de reproducción */}
         <div className="flex items-center gap-4 mb-4">
           <Button variant="ghost" size="icon" onClick={handleGlobalRestart}>
             <SkipBack className="h-5 w-5" />
@@ -875,37 +876,10 @@ export default function DAWInterface({
           <div className="ml-4 font-mono text-sm">
             {formatTime(currentTime)} / {formatTime(duration)}
           </div>
-          <div className="flex-1" />
-          <div className="flex items-center gap-2 mr-4">
-            <label className="text-xs flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={noiseReduction}
-                onChange={(e) => setNoiseReduction(e.target.checked)}
-                className="rounded"
-              />
-              Reducción de Ruido
-            </label>
-          </div>
-          {!isRecording && !showRecordingPreview ? (
-            <>
-              <Button onClick={handleExportMix} variant="outline" className="gap-2" disabled={allTracks.length === 0}>
-                <Upload /> Exportar Mezcla
-              </Button>
-              <Button onClick={autoSyncAllTracks} variant="outline" className="gap-2" disabled={voiceTracks.length < 2}>
-                <RotateCcw /> Auto-sincronizar Todo
-              </Button>
-              <Button onClick={startRecording} variant="destructive" className="gap-2">
-                <Mic /> Grabar Nueva Pista
-              </Button>
-            </>
-          ) : isRecording ? (
-            <Button onClick={stopRecording} variant="outline">
-              <Square /> Detener ({formatTime(recordingTime)})
-            </Button>
-          ) : null}
         </div>
-        <div className="relative h-2 bg-muted rounded">
+
+        {/* Barra de progreso */}
+        <div className="relative h-2 bg-muted rounded mb-6">
           <div
             className="absolute h-full bg-primary"
             style={{
@@ -913,8 +887,66 @@ export default function DAWInterface({
             }}
           />
         </div>
+
+        {/* Controles adicionales y grabación */}
+        <div className="flex flex-col items-center gap-4">
+          {/* Opciones de procesamiento */}
+          <div className="flex items-center gap-4 text-sm">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={noiseReduction}
+                onChange={(e) => setNoiseReduction(e.target.checked)}
+                className="rounded"
+              />
+              <span>Reducción de Ruido</span>
+            </label>
+          </div>
+
+          {/* Botón de grabación prominente */}
+          {!isRecording && !showRecordingPreview ? (
+            <div className="flex flex-col items-center gap-4 w-full">
+              <Button 
+                onClick={startRecording} 
+                size="lg"
+                className="h-16 w-16 rounded-full bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg"
+              >
+                <Mic className="h-8 w-8" />
+              </Button>
+              
+              {/* Botones secundarios */}
+              <div className="flex gap-3 flex-wrap justify-center">
+                <Button 
+                  onClick={handleExportMix} 
+                  variant="outline" 
+                  size="sm"
+                  className="gap-2" 
+                  disabled={allTracks.length === 0}
+                >
+                  <Upload className="h-4 w-4" />
+                  <span className="hidden sm:inline">Exportar Mezcla</span>
+                </Button>
+                <Button 
+                  onClick={autoSyncAllTracks} 
+                  variant="outline" 
+                  size="sm"
+                  className="gap-2" 
+                  disabled={voiceTracks.length < 2}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  <span>Auto-sincronizar</span>
+                </Button>
+              </div>
+            </div>
+          ) : isRecording ? (
+            <Button onClick={stopRecording} variant="destructive" size="lg" className="gap-2">
+              <Square className="h-5 w-5" /> Detener ({formatTime(recordingTime)})
+            </Button>
+          ) : null}
+        </div>
       </div>
-      {/* Lista de pistas */}å{" "}
+
+      {/* Lista de pistas */}
       {allTracks.map((track) => {
         // Usar offset temporal durante arrastre, sino el offset real
         const currentOffset = tempOffsets[track.id] ?? track.start_offset ?? 0;
