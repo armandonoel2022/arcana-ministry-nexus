@@ -603,12 +603,12 @@ export class ArcanaBot {
     }
   }
 
-  private static handleGeneralQuery(query: string): BotResponse {
+  private static async handleGeneralQuery(query: string): Promise<BotResponse> {
     console.log('ARCANA manejando consulta general:', query);
     
     // Detectar consultas de cumpleaños
     if (query.includes('cumpleaños') || query.includes('cumpleanos')) {
-      return this.handleBirthdayQuery(query);
+      return await this.handleBirthdayQuery(query);
     }
 
     // Detectar consultas bíblicas
@@ -640,29 +640,97 @@ export class ArcanaBot {
     };
   }
 
-  private static handleBirthdayQuery(query: string): BotResponse {
+  private static async handleBirthdayQuery(query: string): Promise<BotResponse> {
     const today = new Date();
     const currentMonth = today.getMonth() + 1;
     const currentDay = today.getDate();
 
-    if (query.includes('hoy') || query.includes('día')) {
+    try {
+      // Buscar cumpleaños de hoy
+      if (query.includes('hoy') || query.includes('día')) {
+        const { data: birthdays, error } = await supabase
+          .from('members')
+          .select('nombres, apellidos, fecha_nacimiento')
+          .eq('is_active', true)
+          .not('fecha_nacimiento', 'is', null);
+
+        if (error) throw error;
+
+        const todayBirthdays = birthdays?.filter(member => {
+          if (!member.fecha_nacimiento) return false;
+          const birthDate = new Date(member.fecha_nacimiento);
+          return birthDate.getMonth() + 1 === currentMonth && birthDate.getDate() === currentDay;
+        }) || [];
+
+        if (todayBirthdays.length === 0) {
+          return {
+            type: 'general',
+            message: `🎂 **Cumpleaños de hoy (${currentDay}/${currentMonth}):**\n\n😊 No hay cumpleaños registrados para hoy.\n\n📅 **[Ver Módulo de Cumpleaños](/cumpleanos)** para consultar los próximos cumpleaños del ministerio.\n\n¡Celebremos juntos! 🙏✨`
+          };
+        }
+
+        let mensaje = `🎂 **¡Cumpleaños de hoy!** 🎉\n\n`;
+        todayBirthdays.forEach(member => {
+          mensaje += `🎈 **${member.nombres} ${member.apellidos}**\n`;
+        });
+        mensaje += `\n💝 ¡No olvides felicitar a ${todayBirthdays.length > 1 ? 'nuestros hermanos' : 'nuestro hermano'}!\n\n📅 **[Ver más en Módulo de Cumpleaños](/cumpleanos)**`;
+
+        return { type: 'general', message: mensaje };
+      }
+
+      // Buscar cumpleaños del mes
+      if (query.includes('mes') || query.includes('enero') || query.includes('febrero') || query.includes('marzo') || query.includes('abril') || query.includes('mayo') || query.includes('junio') || query.includes('julio') || query.includes('agosto') || query.includes('septiembre') || query.includes('octubre') || query.includes('noviembre') || query.includes('diciembre')) {
+        const { data: birthdays, error } = await supabase
+          .from('members')
+          .select('nombres, apellidos, fecha_nacimiento')
+          .eq('is_active', true)
+          .not('fecha_nacimiento', 'is', null);
+
+        if (error) throw error;
+
+        const monthBirthdays = birthdays?.filter(member => {
+          if (!member.fecha_nacimiento) return false;
+          const birthDate = new Date(member.fecha_nacimiento);
+          return birthDate.getMonth() + 1 === currentMonth;
+        }).sort((a, b) => {
+          const dateA = new Date(a.fecha_nacimiento);
+          const dateB = new Date(b.fecha_nacimiento);
+          return dateA.getDate() - dateB.getDate();
+        }) || [];
+
+        if (monthBirthdays.length === 0) {
+          return {
+            type: 'general',
+            message: `🎂 **Cumpleaños del mes:**\n\n😊 No hay cumpleaños registrados para este mes.\n\n📅 **[Ver Módulo de Cumpleaños](/cumpleanos)**\n\n¡Celebremos juntos! 🙏✨`
+          };
+        }
+
+        const monthNames = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        let mensaje = `🎂 **Cumpleaños de ${monthNames[currentMonth]}:** 🎉\n\n`;
+        
+        monthBirthdays.forEach(member => {
+          const birthDate = new Date(member.fecha_nacimiento);
+          const day = birthDate.getDate();
+          mensaje += `📅 ${day} - **${member.nombres} ${member.apellidos}**\n`;
+        });
+
+        mensaje += `\n💝 Total: ${monthBirthdays.length} cumpleañero${monthBirthdays.length > 1 ? 's' : ''}\n\n📅 **[Ver más en Módulo de Cumpleaños](/cumpleanos)**\n\n¡No olvides felicitar a tus hermanos en Cristo! 🙏✨`;
+
+        return { type: 'general', message: mensaje };
+      }
+
       return {
         type: 'general',
-        message: `🎂 **Cumpleaños de hoy (${currentDay}/${currentMonth}):**\n\n🤖 Para ver los cumpleaños específicos, visita el módulo de **[Cumpleaños](/cumpleanos)** donde encontrarás:\n\n• 🎉 Lista completa de cumpleañeros\n• 📅 Calendario de cumpleaños del mes\n• 🎁 Tarjetas personalizadas\n• 🎈 Notificaciones automáticas\n\n¡Celebremos juntos! 🙏✨`
+        message: `🎂 **Información de cumpleaños:**\n\n🤖 Para consultar cumpleaños puedes usar:\n\n• "ARCANA cumpleaños de hoy"\n• "ARCANA cumpleaños del mes"\n• "ARCANA cumpleaños de enero" (o cualquier mes)\n\n📅 **[Ir al Módulo de Cumpleaños](/cumpleanos)**\n\n¡Celebremos la vida que Dios nos ha dado! 🙏✨`
       };
-    }
 
-    if (query.includes('mes') || query.includes('enero') || query.includes('febrero') || query.includes('marzo') || query.includes('abril') || query.includes('mayo') || query.includes('junio') || query.includes('julio') || query.includes('agosto') || query.includes('septiembre') || query.includes('octubre') || query.includes('noviembre') || query.includes('diciembre')) {
+    } catch (error) {
+      console.error('Error consultando cumpleaños:', error);
       return {
         type: 'general',
-        message: `🎂 **Cumpleaños del mes:**\n\n🤖 Puedes consultar todos los cumpleaños por mes en el módulo dedicado:\n\n📅 **[Ver Módulo de Cumpleaños](/cumpleanos)**\n\nAllí encontrarás:\n• 🎉 Cumpleañeros del mes actual\n• 📊 Estadísticas de cumpleaños\n• 🎁 Tarjetas personalizadas\n• 🔔 Configurar recordatorios\n\n¡No olvides felicitar a tus hermanos en Cristo! 🙏✨`
+        message: `🎂 **Cumpleaños:**\n\n🤖 Hubo un error consultando los cumpleaños. Por favor visita:\n\n📅 **[Módulo de Cumpleaños](/cumpleanos)**\n\n¡Celebremos juntos! 🙏✨`
       };
     }
-
-    return {
-      type: 'general',
-      message: `🎂 **Información de cumpleaños:**\n\n🤖 Para consultar cumpleaños puedes usar:\n\n• "ARCANA cumpleaños de hoy"\n• "ARCANA cumpleaños del mes"\n• "ARCANA cumpleaños de enero" (o cualquier mes)\n\n📅 **[Ir al Módulo de Cumpleaños](/cumpleanos)**\n\n¡Celebremos la vida que Dios nos ha dado! 🙏✨`
-    };
   }
 
   private static handleBibleQuery(query: string): BotResponse {

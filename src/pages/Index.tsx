@@ -50,7 +50,7 @@ const Index = () => {
       description: "Graba y mezcla pistas",
       icon: Headphones,
       url: "/rehearsals",
-      gradient: "service-card-purple"
+      gradient: "service-card-blue-light"
     },
     {
       id: "integrantes",
@@ -194,8 +194,8 @@ const Index = () => {
               const colors = [
                 'bg-gradient-to-r from-blue-500 to-blue-600',
                 'bg-gradient-to-r from-blue-600 to-blue-700', 
-                'bg-gradient-to-r from-purple-500 to-purple-600',
                 'bg-gradient-to-r from-blue-400 to-blue-500',
+                'bg-gradient-to-r from-blue-500 to-blue-600',
                 'bg-gradient-to-r from-blue-700 to-blue-800'
               ];
               const currentColor = colors[index % colors.length];

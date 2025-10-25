@@ -89,31 +89,6 @@ const menuCategories = [
     ]
   },
   {
-    label: "Entrenamiento",
-    items: [
-      {
-        title: "Entrenamiento Vocal",
-        url: "/vocal-training",
-        icon: Mic,
-      },
-      {
-        title: "Entrenamiento Musical",
-        url: "/musical-training",
-        icon: Guitar,
-      },
-      {
-        title: "Entrenamiento de Danza",
-        url: "/dance-training",
-        icon: Users2,
-      },
-      {
-        title: "Recomendaciones",
-        url: "/recomendaciones",
-        icon: Star,
-      },
-    ]
-  },
-  {
     label: "Comunidad",
     items: [
       {
@@ -135,6 +110,11 @@ const menuCategories = [
         title: "Cumpleaños",
         url: "/cumpleanos",
         icon: Gift,
+      },
+      {
+        title: "Recomendaciones",
+        url: "/recomendaciones",
+        icon: Star,
       },
     ]
   },
