@@ -39,6 +39,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
   const { toast } = useToast();
 
@@ -67,7 +68,11 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
   };
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = messagesContainerRef.current;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   };
 
   const fetchMessages = async () => {
@@ -126,6 +131,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
         (payload) => {
           console.log('Nuevo mensaje recibido via realtime:', payload);
           fetchMessages(); // Refetch to get user data
+          setTimeout(scrollToBottom, 150);
         }
       )
       .subscribe();
@@ -180,6 +186,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
 
       console.log('Mensaje enviado exitosamente');
       setNewMessage("");
+      scrollToBottom();
 
       // Procesar mensaje para ver si ARCANA debe responder
       console.log('Procesando mensaje para ARCANA...');
@@ -280,7 +287,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
       {/* Messages Area */}
       <Card className="h-[70vh]">
         <CardContent className="p-0 h-full flex flex-col">
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth">
             {messages.length === 0 ? (
               <div className="text-center text-gray-500 py-8">
                 No hay mensajes aún. ¡Sé el primero en escribir!
@@ -350,12 +357,13 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
           </div>
 
           {/* Message Input */}
-          <div className="border-t p-4">
+          <div className="border-t p-4 sticky bottom-0 bg-white/95 backdrop-blur">
             <div className="flex gap-2">
               <Input
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
+                onFocus={() => setTimeout(scrollToBottom, 50)}
                 placeholder="Escribe tu mensaje... (prueba: ARCANA ayuda)"
                 className="flex-1"
               />
