@@ -278,7 +278,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
       </Card>
 
       {/* Messages Area */}
-      <Card className="h-96">
+      <Card className="h-[70vh]">
         <CardContent className="p-0 h-full flex flex-col">
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.length === 0 ? (
