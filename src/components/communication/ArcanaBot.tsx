@@ -60,10 +60,25 @@ export class ArcanaBot {
   }
 
   private static extractUserFromQuery(message: string): string | null {
-    // Buscar patrones como "turno de [nombre]", "cuando le toca a [nombre]", etc.
+    // Primero verificar si es una consulta propia (no buscar nombre)
+    const selfQueryPatterns = [
+      /cuando\s+me\s+toca/i,
+      /mi\s+turno/i,
+      /próximo\s+turno/i,
+      /\bme\b.*\btoca\b/i
+    ];
+    
+    for (const pattern of selfQueryPatterns) {
+      if (pattern.test(message)) {
+        console.log('ARCANA detectó consulta propia, no buscar otro usuario');
+        return null;
+      }
+    }
+    
+    // Buscar patrones específicos para otros usuarios
     const patterns = [
-      /(?:turno\s+de|turnos?\s+de|cuando\s+le\s+toca\s+a?|toca\s+a)\s+([a-záéíóúñ\s]+)/i,
-      /([a-záéíóúñ\s]+)\s+(?:turno|turnos|toca|cantar)/i
+      /(?:turno\s+de|turnos?\s+de|cuando\s+le\s+toca\s+a)\s+([a-záéíóúñ\s]+)/i,
+      /(?:toca\s+a)\s+([a-záéíóúñ\s]+)/i
     ];
     
     for (const pattern of patterns) {
@@ -71,11 +86,16 @@ export class ArcanaBot {
       if (match && match[1]) {
         const extractedName = match[1].trim();
         // Validar que no sea una palabra común que podría causar falsos positivos
-        const commonWords = ['me', 'mi', 'cuando', 'que', 'el', 'la', 'un', 'una', 'este', 'esta'];
-        if (!commonWords.includes(extractedName.toLowerCase()) && extractedName.length > 2) {
-          console.log('ARCANA extrajo nombre:', extractedName);
-          return extractedName;
+        const commonWords = ['me', 'mi', 'cuando', 'que', 'el', 'la', 'un', 'una', 'este', 'esta', 'cantar', 'toca', 'turno'];
+        const words = extractedName.toLowerCase().split(/\s+/);
+        
+        // Si contiene palabras comunes o es muy corto, no es un nombre válido
+        if (words.every(word => commonWords.includes(word)) || extractedName.length < 3) {
+          continue;
         }
+        
+        console.log('ARCANA extrajo nombre:', extractedName);
+        return extractedName;
       }
     }
     
