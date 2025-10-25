@@ -273,7 +273,7 @@ export class ArcanaBot {
       if (!canciones || canciones.length === 0) {
         return {
           type: "canciones",
-          message: `🤖 No encontré la canción "${nombreCancion}" en nuestro repertorio.\n\n💡 Puedes:\n• 🔍 [Buscar en el Repertorio](/repertorio-musical?search=${encodeURIComponent(nombreCancion)})\n• ➕ [Agregar Nueva Canción](/repertorio-musical?tab=add)`,
+          message: `🤖 No encontré la canción "${nombreCancion}" en nuestro repertorio.\n\n💡 Puedes:\n• 🔍 Buscar en el Repertorio\n• ➕ Agregar Nueva Canción`,
         };
       }
 
@@ -283,10 +283,10 @@ export class ArcanaBot {
         canciones.forEach((cancion, index) => {
           mensaje += `${index + 1}. **${cancion.title}**`;
           if (cancion.artist) mensaje += ` - ${cancion.artist}`;
-          mensaje += `\n📖 [Ver en Repertorio](/repertorio-musical?search=${encodeURIComponent(cancion.title)})\n\n`;
+          mensaje += `\n📖 Ver detalles en el repertorio\n\n`;
         });
         mensaje += "🤖 Para seleccionar una canción específica para un servicio:\n";
-        mensaje += "1. 📅 Ve a la **[Agenda Ministerial](/agenda)**\n";
+        mensaje += "1. 📅 Ve a la Agenda Ministerial\n";
         mensaje += "2. 🎵 Selecciona el servicio deseado\n";
         mensaje += "3. ➕ Agrega la canción desde ahí\n\n";
         mensaje += '💬 O especifica mejor el nombre: "ARCANA seleccionar [título exacto] para próximo servicio"';
@@ -305,16 +305,16 @@ export class ArcanaBot {
       if (cancion.key_signature) mensaje += `🎹 **Tono:** ${cancion.key_signature}\n\n`;
 
       mensaje += "🤖 **Para seleccionar esta canción para un servicio:**\n";
-      mensaje += "1. 📅 Ve a la **[Agenda Ministerial](/agenda)**\n";
+      mensaje += "1. 📅 Ve a la Agenda Ministerial\n";
       mensaje += "2. 🎵 Busca el servicio donde quieres incluirla\n";
       mensaje += "3. ➕ Agrega la canción desde el formulario del servicio\n\n";
-      mensaje += `📖 [Ver en Repertorio](/repertorio-musical?search=${encodeURIComponent(cancion.title)})\n`;
+      mensaje += `📖 Ver detalles en el repertorio\n`;
 
       // Agregar enlaces a YouTube/Spotify si están disponibles
       if (cancion.youtube_link || cancion.spotify_link) {
         mensaje += "\n🔗 **Enlaces:**\n";
-        if (cancion.youtube_link) mensaje += `• [🎥 Ver en YouTube](${cancion.youtube_link})\n`;
-        if (cancion.spotify_link) mensaje += `• [🎧 Escuchar en Spotify](${cancion.spotify_link})\n`;
+        if (cancion.youtube_link) mensaje += `• 🎥 Ver en YouTube\n`;
+        if (cancion.spotify_link) mensaje += `• 🎧 Escuchar en Spotify\n`;
       }
 
       return {
@@ -325,8 +325,7 @@ export class ArcanaBot {
       console.error("Error en selección de canción:", error);
       return {
         type: "canciones",
-        message:
-          "🤖 Hubo un error procesando tu solicitud. Para seleccionar canciones visita la **[Agenda Ministerial](/agenda)**.",
+        message: "🤖 Hubo un error procesando tu solicitud. Para seleccionar canciones visita la Agenda Ministerial.",
       };
     }
   }
@@ -525,14 +524,14 @@ export class ArcanaBot {
       // Si no se encontró ningún evento
       return {
         type: "turnos",
-        message: `🤖 **Hola ${fullName}!**\n\nNo encontré turnos programados para ti en los próximos servicios.\n\n💡 **Sugerencias:**\n• Verifica que tu nombre esté correctamente escrito en el sistema\n• Consulta con tu líder de grupo sobre próximas asignaciones\n• Revisa la **[Agenda Ministerial completa](/agenda)**`,
+        message: `🤖 **Hola ${fullName}!**\n\nNo encontré turnos programados para ti en los próximos servicios.\n\n💡 **Sugerencias:**\n• Verifica que tu nombre esté correctamente escrito en el sistema\n• Consulta con tu líder de grupo sobre próximas asignaciones\n• Revisa la Agenda Ministerial completa`,
       };
     } catch (error) {
       console.error("Error buscando en servicios:", error);
       return {
         type: "turnos",
         message:
-          "🤖 Disculpa, hubo un error consultando tus turnos. Intenta nuevamente o consulta directamente la agenda ministerial.\n\n🔗 **[Ver Agenda Ministerial](/agenda)**",
+          "🤖 Disculpa, hubo un error consultando tus turnos. Intenta nuevamente o consulta directamente la agenda ministerial.",
       };
     }
   }
@@ -618,7 +617,7 @@ export class ArcanaBot {
       if (!canciones || canciones.length === 0) {
         return {
           type: "canciones",
-          message: `🤖 No encontré canciones con "${searchTerms}". Puedes buscar por título, artista, género o etiquetas en nuestro repertorio.\n\n🔗 **[Ver Repertorio Completo](/repertorio-musical)**`,
+          message: `🤖 No encontré canciones con "${searchTerms}". Puedes buscar por título, artista, género o etiquetas en nuestro repertorio.\n\n🔗 Ver Repertorio Completo`,
         };
       }
 
@@ -638,9 +637,9 @@ export class ArcanaBot {
 
         // Agregar enlaces útiles
         const links = [];
-        if (cancion.youtube_link) links.push(`[🎥 YouTube](${cancion.youtube_link})`);
-        if (cancion.spotify_link) links.push(`[🎧 Spotify](${cancion.spotify_link})`);
-        links.push(`[📖 Ver en Repertorio](/repertorio-musical?search=${encodeURIComponent(cancion.title)})`);
+        if (cancion.youtube_link) links.push(`🎥 YouTube`);
+        if (cancion.spotify_link) links.push(`🎧 Spotify`);
+        links.push(`📖 Ver detalles en el repertorio`);
 
         if (links.length > 0) {
           mensaje += `🔗 ${links.join(" • ")}\n`;
@@ -651,9 +650,9 @@ export class ArcanaBot {
 
       // Agregar opciones adicionales
       mensaje += "💡 **Opciones disponibles:**\n";
-      mensaje += "• 📖 [Ver Repertorio Completo](/repertorio-musical)\n";
-      mensaje += "• ➕ [Agregar Nueva Canción](/repertorio-musical?tab=add)\n";
-      mensaje += "• 🗓️ Para seleccionar una canción para un servicio, visita la **Agenda Ministerial**\n";
+      mensaje += "• 📖 Ver Repertorio Completo\n";
+      mensaje += "• ➕ Agregar Nueva Canción\n";
+      mensaje += "• 🗓️ Para seleccionar una canción para un servicio, visita la Agenda Ministerial\n";
       mensaje += '\n💬 También puedes preguntar: "ARCANA seleccionar [nombre canción] para próximo servicio"';
 
       return {
@@ -664,8 +663,7 @@ export class ArcanaBot {
       console.error("Error buscando canciones:", error);
       return {
         type: "canciones",
-        message:
-          "🤖 Disculpa, hubo un error buscando canciones. Consulta directamente el repertorio musical.\n\n🔗 **[Ver Repertorio Musical](/repertorio-musical)**",
+        message: "🤖 Disculpa, hubo un error buscando canciones. Consulta directamente el repertorio musical.",
       };
     }
   }
@@ -719,7 +717,7 @@ export class ArcanaBot {
 🎂 **CUMPLEAÑOS**
 • "Cumpleaños de hoy"
 • "Cumpleaños del mes"
-• "Cumpleaños de enero"
+• "Cumpleaños de [mes]"
 
 📖 **BIBLIA Y ESPIRITUAL**
 • "Versículo del día"
@@ -731,6 +729,7 @@ export class ArcanaBot {
 • "ARCANA cuándo le toca a Armando Noel"
 • "ARCANA próximo ensayo"
 • "ARCANA cumpleaños de hoy"
+• "ARCANA cumpleaños de noviembre"
 • "ARCANA versículo del día"
 
 ¡Estoy aquí para servirte! 🙏🎵`,
@@ -758,6 +757,22 @@ export class ArcanaBot {
     const currentMonth = today.getMonth() + 1;
     const currentDay = today.getDate();
 
+    // Mapeo de nombres de meses a números
+    const monthMap: { [key: string]: number } = {
+      enero: 1,
+      febrero: 2,
+      marzo: 3,
+      abril: 4,
+      mayo: 5,
+      junio: 6,
+      julio: 7,
+      agosto: 8,
+      septiembre: 9,
+      octubre: 10,
+      noviembre: 11,
+      diciembre: 12,
+    };
+
     try {
       // Buscar cumpleaños de hoy
       if (query.includes("hoy") || query.includes("día")) {
@@ -779,7 +794,7 @@ export class ArcanaBot {
         if (todayBirthdays.length === 0) {
           return {
             type: "general",
-            message: `🎂 **Cumpleaños de hoy (${currentDay}/${currentMonth}):**\n\n😊 No hay cumpleaños registrados para hoy.\n\n📅 **[Ver Módulo de Cumpleaños](/cumpleanos)** para consultar los próximos cumpleaños del ministerio.\n\n¡Celebremos juntos! 🙏✨`,
+            message: `🎂 **Cumpleaños de hoy (${currentDay}/${currentMonth}):**\n\n😊 No hay cumpleaños registrados para hoy.\n\n📅 Ver Módulo de Cumpleaños para consultar los próximos cumpleaños del ministerio.\n\n¡Celebremos juntos! 🙏✨`,
           };
         }
 
@@ -787,55 +802,52 @@ export class ArcanaBot {
         todayBirthdays.forEach((member) => {
           mensaje += `🎈 **${member.nombres} ${member.apellidos}**\n`;
         });
-        mensaje += `\n💝 ¡No olvides felicitar a ${todayBirthdays.length > 1 ? "nuestros hermanos" : "nuestro hermano"}!\n\n📅 **[Ver más en Módulo de Cumpleaños](/cumpleanos)**`;
+        mensaje += `\n💝 ¡No olvides felicitar a ${todayBirthdays.length > 1 ? "nuestros hermanos" : "nuestro hermano"}!\n\n📅 Ver más en Módulo de Cumpleaños`;
 
         return { type: "general", message: mensaje };
       }
 
-      // Buscar cumpleaños del mes
-      if (
-        query.includes("mes") ||
-        query.includes("enero") ||
-        query.includes("febrero") ||
-        query.includes("marzo") ||
-        query.includes("abril") ||
-        query.includes("mayo") ||
-        query.includes("junio") ||
-        query.includes("julio") ||
-        query.includes("agosto") ||
-        query.includes("septiembre") ||
-        query.includes("octubre") ||
-        query.includes("noviembre") ||
-        query.includes("diciembre")
-      ) {
-        const { data: birthdays, error } = await supabase
-          .from("members")
-          .select("nombres, apellidos, fecha_nacimiento")
-          .eq("is_active", true)
-          .not("fecha_nacimiento", "is", null);
+      // Buscar cumpleaños del mes específico
+      let targetMonth = currentMonth;
+      let specifiedMonth = "";
 
-        if (error) throw error;
-
-        const monthBirthdays =
-          birthdays
-            ?.filter((member) => {
-              if (!member.fecha_nacimiento) return false;
-              const birthDate = new Date(member.fecha_nacimiento);
-              return birthDate.getMonth() + 1 === currentMonth;
-            })
-            .sort((a, b) => {
-              const dateA = new Date(a.fecha_nacimiento);
-              const dateB = new Date(b.fecha_nacimiento);
-              return dateA.getDate() - dateB.getDate();
-            }) || [];
-
-        if (monthBirthdays.length === 0) {
-          return {
-            type: "general",
-            message: `🎂 **Cumpleaños del mes:**\n\n😊 No hay cumpleaños registrados para este mes.\n\n📅 **[Ver Módulo de Cumpleaños](/cumpleanos)**\n\n¡Celebremos juntos! 🙏✨`,
-          };
+      // Buscar si se especificó un mes en la consulta
+      for (const [monthName, monthNumber] of Object.entries(monthMap)) {
+        if (query.includes(monthName)) {
+          targetMonth = monthNumber;
+          specifiedMonth = monthName;
+          break;
         }
+      }
 
+      // Si se menciona "mes" sin especificar, usar el mes actual
+      if (query.includes("mes") && !specifiedMonth) {
+        targetMonth = currentMonth;
+        specifiedMonth = Object.keys(monthMap).find((key) => monthMap[key] === currentMonth) || "";
+      }
+
+      const { data: birthdays, error } = await supabase
+        .from("members")
+        .select("nombres, apellidos, fecha_nacimiento")
+        .eq("is_active", true)
+        .not("fecha_nacimiento", "is", null);
+
+      if (error) throw error;
+
+      const monthBirthdays =
+        birthdays
+          ?.filter((member) => {
+            if (!member.fecha_nacimiento) return false;
+            const birthDate = new Date(member.fecha_nacimiento);
+            return birthDate.getMonth() + 1 === targetMonth;
+          })
+          .sort((a, b) => {
+            const dateA = new Date(a.fecha_nacimiento);
+            const dateB = new Date(b.fecha_nacimiento);
+            return dateA.getDate() - dateB.getDate();
+          }) || [];
+
+      if (monthBirthdays.length === 0) {
         const monthNames = [
           "",
           "Enero",
@@ -851,28 +863,43 @@ export class ArcanaBot {
           "Noviembre",
           "Diciembre",
         ];
-        let mensaje = `🎂 **Cumpleaños de ${monthNames[currentMonth]}:** 🎉\n\n`;
-
-        monthBirthdays.forEach((member) => {
-          const birthDate = new Date(member.fecha_nacimiento);
-          const day = birthDate.getDate();
-          mensaje += `📅 ${day} - **${member.nombres} ${member.apellidos}**\n`;
-        });
-
-        mensaje += `\n💝 Total: ${monthBirthdays.length} cumpleañero${monthBirthdays.length > 1 ? "s" : ""}\n\n📅 **[Ver más en Módulo de Cumpleaños](/cumpleanos)**\n\n¡No olvides felicitar a tus hermanos en Cristo! 🙏✨`;
-
-        return { type: "general", message: mensaje };
+        return {
+          type: "general",
+          message: `🎂 **Cumpleaños de ${monthNames[targetMonth]}:**\n\n😊 No hay cumpleaños registrados para este mes.\n\n📅 Ver Módulo de Cumpleaños\n\n¡Celebremos juntos! 🙏✨`,
+        };
       }
 
-      return {
-        type: "general",
-        message: `🎂 **Información de cumpleaños:**\n\n🤖 Para consultar cumpleaños puedes usar:\n\n• "ARCANA cumpleaños de hoy"\n• "ARCANA cumpleaños del mes"\n• "ARCANA cumpleaños de enero" (o cualquier mes)\n\n📅 **[Ir al Módulo de Cumpleaños](/cumpleanos)**\n\n¡Celebremos la vida que Dios nos ha dado! 🙏✨`,
-      };
+      const monthNames = [
+        "",
+        "Enero",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto",
+        "Septiembre",
+        "Octubre",
+        "Noviembre",
+        "Diciembre",
+      ];
+      let mensaje = `🎂 **Cumpleaños de ${monthNames[targetMonth]}:** 🎉\n\n`;
+
+      monthBirthdays.forEach((member) => {
+        const birthDate = new Date(member.fecha_nacimiento);
+        const day = birthDate.getDate();
+        mensaje += `📅 ${day} - **${member.nombres} ${member.apellidos}**\n`;
+      });
+
+      mensaje += `\n💝 Total: ${monthBirthdays.length} cumpleañero${monthBirthdays.length > 1 ? "s" : ""}\n\n📅 Ver más en Módulo de Cumpleaños\n\n¡No olvides felicitar a tus hermanos en Cristo! 🙏✨`;
+
+      return { type: "general", message: mensaje };
     } catch (error) {
       console.error("Error consultando cumpleaños:", error);
       return {
         type: "general",
-        message: `🎂 **Cumpleaños:**\n\n🤖 Hubo un error consultando los cumpleaños. Por favor visita:\n\n📅 **[Módulo de Cumpleaños](/cumpleanos)**\n\n¡Celebremos juntos! 🙏✨`,
+        message: `🎂 **Cumpleaños:**\n\n🤖 Hubo un error consultando los cumpleaños. Por favor visita el Módulo de Cumpleaños.\n\n¡Celebremos juntos! 🙏✨`,
       };
     }
   }
@@ -881,13 +908,13 @@ export class ArcanaBot {
     if (query.includes("día") || query.includes("hoy")) {
       return {
         type: "general",
-        message: `📖 **Versículo del día:**\n\n🤖 Para el versículo diario y reflexiones espirituales, visita:\n\n✨ **[Módulo Espiritual](/modulo-espiritual)**\n\nAllí encontrarás:\n• 📖 Versículo del día con reflexión\n• 📚 Historia de versículos anteriores\n• 🙏 Meditaciones y estudios\n• 💫 Inspiración diaria\n\n"La palabra de Dios es viva y eficaz" - Hebreos 4:12 🙏✨`,
+        message: `📖 **Versículo del día:**\n\n🤖 Para el versículo diario y reflexiones espirituales, visita el Módulo Espiritual.\n\nAllí encontrarás:\n• 📖 Versículo del día con reflexión\n• 📚 Historia de versículos anteriores\n• 🙏 Meditaciones y estudios\n• 💫 Inspiración diaria\n\n"La palabra de Dios es viva y eficaz" - Hebreos 4:12 🙏✨`,
       };
     }
 
     return {
       type: "general",
-      message: `📖 **Consultas bíblicas:**\n\n🤖 Para versículos, reflexiones y estudios bíblicos:\n\n✨ **[Ir al Módulo Espiritual](/modulo-espiritual)**\n\nPuedes consultar:\n• "ARCANA versículo del día"\n• "ARCANA cita bíblica sobre amor"\n• "ARCANA biblia de hoy"\n\n"Lámpara es a mis pies tu palabra, y lumbrera a mi camino" - Salmo 119:105 🙏✨`,
+      message: `📖 **Consultas bíblicas:**\n\n🤖 Para versículos, reflexiones y estudios bíblicos visita el Módulo Espiritual.\n\nPuedes consultar:\n• "ARCANA versículo del día"\n• "ARCANA cita bíblica sobre amor"\n• "ARCANA biblia de hoy"\n\n"Lámpara es a mis pies tu palabra, y lumbrera a mi camino" - Salmo 119:105 🙏✨`,
     };
   }
 
