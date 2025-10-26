@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import arcanaAvatarImage from '@/assets/arcana-avatar.png';
+import arcanaThinking from '@/assets/arcana-thinking.png';
+import arcanaHappy from '@/assets/arcana-happy.png';
+import arcanaWorried from '@/assets/arcana-worried.png';
 
 interface ArcanaAvatarProps {
   isActive: boolean;
-  expression?: 'greeting' | 'thinking' | 'happy' | 'idle';
+  expression?: 'greeting' | 'thinking' | 'happy' | 'worried' | 'idle';
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 }
 
@@ -50,8 +52,24 @@ export const ArcanaAvatar = ({
         return 'animate-pulse';
       case 'happy':
         return 'scale-110';
+      case 'worried':
+        return 'animate-pulse';
       default:
         return '';
+    }
+  };
+
+  const getAvatarImage = () => {
+    switch (expression) {
+      case 'thinking':
+        return arcanaThinking;
+      case 'happy':
+      case 'greeting':
+        return arcanaHappy;
+      case 'worried':
+        return arcanaWorried;
+      default:
+        return arcanaHappy;
     }
   };
 
@@ -82,14 +100,9 @@ export const ArcanaAvatar = ({
         {/* Avatar container */}
         <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-white shadow-2xl bg-gradient-to-br from-purple-100 to-blue-100">
           <img 
-            src={arcanaAvatarImage} 
+            src={getAvatarImage()} 
             alt="ARCANA Avatar" 
             className="w-full h-full object-cover"
-            style={{
-              clipPath: expression === 'happy' 
-                ? 'polygon(33% 0%, 67% 0%, 100% 50%, 67% 100%, 33% 100%, 0% 50%)' 
-                : 'circle(50%)'
-            }}
           />
         </div>
 
@@ -126,6 +139,7 @@ export const ArcanaAvatar = ({
             {expression === 'greeting' && '¡Hola! 👋'}
             {expression === 'thinking' && 'Procesando...'}
             {expression === 'happy' && '¡Listo! ✨'}
+            {expression === 'worried' && 'Lo siento...'}
             {expression === 'idle' && 'Estoy aquí'}
           </div>
         </div>

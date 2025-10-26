@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface BotResponse {
   type: "turnos" | "ensayos" | "canciones" | "general";
   message: string;
+  expression?: 'thinking' | 'happy' | 'worried';
 }
 
 export class ArcanaBot {
@@ -164,7 +165,8 @@ export class ArcanaBot {
       if (!members || members.length === 0) {
         return {
           type: "turnos",
-          message: `🤖 No encontré al integrante "${userName}" en nuestro sistema.\n\n💡 **Sugerencias:**\n• Verifica la ortografía del nombre\n• Usa nombre y apellido si es posible\n• Consulta la lista de **[Integrantes Activos](/integrantes)**`,
+          message: `🤖 Lo siento, no encontré al integrante "${userName}" en nuestro sistema.\n\n💡 **Sugerencias:**\n• Verifica la ortografía del nombre\n• Usa nombre y apellido si es posible\n• Consulta la lista de **[Integrantes Activos](/integrantes)**`,
+          expression: 'worried',
         };
       }
 
@@ -175,6 +177,7 @@ export class ArcanaBot {
         return {
           type: "turnos",
           message: `🤖 Encontré varios integrantes:\n\n${opciones}\n\n💡 Por favor especifica mejor el nombre. Ejemplo: "ARCANA cuándo le toca a **${members[0].nombres} ${members[0].apellidos.split(" ")[0]}**"`,
+          expression: 'thinking',
         };
       }
 
@@ -187,7 +190,8 @@ export class ArcanaBot {
       return {
         type: "turnos",
         message:
-          "🤖 Disculpa, hubo un error consultando los turnos. Por favor intenta nuevamente o consulta la agenda ministerial directamente.\n\n🔗 **[Ver Agenda Ministerial](/agenda)**",
+          "🤖 Lo siento, hubo un error consultando los turnos. Por favor intenta nuevamente o consulta la agenda ministerial directamente.\n\n🔗 **[Ver Agenda Ministerial](/agenda)**",
+        expression: 'worried',
       };
     }
   }
@@ -250,7 +254,8 @@ export class ArcanaBot {
         return {
           type: "canciones",
           message:
-            '🤖 Para seleccionar una canción especifica el nombre completo. Ejemplo: "ARCANA seleccionar Como Lluvia para próximo servicio"',
+            '🤖 Lo siento, para seleccionar una canción especifica el nombre completo. Ejemplo: "ARCANA seleccionar Como Lluvia para próximo servicio"',
+          expression: 'worried',
         };
       }
 
@@ -266,14 +271,16 @@ export class ArcanaBot {
         console.error("Error buscando canción:", error);
         return {
           type: "canciones",
-          message: "🤖 Hubo un error buscando la canción. Intenta nuevamente.",
+          message: "🤖 Lo siento, hubo un error buscando la canción. Intenta nuevamente.",
+          expression: 'worried',
         };
       }
 
       if (!canciones || canciones.length === 0) {
         return {
           type: "canciones",
-          message: `🤖 No encontré la canción "${nombreCancion}" en nuestro repertorio.\n\n💡 Puedes:\n• 🔍 Buscar en el Repertorio\n• ➕ Agregar Nueva Canción`,
+          message: `🤖 Lo siento, no encontré la canción "${nombreCancion}" en nuestro repertorio.\n\n💡 Puedes:\n• 🔍 Buscar en el Repertorio\n• ➕ Agregar Nueva Canción`,
+          expression: 'worried',
         };
       }
 
@@ -294,6 +301,7 @@ export class ArcanaBot {
         return {
           type: "canciones",
           message: mensaje,
+          expression: 'happy',
         };
       }
 
@@ -320,12 +328,14 @@ export class ArcanaBot {
       return {
         type: "canciones",
         message: mensaje,
+        expression: 'happy',
       };
     } catch (error) {
       console.error("Error en selección de canción:", error);
       return {
         type: "canciones",
-        message: "🤖 Hubo un error procesando tu solicitud. Para seleccionar canciones visita la Agenda Ministerial.",
+        message: "🤖 Lo siento, hubo un error procesando tu solicitud. Para seleccionar canciones visita la Agenda Ministerial.",
+        expression: 'worried',
       };
     }
   }
@@ -353,7 +363,8 @@ export class ArcanaBot {
         if (userError || !user) {
           return {
             type: "turnos",
-            message: "🤖 No pude identificar tu usuario. Asegúrate de estar autenticado correctamente.",
+            message: "🤖 Lo siento, no pude identificar tu usuario. Asegúrate de estar autenticado correctamente.",
+            expression: 'worried',
           };
         }
 
@@ -368,7 +379,8 @@ export class ArcanaBot {
           return {
             type: "turnos",
             message:
-              "🤖 No encontré tu información en el sistema de integrantes. Contacta a tu líder para actualizar tus datos.",
+              "🤖 Lo siento, no encontré tu información en el sistema de integrantes. Contacta a tu líder para actualizar tus datos.",
+            expression: 'worried',
           };
         }
 
@@ -384,7 +396,8 @@ export class ArcanaBot {
       return {
         type: "turnos",
         message:
-          "🤖 Disculpa, hubo un error consultando tus turnos. Intenta nuevamente o consulta directamente la agenda ministerial.",
+          "🤖 Lo siento, hubo un error consultando tus turnos. Intenta nuevamente o consulta directamente la agenda ministerial.",
+        expression: 'worried',
       };
     }
   }
@@ -413,7 +426,8 @@ export class ArcanaBot {
         console.error("Error consultando eventos:", eventosError);
         return {
           type: "turnos",
-          message: "🤖 Hubo un error consultando la agenda ministerial. Intenta nuevamente.",
+          message: "🤖 Lo siento, hubo un error consultando la agenda ministerial. Intenta nuevamente.",
+          expression: 'worried',
         };
       }
 
@@ -423,6 +437,7 @@ export class ArcanaBot {
         return {
           type: "turnos",
           message: "🤖 No hay servicios programados en la agenda ministerial.",
+          expression: 'happy',
         };
       }
 
@@ -502,6 +517,7 @@ export class ArcanaBot {
         return {
           type: "turnos",
           message: mensaje,
+          expression: 'thinking',
         };
       }
 
@@ -518,20 +534,23 @@ export class ArcanaBot {
         return {
           type: "turnos",
           message: `🎵 **Hola ${fullName}!**\n\nTu último turno registrado fue:\n\n📅 **${ultimoEvento.title}**\n🗓️ ${fecha}\n📍 ${ultimoEvento.location || "Ubicación por confirmar"}\n\n💡 No tienes turnos futuros programados. Consulta con tu líder de grupo para próximos servicios.`,
+          expression: 'thinking',
         };
       }
 
       // Si no se encontró ningún evento
       return {
         type: "turnos",
-        message: `🤖 **Hola ${fullName}!**\n\nNo encontré turnos programados para ti en los próximos servicios.\n\n💡 **Sugerencias:**\n• Verifica que tu nombre esté correctamente escrito en el sistema\n• Consulta con tu líder de grupo sobre próximas asignaciones\n• Revisa la Agenda Ministerial completa`,
+        message: `🤖 **Hola ${fullName}!**\n\nLo siento, no encontré turnos programados para ti en los próximos servicios.\n\n💡 **Sugerencias:**\n• Verifica que tu nombre esté correctamente escrito en el sistema\n• Consulta con tu líder de grupo sobre próximas asignaciones\n• Revisa la Agenda Ministerial completa`,
+        expression: 'worried',
       };
     } catch (error) {
       console.error("Error buscando en servicios:", error);
       return {
         type: "turnos",
         message:
-          "🤖 Disculpa, hubo un error consultando tus turnos. Intenta nuevamente o consulta directamente la agenda ministerial.",
+          "🤖 Lo siento, hubo un error consultando tus turnos. Intenta nuevamente o consulta directamente la agenda ministerial.",
+        expression: 'worried',
       };
     }
   }
@@ -569,13 +588,15 @@ export class ArcanaBot {
       return {
         type: "ensayos",
         message: mensaje,
+        expression: 'happy',
       };
     } catch (error) {
       console.error("Error generando respuesta de ensayos:", error);
       return {
         type: "ensayos",
         message:
-          "🤖 Disculpa, hubo un error consultando los ensayos. Los ensayos son todos los viernes de 07:00 p.m. a 09:00 p.m.",
+          "🤖 Lo siento, hubo un error consultando los ensayos. Los ensayos son todos los viernes de 07:00 p.m. a 09:00 p.m.",
+        expression: 'worried',
       };
     }
   }
@@ -591,7 +612,8 @@ export class ArcanaBot {
         return {
           type: "canciones",
           message:
-            '🤖 Para buscar canciones, especifica el nombre o categoría. Ejemplo: "ARCANA buscar alabanza" o "ARCANA canción espíritu santo"',
+            '🤖 Lo siento, para buscar canciones, especifica el nombre o categoría. Ejemplo: "ARCANA buscar alabanza" o "ARCANA canción espíritu santo"',
+          expression: 'worried',
         };
       }
 
@@ -608,7 +630,8 @@ export class ArcanaBot {
         console.error("Error buscando canciones:", error);
         return {
           type: "canciones",
-          message: "🤖 Disculpa, hubo un error buscando canciones. Consulta directamente el repertorio musical.",
+          message: "🤖 Lo siento, hubo un error buscando canciones. Consulta directamente el repertorio musical.",
+          expression: 'worried',
         };
       }
 
@@ -617,7 +640,8 @@ export class ArcanaBot {
       if (!canciones || canciones.length === 0) {
         return {
           type: "canciones",
-          message: `🤖 No encontré canciones con "${searchTerms}". Puedes buscar por título, artista, género o etiquetas en nuestro repertorio.\n\n🔗 Ver Repertorio Completo`,
+          message: `🤖 Lo siento, no encontré canciones con "${searchTerms}". Puedes buscar por título, artista, género o etiquetas en nuestro repertorio.\n\n🔗 Ver Repertorio Completo`,
+          expression: 'worried',
         };
       }
 
@@ -658,12 +682,14 @@ export class ArcanaBot {
       return {
         type: "canciones",
         message: mensaje,
+        expression: 'happy',
       };
     } catch (error) {
       console.error("Error buscando canciones:", error);
       return {
         type: "canciones",
-        message: "🤖 Disculpa, hubo un error buscando canciones. Consulta directamente el repertorio musical.",
+        message: "🤖 Lo siento, hubo un error buscando canciones. Consulta directamente el repertorio musical.",
+        expression: 'worried',
       };
     }
   }
@@ -739,7 +765,7 @@ export class ArcanaBot {
     for (const [key, response] of Object.entries(responses)) {
       if (query.includes(key)) {
         console.log("ARCANA encontró respuesta para:", key);
-        return { type: "general", message: response };
+        return { type: "general", message: response, expression: 'happy' };
       }
     }
 
@@ -748,7 +774,8 @@ export class ArcanaBot {
     return {
       type: "general",
       message:
-        '🤖 No entendí tu consulta. Escribe "ARCANA ayuda" para ver todas las opciones disponibles.\n\n💡 Puedo ayudarte con:\n• Turnos de canto\n• Información de ensayos\n• Búsqueda de canciones\n• Selección de repertorio\n• Cumpleaños del ministerio\n• Versículos bíblicos',
+        '🤖 Lo siento, no entendí tu consulta. Escribe "ARCANA ayuda" para ver todas las opciones disponibles.\n\n💡 Puedo ayudarte con:\n• Turnos de canto\n• Información de ensayos\n• Búsqueda de canciones\n• Selección de repertorio\n• Cumpleaños del ministerio\n• Versículos bíblicos',
+      expression: 'worried',
     };
   }
 
@@ -795,6 +822,7 @@ export class ArcanaBot {
           return {
             type: "general",
             message: `🎂 **Cumpleaños de hoy (${currentDay}/${currentMonth}):**\n\n😊 No hay cumpleaños registrados para hoy.\n\n📅 Ver Módulo de Cumpleaños para consultar los próximos cumpleaños del ministerio.\n\n¡Celebremos juntos! 🙏✨`,
+            expression: 'happy',
           };
         }
 
@@ -804,7 +832,7 @@ export class ArcanaBot {
         });
         mensaje += `\n💝 ¡No olvides felicitar a ${todayBirthdays.length > 1 ? "nuestros hermanos" : "nuestro hermano"}!\n\n📅 Ver más en Módulo de Cumpleaños`;
 
-        return { type: "general", message: mensaje };
+        return { type: "general", message: mensaje, expression: 'happy' };
       }
 
       // Buscar cumpleaños del mes específico
@@ -866,6 +894,7 @@ export class ArcanaBot {
         return {
           type: "general",
           message: `🎂 **Cumpleaños de ${monthNames[targetMonth]}:**\n\n😊 No hay cumpleaños registrados para este mes.\n\n📅 Ver Módulo de Cumpleaños\n\n¡Celebremos juntos! 🙏✨`,
+          expression: 'happy',
         };
       }
 
@@ -894,12 +923,13 @@ export class ArcanaBot {
 
       mensaje += `\n💝 Total: ${monthBirthdays.length} cumpleañero${monthBirthdays.length > 1 ? "s" : ""}\n\n📅 Ver más en Módulo de Cumpleaños\n\n¡No olvides felicitar a tus hermanos en Cristo! 🙏✨`;
 
-      return { type: "general", message: mensaje };
+      return { type: "general", message: mensaje, expression: 'happy' };
     } catch (error) {
       console.error("Error consultando cumpleaños:", error);
       return {
         type: "general",
-        message: `🎂 **Cumpleaños:**\n\n🤖 Hubo un error consultando los cumpleaños. Por favor visita el Módulo de Cumpleaños.\n\n¡Celebremos juntos! 🙏✨`,
+        message: `🎂 **Cumpleaños:**\n\n🤖 Lo siento, hubo un error consultando los cumpleaños. Por favor visita el Módulo de Cumpleaños.\n\n¡Celebremos juntos! 🙏✨`,
+        expression: 'worried',
       };
     }
   }
@@ -909,12 +939,14 @@ export class ArcanaBot {
       return {
         type: "general",
         message: `📖 **Versículo del día:**\n\n🤖 Para el versículo diario y reflexiones espirituales, visita el Módulo Espiritual.\n\nAllí encontrarás:\n• 📖 Versículo del día con reflexión\n• 📚 Historia de versículos anteriores\n• 🙏 Meditaciones y estudios\n• 💫 Inspiración diaria\n\n"La palabra de Dios es viva y eficaz" - Hebreos 4:12 🙏✨`,
+        expression: 'thinking',
       };
     }
 
     return {
       type: "general",
       message: `📖 **Consultas bíblicas:**\n\n🤖 Para versículos, reflexiones y estudios bíblicos visita el Módulo Espiritual.\n\nPuedes consultar:\n• "ARCANA versículo del día"\n• "ARCANA cita bíblica sobre amor"\n• "ARCANA biblia de hoy"\n\n"Lámpara es a mis pies tu palabra, y lumbrera a mi camino" - Salmo 119:105 🙏✨`,
+      expression: 'thinking',
     };
   }
 

@@ -40,7 +40,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [arcanaActive, setArcanaActive] = useState(false);
-  const [arcanaExpression, setArcanaExpression] = useState<'greeting' | 'thinking' | 'happy' | 'idle'>('idle');
+  const [arcanaExpression, setArcanaExpression] = useState<'greeting' | 'thinking' | 'happy' | 'worried' | 'idle'>('idle');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
@@ -202,9 +202,9 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
       if (botResponse) {
         console.log('ARCANA generó respuesta:', botResponse.type);
         
-        // Activar avatar en modo "thinking"
+        // Activar avatar con la expresión correspondiente
         setArcanaActive(true);
-        setArcanaExpression('thinking');
+        setArcanaExpression(botResponse.expression || 'thinking');
         
         // Esperar un momento antes de que el bot responda para que parezca más natural
         setTimeout(async () => {
@@ -213,8 +213,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
             await ArcanaBot.sendBotResponse(room.id, botResponse);
             console.log('Respuesta de ARCANA enviada exitosamente');
             
-            // Cambiar a expresión feliz cuando termina
-            setArcanaExpression('happy');
+            // Mantener la expresión por un momento más
             setTimeout(() => {
               setArcanaActive(false);
               setArcanaExpression('idle');
