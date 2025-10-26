@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Send, Users, Bot } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ArcanaBot } from "./ArcanaBot";
+import { ArcanaAvatar } from "./ArcanaAvatar";
 
 interface ChatRoomData {
   id: string;
@@ -38,6 +39,8 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [arcanaActive, setArcanaActive] = useState(false);
+  const [arcanaExpression, setArcanaExpression] = useState<'greeting' | 'thinking' | 'happy' | 'idle'>('idle');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
@@ -198,14 +201,28 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
 
       if (botResponse) {
         console.log('ARCANA generó respuesta:', botResponse.type);
+        
+        // Activar avatar en modo "thinking"
+        setArcanaActive(true);
+        setArcanaExpression('thinking');
+        
         // Esperar un momento antes de que el bot responda para que parezca más natural
         setTimeout(async () => {
           console.log('Enviando respuesta de ARCANA...');
           try {
             await ArcanaBot.sendBotResponse(room.id, botResponse);
             console.log('Respuesta de ARCANA enviada exitosamente');
+            
+            // Cambiar a expresión feliz cuando termina
+            setArcanaExpression('happy');
+            setTimeout(() => {
+              setArcanaActive(false);
+              setArcanaExpression('idle');
+            }, 2000);
           } catch (botError) {
             console.error('Error enviando respuesta del bot:', botError);
+            setArcanaActive(false);
+            setArcanaExpression('idle');
           }
         }, 2000);
       } else {
@@ -263,7 +280,13 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
+      {/* Avatar animado de ARCANA */}
+      <ArcanaAvatar 
+        isActive={arcanaActive}
+        expression={arcanaExpression}
+        position="bottom-right"
+      />
       {/* Room Header */}
       <Card className="bg-gradient-to-r from-arcana-blue-50 to-arcana-gold-50">
         <CardHeader className="pb-3">
