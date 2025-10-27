@@ -348,15 +348,14 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
           return;
         }
 
-        // Insertar en la tabla service_songs
+        // Insertar en la tabla service_songs (sin select para evitar queries complejas)
         console.log('Insertando en service_songs...');
-        const { data: inserted, error } = await supabase
+        const { error } = await supabase
           .from('service_songs')
           .insert({
             service_id: serviceId,
             song_id: action.songId
-          })
-          .select();
+          });
 
         if (error) {
           console.error('Error insertando en service_songs:', error);
@@ -364,7 +363,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
           throw error;
         }
 
-        console.log('Canción insertada exitosamente:', inserted);
+        console.log('Canción insertada exitosamente');
 
         toast({
           title: "✅ Canción agregada",
