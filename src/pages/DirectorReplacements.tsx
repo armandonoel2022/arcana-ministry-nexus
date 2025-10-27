@@ -5,8 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { UserCheck, MessageSquare, History, Eye } from "lucide-react";
 import DirectorRequestResponse from '@/components/agenda/DirectorRequestResponse';
-import DirectorReplacementRequestOverlay from '@/components/agenda/DirectorReplacementRequestOverlay';
-import DirectorReplacementNotificationOverlay from '@/components/agenda/DirectorReplacementNotificationOverlay';
 
 const DirectorReplacements = () => {
   const handlePreviewRequest = () => {
@@ -56,11 +54,7 @@ const DirectorReplacements = () => {
   };
 
   return (
-    <>
-      <DirectorReplacementRequestOverlay />
-      <DirectorReplacementNotificationOverlay />
-      
-      <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 bg-arcana-gradient rounded-full flex items-center justify-center">
           <UserCheck className="w-5 h-5 text-white" />
@@ -139,7 +133,6 @@ const DirectorReplacements = () => {
         </TabsContent>
       </Tabs>
     </div>
-    </>
   );
 };
 
