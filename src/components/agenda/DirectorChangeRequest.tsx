@@ -162,11 +162,11 @@ const DirectorChangeRequest: React.FC<DirectorChangeRequestProps> = ({
         return;
       }
 
-      // Buscar si el director seleccionado tiene cuenta en profiles (por email)
+      // Buscar si el director seleccionado tiene cuenta en profiles (por email, case-insensitive)
       const { data: replacementProfile } = await supabase
         .from('profiles')
         .select('id, email')
-        .eq('email', selectedDir.email)
+        .ilike('email', selectedDir.email)
         .maybeSingle();
 
       if (!replacementProfile) {
