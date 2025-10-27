@@ -24,6 +24,11 @@ interface WeekendService {
     name: string;
     color_theme: string;
   };
+  director_profile?: {
+    id: string;
+    full_name: string;
+    photo_url?: string;
+  };
   group_members: {
     id: string;
     user_id: string;
@@ -226,6 +231,21 @@ const ServiceNotificationOverlay = ({ forceShow = false, onClose }: ServiceNotif
           data.map(async (service) => {  
             let members: any[] = [];
             let selectedSongs: any[] = [];
+            let directorProfile: any = null;
+
+            // Get director profile by searching for the leader name in profiles
+            if (service.leader) {
+              const { data: profileData } = await supabase
+                .from('profiles')
+                .select('id, full_name, photo_url')
+                .ilike('full_name', `%${service.leader}%`)
+                .limit(1)
+                .single();
+              
+              if (profileData) {
+                directorProfile = profileData;
+              }
+            }
 
             if (service.assigned_group_id) {
               const { data: membersData, error: membersError } = await supabase
@@ -277,6 +297,7 @@ const ServiceNotificationOverlay = ({ forceShow = false, onClose }: ServiceNotif
               ...service,   
               group_members: members,  
               selected_songs: selectedSongs,  
+              director_profile: directorProfile,
               // Corregir el tipo de worship_groups  
               worship_groups: Array.isArray(service.worship_groups) && service.worship_groups.length > 0   
                 ? service.worship_groups[0]   
@@ -485,7 +506,7 @@ const ServiceNotificationOverlay = ({ forceShow = false, onClose }: ServiceNotif
               {services.map((service) => {
                 const serviceTime = getServiceTime(service.title);
                 const director = service.leader;
-                const directorMember = service.group_members.find(m => m.is_leader);
+                const directorPhoto = service.director_profile?.photo_url;
                 const responsibleVoices = getResponsibleVoices(service.group_members).slice(0, 5);
                 
                 // Separar canciones por tipo
@@ -545,7 +566,7 @@ const ServiceNotificationOverlay = ({ forceShow = false, onClose }: ServiceNotif
                           </h4>
                           <div className="flex items-center gap-3">
                             <Avatar className="w-16 h-16 border-2 border-primary/30">
-                              <AvatarImage src={directorMember?.profiles?.photo_url} />
+                              <AvatarImage src={directorPhoto} />
                               <AvatarFallback className="bg-primary/20 text-primary font-bold">
                                 {getInitials(director)}
                               </AvatarFallback>
