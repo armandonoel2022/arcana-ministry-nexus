@@ -777,19 +777,8 @@ export class ArcanaBot {
         };
       }
 
-      // Obtener próximo servicio del usuario (como director)
-      // Usar userId pasado como parámetro desde ChatRoom (ya autenticado)
-      const { data: userGroups } = await supabase
-        .from("group_members")
-        .select("group_id, is_leader")
-        .eq("user_id", userId) // Usar el userId del contexto del chat
-        .eq("is_active", true)
-        .eq("is_leader", true);
-
-      const userGroupIds = userGroups?.map(g => g.group_id) || [];
-      
-      let nextService = null;
-      // Identificar usuario y nombre de perfil
+      // Obtener próximo servicio donde el usuario es director/leader
+      // Obtener info del usuario
       let profileName: string | null = null;
       const { data: profile } = await supabase
         .from('profiles')
@@ -798,7 +787,21 @@ export class ArcanaBot {
         .maybeSingle();
       profileName = profile?.full_name || null;
 
-      // 1) Próximo servicio por grupos donde es líder
+      console.log("Usuario buscando servicios:", profileName, "ID:", userId);
+
+      let nextService = null;
+
+      // 1) Verificar grupos donde es líder
+      const { data: userGroups } = await supabase
+        .from("group_members")
+        .select("group_id, is_leader")
+        .eq("user_id", userId)
+        .eq("is_active", true)
+        .eq("is_leader", true);
+
+      const userGroupIds = userGroups?.map(g => g.group_id) || [];
+      console.log("Grupos donde es líder:", userGroupIds);
+
       if (userGroupIds.length > 0) {
         const { data } = await supabase
           .from("services")
@@ -811,8 +814,9 @@ export class ArcanaBot {
         nextService = data || null;
       }
 
-      // 2) Fallback: próximo servicio donde el campo leader coincide con su nombre
+      // 2) Si no encontró por grupos, buscar por nombre en campo leader
       if (!nextService && profileName) {
+        console.log("Buscando servicios por nombre en leader:", profileName);
         const { data } = await supabase
           .from('services')
           .select('id, service_date, title, leader')
@@ -822,6 +826,7 @@ export class ArcanaBot {
           .limit(1)
           .maybeSingle();
         nextService = data || null;
+        console.log("Servicio encontrado por leader:", nextService);
       }
 
       const serviceDate = nextService?.service_date;
