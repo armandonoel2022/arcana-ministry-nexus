@@ -548,28 +548,27 @@ const ServiceNotificationOverlay = ({
       container.style.backgroundColor = '#ffffff';
       container.style.padding = '0';
       
-      // Crear el encabezado con la fecha y hora
+      // Crear el encabezado con la fecha y hora (estilo simple)
       const header = document.createElement('div');
-      header.style.background = 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)';
-      header.style.padding = '32px 24px';
-      header.style.textAlign = 'center';
-      header.style.color = '#ffffff';
+      header.style.backgroundColor = '#ffffff';
+      header.style.padding = '20px 24px';
+      header.style.borderBottom = '1px solid #e5e7eb';
       header.style.marginBottom = '0';
       
       const title = document.createElement('h1');
       title.textContent = 'Programa de Servicios';
-      title.style.fontSize = '32px';
-      title.style.fontWeight = 'bold';
-      title.style.marginBottom = '12px';
-      title.style.color = '#ffffff';
+      title.style.fontSize = '20px';
+      title.style.fontWeight = '600';
+      title.style.marginBottom = '4px';
+      title.style.color = '#111827';
       
       const dateTime = document.createElement('p');
-      const serviceDate = format(new Date(service.service_date), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
+      const serviceDate = format(new Date(service.service_date), "EEEE, dd 'de' MMMM", { locale: es });
       const serviceTime = getServiceTime(service.title);
-      dateTime.textContent = `${serviceDate} - ${serviceTime}`;
-      dateTime.style.fontSize = '20px';
-      dateTime.style.fontWeight = '500';
-      dateTime.style.color = '#ffffff';
+      dateTime.textContent = `${serviceDate}`;
+      dateTime.style.fontSize = '14px';
+      dateTime.style.fontWeight = '400';
+      dateTime.style.color = '#6b7280';
       dateTime.style.textTransform = 'capitalize';
       
       header.appendChild(title);
