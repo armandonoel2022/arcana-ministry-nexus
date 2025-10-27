@@ -11,6 +11,7 @@ import { ArcanaBot, BotAction } from "./ArcanaBot";
 import { ArcanaAvatar } from "./ArcanaAvatar";
 import { VoiceRecognition } from "./VoiceRecognition";
 import { VoiceNoteRecorder } from "./VoiceNoteRecorder";
+import { SongLimitOverlay } from "./SongLimitOverlay";
 
 interface ChatRoomData {
   id: string;
@@ -44,6 +45,8 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [arcanaActive, setArcanaActive] = useState(false);
   const [arcanaExpression, setArcanaExpression] = useState<'greeting' | 'thinking' | 'happy' | 'worried' | 'idle'>('idle');
+  const [showSongLimitOverlay, setShowSongLimitOverlay] = useState(false);
+  const [songLimitData, setSongLimitData] = useState<{ count: number; serviceName: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
@@ -365,10 +368,35 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
 
         console.log('Canción insertada exitosamente');
 
+        // Contar cuántas canciones tiene ahora el servicio
+        const { data: songCount, error: countError } = await supabase
+          .from('service_songs')
+          .select('id', { count: 'exact' })
+          .eq('service_id', serviceId);
+
+        const totalSongs = songCount?.length || 0;
+        console.log('Total de canciones en el servicio:', totalSongs);
+
+        // Obtener nombre del servicio para el overlay
+        const { data: serviceData } = await supabase
+          .from('services')
+          .select('title')
+          .eq('id', serviceId)
+          .single();
+
         toast({
           title: "✅ Canción agregada",
           description: `"${action.songName}" agregada al servicio del ${new Date(serviceDate!).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}`,
         });
+
+        // Mostrar overlay si se alcanzaron 4, 5 o 6 canciones
+        if (totalSongs >= 4 && totalSongs <= 6) {
+          setSongLimitData({
+            count: totalSongs,
+            serviceName: serviceData?.title || 'Sin nombre'
+          });
+          setShowSongLimitOverlay(true);
+        }
 
         // Send confirmation message from bot
         await supabase.from('chat_messages').insert({
@@ -395,6 +423,18 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
 
   return (
     <div className="space-y-4 relative">
+      {/* Song Limit Overlay */}
+      {showSongLimitOverlay && songLimitData && (
+        <SongLimitOverlay
+          songCount={songLimitData.count}
+          serviceName={songLimitData.serviceName}
+          onClose={() => {
+            setShowSongLimitOverlay(false);
+            setSongLimitData(null);
+          }}
+        />
+      )}
+
       {/* Avatar animado de ARCANA */}
       <ArcanaAvatar 
         isActive={arcanaActive}
