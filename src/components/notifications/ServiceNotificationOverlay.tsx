@@ -230,7 +230,6 @@ const ServiceNotificationOverlay = ({ forceShow = false, onClose }: ServiceNotif
         const servicesWithMembers = await Promise.all(  
           data.map(async (service) => {  
             let members: any[] = [];
-            let selectedSongs: any[] = [];
             let directorProfile: any = null;
 
             // Get director profile by searching for the leader name in profiles
@@ -281,7 +280,8 @@ const ServiceNotificationOverlay = ({ forceShow = false, onClose }: ServiceNotif
               }
             }
 
-            // Get selected songs for this service
+            // Get selected songs for this service (prefer service_songs; fallback to selections view)
+            let selectedSongs: any[] = [];
             const { data: songsData, error: songsError } = await supabase
               .from('service_songs')
               .select(`
@@ -296,13 +296,28 @@ const ServiceNotificationOverlay = ({ forceShow = false, onClose }: ServiceNotif
               .eq('service_id', service.id)
               .order('song_order');
 
-            if (!songsError && songsData) {
+            if (!songsError && songsData && songsData.length > 0) {
               selectedSongs = songsData.map((item: any) => ({
                 id: item.songs.id,
                 title: item.songs.title,
                 artist: item.songs.artist,
                 song_order: item.song_order
               }));
+            } else {
+              // Fallback: read from service_selected_songs view
+              const { data: selectedView, error: viewError } = await supabase
+                .from('service_selected_songs')
+                .select('song_id, song_title, artist, selected_at')
+                .eq('service_id', service.id)
+                .order('selected_at', { ascending: true });
+              if (!viewError && selectedView && selectedView.length > 0) {
+                selectedSongs = selectedView.map((row: any, idx: number) => ({
+                  id: row.song_id,
+                  title: row.song_title,
+                  artist: row.artist,
+                  song_order: idx + 1 // derive order by selection time
+                }));
+              }
             }
 
             return {   
