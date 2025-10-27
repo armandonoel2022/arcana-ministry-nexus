@@ -9,7 +9,6 @@ import { format, addDays, startOfWeek, endOfWeek, getDay, isWithinInterval } fro
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
 import html2canvas from 'html2canvas';
-import { useNavigate } from 'react-router-dom';
 
 interface WeekendService {
   id: string;
@@ -59,14 +58,15 @@ interface ServiceNotificationOverlayProps {
   forceShow?: boolean;
   onClose?: () => void;
   onOpenChat?: (initialMessage?: string) => void;
+  onNavigate?: (path: string) => void;
 }
 
 const ServiceNotificationOverlay = ({ 
   forceShow = false, 
   onClose, 
-  onOpenChat 
+  onOpenChat,
+  onNavigate
 }: ServiceNotificationOverlayProps = {}) => {
-  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(forceShow);
   const [isAnimating, setIsAnimating] = useState(false);
   const [services, setServices] = useState<WeekendService[]>([]);
@@ -643,7 +643,11 @@ const ServiceNotificationOverlay = ({
                     variant="outline"
                     onClick={() => {
                       closeOverlay();
-                      navigate('/repertorio-musical');
+                      if (onNavigate) {
+                        onNavigate('/repertorio-musical');
+                      } else {
+                        window.location.href = '/repertorio-musical';
+                      }
                     }}
                     className="w-full justify-start"
                   >
@@ -655,7 +659,11 @@ const ServiceNotificationOverlay = ({
                     variant="outline"
                     onClick={() => {
                       closeOverlay();
-                      navigate('/communication');
+                      if (onNavigate) {
+                        onNavigate('/communication');
+                      } else {
+                        window.location.href = '/communication';
+                      }
                     }}
                     className="w-full justify-start"
                   >
@@ -897,7 +905,11 @@ const ServiceNotificationOverlay = ({
                         <Button
                           onClick={() => {
                             closeOverlay();
-                            navigate('/communication');
+                            if (onNavigate) {
+                              onNavigate('/communication');
+                            } else {
+                              window.location.href = '/communication';
+                            }
                           }}
                           className="w-full justify-start"
                           variant="outline"
@@ -907,7 +919,11 @@ const ServiceNotificationOverlay = ({
                         <Button
                           onClick={() => {
                             closeOverlay();
-                            navigate('/repertorio-musical');
+                            if (onNavigate) {
+                              onNavigate('/repertorio-musical');
+                            } else {
+                              window.location.href = '/repertorio-musical';
+                            }
                           }}
                           className="w-full justify-start"
                           variant="outline"
@@ -917,7 +933,11 @@ const ServiceNotificationOverlay = ({
                         <Button
                           onClick={() => {
                             closeOverlay();
-                            navigate('/ministerial-agenda');
+                            if (onNavigate) {
+                              onNavigate('/ministerial-agenda');
+                            } else {
+                              window.location.href = '/ministerial-agenda';
+                            }
                           }}
                           className="w-full justify-start"
                           variant="outline"

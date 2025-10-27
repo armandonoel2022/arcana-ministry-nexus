@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import ServiceNotificationOverlay from "@/components/notifications/ServiceNotificationOverlay";
 import {
   Dialog,
@@ -64,6 +65,7 @@ const notificationTypes = [
 ];
 
 const ScheduledNotifications = () => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<ScheduledNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -426,7 +428,11 @@ const ScheduledNotifications = () => {
       {showPreview && (
         <ServiceNotificationOverlay 
           forceShow={true} 
-          onClose={() => setShowPreview(false)} 
+          onClose={() => setShowPreview(false)}
+          onNavigate={(path) => {
+            setShowPreview(false);
+            navigate(path);
+          }}
         />
       )}
     </div>

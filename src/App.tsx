@@ -69,11 +69,11 @@ function App() {
             <Toaster />
             <Sonner />
             <NotificationOverlay />
-            <ServiceNotificationOverlay />
             {showSplash ? (
               <SplashScreen onComplete={handleSplashComplete} />
             ) : (
             <BrowserRouter>
+            <ServiceNotificationOverlay />
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/*" element={
