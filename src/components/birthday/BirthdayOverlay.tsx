@@ -28,6 +28,16 @@ export const BirthdayOverlay = () => {
     const handleTestOverlay = (event: Event) => {
       const customEvent = event as CustomEvent<Member>;
       if (customEvent.detail) {
+        // Clear any dismissal for today for this member so overlay shows immediately
+        const today = new Date().toDateString();
+        try {
+          const dismissed = JSON.parse(localStorage.getItem('dismissedBirthdays') || '{}');
+          if (dismissed[today]) {
+            dismissed[today] = dismissed[today].filter((id: string) => id !== customEvent.detail!.id);
+            localStorage.setItem('dismissedBirthdays', JSON.stringify(dismissed));
+          }
+        } catch {}
+        setDismissedIds((ids) => ids.filter((id) => id !== customEvent.detail!.id));
         setBirthdayMembers([customEvent.detail]);
       }
     };
