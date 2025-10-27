@@ -337,7 +337,7 @@ const BirthdayModule = () => {
                       </Badge>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <Button
                       onClick={() => generateBirthdayCard(member)}
                       className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
@@ -352,6 +352,22 @@ const BirthdayModule = () => {
                     >
                       <Bell className="w-4 h-4 mr-2" />
                       Notificar
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        // Trigger overlay test by storing temp data
+                        localStorage.setItem('testBirthdayOverlay', JSON.stringify(member));
+                        window.dispatchEvent(new Event('storage'));
+                        toast({
+                          title: "Overlay activado",
+                          description: "El overlay de cumpleaños debería aparecer ahora",
+                        });
+                      }}
+                      variant="outline"
+                      className="border-purple-500 text-purple-600 hover:bg-purple-50"
+                    >
+                      <Gift className="w-4 h-4 mr-2" />
+                      Probar Overlay
                     </Button>
                   </div>
                 </div>

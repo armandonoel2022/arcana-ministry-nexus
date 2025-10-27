@@ -1,1 +1,4 @@
 project_id = "hfjtzmnphyizntcjzgar"
+
+[functions.send-birthday-overlay-notification]
+verify_jwt = false
