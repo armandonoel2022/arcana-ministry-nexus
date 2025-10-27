@@ -115,6 +115,28 @@ const DirectorReplacementRequestOverlay = () => {
             : data.services
         };
         setCurrentRequest(transformedData);
+
+        // Fallback: if original director has no profile photo, try members.photo_url by email
+        try {
+          if (!transformedData.original_director?.photo_url && transformedData.original_director?.email) {
+            const { data: member } = await supabase
+              .from('members')
+              .select('photo_url')
+              .eq('email', transformedData.original_director.email)
+              .maybeSingle();
+            if (member?.photo_url) {
+              setCurrentRequest(prev => prev ? {
+                ...prev,
+                original_director: {
+                  ...prev.original_director,
+                  photo_url: member.photo_url
+                }
+              } : prev);
+            }
+          }
+        } catch (e) {
+          console.warn('Fallback members photo lookup failed:', e);
+        }
       }
     } catch (error) {
       console.error('Error checking for pending requests:', error);
@@ -145,7 +167,7 @@ const DirectorReplacementRequestOverlay = () => {
         // Get current user profile
         const { data: userProfile } = await supabase
           .from('profiles')
-          .select('full_name, photo_url')
+          .select('full_name, photo_url, email')
           .eq('id', user.id)
           .single();
 
@@ -225,8 +247,8 @@ const DirectorReplacementRequestOverlay = () => {
   if (!currentRequest) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <Card className="w-full max-w-2xl shadow-2xl animate-in slide-in-from-bottom-4 duration-500">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 py-6 overflow-y-auto animate-in fade-in duration-300">
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in slide-in-from-bottom-4 duration-500">
         <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-lg">
           <CardTitle className="text-2xl text-center">
             Solicitud de Reemplazo de Director
