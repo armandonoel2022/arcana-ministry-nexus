@@ -84,13 +84,25 @@ const DirectorChangeRequest: React.FC<DirectorChangeRequestProps> = ({
       // Obtener el perfil del usuario actual para excluirlo
       const { data: currentProfile } = await supabase
         .from('profiles')
-        .select('email')
+        .select('email, full_name')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
-      // Filtrar para excluir al usuario actual (por email) y mapear a formato esperado
+      const currentUserEmail = currentProfile?.email?.toLowerCase();
+      const currentUserName = currentProfile?.full_name?.toLowerCase();
+
+      // Filtrar para excluir al usuario actual (por email o nombre) y mapear a formato esperado
       const directors = (membersData || [])
-        .filter(m => m.email !== currentProfile?.email)
+        .filter(m => {
+          const memberEmail = m.email?.toLowerCase();
+          const memberFullName = `${m.nombres} ${m.apellidos}`.toLowerCase();
+          
+          // Excluir si el email coincide O si el nombre completo coincide
+          const isSameEmail = memberEmail && currentUserEmail && memberEmail === currentUserEmail;
+          const isSameName = memberFullName === currentUserName;
+          
+          return !isSameEmail && !isSameName;
+        })
         .map(m => ({
           id: m.id,
           full_name: `${m.nombres} ${m.apellidos}`,
