@@ -133,7 +133,7 @@ export const BirthdayOverlay = () => {
           {activeBirthdays.map((member) => (
             <Card 
               key={member.id} 
-              className="bg-gradient-to-br from-yellow-50 via-orange-50 to-pink-50 border-4 border-yellow-300 shadow-2xl mb-4 relative"
+              className="bg-gradient-to-br from-blue-50 via-white to-blue-100 border-4 border-blue-200 shadow-2xl mb-4 relative"
             >
               <button
                 onClick={() => handleDismiss(member.id)}
@@ -144,16 +144,18 @@ export const BirthdayOverlay = () => {
               </button>
 
               <div className="p-6 sm:p-8 text-center space-y-6">
-                {/* Header Icon */}
+                {/* Logo ADN */}
                 <div className="flex justify-center">
-                  <div className="w-16 h-16 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center animate-bounce">
-                    <Gift className="w-8 h-8 text-white" />
-                  </div>
+                  <img 
+                    src="/lovable-uploads/74634c97-a2ef-403b-9fa0-89d9207b7b00.png" 
+                    alt="ADN Ministerio Logo" 
+                    className="w-16 h-auto"
+                  />
                 </div>
 
                 {/* Title */}
                 <div>
-                  <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-yellow-600 via-orange-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                  <h2 className="text-3xl sm:text-4xl font-bold text-orange-500 mb-2">
                     ¡Feliz Cumpleaños!
                   </h2>
                   <div className="text-4xl sm:text-5xl">🎉🎂🎈</div>
@@ -161,28 +163,31 @@ export const BirthdayOverlay = () => {
 
                 {/* Member Info */}
                 <div className="flex flex-col items-center space-y-4">
-                  <Avatar className="w-24 h-24 sm:w-32 sm:h-32 border-4 border-yellow-400 shadow-lg">
-                    <AvatarImage
-                      src={member.photo_url || undefined}
-                      alt={`${member.nombres} ${member.apellidos}`}
-                    />
-                    <AvatarFallback className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-3xl">
-                      {member.nombres.charAt(0)}{member.apellidos.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative inline-block">
+                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500 rounded-full blur-sm opacity-60"></div>
+                    <Avatar className="relative w-24 h-24 sm:w-32 sm:h-32 border-4 border-white shadow-lg">
+                      <AvatarImage
+                        src={member.photo_url || undefined}
+                        alt={`${member.nombres} ${member.apellidos}`}
+                      />
+                      <AvatarFallback className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-3xl">
+                        {member.nombres.charAt(0)}{member.apellidos.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
 
                   <div>
-                    <h3 className="text-2xl sm:text-3xl font-bold text-gray-800">
+                    <h3 className="text-2xl sm:text-3xl font-bold text-blue-600">
                       {member.nombres} {member.apellidos}
                     </h3>
-                    <p className="text-lg text-gray-600 mt-1">
+                    <p className="text-lg text-blue-500 mt-1">
                       {getRoleLabel(member.cargo)}
                     </p>
                   </div>
                 </div>
 
                 {/* Message */}
-                <div className="bg-white/80 backdrop-blur rounded-lg p-4 border-2 border-yellow-200">
+                <div className="bg-white/90 backdrop-blur rounded-lg p-4 border border-gray-100">
                   <p className="text-lg text-gray-700 font-medium">
                     ¡Hoy es un día especial! 🎊
                   </p>
@@ -195,7 +200,7 @@ export const BirthdayOverlay = () => {
                 <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <Button
                     onClick={() => handleGoToCelebrate(member.id)}
-                    className="flex-1 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold py-6 text-lg shadow-lg"
+                    className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-6 text-lg shadow-lg"
                   >
                     <MessageCircle className="w-5 h-5 mr-2" />
                     Ir a Felicitarlo
@@ -203,7 +208,7 @@ export const BirthdayOverlay = () => {
                   <Button
                     onClick={() => handleDismiss(member.id)}
                     variant="outline"
-                    className="flex-1 border-2 border-yellow-400 text-yellow-700 hover:bg-yellow-50 py-6 text-lg font-semibold"
+                    className="flex-1 border-2 border-blue-400 text-blue-700 hover:bg-blue-50 py-6 text-lg font-semibold"
                   >
                     Después
                   </Button>
