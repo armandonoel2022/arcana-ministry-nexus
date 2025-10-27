@@ -183,7 +183,7 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
         const monthEnd = endOfMonth(now);
         filtered = services.filter(service => 
           isWithinInterval(new Date(service.service_date), { start: monthStart, end: monthEnd }) &&
-          service.leader.toLowerCase().includes('armando noel')
+          service.leader.toLowerCase().includes(currentUserName)
         );
         break;
       
@@ -192,7 +192,7 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
         const { start: myWeekStart, end: myWeekEnd } = getCurrentWeekend();
         filtered = services.filter(service => 
           isWithinInterval(new Date(service.service_date), { start: myWeekStart, end: myWeekEnd }) &&
-          service.leader.toLowerCase().includes('armando noel')
+          service.leader.toLowerCase().includes(currentUserName)
         );
         break;
       
