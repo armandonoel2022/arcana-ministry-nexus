@@ -357,10 +357,6 @@ const BirthdayModule = () => {
                       onClick={() => {
                         // Trigger overlay test with custom event
                         window.dispatchEvent(new CustomEvent('testBirthdayOverlay', { detail: member }));
-                        toast({
-                          title: "Overlay activado",
-                          description: "El overlay de cumpleaños debería aparecer ahora",
-                        });
                       }}
                       variant="outline"
                       className="border-purple-500 text-purple-600 hover:bg-purple-50"
