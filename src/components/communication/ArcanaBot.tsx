@@ -857,7 +857,14 @@ export class ArcanaBot {
       });
 
       // Agregar información sobre botones solo si es director
-      if (userGroupIds.length > 0 && nextService) {
+      console.log("¿Es director?", { 
+        userGroupIds: userGroupIds.length, 
+        nextService: !!nextService,
+        serviceDate,
+        serviceId: nextService?.id 
+      });
+      
+      if (nextService) {
         mensaje += `💡 **Haz clic en los botones para agregar al servicio del ${new Date(serviceDate!).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}**\n\n`;
       } else {
         mensaje += "💡 **Opciones disponibles:**\n";
@@ -865,14 +872,16 @@ export class ArcanaBot {
         mensaje += "• Solo los directores pueden agregar canciones a los servicios\n";
       }
 
-      // Crear botones solo si es director y tiene servicios asignados
-      const actions: BotAction[] = userGroupIds.length > 0 && nextService ? canciones.map((c: any) => ({
+      // Crear botones solo si tiene servicios asignados
+      const actions: BotAction[] = nextService ? canciones.map((c: any) => ({
         type: 'select_song',
         songId: c.id,
         songName: c.title,
         serviceDate: nextService.service_date,
         serviceId: nextService.id
       })) : [];
+
+      console.log("Acciones generadas:", actions.length, actions);
 
       return {
         type: "canciones",
