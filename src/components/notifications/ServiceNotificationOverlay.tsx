@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { X, Calendar, Clock, Users, Save, Music, Download, Bell, MapPin, CheckCircle, MessageCircle, Mic, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { format, addDays, startOfWeek, endOfWeek, getDay, isWithinInterval } from "date-fns";
+import { format, addDays, startOfWeek, endOfWeek, getDay, isWithinInterval, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
 import html2canvas from 'html2canvas';
@@ -532,8 +532,60 @@ const ServiceNotificationOverlay = ({
         return;
       }
 
+      // Encontrar el servicio para obtener la fecha y hora
+      const service = services.find(s => s.id === serviceId);
+      if (!service) {
+        toast.error('No se pudo encontrar la información del servicio');
+        return;
+      }
+
+      // Crear un contenedor temporal con el encabezado
+      const container = document.createElement('div');
+      container.style.position = 'fixed';
+      container.style.left = '-9999px';
+      container.style.top = '0';
+      container.style.width = element.offsetWidth + 'px';
+      container.style.backgroundColor = '#ffffff';
+      container.style.padding = '0';
+      
+      // Crear el encabezado con la fecha y hora
+      const header = document.createElement('div');
+      header.style.background = 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)';
+      header.style.padding = '32px 24px';
+      header.style.textAlign = 'center';
+      header.style.color = '#ffffff';
+      header.style.marginBottom = '0';
+      
+      const title = document.createElement('h1');
+      title.textContent = 'Programa de Servicios';
+      title.style.fontSize = '32px';
+      title.style.fontWeight = 'bold';
+      title.style.marginBottom = '12px';
+      title.style.color = '#ffffff';
+      
+      const dateTime = document.createElement('p');
+      const serviceDate = format(new Date(service.service_date), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
+      const serviceTime = getServiceTime(service.title);
+      dateTime.textContent = `${serviceDate} - ${serviceTime}`;
+      dateTime.style.fontSize = '20px';
+      dateTime.style.fontWeight = '500';
+      dateTime.style.color = '#ffffff';
+      dateTime.style.textTransform = 'capitalize';
+      
+      header.appendChild(title);
+      header.appendChild(dateTime);
+      
+      // Clonar el contenido del servicio
+      const contentClone = element.cloneNode(true) as HTMLElement;
+      contentClone.style.backgroundColor = '#ffffff';
+      
+      // Agregar todo al contenedor
+      container.appendChild(header);
+      container.appendChild(contentClone);
+      document.body.appendChild(container);
+
       // Esperar a que todas las imágenes estén cargadas
-      const images = element.getElementsByTagName('img');
+      const images = container.getElementsByTagName('img');
       const imagePromises = Array.from(images).map((img) => {
         if (img.complete) {
           return Promise.resolve(undefined);
@@ -541,24 +593,28 @@ const ServiceNotificationOverlay = ({
         return new Promise<void>((resolve) => {
           img.onload = () => resolve();
           img.onerror = () => {
-            // Si la imagen falla, usar un placeholder
             console.warn('Image failed to load:', img.src);
             resolve();
           };
-          // Timeout después de 3 segundos
           setTimeout(() => resolve(), 3000);
         });
       });
 
       await Promise.all(imagePromises);
 
-      const canvas = await html2canvas(element, {
+      // Pequeña espera para asegurar que todo esté renderizado
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const canvas = await html2canvas(container, {
         backgroundColor: '#ffffff',
         scale: 2,
         useCORS: true,
         allowTaint: true,
         logging: false,
       });
+
+      // Eliminar el contenedor temporal
+      document.body.removeChild(container);
 
       const link = document.createElement('a');
       link.download = `${serviceTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().getTime()}.png`;
