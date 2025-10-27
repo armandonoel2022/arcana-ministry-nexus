@@ -305,9 +305,9 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
       try {
         // Add song to next service
         const { data: nextService } = await supabase
-          .from('ministerial_agenda')
+          .from('services')
           .select('id, service_date')
-          .gte('service_date', new Date().toISOString())
+          .gte('service_date', new Date().toISOString().split("T")[0])
           .order('service_date', { ascending: true })
           .limit(1)
           .single();
@@ -321,14 +321,18 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
           return;
         }
 
+        // Insertar en la tabla service_songs
         const { error } = await supabase
-          .from('selected_songs')
+          .from('service_songs')
           .insert({
             service_id: nextService.id,
             song_id: action.songId
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error agregando canción:', error);
+          throw error;
+        }
 
         toast({
           title: "✅ Canción agregada",

@@ -673,6 +673,17 @@ export class ArcanaBot {
         };
       }
 
+      // Obtener próximo servicio
+      const { data: nextService } = await supabase
+        .from("services")
+        .select("service_date")
+        .gte("service_date", new Date().toISOString().split("T")[0])
+        .order("service_date", { ascending: true })
+        .limit(1)
+        .single();
+
+      const serviceDate = nextService?.service_date;
+
       let mensaje = `🎵 **Encontré ${canciones.length} canción(es) con "${searchTerms}":**\n\n`;
 
       canciones.forEach((cancion, index) => {
@@ -704,13 +715,21 @@ export class ArcanaBot {
       mensaje += "💡 **Opciones disponibles:**\n";
       mensaje += "• 📖 Ver Repertorio Completo\n";
       mensaje += "• ➕ Agregar Nueva Canción\n";
-      mensaje += "• 🗓️ Para seleccionar una canción para un servicio, visita la Agenda Ministerial\n";
-      mensaje += '\n💬 También puedes preguntar: "ARCANA seleccionar [nombre canción] para próximo servicio"';
+      mensaje += `• 🗓️ Haz clic en los botones para agregar al próximo servicio${serviceDate ? ` (${new Date(serviceDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })})` : ''}`;
+
+      // Crear botones para cada canción encontrada
+      const actions: BotAction[] = canciones.map((c: any) => ({
+        type: 'select_song',
+        songId: c.id,
+        songName: c.title,
+        serviceDate
+      }));
 
       return {
         type: "canciones",
         message: mensaje,
         expression: 'happy',
+        actions
       };
     } catch (error) {
       console.error("Error buscando canciones:", error);
