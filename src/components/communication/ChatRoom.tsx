@@ -223,20 +223,12 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
         setTimeout(async () => {
           console.log('Enviando respuesta de ARCANA...');
           try {
-            // Agregar mensaje del bot localmente de inmediato para que se vea sin depender de realtime
-            const botMessage: Message = {
-              id: `temp-${Date.now()}`,
-              message: botResponse.message,
-              created_at: new Date().toISOString(),
-              user_id: null,
-              is_bot: true,
-              actions: botResponse.actions || []
-            };
-            setMessages(prev => [...prev, botMessage]);
-            
-            // Luego guardar en BD (esto también llegará por realtime pero ignoraremos duplicados)
+            // Guardar en BD primero
             await ArcanaBot.sendBotResponse(room.id, botResponse);
             console.log('Respuesta de ARCANA enviada exitosamente');
+            
+            // Hacer refetch de mensajes para asegurar que se vean las acciones
+            fetchMessages();
             
             // Mantener la expresión por un momento más
             setTimeout(() => {

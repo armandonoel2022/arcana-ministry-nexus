@@ -56,7 +56,7 @@ export class ArcanaBot {
       return await this.handleEnsayosQuery();
     } else if (this.isCancionesQuery(cleanMessage)) {
       console.log("ARCANA detectó consulta de canciones");
-      return await this.handleCancionesQuery(cleanMessage);
+      return await this.handleCancionesQuery(cleanMessage, userId);
     } else if (this.isSeleccionarCancionQuery(cleanMessage)) {
       console.log("ARCANA detectó consulta de selección de canción");
       return await this.handleSeleccionarCancionQuery(cleanMessage);
@@ -733,7 +733,7 @@ export class ArcanaBot {
     }
   }
 
-  private static async handleCancionesQuery(query: string): Promise<BotResponse> {
+  private static async handleCancionesQuery(query: string, userId?: string): Promise<BotResponse> {
     try {
       console.log("ARCANA consultando canciones con query:", query);
 
@@ -778,10 +778,11 @@ export class ArcanaBot {
       }
 
       // Obtener próximo servicio del usuario (como director)
+      // Usar userId pasado como parámetro desde ChatRoom (ya autenticado)
       const { data: userGroups } = await supabase
         .from("group_members")
         .select("group_id, is_leader")
-        .eq("user_id", await supabase.auth.getUser().then(u => u.data.user?.id))
+        .eq("user_id", userId) // Usar el userId del contexto del chat
         .eq("is_active", true)
         .eq("is_leader", true);
 
@@ -789,17 +790,13 @@ export class ArcanaBot {
       
       let nextService = null;
       // Identificar usuario y nombre de perfil
-      const { data: authData } = await supabase.auth.getUser();
-      const currentUserId = authData.user?.id || null;
       let profileName: string | null = null;
-      if (currentUserId) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('id', currentUserId)
-          .maybeSingle();
-        profileName = profile?.full_name || null;
-      }
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', userId)
+        .maybeSingle();
+      profileName = profile?.full_name || null;
 
       // 1) Próximo servicio por grupos donde es líder
       if (userGroupIds.length > 0) {
@@ -1156,14 +1153,8 @@ export class ArcanaBot {
         is_bot: true,
         message_type: "text",
         is_deleted: false,
+        actions: response.actions && response.actions.length > 0 ? response.actions : null,
       };
-
-      // Agregar las acciones como metadata si existen
-      if (response.actions && response.actions.length > 0) {
-        // Note: La tabla chat_messages necesita tener una columna 'actions' de tipo JSONB
-        // Por ahora, las guardaremos temporalmente en el frontend
-        console.log("Acciones incluidas en la respuesta:", response.actions);
-      }
 
       // Usar user_id null para el bot
       const { error } = await supabase.from("chat_messages").insert([messageData]);

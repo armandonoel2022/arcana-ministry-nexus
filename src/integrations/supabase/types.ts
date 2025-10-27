@@ -49,6 +49,7 @@ export type Database = {
       }
       chat_messages: {
         Row: {
+          actions: Json | null
           created_at: string | null
           id: string
           is_bot: boolean | null
@@ -60,6 +61,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          actions?: Json | null
           created_at?: string | null
           id?: string
           is_bot?: boolean | null
@@ -71,6 +73,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          actions?: Json | null
           created_at?: string | null
           id?: string
           is_bot?: boolean | null
@@ -1898,10 +1901,7 @@ export type Database = {
         Args: { object_name: string }
         Returns: boolean
       }
-      expire_pending_replacements: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      expire_pending_replacements: { Args: never; Returns: undefined }
       get_available_directors: {
         Args: { exclude_director_id: string }
         Returns: {
@@ -1911,18 +1911,9 @@ export type Database = {
           phone: string
         }[]
       }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_spanish_month_name: {
-        Args: { date_input: string }
-        Returns: string
-      }
-      is_administrator: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      get_current_user_role: { Args: never; Returns: string }
+      get_spanish_month_name: { Args: { date_input: string }; Returns: string }
+      is_administrator: { Args: { _user_id: string }; Returns: boolean }
       is_participant_in_session: {
         Args: { _session_id: string; _user_id: string }
         Returns: boolean
@@ -1931,10 +1922,7 @@ export type Database = {
         Args: { _room_id: string; _user_id: string }
         Returns: boolean
       }
-      process_scheduled_notifications: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      process_scheduled_notifications: { Args: never; Returns: undefined }
     }
     Enums: {
       blood_type: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-"
