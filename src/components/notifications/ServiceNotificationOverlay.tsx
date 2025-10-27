@@ -240,7 +240,7 @@ const ServiceNotificationOverlay = ({ forceShow = false, onClose }: ServiceNotif
                 .select('id, full_name, photo_url')
                 .ilike('full_name', `%${service.leader}%`)
                 .limit(1)
-                .single();
+                .maybeSingle();
               
               if (profileData) {
                 directorProfile = profileData;
@@ -250,33 +250,34 @@ const ServiceNotificationOverlay = ({ forceShow = false, onClose }: ServiceNotif
             if (service.assigned_group_id) {
               const { data: membersData, error: membersError } = await supabase
                 .from('group_members')
-                .select(`
-                  id,
-                  user_id,
-                  instrument,
-                  is_leader
-                `)
+                .select('id, user_id, instrument, is_leader')
                 .eq('group_id', service.assigned_group_id)
                 .eq('is_active', true);
 
-              if (!membersError && membersData) {
-                // Fetch profiles separately for each member
-                const membersWithProfiles = await Promise.all(
-                  membersData.map(async (member) => {
-                    const { data: profileData } = await supabase
-                      .from('profiles')
-                      .select('id, full_name, photo_url')
-                      .eq('id', member.user_id)
-                      .single();
-                    
-                    return {
-                      ...member,
-                      profiles: profileData || { id: member.user_id, full_name: 'Desconocido', photo_url: null }
-                    };
-                  })
+              if (!membersError && membersData && membersData.length > 0) {
+                // Get all unique user_ids
+                const userIds = membersData.map(m => m.user_id);
+                
+                // Fetch all profiles at once
+                const { data: profilesData } = await supabase
+                  .from('profiles')
+                  .select('id, full_name, photo_url')
+                  .in('id', userIds);
+                
+                // Create a map of profiles by id for quick lookup
+                const profilesMap = new Map(
+                  profilesData?.map(p => [p.id, p]) || []
                 );
                 
-                members = membersWithProfiles;
+                // Combine members with their profiles
+                members = membersData.map(member => ({
+                  ...member,
+                  profiles: profilesMap.get(member.user_id) || {
+                    id: member.user_id,
+                    full_name: 'Desconocido',
+                    photo_url: null
+                  }
+                }));
               }
             }
 
