@@ -3,12 +3,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { X, Calendar, Clock, Users, Save, Music, Download, Bell, MapPin, CheckCircle, MessageCircle, Mic } from "lucide-react";
+import { X, Calendar, Clock, Users, Save, Music, Download, Bell, MapPin, CheckCircle, MessageCircle, Mic, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays, startOfWeek, endOfWeek, getDay, isWithinInterval } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
 import html2canvas from 'html2canvas';
+import { useNavigate } from 'react-router-dom';
 
 interface WeekendService {
   id: string;
@@ -65,6 +66,7 @@ const ServiceNotificationOverlay = ({
   onClose, 
   onOpenChat 
 }: ServiceNotificationOverlayProps = {}) => {
+  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(forceShow);
   const [isAnimating, setIsAnimating] = useState(false);
   const [services, setServices] = useState<WeekendService[]>([]);
@@ -582,13 +584,13 @@ const ServiceNotificationOverlay = ({
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Left Column - Songs and Director */}
+          {/* Left Column - Director and Songs */}
           <div className="space-y-4">
-            {/* Director */}
-            <div className="bg-blue-50 rounded-lg p-4">
-              <div className="text-sm font-semibold text-blue-800 mb-3">Director/a de Alabanza</div>
-              <div className="flex items-center gap-3">
-                <div className="w-16 h-16 rounded-full border-3 border-blue-300 shadow-lg overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600">
+            {/* Director - Más grande y prominente */}
+            <div className="bg-blue-50 rounded-lg p-5">
+              <div className="text-sm font-semibold text-blue-800 mb-4">Director/a de Alabanza</div>
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-24 h-24 rounded-full border-4 border-blue-300 shadow-xl overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 flex-shrink-0">
                   <img
                     src={directorMember?.profiles?.photo_url || service.director_profile?.photo_url}
                     alt={service.leader}
@@ -600,41 +602,69 @@ const ServiceNotificationOverlay = ({
                       if (fallback) fallback.style.display = 'flex';
                     }}
                   />
-                  <div className="w-full h-full hidden items-center justify-center text-white text-lg font-bold">
+                  <div className="w-full h-full hidden items-center justify-center text-white text-2xl font-bold">
                     {getInitials(service.leader)}
                   </div>
                 </div>
-                <div>
-                  <div className="font-semibold text-gray-900">{service.leader}</div>
+                <div className="text-center">
+                  <div className="font-bold text-gray-900 text-lg">{service.leader}</div>
                   <div className="text-sm text-blue-600">Líder del Servicio</div>
                 </div>
               </div>
-            </div>
 
-            {/* Selected Songs */}
-            {worshipSongs.length > 0 && (
-              <div className="bg-green-50 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-4 h-4 text-green-600">🎵</div>
-                  <div className="text-sm font-semibold text-green-800">Canciones Seleccionadas</div>
-                </div>
-                <div className="space-y-2">
-                  {worshipSongs.map((song, index) => (
-                    <div key={song.id} className="flex items-center gap-2 text-sm">
-                      <span className="w-5 h-5 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold">
-                        {index + 1}
-                      </span>
-                      <div>
-                        <div className="font-medium text-gray-900">{song.title}</div>
-                        {song.artist && (
-                          <div className="text-xs text-gray-600">{song.artist}</div>
-                        )}
+              {/* Canciones debajo del director */}
+              {worshipSongs.length > 0 ? (
+                <div className="mt-4 pt-4 border-t border-blue-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Music className="w-4 h-4 text-green-600" />
+                    <div className="text-sm font-semibold text-green-800">Canciones Seleccionadas</div>
+                  </div>
+                  <div className="space-y-2">
+                    {worshipSongs.map((song, index) => (
+                      <div key={song.id} className="flex items-start gap-2 text-sm">
+                        <span className="w-5 h-5 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                          {index + 1}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium text-gray-900">{song.title}</div>
+                          {song.artist && (
+                            <div className="text-xs text-gray-600">{song.artist}</div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="mt-4 pt-4 border-t border-blue-200 space-y-2">
+                  <p className="text-sm text-gray-600 mb-3">No hay canciones seleccionadas aún</p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      closeOverlay();
+                      navigate('/repertorio-musical');
+                    }}
+                    className="w-full justify-start"
+                  >
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    Ir a Repertorio general
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      closeOverlay();
+                      navigate('/communication');
+                    }}
+                    className="w-full justify-start"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Seleccionar con ARCANA
+                  </Button>
+                </div>
+              )}
+            </div>
 
             {/* Offering Song */}
             {offeringsSongs.length > 0 && (
@@ -865,37 +895,34 @@ const ServiceNotificationOverlay = ({
                       </h3>
                       <div className="space-y-3">
                         <Button
-                          onClick={() => onOpenChat?.('Necesito ayuda para preparar las canciones del próximo servicio')}
+                          onClick={() => {
+                            closeOverlay();
+                            navigate('/communication');
+                          }}
                           className="w-full justify-start"
                           variant="outline"
                         >
                           🎵 Consultar canciones con ARCANA
                         </Button>
                         <Button
-                          onClick={() => window.open('/repertorio-musical', '_blank')}
+                          onClick={() => {
+                            closeOverlay();
+                            navigate('/repertorio-musical');
+                          }}
                           className="w-full justify-start"
                           variant="outline"
                         >
                           📖 Ver repertorio completo
                         </Button>
                         <Button
-                          onClick={() => window.open('/agenda', '_blank')}
-                          className="w-full justify-start"
-                          variant="outline"
-                        >
-                          📅 Ver agenda ministerial
-                        </Button>
-                        <Button
                           onClick={() => {
-                            const speech = new SpeechSynthesisUtterance();
-                            speech.text = 'Recuerda prepararte espiritualmente para el servicio. Ora y medita en la palabra de Dios.';
-                            speech.lang = 'es-ES';
-                            window.speechSynthesis.speak(speech);
+                            closeOverlay();
+                            navigate('/ministerial-agenda');
                           }}
                           className="w-full justify-start"
                           variant="outline"
                         >
-                          🙏 Recordatorio espiritual
+                          📅 Ver agenda ministerial
                         </Button>
                       </div>
                     </CardContent>
