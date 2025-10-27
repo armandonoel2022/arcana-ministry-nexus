@@ -72,20 +72,36 @@ const DirectorChangeRequest: React.FC<DirectorChangeRequestProps> = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Obtener directores que tengan cuenta de usuario en el sistema (tabla profiles)
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, phone, email')
-        .in('role', ['leader', 'administrator'])
-        .eq('is_active', true)
-        .eq('is_approved', true)
-        .neq('id', user.id); // Excluir al usuario actual
+      // Obtener TODOS los directores de alabanza de la tabla members
+      const { data: membersData, error: membersError } = await supabase
+        .from('members')
+        .select('id, nombres, apellidos, celular, email')
+        .eq('cargo', 'Director de Alabanza')
+        .eq('is_active', true);
 
-      if (error) throw error;
+      if (membersError) throw membersError;
+
+      // Obtener el perfil del usuario actual para excluirlo
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', user.id)
+        .single();
+
+      // Filtrar para excluir al usuario actual (por email) y mapear a formato esperado
+      const directors = (membersData || [])
+        .filter(m => m.email !== currentProfile?.email)
+        .map(m => ({
+          id: m.id,
+          full_name: `${m.nombres} ${m.apellidos}`,
+          phone: m.celular || 'Sin teléfono',
+          email: m.email || 'Sin email'
+        }));
       
-      setAvailableDirectors(data || []);
+      setAvailableDirectors(directors);
+      
       // Si el valor seleccionado anterior no pertenece a la lista actual, reiniciarlo
-      if (!data?.some((d: any) => d.id === selectedDirector)) {
+      if (!directors.some((d: any) => d.id === selectedDirector)) {
         setSelectedDirector('');
       }
     } catch (error) {
@@ -127,10 +143,23 @@ const DirectorChangeRequest: React.FC<DirectorChangeRequestProps> = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
 
-      // Validar que el director seleccionado exista en la lista disponible (pertenezca a profiles)
-      const isValidSelection = availableDirectors.some(d => d.id === selectedDirector);
-      if (!isValidSelection) {
+      // Validar que el director seleccionado exista en la lista disponible
+      const selectedDir = availableDirectors.find(d => d.id === selectedDirector);
+      if (!selectedDir) {
         toast.error('Selecciona un director válido');
+        setIsLoading(false);
+        return;
+      }
+
+      // Buscar si el director seleccionado tiene cuenta en profiles (por email)
+      const { data: replacementProfile } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .eq('email', selectedDir.email)
+        .maybeSingle();
+
+      if (!replacementProfile) {
+        toast.error(`El director ${selectedDir.full_name} no tiene cuenta en el sistema. Debe crear una cuenta primero para recibir solicitudes.`);
         setIsLoading(false);
         return;
       }
@@ -140,7 +169,7 @@ const DirectorChangeRequest: React.FC<DirectorChangeRequestProps> = ({
         .insert({
           service_id: serviceId,
           original_director_id: user.id,
-          replacement_director_id: selectedDirector,
+          replacement_director_id: replacementProfile.id,
           reason: reason,
           status: 'pending'
         });
@@ -151,7 +180,7 @@ const DirectorChangeRequest: React.FC<DirectorChangeRequestProps> = ({
       await supabase
         .from('system_notifications')
         .insert({
-          recipient_id: selectedDirector,
+          recipient_id: replacementProfile.id,
           sender_id: user.id,
           type: 'director_replacement_request',
           title: 'Solicitud de Reemplazo de Director',

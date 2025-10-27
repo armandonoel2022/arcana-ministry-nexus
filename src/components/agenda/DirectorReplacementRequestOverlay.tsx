@@ -171,7 +171,7 @@ const DirectorReplacementRequestOverlay = () => {
           .eq('id', user.id)
           .single();
 
-        // Update service leader
+        // Update service leader for the requested service
         await supabase
           .from('services')
           .update({
@@ -180,7 +180,48 @@ const DirectorReplacementRequestOverlay = () => {
           })
           .eq('id', currentRequest.service_id);
 
-        // Send notification to all members
+        // BALANCE: Find other services led by the new director (current user) and reassign to original director
+        const { data: newDirectorServices } = await supabase
+          .from('services')
+          .select('id, title, service_date')
+          .eq('leader', userProfile?.full_name)
+          .neq('id', currentRequest.service_id) // Exclude the service we just accepted
+          .gte('service_date', new Date().toISOString()); // Only future services
+
+        if (newDirectorServices && newDirectorServices.length > 0) {
+          // Reassign the first service found to the original director
+          const serviceToReassign = newDirectorServices[0];
+          await supabase
+            .from('services')
+            .update({
+              leader: currentRequest.original_director?.full_name,
+              notes: `Reasignado automáticamente desde ${userProfile?.full_name} para mantener equilibrio de servicios.`
+            })
+            .eq('id', serviceToReassign.id);
+
+          // Notify original director about the reassignment
+          await supabase
+            .from('system_notifications')
+            .insert({
+              recipient_id: currentRequest.original_director_id,
+              sender_id: user.id,
+              type: 'director_change',
+              title: 'Servicio Reasignado Automáticamente',
+              message: `Para mantener el equilibrio, se te ha asignado el servicio "${serviceToReassign.title}" del ${format(new Date(serviceToReassign.service_date), 'dd/MM/yyyy', { locale: es })} que originalmente era de ${userProfile?.full_name}.`,
+              notification_category: 'agenda',
+              metadata: {
+                service_id: serviceToReassign.id,
+                service_title: serviceToReassign.title,
+                service_date: serviceToReassign.service_date,
+                new_director: currentRequest.original_director?.full_name,
+                new_director_photo: currentRequest.original_director?.photo_url,
+                original_director: userProfile?.full_name,
+                original_director_photo: userProfile?.photo_url
+              }
+            });
+        }
+
+        // Send notification to all members about the accepted replacement
         const { data: allMembers } = await supabase
           .from('profiles')
           .select('id')
