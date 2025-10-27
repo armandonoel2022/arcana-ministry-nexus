@@ -76,8 +76,13 @@ export const EditServiceForm: React.FC<EditServiceFormProps> = ({
     setIsLoading(true);
 
     try {
+      // Parse date and set time to noon to avoid timezone issues
+      const [year, month, day] = formData.service_date.split('-').map(Number);
+      const serviceDate = new Date(year, month - 1, day, 12, 0, 0, 0);
+
       const updateData = {
         ...formData,
+        service_date: serviceDate.toISOString(),
         assigned_group_id: formData.assigned_group_id || null,
         special_activity: formData.special_activity || null,
         description: formData.description || null,

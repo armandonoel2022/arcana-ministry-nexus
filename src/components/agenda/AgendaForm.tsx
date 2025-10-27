@@ -79,8 +79,13 @@ export const AgendaForm: React.FC<AgendaFormProps> = ({ onSuccess }) => {
       // Get Spanish month name
       const monthName = format(data.service_date, 'MMMM', { locale: es });
 
+      // Fix timezone issue: set time to noon to avoid day shifts
+      const serviceDate = new Date(data.service_date);
+      serviceDate.setHours(12, 0, 0, 0);
+
       const serviceData = {
         ...data,
+        service_date: serviceDate.toISOString(),
         month_name: monthName,
         created_by: user.user.id,
         is_confirmed: false,

@@ -202,7 +202,8 @@ export const CSVUpload: React.FC<CSVUploadProps> = ({ onSuccess }) => {
         const day = parseInt(dateParts[0]);
         const month = parseInt(dateParts[1]) - 1; // Month is 0-indexed
         const year = parseInt(dateParts[2]);
-        const serviceDate = new Date(year, month, day);
+        // Set time to noon to avoid timezone issues when converting to ISO
+        const serviceDate = new Date(year, month, day, 12, 0, 0, 0);
 
         if (isNaN(serviceDate.getTime())) {
           throw new Error('Fecha inválida');
