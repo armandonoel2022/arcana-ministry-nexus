@@ -371,11 +371,11 @@ const DirectorReplacementRequestOverlay = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3">
+          <div className="flex flex-col md:flex-row gap-3">
             <Button 
               onClick={() => handleResponse('accepted')}
               disabled={isLoading}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              className="w-full md:flex-1 bg-green-600 hover:bg-green-700 text-white"
               size="lg"
             >
               <CheckCircle className="w-5 h-5 mr-2" />
@@ -385,7 +385,7 @@ const DirectorReplacementRequestOverlay = () => {
               onClick={() => handleResponse('rejected')}
               disabled={isLoading}
               variant="destructive"
-              className="flex-1"
+              className="w-full md:flex-1"
               size="lg"
             >
               <XCircle className="w-5 h-5 mr-2" />
@@ -395,6 +395,7 @@ const DirectorReplacementRequestOverlay = () => {
               onClick={handleDismiss}
               variant="outline"
               disabled={isLoading}
+              className="w-full"
             >
               Después
             </Button>
