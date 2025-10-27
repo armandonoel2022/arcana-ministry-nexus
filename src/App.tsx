@@ -42,6 +42,7 @@ import NotificationOverlay from "./components/notifications/NotificationOverlay"
 import ServiceNotificationOverlay from "./components/notifications/ServiceNotificationOverlay";
 import { BirthdayOverlay } from "./components/birthday/BirthdayOverlay";
 import DirectorReplacementRequestOverlay from "./components/agenda/DirectorReplacementRequestOverlay";
+import DirectorReplacementNotificationOverlay from "./components/agenda/DirectorReplacementNotificationOverlay";
 import "./App.css";
 
 const queryClient = new QueryClient();
@@ -78,6 +79,7 @@ function App() {
             <ServiceNotificationOverlay />
             <BirthdayOverlay />
             <DirectorReplacementRequestOverlay />
+            <DirectorReplacementNotificationOverlay />
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/*" element={
