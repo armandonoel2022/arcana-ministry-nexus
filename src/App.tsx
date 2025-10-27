@@ -40,6 +40,7 @@ import { ThemeProvider } from "./hooks/useTheme";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import NotificationOverlay from "./components/notifications/NotificationOverlay";
 import ServiceNotificationOverlay from "./components/notifications/ServiceNotificationOverlay";
+import { BirthdayOverlay } from "./components/birthday/BirthdayOverlay";
 import "./App.css";
 
 const queryClient = new QueryClient();
@@ -74,6 +75,7 @@ function App() {
             ) : (
             <BrowserRouter>
             <ServiceNotificationOverlay />
+            <BirthdayOverlay />
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/*" element={
