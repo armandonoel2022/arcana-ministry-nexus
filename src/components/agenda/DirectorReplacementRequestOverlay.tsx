@@ -171,6 +171,23 @@ const DirectorReplacementRequestOverlay = () => {
           .eq('id', user.id)
           .single();
 
+        // Get new director's photo from members table
+        let newDirectorPhoto = userProfile?.photo_url;
+        if (!newDirectorPhoto && userProfile?.full_name) {
+          const nameParts = userProfile.full_name.split(' ');
+          const firstName = nameParts[0];
+          const { data: memberData } = await supabase
+            .from('members')
+            .select('photo_url')
+            .ilike('nombres', `%${firstName}%`)
+            .limit(1)
+            .single();
+          
+          if (memberData?.photo_url) {
+            newDirectorPhoto = memberData.photo_url;
+          }
+        }
+
         // Update service leader for the requested service
         await supabase
           .from('services')
@@ -209,14 +226,14 @@ const DirectorReplacementRequestOverlay = () => {
               title: 'Servicio Reasignado Automáticamente',
               message: `Para mantener el equilibrio, se te ha asignado el servicio "${serviceToReassign.title}" del ${format(new Date(serviceToReassign.service_date), 'dd/MM/yyyy', { locale: es })} que originalmente era de ${userProfile?.full_name}.`,
               notification_category: 'agenda',
-              metadata: {
+               metadata: {
                 service_id: serviceToReassign.id,
                 service_title: serviceToReassign.title,
                 service_date: serviceToReassign.service_date,
                 new_director: currentRequest.original_director?.full_name,
                 new_director_photo: currentRequest.original_director?.photo_url,
                 original_director: userProfile?.full_name,
-                original_director_photo: userProfile?.photo_url
+                original_director_photo: newDirectorPhoto
               }
             });
         }
@@ -240,7 +257,7 @@ const DirectorReplacementRequestOverlay = () => {
               service_title: currentRequest.services?.title,
               service_date: currentRequest.services?.service_date,
               new_director: userProfile?.full_name || 'Director de reemplazo',
-              new_director_photo: userProfile?.photo_url,
+              new_director_photo: newDirectorPhoto,
               original_director: currentRequest.original_director?.full_name,
               original_director_photo: currentRequest.original_director?.photo_url
             }
