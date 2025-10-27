@@ -72,25 +72,18 @@ const DirectorChangeRequest: React.FC<DirectorChangeRequestProps> = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Obtener directores de alabanza desde la tabla members
+      // Obtener directores que tengan cuenta de usuario en el sistema (tabla profiles)
       const { data, error } = await supabase
-        .from('members')
-        .select('id, nombres, apellidos, celular, email')
-        .in('cargo', ['director_alabanza', 'directora_alabanza'])
+        .from('profiles')
+        .select('id, full_name, phone, email')
+        .in('role', ['leader', 'administrator'])
         .eq('is_active', true)
+        .eq('is_approved', true)
         .neq('id', user.id); // Excluir al usuario actual
 
       if (error) throw error;
       
-      // Transformar los datos para que coincidan con la interfaz esperada
-      const transformedData = (data || []).map(member => ({
-        id: member.id,
-        full_name: `${member.nombres} ${member.apellidos}`,
-        phone: member.celular || '',
-        email: member.email || ''
-      }));
-      
-      setAvailableDirectors(transformedData);
+      setAvailableDirectors(data || []);
     } catch (error) {
       console.error('Error fetching available directors:', error);
       toast.error('Error al cargar directores disponibles');
