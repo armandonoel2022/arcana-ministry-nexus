@@ -117,92 +117,94 @@ const DirectorReplacementNotificationOverlay = () => {
   const { metadata } = notification;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <Card className="w-full max-w-3xl shadow-2xl animate-in slide-in-from-bottom-4 duration-500 border-4 border-blue-500">
-        {/* Header with Logo */}
-        <CardHeader className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white rounded-t-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-          <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/10 rounded-full -ml-20 -mb-20"></div>
-          <div className="relative z-10 flex items-center justify-center gap-3 py-2">
-            <img src={arcanaLogo} alt="ADN Ministerio" className="w-12 h-12 rounded-full bg-white p-1" />
-            <CardTitle className="text-3xl font-bold text-center">
-              Reemplazo de Dirección de Alabanza
-            </CardTitle>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="p-8 space-y-6">
-          {/* Service Info */}
-          <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl space-y-3 border-2 border-blue-200">
-            <h3 className="text-2xl font-bold text-blue-900">{metadata.service_title}</h3>
-            <div className="flex items-center justify-center gap-2 text-blue-700 text-lg">
-              <Calendar className="w-6 h-6" />
-              <span className="font-semibold">
-                {metadata.service_date && format(new Date(metadata.service_date), "EEEE, dd 'de' MMMM", { locale: es })}
-              </span>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300 overflow-y-auto">
+      <div className="w-full max-w-3xl my-auto">
+        <Card className="shadow-2xl animate-in slide-in-from-bottom-4 duration-500 border-4 border-blue-500 max-h-[95vh] flex flex-col">
+          {/* Header with Logo */}
+          <CardHeader className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white rounded-t-lg relative overflow-hidden flex-shrink-0">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+            <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/10 rounded-full -ml-20 -mb-20"></div>
+            <div className="relative z-10 flex items-center justify-center gap-3 py-2">
+              <img src={arcanaLogo} alt="ADN Ministerio" className="w-12 h-12 rounded-full bg-white p-1" />
+              <CardTitle className="text-2xl md:text-3xl font-bold text-center">
+                Reemplazo de Dirección de Alabanza
+              </CardTitle>
             </div>
-          </div>
-
-          {/* Directors Comparison */}
-          <div className="grid grid-cols-3 gap-4 items-center">
-            {/* Original Director */}
-            <div className="flex flex-col items-center space-y-3 p-4 bg-gray-50 rounded-xl">
-              <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Solicitó</div>
-              <Avatar className="w-24 h-24 border-4 border-gray-300 shadow-lg">
-                <AvatarImage src={metadata.original_director_photo} alt={metadata.original_director} />
-                <AvatarFallback className="bg-gradient-to-br from-gray-400 to-gray-600 text-white text-2xl">
-                  {metadata.original_director?.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="text-center">
-                <div className="font-bold text-gray-900">{metadata.original_director}</div>
-                <div className="text-sm text-gray-500">Director Original</div>
+          </CardHeader>
+          
+          <CardContent className="p-4 md:p-8 space-y-4 md:space-y-6 overflow-y-auto flex-1">
+            {/* Service Info */}
+            <div className="text-center p-4 md:p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl space-y-2 md:space-y-3 border-2 border-blue-200">
+              <h3 className="text-xl md:text-2xl font-bold text-blue-900">{metadata.service_title}</h3>
+              <div className="flex items-center justify-center gap-2 text-blue-700 text-base md:text-lg">
+                <Calendar className="w-5 h-5 md:w-6 md:h-6" />
+                <span className="font-semibold">
+                  {metadata.service_date && format(new Date(metadata.service_date), "EEEE, dd 'de' MMMM", { locale: es })}
+                </span>
               </div>
             </div>
 
-            {/* Arrow */}
-            <div className="flex justify-center">
-              <div className="p-4 bg-blue-100 rounded-full">
-                <ArrowRight className="w-8 h-8 text-blue-600" />
+            {/* Directors Comparison */}
+            <div className="grid grid-cols-3 gap-2 md:gap-4 items-center">
+              {/* Original Director */}
+              <div className="flex flex-col items-center space-y-2 md:space-y-3 p-2 md:p-4 bg-gray-50 rounded-xl">
+                <div className="text-xs md:text-sm font-medium text-gray-600 uppercase tracking-wide">Solicitó</div>
+                <Avatar className="w-16 h-16 md:w-24 md:h-24 border-2 md:border-4 border-gray-300 shadow-lg">
+                  <AvatarImage src={metadata.original_director_photo} alt={metadata.original_director} />
+                  <AvatarFallback className="bg-gradient-to-br from-gray-400 to-gray-600 text-white text-lg md:text-2xl">
+                    {metadata.original_director?.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="text-center">
+                  <div className="font-bold text-gray-900 text-sm md:text-base">{metadata.original_director}</div>
+                  <div className="text-xs md:text-sm text-gray-500">Director Original</div>
+                </div>
+              </div>
+
+              {/* Arrow */}
+              <div className="flex justify-center">
+                <div className="p-2 md:p-4 bg-blue-100 rounded-full">
+                  <ArrowRight className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
+                </div>
+              </div>
+
+              {/* New Director */}
+              <div className="flex flex-col items-center space-y-2 md:space-y-3 p-2 md:p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border-2 border-blue-300">
+                <div className="text-xs md:text-sm font-medium text-blue-700 uppercase tracking-wide">Aceptó</div>
+                <Avatar className="w-16 h-16 md:w-24 md:h-24 border-2 md:border-4 border-blue-500 shadow-lg ring-2 md:ring-4 ring-blue-200">
+                  <AvatarImage src={metadata.new_director_photo} alt={metadata.new_director} />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-700 text-white text-lg md:text-2xl">
+                    {metadata.new_director?.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="text-center">
+                  <div className="font-bold text-blue-900 text-sm md:text-base">{metadata.new_director}</div>
+                  <div className="text-xs md:text-sm text-blue-600 font-medium">Nuevo Director</div>
+                </div>
               </div>
             </div>
 
-            {/* New Director */}
-            <div className="flex flex-col items-center space-y-3 p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border-2 border-blue-300">
-              <div className="text-sm font-medium text-blue-700 uppercase tracking-wide">Aceptó</div>
-              <Avatar className="w-24 h-24 border-4 border-blue-500 shadow-lg ring-4 ring-blue-200">
-                <AvatarImage src={metadata.new_director_photo} alt={metadata.new_director} />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-700 text-white text-2xl">
-                  {metadata.new_director?.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="text-center">
-                <div className="font-bold text-blue-900">{metadata.new_director}</div>
-                <div className="text-sm text-blue-600 font-medium">Nuevo Director</div>
+            {/* Status Message */}
+            <div className="text-center p-3 md:p-4 bg-orange-50 border-2 border-orange-300 rounded-lg">
+              <div className="flex items-center justify-center gap-2 text-orange-700 font-medium text-sm md:text-base">
+                <Music className="w-4 h-4 md:w-5 md:h-5" />
+                <span>En espera de la selección de canciones</span>
               </div>
             </div>
-          </div>
+          </CardContent>
 
-          {/* Status Message */}
-          <div className="text-center p-4 bg-orange-50 border-2 border-orange-300 rounded-lg">
-            <div className="flex items-center justify-center gap-2 text-orange-700 font-medium">
-              <Music className="w-5 h-5" />
-              <span>En espera de la selección de canciones</span>
-            </div>
-          </div>
-
-          {/* Dismiss Button */}
-          <div className="flex justify-center pt-2">
+          {/* Dismiss Button - Fixed at bottom */}
+          <div className="flex justify-center p-4 md:p-6 pt-2 border-t bg-white rounded-b-lg flex-shrink-0">
             <Button 
               onClick={handleDismiss}
               size="lg"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 w-full md:w-auto"
             >
               Entendido
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };
