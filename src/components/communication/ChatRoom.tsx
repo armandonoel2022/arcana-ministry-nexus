@@ -175,7 +175,17 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
     try {
       console.log('Enviando mensaje:', textToSend);
       
-      // Enviar el mensaje del usuario
+      // Agregar mensaje del usuario de forma optimista
+      const tempUserMessage: Message = {
+        id: `temp-user-${Date.now()}`,
+        message: textToSend,
+        created_at: new Date().toISOString(),
+        user_id: userId,
+        is_bot: false,
+      };
+      setMessages(prev => [...prev, tempUserMessage]);
+      
+      // Enviar el mensaje del usuario a la BD
       const { error } = await supabase
         .from('chat_messages')
         .insert({

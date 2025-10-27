@@ -788,6 +788,20 @@ export class ArcanaBot {
       const userGroupIds = userGroups?.map(g => g.group_id) || [];
       
       let nextService = null;
+      // Identificar usuario y nombre de perfil
+      const { data: authData } = await supabase.auth.getUser();
+      const currentUserId = authData.user?.id || null;
+      let profileName: string | null = null;
+      if (currentUserId) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', currentUserId)
+          .maybeSingle();
+        profileName = profile?.full_name || null;
+      }
+
+      // 1) Próximo servicio por grupos donde es líder
       if (userGroupIds.length > 0) {
         const { data } = await supabase
           .from("services")
@@ -796,8 +810,21 @@ export class ArcanaBot {
           .gte("service_date", new Date().toISOString().split("T")[0])
           .order("service_date", { ascending: true })
           .limit(1)
-          .single();
-        nextService = data;
+          .maybeSingle();
+        nextService = data || null;
+      }
+
+      // 2) Fallback: próximo servicio donde el campo leader coincide con su nombre
+      if (!nextService && profileName) {
+        const { data } = await supabase
+          .from('services')
+          .select('id, service_date, title, leader')
+          .gte('service_date', new Date().toISOString().split('T')[0])
+          .ilike('leader', `%${profileName}%`)
+          .order('service_date', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        nextService = data || null;
       }
 
       const serviceDate = nextService?.service_date;
