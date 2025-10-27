@@ -1981,6 +1981,9 @@ export type Database = {
         | "system"
         | "birthday_daily"
         | "birthday_monthly"
+        | "director_replacement_request"
+        | "director_replacement_response"
+        | "director_change"
       song_knowledge: "unknown" | "learning" | "known" | "expert"
       user_role:
         | "admin"
@@ -2172,6 +2175,9 @@ export const Constants = {
         "system",
         "birthday_daily",
         "birthday_monthly",
+        "director_replacement_request",
+        "director_replacement_response",
+        "director_change",
       ],
       song_knowledge: ["unknown", "learning", "known", "expert"],
       user_role: [
