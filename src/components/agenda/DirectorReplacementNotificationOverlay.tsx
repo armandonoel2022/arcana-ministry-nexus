@@ -62,11 +62,6 @@ const DirectorReplacementNotificationOverlay = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Check if there's already been a dismissed notification today
-      const today = new Date().toDateString();
-      const dismissed = JSON.parse(localStorage.getItem('dismissedDirectorChanges') || '{}');
-      if (dismissed[today]) return;
-
       const { data, error } = await supabase
         .from('system_notifications')
         .select('*')
@@ -74,18 +69,21 @@ const DirectorReplacementNotificationOverlay = () => {
         .eq('type', 'director_change')
         .eq('is_read', false)
         .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+        .limit(1);
 
       if (error) {
-        if (error.code !== 'PGRST116') { // Not a "no rows" error
-          throw error;
-        }
+        console.error('Error fetching director change notifications:', error);
         return;
       }
 
-      if (data) {
-        setNotification(data);
+      if (data && data.length > 0) {
+        // Check if we've already shown this specific notification
+        const dismissed = JSON.parse(localStorage.getItem('dismissedDirectorChanges') || '{}');
+        const notificationId = data[0].id;
+        
+        if (!dismissed[notificationId]) {
+          setNotification(data[0]);
+        }
       }
     } catch (error) {
       console.error('Error checking for director change notifications:', error);
@@ -102,10 +100,9 @@ const DirectorReplacementNotificationOverlay = () => {
         .update({ is_read: true })
         .eq('id', notification.id);
 
-      // Store dismissal in localStorage
-      const today = new Date().toDateString();
+      // Store dismissal for this specific notification
       const dismissed = JSON.parse(localStorage.getItem('dismissedDirectorChanges') || '{}');
-      dismissed[today] = true;
+      dismissed[notification.id] = true;
       localStorage.setItem('dismissedDirectorChanges', JSON.stringify(dismissed));
 
       setNotification(null);

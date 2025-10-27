@@ -49,11 +49,8 @@ const DirectorReplacements = () => {
       }
     };
 
-    // Clear any previous dismissals
-    const today = new Date().toDateString();
-    const dismissed = JSON.parse(localStorage.getItem('dismissedDirectorChanges') || '{}');
-    delete dismissed[today];
-    localStorage.setItem('dismissedDirectorChanges', JSON.stringify(dismissed));
+    // Clear all dismissed notifications to allow testing
+    localStorage.removeItem('dismissedDirectorChanges');
 
     window.dispatchEvent(new CustomEvent('testDirectorChangeNotification', { detail: mockNotification }));
   };
