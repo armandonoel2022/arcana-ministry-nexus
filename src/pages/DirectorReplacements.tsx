@@ -33,17 +33,17 @@ const DirectorReplacements = () => {
   };
 
   const handlePreviewNotification = () => {
-    // Simulate a director change notification
+    // Simulate a director change notification with Roosevelt's photo
     const mockNotification = {
-      id: 'test-notification-1',
+      id: 'test-notification-' + Date.now(),
       metadata: {
         service_id: 'test-service-1',
-        service_title: 'Culto Dominical',
+        service_title: '10:45 a.m.',
         service_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        new_director: 'María González',
-        new_director_photo: undefined,
-        original_director: 'Roosevelt Martínez',
-        original_director_photo: undefined
+        new_director: 'Roosevelt Martínez',
+        new_director_photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/60b1f3d9-9826-4e5c-a348-cebbdbd2a7c9.JPG',
+        original_director: 'Armando Noel',
+        original_director_photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/d6602109-ad3e-4db6-ab4a-2984dadfc569.JPG'
       }
     };
 

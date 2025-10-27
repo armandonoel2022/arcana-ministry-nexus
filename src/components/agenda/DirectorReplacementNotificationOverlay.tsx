@@ -138,7 +138,7 @@ const DirectorReplacementNotificationOverlay = () => {
             <div className="flex items-center justify-center gap-2 text-blue-700 text-lg">
               <Calendar className="w-6 h-6" />
               <span className="font-semibold">
-                {metadata.service_date && format(new Date(metadata.service_date), "EEEE, dd 'de' MMMM 'a las' HH:mm", { locale: es })}
+                {metadata.service_date && format(new Date(metadata.service_date), "EEEE, dd 'de' MMMM", { locale: es })}
               </span>
             </div>
           </div>
