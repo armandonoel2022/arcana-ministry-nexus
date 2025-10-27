@@ -164,9 +164,15 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
     return { start: weekStart, end: weekEnd };
   };
 
+  // Helper function to normalize strings (remove accents) for comparison
+  const normalizeString = (str: string) => {
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  };
+
   const applyFilter = () => {
     const now = new Date();
     let filtered = [...services];
+    const normalizedUserName = normalizeString(currentUserName);
 
     switch (filter) {
       case 'current_weekend':
@@ -183,7 +189,7 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
         const monthEnd = endOfMonth(now);
         filtered = services.filter(service => 
           isWithinInterval(new Date(service.service_date), { start: monthStart, end: monthEnd }) &&
-          service.leader.toLowerCase().includes(currentUserName)
+          normalizeString(service.leader).includes(normalizedUserName)
         );
         break;
       
@@ -192,7 +198,7 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
         const { start: myWeekStart, end: myWeekEnd } = getCurrentWeekend();
         filtered = services.filter(service => 
           isWithinInterval(new Date(service.service_date), { start: myWeekStart, end: myWeekEnd }) &&
-          service.leader.toLowerCase().includes(currentUserName)
+          normalizeString(service.leader).includes(normalizedUserName)
         );
         break;
       
