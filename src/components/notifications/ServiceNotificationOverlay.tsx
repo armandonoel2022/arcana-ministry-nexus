@@ -532,17 +532,37 @@ const ServiceNotificationOverlay = ({
         return;
       }
 
+      // Esperar a que todas las imágenes estén cargadas
+      const images = element.getElementsByTagName('img');
+      const imagePromises = Array.from(images).map((img) => {
+        if (img.complete) {
+          return Promise.resolve(undefined);
+        }
+        return new Promise<void>((resolve) => {
+          img.onload = () => resolve();
+          img.onerror = () => {
+            // Si la imagen falla, usar un placeholder
+            console.warn('Image failed to load:', img.src);
+            resolve();
+          };
+          // Timeout después de 3 segundos
+          setTimeout(() => resolve(), 3000);
+        });
+      });
+
+      await Promise.all(imagePromises);
+
       const canvas = await html2canvas(element, {
         backgroundColor: '#ffffff',
         scale: 2,
         useCORS: true,
-        allowTaint: false,
-        foreignObjectRendering: true,
+        allowTaint: true,
+        logging: false,
       });
 
       const link = document.createElement('a');
       link.download = `${serviceTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().getTime()}.png`;
-      link.href = canvas.toDataURL();
+      link.href = canvas.toDataURL('image/png');
       link.click();
       
       toast.success('Imagen descargada exitosamente');
@@ -644,9 +664,9 @@ const ServiceNotificationOverlay = ({
                     onClick={() => {
                       closeOverlay();
                       if (onNavigate) {
-                        onNavigate('/repertorio-musical');
+                        onNavigate('/repertorio');
                       } else {
-                        window.location.href = '/repertorio-musical';
+                        window.location.href = '/repertorio';
                       }
                     }}
                     className="w-full justify-start"
@@ -920,9 +940,9 @@ const ServiceNotificationOverlay = ({
                           onClick={() => {
                             closeOverlay();
                             if (onNavigate) {
-                              onNavigate('/repertorio-musical');
+                              onNavigate('/repertorio');
                             } else {
-                              window.location.href = '/repertorio-musical';
+                              window.location.href = '/repertorio';
                             }
                           }}
                           className="w-full justify-start"
@@ -934,9 +954,9 @@ const ServiceNotificationOverlay = ({
                           onClick={() => {
                             closeOverlay();
                             if (onNavigate) {
-                              onNavigate('/ministerial-agenda');
+                              onNavigate('/agenda');
                             } else {
-                              window.location.href = '/ministerial-agenda';
+                              window.location.href = '/agenda';
                             }
                           }}
                           className="w-full justify-start"
