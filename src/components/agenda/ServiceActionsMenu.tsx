@@ -28,7 +28,13 @@ const ServiceActionsMenu: React.FC<ServiceActionsMenuProps> = ({
   onDelete,
   onRequestDirectorChange
 }) => {
-  const isMyService = currentUser && service.leader?.toLowerCase().includes(currentUser.toLowerCase());
+  // Normalize strings to ignore accents
+  const normalizeString = (str: string) => {
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  };
+  
+  const isMyService = currentUser && service.leader && 
+    normalizeString(service.leader).includes(normalizeString(currentUser));
 
   return (
     <DropdownMenu>
