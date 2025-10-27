@@ -20,12 +20,17 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import BirthdayNotificationBanner from "@/components/notifications/BirthdayNotificationBanner";
 import { BiometricSetup } from "@/components/BiometricSetup";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
+  const { userProfile } = useAuth();
   const [memberCount, setMemberCount] = useState<number>(0);
   const [groupCount, setGroupCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [birthdayNotification, setBirthdayNotification] = useState<any>(null);
+  
+  // Get first name from full name
+  const firstName = userProfile?.full_name?.split(' ')[0] || 'Usuario';
 
   const mainServices = [
     {
@@ -170,7 +175,7 @@ const Index = () => {
             
             {/* Welcome Message */}
             <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-8 mb-8 max-w-2xl mx-auto border border-white/20">
-              <h2 className="text-2xl font-semibold mb-2 text-white">¡Hola, Armando!</h2>
+              <h2 className="text-2xl font-semibold mb-2 text-white">¡Hola, {firstName}!</h2>
               <p className="text-blue-100">Tu participación hace la diferencia</p>
               
               <Link to="/agenda">

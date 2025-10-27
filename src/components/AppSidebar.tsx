@@ -187,7 +187,7 @@ export function AppSidebar() {
             />
             <div>
               <h1 className="text-xl font-bold text-gray-900">ARCANA</h1>
-              <p className="text-sm text-gray-500">Armando</p>
+              <p className="text-sm text-gray-500">{userProfile?.full_name?.split(' ')[0] || 'Usuario'}</p>
             </div>
           </div>
         </div>
