@@ -24,28 +24,22 @@ export const BirthdayOverlay = () => {
   useEffect(() => {
     fetchTodaysBirthdays();
     
-    // Listen for test overlay trigger
-    const handleStorageChange = () => {
-      const testData = localStorage.getItem('testBirthdayOverlay');
-      if (testData) {
-        try {
-          const member = JSON.parse(testData);
-          setBirthdayMembers([member]);
-          localStorage.removeItem('testBirthdayOverlay');
-        } catch (error) {
-          console.error('Error parsing test data:', error);
-        }
+    // Listen for test overlay trigger using custom event
+    const handleTestOverlay = (event: Event) => {
+      const customEvent = event as CustomEvent<Member>;
+      if (customEvent.detail) {
+        setBirthdayMembers([customEvent.detail]);
       }
     };
     
-    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('testBirthdayOverlay', handleTestOverlay);
     
     // Check every hour for new birthdays
     const interval = setInterval(fetchTodaysBirthdays, 3600000);
     
     return () => {
       clearInterval(interval);
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('testBirthdayOverlay', handleTestOverlay);
     };
   }, []);
 

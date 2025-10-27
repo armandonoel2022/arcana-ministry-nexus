@@ -355,9 +355,8 @@ const BirthdayModule = () => {
                     </Button>
                     <Button
                       onClick={() => {
-                        // Trigger overlay test by storing temp data
-                        localStorage.setItem('testBirthdayOverlay', JSON.stringify(member));
-                        window.dispatchEvent(new Event('storage'));
+                        // Trigger overlay test with custom event
+                        window.dispatchEvent(new CustomEvent('testBirthdayOverlay', { detail: member }));
                         toast({
                           title: "Overlay activado",
                           description: "El overlay de cumpleaños debería aparecer ahora",
