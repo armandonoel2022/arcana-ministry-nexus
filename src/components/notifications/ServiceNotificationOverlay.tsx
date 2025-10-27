@@ -80,7 +80,6 @@ const ServiceNotificationOverlay = () => {
         payload.new.notification_category === 'agenda' &&
         payload.new.metadata?.service_date
       ) {
-        // Mostrar inmediatamente el overlay para notificaciones de programa de servicio
         showServiceProgramOverlay(payload.new.metadata);
       }
     };
@@ -115,7 +114,6 @@ const ServiceNotificationOverlay = () => {
           color_theme: '#3B82F6'
         } : undefined,
         group_members: [
-          // Director
           ...(service.director ? [{
             id: 'director-' + service.time,
             user_id: 'director',
@@ -127,7 +125,6 @@ const ServiceNotificationOverlay = () => {
               photo_url: service.director?.photo
             }
           }] : []),
-          // Responsables de voces
           ...((service.voices || []).map((voice: any, index: number) => ({
             id: 'voice-' + service.time + '-' + index,
             user_id: 'voice-' + index,
@@ -156,7 +153,6 @@ const ServiceNotificationOverlay = () => {
       setIsVisible(true);
       setTimeout(() => setIsAnimating(true), 100);
       
-      // Limpiar localStorage para asegurar que se muestre
       localStorage.removeItem('serviceNotificationDismissed');
       localStorage.removeItem('serviceNotificationLastShown');
     }
@@ -376,7 +372,8 @@ const ServiceNotificationOverlay = () => {
       member.instrument?.toLowerCase().includes('tenor') ||
       member.instrument?.toLowerCase().includes('bajo') ||
       member.instrument?.toLowerCase().includes('voice') ||
-      member.instrument?.toLowerCase().includes('voz')
+      member.instrument?.toLowerCase().includes('voz') ||
+      member.instrument?.toLowerCase().includes('contralto')
     );
   };
 
@@ -427,17 +424,17 @@ const ServiceNotificationOverlay = () => {
           }`}
         >
           {/* Fixed Header */}
-          <div className="bg-white rounded-t-xl p-4 border-b border-gray-200 sticky top-4 z-10 shadow-md">
+          <div className="bg-white rounded-t-xl p-4 border-b border-border sticky top-4 z-10 shadow-md">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-blue-900">
+                  <h2 className="text-xl font-bold text-foreground">
                     Programa de Servicios
                   </h2>
-                  <p className="text-blue-700 text-sm">
+                  <p className="text-muted-foreground text-sm">
                     {format(new Date(services[0].service_date), 'EEEE, dd \'de\' MMMM', { locale: es })}
                   </p>
                 </div>
@@ -447,7 +444,7 @@ const ServiceNotificationOverlay = () => {
                   variant="outline"
                   size="sm"
                   onClick={saveToNotifications}
-                  className="flex items-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
+                  className="flex items-center gap-2"
                 >
                   <Save className="w-4 h-4" />
                   Guardar
@@ -456,7 +453,7 @@ const ServiceNotificationOverlay = () => {
                   variant="ghost"
                   size="sm"
                   onClick={closeOverlay}
-                  className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                  className="text-destructive hover:text-destructive"
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -472,176 +469,216 @@ const ServiceNotificationOverlay = () => {
                 const director = service.leader;
                 const directorMember = service.group_members.find(m => m.is_leader);
                 const responsibleVoices = getResponsibleVoices(service.group_members).slice(0, 5);
-                const hasSongs = service.selected_songs && service.selected_songs.length > 0;
+                
+                // Separar canciones por tipo
+                const worshipSongs = service.selected_songs?.filter(s => s.song_order >= 1 && s.song_order <= 4) || [];
+                const offeringsSongs = service.selected_songs?.filter(s => s.song_order === 5) || [];
+                const communionSongs = service.selected_songs?.filter(s => s.song_order === 6) || [];
 
                 return (
                   <div 
                     key={service.id}
                     ref={el => serviceCardRefs.current[service.id] = el}
-                    className="bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden"
+                    className="bg-card rounded-xl border-2 border-primary/20 shadow-lg overflow-hidden"
                   >
                     {/* Service Header */}
-                    <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-4">
+                    <div className="bg-primary text-primary-foreground px-6 py-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                            <Clock className="w-4 h-4" />
+                          <div className="w-10 h-10 bg-primary-foreground/20 rounded-full flex items-center justify-center">
+                            <Clock className="w-5 h-5" />
                           </div>
                           <div>
-                            <h3 className="text-lg font-bold">
+                            <h3 className="text-xl font-bold">
                               {service.title}
                             </h3>
-                            <div className="flex items-center gap-2 text-blue-100">
+                            <p className="text-primary-foreground/80 text-sm flex items-center gap-2">
                               {service.worship_groups && (
                                 <>
-                                  <Badge 
-                                    variant="secondary"
-                                    className="bg-white/20 text-white border-white/30 text-xs"
-                                  >
-                                    {service.worship_groups.name}
-                                  </Badge>
-                                  <span className="text-xs">•</span>
+                                  <Users className="w-3 h-3" />
+                                  {service.worship_groups.name}
+                                  <span className="mx-1">•</span>
                                 </>
                               )}
-                              <span className="text-xs">{service.service_type === 'regular' ? 'Servicio Dominical' : service.service_type}</span>
-                            </div>
+                              Servicio Dominical
+                            </p>
                           </div>
                         </div>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => downloadServiceImage(service.id, service.title)}
-                          className="text-white hover:bg-white/20"
+                          className="text-primary-foreground hover:bg-primary-foreground/20"
                         >
-                          <Download className="w-4 h-4" />
+                          <Download className="w-4 h-4 mr-2" />
+                          Descargar
                         </Button>
                       </div>
-                      
-                      {service.special_activity && (
-                        <div className="mt-2 flex items-center gap-2 text-yellow-200">
-                          <span className="text-lg">⭐</span>
-                          <span className="font-medium">{service.special_activity}</span>
-                        </div>
-                      )}
                     </div>
 
-                    <div className="p-6">
-                      <div className="grid md:grid-cols-2 gap-8">
-                        {/* Left Side - Director */}
-                        <div>
-                          <h4 className="text-blue-800 font-semibold mb-4 text-center">Director/a de Alabanza</h4>
-                          <div className="text-center mb-6">
-                            <Avatar className="w-24 h-24 mx-auto mb-3 border-4 border-blue-200">
-                              <AvatarImage
-                                src={directorMember?.profiles?.photo_url}
-                                alt={director}
-                                className="object-cover object-center"
-                                style={{ objectPosition: 'center top' }}
-                              />
-                              <AvatarFallback className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-lg font-bold">
+                    {/* Service Content */}
+                    <div className="p-6 space-y-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Director de Alabanza */}
+                        <div className="bg-accent/50 rounded-lg p-4 border border-border">
+                          <h4 className="text-foreground font-semibold mb-3 flex items-center gap-2">
+                            <Users className="w-4 h-4" />
+                            Director/a de Alabanza
+                          </h4>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="w-16 h-16 border-2 border-primary/30">
+                              <AvatarImage src={directorMember?.profiles?.photo_url} />
+                              <AvatarFallback className="bg-primary/20 text-primary font-bold">
                                 {getInitials(director)}
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <div className="font-bold text-gray-900 text-lg">{director}</div>
-                              <div className="text-sm text-blue-600">Líder del Servicio</div>
-                            </div>
-                          </div>
-
-                          {/* Selected Songs */}
-                          <div>
-                            <div className="flex items-center gap-2 mb-3">
-                              <Music className="w-4 h-4 text-gray-600" />
-                              <h5 className="font-semibold text-gray-800">Canciones Seleccionadas</h5>
-                            </div>
-                            
-                            {hasSongs ? (
-                              <div className="space-y-2">
-                                {service.selected_songs?.slice(0, 3).map((song, index) => (
-                                  <div key={song.id} className="flex items-center gap-3 p-2 bg-green-50 rounded-md">
-                                    <span className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                      {index + 1}
-                                    </span>
-                                    <div>
-                                      <div className="font-medium text-gray-900">{song.title}</div>
-                                      {song.artist && (
-                                        <div className="text-xs text-gray-600">{song.artist}</div>
-                                      )}
-                                    </div>
-                                  </div>
-                                ))}
-                                {service.selected_songs && service.selected_songs.length > 3 && (
-                                  <div className="text-xs text-green-700 font-medium pl-9">
-                                    +{service.selected_songs.length - 3} canciones más
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                                <p className="text-sm text-yellow-800 italic">
-                                  Pendiente de seleccionar las canciones
-                                </p>
-                              </div>
-                            )}
-
-                            {/* Offering Song */}
-                            <div className="mt-4">
-                              <div className="flex items-center gap-2 mb-2">
-                                <span className="text-lg">💰</span>
-                                <h5 className="font-semibold text-yellow-700">Canción de Ofrendas</h5>
-                              </div>
-                              <div className="p-3 bg-yellow-50 rounded-md">
-                                <div className="font-medium">Hosanna</div>
-                                <div className="text-sm text-gray-600">Marco Barrientos</div>
-                              </div>
+                              <p className="font-bold text-foreground">{director}</p>
+                              <Badge variant="outline" className="mt-1">
+                                Líder del Servicio
+                              </Badge>
                             </div>
                           </div>
                         </div>
 
-                        {/* Right Side - Voices */}
-                        <div>
-                          <h4 className="text-blue-800 font-semibold mb-4 text-center">Responsables de Voces</h4>
-                          
+                        {/* Responsables de Voces */}
+                        <div className="bg-accent/50 rounded-lg p-4 border border-border">
+                          <h4 className="text-foreground font-semibold mb-3 flex items-center gap-2">
+                            <Music className="w-4 h-4" />
+                            Responsables de Voces
+                          </h4>
                           {responsibleVoices.length > 0 ? (
-                            <div className="space-y-3">
-                              {responsibleVoices.map((member, index) => (
-                                <div key={member.id} className="flex items-center gap-3">
-                                  <Avatar className="w-12 h-12 border-2 border-blue-200">
-                                    <AvatarImage
-                                      src={member.profiles?.photo_url}
-                                      alt={member.profiles?.full_name}
-                                      className="object-cover object-center"
-                                      style={{ objectPosition: 'center top' }}
-                                    />
-                                    <AvatarFallback className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-bold">
-                                      {getInitials(member.profiles?.full_name || '')}
+                            <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                              {responsibleVoices.map((voice) => (
+                                <div key={voice.id} className="flex items-center gap-3">
+                                  <Avatar className="w-10 h-10 border-2 border-primary/30">
+                                    <AvatarImage src={voice.profiles?.photo_url} />
+                                    <AvatarFallback className="bg-primary/20 text-primary text-xs font-bold">
+                                      {getInitials(voice.profiles?.full_name || 'NN')}
                                     </AvatarFallback>
                                   </Avatar>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="font-medium text-gray-900">
-                                      {member.profiles?.full_name}
-                                    </div>
-                                    <div className="text-sm text-blue-600">
-                                      {member.instrument}
-                                    </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-foreground text-sm truncate">
+                                      {voice.profiles?.full_name || 'Sin nombre'}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground truncate">
+                                      {voice.instrument}
+                                    </p>
                                   </div>
                                 </div>
                               ))}
-                              {responsibleVoices.length > 5 && (
-                                <div className="text-xs text-blue-700 font-medium text-center pt-2">
-                                  +{responsibleVoices.length - 5} integrantes más
-                                </div>
-                              )}
                             </div>
                           ) : (
-                            <div className="text-center p-4 bg-gray-50 rounded-md">
-                              <p className="text-sm text-gray-600 italic">
-                                No hay responsables de voces asignados
+                            <p className="text-muted-foreground text-sm italic">
+                              No hay responsables de voces asignados
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Canciones Seleccionadas */}
+                      <div className="space-y-4">
+                        {/* Canciones de Adoración */}
+                        <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                          <h4 className="text-green-900 font-semibold mb-3 flex items-center gap-2">
+                            <Music className="w-4 h-4" />
+                            Canciones Seleccionadas
+                          </h4>
+                          {worshipSongs.length > 0 ? (
+                            <div className="space-y-2">
+                              {worshipSongs.map((song, index) => (
+                                <div 
+                                  key={song.id} 
+                                  className="flex items-start gap-3 bg-white rounded-lg p-3 border border-green-200"
+                                >
+                                  <div className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center font-bold text-sm shrink-0">
+                                    {index + 1}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-semibold text-gray-900">
+                                      {song.title}
+                                    </p>
+                                    <p className="text-sm text-gray-600">
+                                      {song.artist}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="bg-white rounded-lg p-4 border border-green-200">
+                              <p className="text-gray-500 text-sm italic text-center">
+                                Sin canciones seleccionadas
                               </p>
                             </div>
                           )}
                         </div>
+
+                        {/* Canción de Ofrendas */}
+                        {offeringsSongs.length > 0 && (
+                          <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                            <h4 className="text-amber-900 font-semibold mb-3 flex items-center gap-2">
+                              <Music className="w-4 h-4" />
+                              Canción de Ofrendas
+                            </h4>
+                            {offeringsSongs.map((song) => (
+                              <div 
+                                key={song.id} 
+                                className="flex items-start gap-3 bg-white rounded-lg p-3 border border-amber-200"
+                              >
+                                <div className="w-8 h-8 bg-amber-500 text-white rounded-full flex items-center justify-center text-lg shrink-0">
+                                  💰
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold text-gray-900">
+                                    {song.title}
+                                  </p>
+                                  <p className="text-sm text-gray-600">
+                                    {song.artist}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Canción de Comunión */}
+                        {communionSongs.length > 0 && (
+                          <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                            <h4 className="text-purple-900 font-semibold mb-3 flex items-center gap-2">
+                              <Music className="w-4 h-4" />
+                              Canción de Santa Comunión
+                            </h4>
+                            {communionSongs.map((song) => (
+                              <div 
+                                key={song.id} 
+                                className="flex items-start gap-3 bg-white rounded-lg p-3 border border-purple-200"
+                              >
+                                <div className="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center text-lg shrink-0">
+                                  ✝️
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold text-gray-900">
+                                    {song.title}
+                                  </p>
+                                  <p className="text-sm text-gray-600">
+                                    {song.artist}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
+
+                      {/* Special Activity */}
+                      {service.special_activity && (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                          <p className="text-sm text-yellow-800">
+                            <strong>Actividad Especial:</strong> {service.special_activity}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -649,13 +686,48 @@ const ServiceNotificationOverlay = () => {
             </div>
 
             {/* Warning Message */}
-            <div className="px-6 pb-6">
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <p className="text-sm text-amber-800 text-center">
-                  ⚠️ <strong>Importante:</strong> Revise el programa completo y confirme su disponibilidad. 
-                  En caso de algún inconveniente, coordine los reemplazos necesarios.
-                </p>
+            <div className="p-6 pt-0">
+              <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl shrink-0">⚠️</span>
+                  <div>
+                    <p className="text-yellow-900 font-medium text-sm">
+                      <strong>Importante:</strong> Revise el programa completo y confirme su disponibilidad. 
+                      En caso de algún inconveniente, coordine los reemplazos necesarios.
+                    </p>
+                  </div>
+                </div>
               </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="px-6 pb-6 flex items-center gap-3 justify-center flex-wrap">
+              <Button
+                variant="default"
+                onClick={() => downloadServiceImage(services[0].id, 'Primer Servicio')}
+                className="flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Descargar 1er Servicio
+              </Button>
+              {services[1] && (
+                <Button
+                  variant="default"
+                  onClick={() => downloadServiceImage(services[1].id, 'Segundo Servicio')}
+                  className="flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Descargar 2do Servicio
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                onClick={closeOverlay}
+                className="flex items-center gap-2"
+              >
+                <X className="w-4 h-4" />
+                Cerrar
+              </Button>
             </div>
           </div>
         </div>
