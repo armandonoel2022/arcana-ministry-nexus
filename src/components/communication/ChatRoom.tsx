@@ -303,20 +303,32 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
   const handleActionClick = async (action: BotAction) => {
     if (action.type === 'select_song') {
       try {
-        // Add song to next service
-        const { data: nextService } = await supabase
-          .from('services')
-          .select('id, service_date')
-          .gte('service_date', new Date().toISOString().split("T")[0])
-          .order('service_date', { ascending: true })
-          .limit(1)
-          .single();
+        // Usar el serviceId que viene en la acción
+        const serviceId = action.serviceId;
+        const serviceDate = action.serviceDate;
 
-        if (!nextService) {
+        if (!serviceId) {
           toast({
             title: "Error",
-            description: "No hay servicios programados",
+            description: "No tienes servicios asignados como director",
             variant: "destructive"
+          });
+          return;
+        }
+
+        // Verificar si la canción ya existe en el servicio
+        const { data: existing } = await supabase
+          .from('service_songs')
+          .select('id')
+          .eq('service_id', serviceId)
+          .eq('song_id', action.songId)
+          .maybeSingle();
+
+        if (existing) {
+          toast({
+            title: "⚠️ Canción ya agregada",
+            description: `"${action.songName}" ya está en este servicio`,
+            variant: "default"
           });
           return;
         }
@@ -325,7 +337,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
         const { error } = await supabase
           .from('service_songs')
           .insert({
-            service_id: nextService.id,
+            service_id: serviceId,
             song_id: action.songId
           });
 
@@ -336,14 +348,14 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
 
         toast({
           title: "✅ Canción agregada",
-          description: `"${action.songName}" agregada al servicio del ${new Date(nextService.service_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}`,
+          description: `"${action.songName}" agregada al servicio del ${new Date(serviceDate!).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}`,
         });
 
         // Send confirmation message from bot
         await supabase.from('chat_messages').insert({
           room_id: room.id,
           user_id: null,
-          message: `✅ Perfecto! Agregué "${action.songName}" al servicio del ${new Date(nextService.service_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}`,
+          message: `✅ Perfecto! Agregué "${action.songName}" al servicio del ${new Date(serviceDate!).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}`,
           is_bot: true
         });
 
@@ -438,11 +450,18 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
                         }`}
                       >
                         {(!isOwnMessage || isBotMessage) && (
-                          <p className="text-xs font-medium mb-1">
+                          <p className="text-xs font-medium mb-1 text-left">
                             {getUserDisplayName(message)}
                           </p>
                         )}
-                        <div className="text-sm whitespace-pre-wrap">{message.message}</div>
+                        <div 
+                          className="text-sm whitespace-pre-wrap text-left"
+                          dangerouslySetInnerHTML={{
+                            __html: message.message
+                              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                              .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="underline text-purple-900 hover:text-purple-700">$1</a>')
+                          }}
+                        />
                         
                         {/* Render action buttons if available */}
                         {message.actions && message.actions.length > 0 && (
@@ -452,7 +471,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
                                 key={idx}
                                 onClick={() => handleActionClick(action)}
                                 size="sm"
-                                className="bg-arcana-blue-gradient hover:opacity-90 text-white"
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-md"
                               >
                                 ➕ Agregar "{action.songName}"
                               </Button>

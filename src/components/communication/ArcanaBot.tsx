@@ -5,6 +5,7 @@ export interface BotAction {
   songId: string;
   songName: string;
   serviceDate?: string;
+  serviceId?: string;
 }
 
 interface BotResponse {
@@ -369,62 +370,165 @@ export class ArcanaBot {
   }
 
   private static async handleTurnosQuery(userId: string): Promise<BotResponse> {
+    console.log("ARCANA consultando turnos para usuario:", userId);
     try {
-      console.log("ARCANA consultando turnos para usuario:", userId);
-
-      // Buscar información del usuario en perfiles
+      // Obtener datos del usuario
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("full_name")
+        .select("full_name, email")
         .eq("id", userId)
         .single();
 
-      if (profileError || !profile) {
-        console.log("No se encontró perfil, buscando en tabla members");
-
-        // Buscar en la tabla members usando el email del usuario autenticado
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
-
-        if (userError || !user) {
-          return {
-            type: "turnos",
-            message: "🤖 Lo siento, no pude identificar tu usuario. Asegúrate de estar autenticado correctamente.",
-            expression: 'worried',
-          };
-        }
-
-        // Buscar en members por email
-        const { data: member, error: memberError } = await supabase
-          .from("members")
-          .select("nombres, apellidos")
-          .eq("email", user.email)
-          .single();
-
-        if (memberError || !member) {
-          return {
-            type: "turnos",
-            message:
-              "🤖 Lo siento, no encontré tu información en el sistema de integrantes. Contacta a tu líder para actualizar tus datos.",
-            expression: 'worried',
-          };
-        }
-
-        // Usar el nombre completo del member
-        const fullName = `${member.nombres} ${member.apellidos}`;
-        return await this.searchUserInServices(fullName);
+      if (profileError) {
+        console.error("Error obteniendo perfil:", profileError);
+        return {
+          type: "turnos",
+          message:
+            "🤖 Lo siento, no pude identificar tu perfil. Por favor verifica que tu cuenta esté configurada correctamente.",
+          expression: 'worried',
+        };
       }
 
-      // Usar el nombre del perfil
-      return await this.searchUserInServices(profile.full_name);
+      console.log("Perfil obtenido:", profile);
+
+      // Obtener grupos del usuario con instrumento
+      const { data: userGroups, error: groupsError } = await supabase
+        .from("group_members")
+        .select(
+          `
+          group_id,
+          instrument,
+          is_leader,
+          worship_groups (
+            id,
+            name
+          )
+        `,
+        )
+        .eq("user_id", userId)
+        .eq("is_active", true);
+
+      if (groupsError) {
+        console.error("Error obteniendo grupos:", groupsError);
+        return {
+          type: "turnos",
+          message:
+            "🤖 Lo siento, hubo un error consultando tus grupos. Por favor verifica tu configuración en el sistema.",
+          expression: 'worried',
+        };
+      }
+
+      console.log("Grupos del usuario:", userGroups);
+
+      if (!userGroups || userGroups.length === 0) {
+        return {
+          type: "turnos",
+          message:
+            "🎵 Actualmente no estás asignado a ningún grupo de alabanza.\n\n💡 Contacta a tu líder ministerial para que te asigne a un grupo.",
+          expression: 'worried',
+        };
+      }
+
+      // Obtener servicios asignados a los grupos del usuario
+      const groupIds = userGroups.map((g) => g.group_id);
+
+      const { data: services, error: servicesError } = await supabase
+        .from("services")
+        .select(
+          `
+          *,
+          worship_groups (
+            name
+          )
+        `,
+        )
+        .in("assigned_group_id", groupIds)
+        .gte("service_date", new Date().toISOString().split("T")[0])
+        .order("service_date", { ascending: true })
+        .limit(5);
+
+      if (servicesError) {
+        console.error("Error obteniendo servicios:", servicesError);
+        return {
+          type: "turnos",
+          message:
+            "🤖 Lo siento, hubo un error consultando los servicios. Por favor intenta nuevamente o consulta la agenda ministerial directamente.",
+          expression: 'worried',
+        };
+      }
+
+      console.log("Servicios encontrados:", services);
+
+      if (!services || services.length === 0) {
+        return {
+          type: "turnos",
+          message:
+            "🎵 Actualmente no tienes turnos programados.\n\n💡 Consulta la agenda ministerial para más información o contacta a tu líder.",
+          expression: 'worried',
+        };
+      }
+
+      // Construir mensaje con los próximos turnos
+      let mensaje = `👋 **Hola ${profile.full_name}!**\n\n`;
+      mensaje += `🎤 Encontré ${services.length} turno${services.length > 1 ? "s" : ""} programado${services.length > 1 ? "s" : ""} para ti:\n\n`;
+
+      services.forEach((service, index) => {
+        const serviceDate = new Date(service.service_date);
+        const formattedDate = serviceDate.toLocaleDateString("es-ES", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+
+        // Indicar si es el próximo turno
+        const isNext = index === 0;
+        const prefix = isNext ? "🎯 **PRÓXIMO TURNO:**" : `📅 Turno ${index + 1}:`;
+
+        mensaje += `${prefix}\n`;
+        mensaje += `📍 **${service.title || "Servicio de Adoración"}**\n`;
+        mensaje += `📆 ${formattedDate}\n`;
+
+        if (service.worship_groups?.name) {
+          mensaje += `🎵 Grupo: ${service.worship_groups.name}\n`;
+        }
+
+        if (service.leader) {
+          mensaje += `👤 Director: ${service.leader}\n`;
+        }
+
+        if (service.location) {
+          mensaje += `📍 Lugar: ${service.location}\n`;
+        }
+
+        // Obtener instrumento del usuario para este grupo
+        const userGroupInfo = userGroups.find((g) => g.group_id === service.assigned_group_id);
+        if (userGroupInfo) {
+          mensaje += `🎸 Tu instrumento: ${userGroupInfo.instrument}\n`;
+          if (userGroupInfo.is_leader) {
+            mensaje += `⭐ Eres director de este grupo\n`;
+          }
+        }
+
+        mensaje += "\n";
+      });
+
+      mensaje += "💡 **Recuerda:**\n";
+      mensaje += "• 🎵 Prepara tu instrumento con anticipación\n";
+      mensaje += "• 📖 Revisa el repertorio asignado\n";
+      mensaje += "• ⏰ Llega con tiempo para el ensayo previo\n";
+
+      return {
+        type: "turnos",
+        message: mensaje,
+        expression: 'happy',
+      };
     } catch (error) {
       console.error("Error consultando turnos:", error);
       return {
         type: "turnos",
         message:
-          "🤖 Lo siento, hubo un error consultando tus turnos. Intenta nuevamente o consulta directamente la agenda ministerial.",
+          "🤖 Lo siento, hubo un error consultando los turnos. Por favor intenta nuevamente o consulta la agenda ministerial directamente.\n\n🔗 **[Ver Agenda Ministerial](/agenda)**",
         expression: 'worried',
       };
     }
@@ -673,14 +777,28 @@ export class ArcanaBot {
         };
       }
 
-      // Obtener próximo servicio
-      const { data: nextService } = await supabase
-        .from("services")
-        .select("service_date")
-        .gte("service_date", new Date().toISOString().split("T")[0])
-        .order("service_date", { ascending: true })
-        .limit(1)
-        .single();
+      // Obtener próximo servicio del usuario (como director)
+      const { data: userGroups } = await supabase
+        .from("group_members")
+        .select("group_id, is_leader")
+        .eq("user_id", await supabase.auth.getUser().then(u => u.data.user?.id))
+        .eq("is_active", true)
+        .eq("is_leader", true);
+
+      const userGroupIds = userGroups?.map(g => g.group_id) || [];
+      
+      let nextService = null;
+      if (userGroupIds.length > 0) {
+        const { data } = await supabase
+          .from("services")
+          .select("id, service_date, title")
+          .in("assigned_group_id", userGroupIds)
+          .gte("service_date", new Date().toISOString().split("T")[0])
+          .order("service_date", { ascending: true })
+          .limit(1)
+          .single();
+        nextService = data;
+      }
 
       const serviceDate = nextService?.service_date;
 
@@ -698,32 +816,34 @@ export class ArcanaBot {
           mensaje += `⭐ Dificultad: ${difficulty}\n`;
         }
 
-        // Agregar enlaces útiles
-        const links = [];
-        if (cancion.youtube_link) links.push(`🎥 YouTube`);
-        if (cancion.spotify_link) links.push(`🎧 Spotify`);
-        links.push(`📖 Ver detalles en el repertorio`);
-
-        if (links.length > 0) {
-          mensaje += `🔗 ${links.join(" • ")}\n`;
+        // Agregar enlaces clicables
+        if (cancion.youtube_link) {
+          mensaje += `🔗 [Ver en YouTube](${cancion.youtube_link})\n`;
+        }
+        if (cancion.spotify_link) {
+          mensaje += `🔗 [Escuchar en Spotify](${cancion.spotify_link})\n`;
         }
 
         mensaje += "\n";
       });
 
-      // Agregar opciones adicionales
-      mensaje += "💡 **Opciones disponibles:**\n";
-      mensaje += "• 📖 Ver Repertorio Completo\n";
-      mensaje += "• ➕ Agregar Nueva Canción\n";
-      mensaje += `• 🗓️ Haz clic en los botones para agregar al próximo servicio${serviceDate ? ` (${new Date(serviceDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })})` : ''}`;
+      // Agregar información sobre botones solo si es director
+      if (userGroupIds.length > 0 && nextService) {
+        mensaje += `💡 **Haz clic en los botones para agregar al servicio del ${new Date(serviceDate!).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}**\n\n`;
+      } else {
+        mensaje += "💡 **Opciones disponibles:**\n";
+        mensaje += "• 📖 Ver Repertorio Completo\n";
+        mensaje += "• Solo los directores pueden agregar canciones a los servicios\n";
+      }
 
-      // Crear botones para cada canción encontrada
-      const actions: BotAction[] = canciones.map((c: any) => ({
+      // Crear botones solo si es director y tiene servicios asignados
+      const actions: BotAction[] = userGroupIds.length > 0 && nextService ? canciones.map((c: any) => ({
         type: 'select_song',
         songId: c.id,
         songName: c.title,
-        serviceDate
-      }));
+        serviceDate: nextService.service_date,
+        serviceId: nextService.id
+      })) : [];
 
       return {
         type: "canciones",
