@@ -76,7 +76,7 @@ const DirectorChangeRequest: React.FC<DirectorChangeRequestProps> = ({
       const { data: membersData, error: membersError } = await supabase
         .from('members')
         .select('id, nombres, apellidos, celular, email')
-        .eq('cargo', 'Director de Alabanza');
+        .in('cargo', ['director_alabanza', 'directora_alabanza']);
 
       if (membersError) throw membersError;
 
