@@ -11,10 +11,12 @@ import {
   Trash2, 
   Bell,
   Save,
-  X
+  X,
+  Eye
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ServiceNotificationOverlay from "@/components/notifications/ServiceNotificationOverlay";
 import {
   Dialog,
   DialogContent,
@@ -65,6 +67,7 @@ const ScheduledNotifications = () => {
   const [notifications, setNotifications] = useState<ScheduledNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [editingNotification, setEditingNotification] = useState<ScheduledNotification | null>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -232,10 +235,20 @@ const ScheduledNotifications = () => {
             Configura notificaciones automáticas que se enviarán según el horario programado
           </p>
         </div>
-        <Button onClick={openCreateDialog} className="flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          Nueva Notificación
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={() => setShowPreview(true)} 
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Eye className="w-4 h-4" />
+            Preview Semanal
+          </Button>
+          <Button onClick={openCreateDialog} className="flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            Nueva Notificación
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6">
@@ -408,6 +421,14 @@ const ScheduledNotifications = () => {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Preview Overlay */}
+      {showPreview && (
+        <ServiceNotificationOverlay 
+          forceShow={true} 
+          onClose={() => setShowPreview(false)} 
+        />
+      )}
     </div>
   );
 };

@@ -49,14 +49,27 @@ interface ServiceProgramNotification {
   special_event?: string;
 }
 
-const ServiceNotificationOverlay = () => {
-  const [isVisible, setIsVisible] = useState(false);
+interface ServiceNotificationOverlayProps {
+  forceShow?: boolean;
+  onClose?: () => void;
+}
+
+const ServiceNotificationOverlay = ({ forceShow = false, onClose }: ServiceNotificationOverlayProps = {}) => {
+  const [isVisible, setIsVisible] = useState(forceShow);
   const [isAnimating, setIsAnimating] = useState(false);
   const [services, setServices] = useState<WeekendService[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!forceShow);
   const serviceCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   useEffect(() => {
+    // Si forceShow es true (preview mode), siempre cargar los servicios
+    if (forceShow) {
+      setIsVisible(true);
+      setIsAnimating(true);
+      fetchWeekendServices();
+      return;
+    }
+
     // Limpiar localStorage al montar el componente para evitar conflictos
     localStorage.removeItem('serviceNotificationDismissed');
     localStorage.removeItem('serviceNotificationLastShown');
@@ -290,8 +303,13 @@ const ServiceNotificationOverlay = () => {
     setIsAnimating(false);
     setTimeout(() => {
       setIsVisible(false);
-      localStorage.setItem('serviceNotificationDismissed', 'true');
-      localStorage.setItem('serviceNotificationLastShown', new Date().toDateString());
+      if (!forceShow) {
+        localStorage.setItem('serviceNotificationDismissed', 'true');
+        localStorage.setItem('serviceNotificationLastShown', new Date().toDateString());
+      }
+      if (onClose) {
+        onClose();
+      }
     }, 300);
   };
 
