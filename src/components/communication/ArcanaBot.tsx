@@ -1,9 +1,17 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export interface BotAction {
+  type: 'select_song';
+  songId: string;
+  songName: string;
+  serviceDate?: string;
+}
+
 interface BotResponse {
   type: "turnos" | "ensayos" | "canciones" | "general";
   message: string;
   expression?: 'thinking' | 'happy' | 'worried';
+  actions?: BotAction[];
 }
 
 export class ArcanaBot {
@@ -284,24 +292,40 @@ export class ArcanaBot {
         };
       }
 
-      // Si hay múltiples canciones, mostrar opciones
+      // Obtener próximo servicio
+      const { data: nextService } = await supabase
+        .from("services")
+        .select("service_date")
+        .gte("service_date", new Date().toISOString().split("T")[0])
+        .order("service_date", { ascending: true })
+        .limit(1)
+        .single();
+
+      const serviceDate = nextService?.service_date;
+
+      // Si hay múltiples canciones, mostrar opciones con botones
       if (canciones.length > 1) {
         let mensaje = `🎵 Encontré ${canciones.length} canciones similares a "${nombreCancion}":\n\n`;
         canciones.forEach((cancion, index) => {
           mensaje += `${index + 1}. **${cancion.title}**`;
           if (cancion.artist) mensaje += ` - ${cancion.artist}`;
-          mensaje += `\n📖 Ver detalles en el repertorio\n\n`;
+          mensaje += `\n`;
         });
-        mensaje += "🤖 Para seleccionar una canción específica para un servicio:\n";
-        mensaje += "1. 📅 Ve a la Agenda Ministerial\n";
-        mensaje += "2. 🎵 Selecciona el servicio deseado\n";
-        mensaje += "3. ➕ Agrega la canción desde ahí\n\n";
-        mensaje += '💬 O especifica mejor el nombre: "ARCANA seleccionar [título exacto] para próximo servicio"';
+        
+        mensaje += `\n💡 Haz clic en el botón para agregarla al próximo servicio${serviceDate ? ` (${new Date(serviceDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })})` : ''}.`;
+
+        const actions: BotAction[] = canciones.map((c: any) => ({
+          type: 'select_song',
+          songId: c.id,
+          songName: c.title,
+          serviceDate
+        }));
 
         return {
           type: "canciones",
           message: mensaje,
           expression: 'happy',
+          actions
         };
       }
 
@@ -312,23 +336,27 @@ export class ArcanaBot {
       if (cancion.genre) mensaje += `🎼 **Género:** ${cancion.genre}\n`;
       if (cancion.key_signature) mensaje += `🎹 **Tono:** ${cancion.key_signature}\n\n`;
 
-      mensaje += "🤖 **Para seleccionar esta canción para un servicio:**\n";
-      mensaje += "1. 📅 Ve a la Agenda Ministerial\n";
-      mensaje += "2. 🎵 Busca el servicio donde quieres incluirla\n";
-      mensaje += "3. ➕ Agrega la canción desde el formulario del servicio\n\n";
-      mensaje += `📖 Ver detalles en el repertorio\n`;
+      mensaje += `💡 Haz clic en el botón para agregarla al próximo servicio${serviceDate ? ` (${new Date(serviceDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })})` : ''}.`;
 
       // Agregar enlaces a YouTube/Spotify si están disponibles
       if (cancion.youtube_link || cancion.spotify_link) {
-        mensaje += "\n🔗 **Enlaces:**\n";
+        mensaje += "\n\n🔗 **Enlaces:**\n";
         if (cancion.youtube_link) mensaje += `• 🎥 Ver en YouTube\n`;
         if (cancion.spotify_link) mensaje += `• 🎧 Escuchar en Spotify\n`;
       }
+
+      const actions: BotAction[] = [{
+        type: 'select_song',
+        songId: cancion.id,
+        songName: cancion.title,
+        serviceDate
+      }];
 
       return {
         type: "canciones",
         message: mensaje,
         expression: 'happy',
+        actions
       };
     } catch (error) {
       console.error("Error en selección de canción:", error);
@@ -954,17 +982,25 @@ export class ArcanaBot {
     try {
       console.log("ARCANA enviando respuesta:", response.message.substring(0, 50) + "...");
 
+      // Preparar el mensaje con las acciones si existen
+      const messageData: any = {
+        room_id: roomId,
+        user_id: null, // Bot messages will have null user_id
+        message: response.message,
+        is_bot: true,
+        message_type: "text",
+        is_deleted: false,
+      };
+
+      // Agregar las acciones como metadata si existen
+      if (response.actions && response.actions.length > 0) {
+        // Note: La tabla chat_messages necesita tener una columna 'actions' de tipo JSONB
+        // Por ahora, las guardaremos temporalmente en el frontend
+        console.log("Acciones incluidas en la respuesta:", response.actions);
+      }
+
       // Usar user_id null para el bot
-      const { error } = await supabase.from("chat_messages").insert([
-        {
-          room_id: roomId,
-          user_id: null, // Bot messages will have null user_id
-          message: response.message,
-          is_bot: true,
-          message_type: "text",
-          is_deleted: false,
-        },
-      ]);
+      const { error } = await supabase.from("chat_messages").insert([messageData]);
 
       if (error) {
         console.error("Error enviando respuesta del bot:", error);

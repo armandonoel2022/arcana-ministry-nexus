@@ -7,8 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Send, Users, Bot } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { ArcanaBot } from "./ArcanaBot";
+import { ArcanaBot, BotAction } from "./ArcanaBot";
 import { ArcanaAvatar } from "./ArcanaAvatar";
+import { VoiceRecognition } from "./VoiceRecognition";
+import { VoiceNoteRecorder } from "./VoiceNoteRecorder";
 
 interface ChatRoomData {
   id: string;
@@ -25,6 +27,7 @@ interface Message {
   created_at: string;
   user_id: string | null; // Allow null for bot messages
   is_bot?: boolean;
+  actions?: BotAction[];
   profiles?: {
     full_name: string;
   };
@@ -142,8 +145,10 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
     channelRef.current = channel;
   };
 
-  const sendMessage = async () => {
-    if (!newMessage.trim()) {
+  const sendMessage = async (messageText?: string) => {
+    const textToSend = messageText || newMessage.trim();
+    
+    if (!textToSend) {
       console.log('No se puede enviar mensaje vacío');
       return;
     }
@@ -167,10 +172,8 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
       }
     }
 
-    const messageText = newMessage.trim();
-
     try {
-      console.log('Enviando mensaje:', messageText);
+      console.log('Enviando mensaje:', textToSend);
       
       // Enviar el mensaje del usuario
       const { error } = await supabase
@@ -178,7 +181,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
         .insert({
           room_id: room.id,
           user_id: userId,
-          message: messageText,
+          message: textToSend,
           is_bot: false
         });
 
@@ -194,7 +197,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
       // Procesar mensaje para ver si ARCANA debe responder
       console.log('Procesando mensaje para ARCANA...');
       const botResponse = await ArcanaBot.processMessage(
-        messageText,
+        textToSend,
         room.id,
         userId
       );
@@ -212,6 +215,19 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
           try {
             await ArcanaBot.sendBotResponse(room.id, botResponse);
             console.log('Respuesta de ARCANA enviada exitosamente');
+            
+            // Si hay acciones, agregar el mensaje localmente con las acciones
+            if (botResponse.actions && botResponse.actions.length > 0) {
+              const botMessageWithActions: Message = {
+                id: `temp-${Date.now()}`,
+                message: botResponse.message,
+                created_at: new Date().toISOString(),
+                user_id: null,
+                is_bot: true,
+                actions: botResponse.actions
+              };
+              setMessages(prev => [...prev, botMessageWithActions]);
+            }
             
             // Mantener la expresión por un momento más
             setTimeout(() => {
@@ -272,6 +288,70 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
       return getBotDisplayName();
     }
     return message.profiles?.full_name || 'Usuario';
+  };
+
+  const handleVoiceCommand = (command: string) => {
+    console.log('Comando de voz recibido:', command);
+    sendMessage(`ARCANA ${command}`);
+  };
+
+  const handleVoiceNote = (transcript: string) => {
+    console.log('Nota de voz transcrita:', transcript);
+    sendMessage(transcript);
+  };
+
+  const handleActionClick = async (action: BotAction) => {
+    if (action.type === 'select_song') {
+      try {
+        // Add song to next service
+        const { data: nextService } = await supabase
+          .from('ministerial_agenda')
+          .select('id, service_date')
+          .gte('service_date', new Date().toISOString())
+          .order('service_date', { ascending: true })
+          .limit(1)
+          .single();
+
+        if (!nextService) {
+          toast({
+            title: "Error",
+            description: "No hay servicios programados",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        const { error } = await supabase
+          .from('selected_songs')
+          .insert({
+            service_id: nextService.id,
+            song_id: action.songId
+          });
+
+        if (error) throw error;
+
+        toast({
+          title: "✅ Canción agregada",
+          description: `"${action.songName}" agregada al servicio del ${new Date(nextService.service_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}`,
+        });
+
+        // Send confirmation message from bot
+        await supabase.from('chat_messages').insert({
+          room_id: room.id,
+          user_id: null,
+          message: `✅ Perfecto! Agregué "${action.songName}" al servicio del ${new Date(nextService.service_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}`,
+          is_bot: true
+        });
+
+      } catch (error) {
+        console.error('Error agregando canción:', error);
+        toast({
+          title: "Error",
+          description: "No se pudo agregar la canción al servicio",
+          variant: "destructive"
+        });
+      }
+    }
   };
 
   if (loading) {
@@ -359,6 +439,22 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
                           </p>
                         )}
                         <div className="text-sm whitespace-pre-wrap">{message.message}</div>
+                        
+                        {/* Render action buttons if available */}
+                        {message.actions && message.actions.length > 0 && (
+                          <div className="mt-3 flex flex-col gap-2">
+                            {message.actions.map((action, idx) => (
+                              <Button
+                                key={idx}
+                                onClick={() => handleActionClick(action)}
+                                size="sm"
+                                className="bg-arcana-blue-gradient hover:opacity-90 text-white"
+                              >
+                                ➕ Agregar "{action.songName}"
+                              </Button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <p className={`text-xs text-gray-500 mt-1 ${isOwnMessage && !isBotMessage ? 'text-right' : 'text-left'}`}>
                         {formatTime(message.created_at)}
@@ -380,17 +476,24 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
 
           {/* Message Input */}
           <div className="border-t p-4 sticky bottom-0 bg-white/95 backdrop-blur">
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-end">
+              <VoiceRecognition 
+                onCommand={handleVoiceCommand}
+                isEnabled={true}
+              />
+              <VoiceNoteRecorder 
+                onVoiceNote={handleVoiceNote}
+              />
               <Input
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 onFocus={() => setTimeout(scrollToBottom, 50)}
-                placeholder="Escribe tu mensaje... (prueba: ARCANA ayuda)"
+                placeholder="Escribe o habla... (prueba: ARCANA ayuda)"
                 className="flex-1"
               />
               <Button
-                onClick={sendMessage}
+                onClick={() => sendMessage()}
                 disabled={!newMessage.trim()}
                 className="bg-arcana-blue-gradient hover:opacity-90"
               >
