@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { UserCheck, MessageSquare, History, Eye } from "lucide-react";
 import DirectorRequestResponse from '@/components/agenda/DirectorRequestResponse';
+import DirectorReplacementHistory from '@/components/agenda/DirectorReplacementHistory';
 
 const DirectorReplacements = () => {
   const handlePreviewRequest = () => {
@@ -113,23 +114,7 @@ const DirectorReplacements = () => {
         </TabsContent>
 
         <TabsContent value="history" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Historial de Solicitudes</CardTitle>
-              <CardDescription>
-                Historial completo de todas las solicitudes de reemplazo
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-gray-500">
-                <History className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <p>Funcionalidad de historial próximamente</p>
-                <p className="text-sm mt-2">
-                  Aquí podrás ver el historial completo de solicitudes de reemplazo
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <DirectorReplacementHistory />
         </TabsContent>
       </Tabs>
     </div>
