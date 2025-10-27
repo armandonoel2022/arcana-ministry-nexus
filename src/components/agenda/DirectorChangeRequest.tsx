@@ -84,6 +84,10 @@ const DirectorChangeRequest: React.FC<DirectorChangeRequestProps> = ({
       if (error) throw error;
       
       setAvailableDirectors(data || []);
+      // Si el valor seleccionado anterior no pertenece a la lista actual, reiniciarlo
+      if (!data?.some((d: any) => d.id === selectedDirector)) {
+        setSelectedDirector('');
+      }
     } catch (error) {
       console.error('Error fetching available directors:', error);
       toast.error('Error al cargar directores disponibles');
@@ -122,6 +126,14 @@ const DirectorChangeRequest: React.FC<DirectorChangeRequestProps> = ({
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
+
+      // Validar que el director seleccionado exista en la lista disponible (pertenezca a profiles)
+      const isValidSelection = availableDirectors.some(d => d.id === selectedDirector);
+      if (!isValidSelection) {
+        toast.error('Selecciona un director válido');
+        setIsLoading(false);
+        return;
+      }
 
       const { error } = await supabase
         .from('director_replacement_requests')
@@ -168,6 +180,8 @@ const DirectorChangeRequest: React.FC<DirectorChangeRequestProps> = ({
 
   const handleRequestForm = () => {
     setShowRequestForm(true);
+    // Reiniciar selección para evitar IDs obsoletos
+    setSelectedDirector('');
     fetchAvailableDirectors();
   };
 
