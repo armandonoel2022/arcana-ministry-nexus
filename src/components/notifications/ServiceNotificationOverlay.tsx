@@ -233,18 +233,8 @@ const ServiceNotificationOverlay = ({
             let members: any[] = [];
             let directorProfile: any = null;
 
-            if (service.leader) {
-              const { data: profileData } = await supabase
-                .from('profiles')
-                .select('id, full_name, photo_url')
-                .ilike('full_name', `%${service.leader}%`)
-                .limit(1)
-                .maybeSingle();
-              
-              if (profileData) {
-                directorProfile = profileData;
-              }
-            }
+            // Director profile will be derived from group_members after mapping
+
 
             if (service.assigned_group_id) {
               const { data: membersData, error: membersError } = await supabase
@@ -255,24 +245,33 @@ const ServiceNotificationOverlay = ({
 
               if (!membersError && membersData && membersData.length > 0) {
                 const userIds = membersData.map(m => m.user_id);
-                
-                const { data: profilesData } = await supabase
-                  .from('profiles')
-                  .select('id, full_name, photo_url')
+
+                const { data: membersProfiles } = await supabase
+                  .from('members')
+                  .select('id, nombres, apellidos, photo_url')
                   .in('id', userIds);
-                
-                const profilesMap = new Map(
-                  profilesData?.map(p => [p.id, p]) || []
+
+                const profileMap = new Map(
+                  (membersProfiles || []).map((p: any) => [p.id, {
+                    id: p.id,
+                    full_name: ((p.nombres || '') + ' ' + (p.apellidos || '')).trim(),
+                    photo_url: p.photo_url
+                  }])
                 );
-                
+
                 members = membersData.map(member => ({
                   ...member,
-                  profiles: profilesMap.get(member.user_id) || {
+                  profiles: profileMap.get(member.user_id) || {
                     id: member.user_id,
                     full_name: 'Desconocido',
                     photo_url: null
                   }
                 }));
+
+                const leader = members.find(m => m.is_leader);
+                if (!directorProfile && leader?.profiles) {
+                  directorProfile = leader.profiles;
+                }
               }
             }
 
@@ -679,39 +678,6 @@ const ServiceNotificationOverlay = ({
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-2 mt-6 pt-4 border-t border-gray-200">
-          <Button
-            size="sm"
-            onClick={() => handleConfirmAttendance(service.id)}
-            className={`flex items-center gap-2 ${
-              confirmedServices.has(service.id)
-                ? 'bg-green-500 hover:bg-green-600'
-                : 'bg-blue-500 hover:bg-blue-600'
-            }`}
-          >
-            <CheckCircle className="w-4 h-4" />
-            {confirmedServices.has(service.id) ? 'Confirmado' : 'Confirmar Asistencia'}
-          </Button>
-          
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => handleAskArcana(service)}
-            className="flex items-center gap-2"
-          >
-            <MessageCircle className="w-4 h-4" />
-            Consultar ARCANA
-          </Button>
-
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => handleVoiceReminder(service)}
-            className="flex items-center gap-2"
-          >
-            <Mic className="w-4 h-4" />
-            Recordatorio Voz
-          </Button>
-
           <Button
             size="sm"
             variant="outline"
