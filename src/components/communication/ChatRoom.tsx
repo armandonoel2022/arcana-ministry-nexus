@@ -304,11 +304,14 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
   const handleActionClick = async (action: BotAction) => {
     if (action.type === 'select_song') {
       try {
+        console.log('Acción recibida:', action);
+        
         // Usar el serviceId que viene en la acción
         const serviceId = action.serviceId;
         const serviceDate = action.serviceDate;
 
         if (!serviceId) {
+          console.error('No serviceId en la acción');
           toast({
             title: "Error",
             description: "No tienes servicios asignados como director",
@@ -317,13 +320,24 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
           return;
         }
 
+        console.log('Intentando agregar canción:', {
+          serviceId,
+          songId: action.songId,
+          songName: action.songName
+        });
+
         // Verificar si la canción ya existe en el servicio
-        const { data: existing } = await supabase
+        const { data: existing, error: checkError } = await supabase
           .from('service_songs')
           .select('id')
           .eq('service_id', serviceId)
           .eq('song_id', action.songId)
           .maybeSingle();
+
+        if (checkError) {
+          console.error('Error verificando canción existente:', checkError);
+          throw checkError;
+        }
 
         if (existing) {
           toast({
@@ -335,17 +349,22 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
         }
 
         // Insertar en la tabla service_songs
-        const { error } = await supabase
+        console.log('Insertando en service_songs...');
+        const { data: inserted, error } = await supabase
           .from('service_songs')
           .insert({
             service_id: serviceId,
             song_id: action.songId
-          });
+          })
+          .select();
 
         if (error) {
-          console.error('Error agregando canción:', error);
+          console.error('Error insertando en service_songs:', error);
+          console.error('Detalles del error:', error.message, error.details, error.hint);
           throw error;
         }
+
+        console.log('Canción insertada exitosamente:', inserted);
 
         toast({
           title: "✅ Canción agregada",
@@ -361,10 +380,10 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
         });
 
       } catch (error) {
-        console.error('Error agregando canción:', error);
+        console.error('Error completo agregando canción:', error);
         toast({
           title: "Error",
-          description: "No se pudo agregar la canción al servicio",
+          description: `No se pudo agregar la canción: ${error.message || 'Error desconocido'}`,
           variant: "destructive"
         });
       }
