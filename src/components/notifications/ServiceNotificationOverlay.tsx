@@ -254,18 +254,29 @@ const ServiceNotificationOverlay = ({ forceShow = false, onClose }: ServiceNotif
                   id,
                   user_id,
                   instrument,
-                  is_leader,
-                  profiles (
-                    id,
-                    full_name,
-                    photo_url
-                  )
+                  is_leader
                 `)
                 .eq('group_id', service.assigned_group_id)
                 .eq('is_active', true);
 
               if (!membersError && membersData) {
-                members = membersData;
+                // Fetch profiles separately for each member
+                const membersWithProfiles = await Promise.all(
+                  membersData.map(async (member) => {
+                    const { data: profileData } = await supabase
+                      .from('profiles')
+                      .select('id, full_name, photo_url')
+                      .eq('id', member.user_id)
+                      .single();
+                    
+                    return {
+                      ...member,
+                      profiles: profileData || { id: member.user_id, full_name: 'Desconocido', photo_url: null }
+                    };
+                  })
+                );
+                
+                members = membersWithProfiles;
               }
             }
 

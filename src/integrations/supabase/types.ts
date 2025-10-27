@@ -897,6 +897,7 @@ export type Database = {
           needs_password_change: boolean | null
           notes: string | null
           phone: string | null
+          photo_url: string | null
           repertory_view_preference: string | null
           role: Database["public"]["Enums"]["user_role"] | null
           updated_at: string | null
@@ -918,6 +919,7 @@ export type Database = {
           needs_password_change?: boolean | null
           notes?: string | null
           phone?: string | null
+          photo_url?: string | null
           repertory_view_preference?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string | null
@@ -939,6 +941,7 @@ export type Database = {
           needs_password_change?: boolean | null
           notes?: string | null
           phone?: string | null
+          photo_url?: string | null
           repertory_view_preference?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string | null
