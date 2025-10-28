@@ -43,7 +43,7 @@ interface Service {
   }[];
 }
 
-type FilterType = 'current_weekend' | 'month' | 'all' | 'my_agenda';
+type FilterType = 'current_weekend' | 'month' | 'all' | 'my_agenda' | 'year_2025' | 'year_2026';
 
 interface AgendaTableProps {
   initialFilter?: string | null;
@@ -202,6 +202,20 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
         );
         break;
       
+      case 'year_2025':
+        filtered = services.filter(service => {
+          const year = new Date(service.service_date).getFullYear();
+          return year === 2025;
+        });
+        break;
+      
+      case 'year_2026':
+        filtered = services.filter(service => {
+          const year = new Date(service.service_date).getFullYear();
+          return year === 2026;
+        });
+        break;
+      
       case 'all':
       default:
         filtered = services;
@@ -279,6 +293,8 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
       case 'current_weekend': return 'Fin de Semana Actual';
       case 'month': return 'Mis Servicios - Este Mes';
       case 'my_agenda': return 'Mi Agenda - Fin de Semana';
+      case 'year_2025': return 'Servicios 2025';
+      case 'year_2026': return 'Servicios 2026';
       case 'all': return 'Todos los Servicios';
       default: return 'Filtro';
     }
@@ -312,37 +328,57 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={filter === 'current_weekend' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilter('current_weekend')}
-            >
-              Fin de Semana Actual
-            </Button>
-            <Button
-              variant={filter === 'month' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilter('month')}
-            >
-              Este Mes
-            </Button>
-            <Button
-              variant={filter === 'my_agenda' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilter('my_agenda')}
-              className="flex items-center gap-1"
-            >
-              <User className="w-4 h-4" />
-              Ver Mi Agenda
-            </Button>
-            <Button
-              variant={filter === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilter('all')}
-            >
-              Todos los Servicios
-            </Button>
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={filter === 'current_weekend' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('current_weekend')}
+              >
+                Fin de Semana Actual
+              </Button>
+              <Button
+                variant={filter === 'month' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('month')}
+              >
+                Este Mes
+              </Button>
+              <Button
+                variant={filter === 'my_agenda' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('my_agenda')}
+                className="flex items-center gap-1"
+              >
+                <User className="w-4 h-4" />
+                Ver Mi Agenda
+              </Button>
+              <Button
+                variant={filter === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('all')}
+              >
+                Todos los Servicios
+              </Button>
+            </div>
+            
+            <div className="flex flex-wrap gap-2 pt-2 border-t">
+              <span className="text-sm text-gray-600 font-medium self-center mr-2">Por Año:</span>
+              <Button
+                variant={filter === 'year_2025' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('year_2025')}
+              >
+                2025
+              </Button>
+              <Button
+                variant={filter === 'year_2026' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilter('year_2026')}
+              >
+                2026
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
