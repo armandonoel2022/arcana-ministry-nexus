@@ -116,6 +116,14 @@ const DirectorReplacementNotificationOverlay = () => {
 
   const { metadata } = notification;
 
+  // Log photo URLs for debugging
+  console.log('Director Replacement Notification:', {
+    original_director: metadata.original_director,
+    original_photo: metadata.original_director_photo,
+    new_director: metadata.new_director,
+    new_photo: metadata.new_director_photo
+  });
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300 overflow-y-auto">
       <div className="w-full max-w-3xl my-auto">
@@ -150,7 +158,13 @@ const DirectorReplacementNotificationOverlay = () => {
               <div className="flex flex-col items-center space-y-2 md:space-y-3 p-2 md:p-4 bg-gray-50 rounded-xl">
                 <div className="text-xs md:text-sm font-medium text-gray-600 uppercase tracking-wide">Solicitó</div>
                 <Avatar className="w-16 h-16 md:w-24 md:h-24 border-2 md:border-4 border-gray-300 shadow-lg">
-                  <AvatarImage src={metadata.original_director_photo} alt={metadata.original_director} />
+                  {metadata.original_director_photo ? (
+                    <AvatarImage 
+                      src={metadata.original_director_photo} 
+                      alt={metadata.original_director}
+                      crossOrigin="anonymous"
+                    />
+                  ) : null}
                   <AvatarFallback className="bg-gradient-to-br from-gray-400 to-gray-600 text-white text-lg md:text-2xl">
                     {metadata.original_director?.split(' ').map(n => n[0]).join('').substring(0, 2)}
                   </AvatarFallback>
@@ -172,7 +186,13 @@ const DirectorReplacementNotificationOverlay = () => {
               <div className="flex flex-col items-center space-y-2 md:space-y-3 p-2 md:p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border-2 border-blue-300">
                 <div className="text-xs md:text-sm font-medium text-blue-700 uppercase tracking-wide">Aceptó</div>
                 <Avatar className="w-16 h-16 md:w-24 md:h-24 border-2 md:border-4 border-blue-500 shadow-lg ring-2 md:ring-4 ring-blue-200">
-                  <AvatarImage src={metadata.new_director_photo} alt={metadata.new_director} />
+                  {metadata.new_director_photo ? (
+                    <AvatarImage 
+                      src={metadata.new_director_photo} 
+                      alt={metadata.new_director}
+                      crossOrigin="anonymous"
+                    />
+                  ) : null}
                   <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-700 text-white text-lg md:text-2xl">
                     {metadata.new_director?.split(' ').map(n => n[0]).join('').substring(0, 2)}
                   </AvatarFallback>
