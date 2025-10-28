@@ -237,44 +237,44 @@ const ServiceNotificationOverlay = ({
 
             // First, try to find director by name in members table
             if (service.leader) {
-              const parts = service.leader.trim().split(/\s+/);
-              const first = parts[0];
-              const last = parts.slice(1).join(' ');
+              // Try to match the full name by searching in concatenated nombres + apellidos
+              const { data: exactMatch } = await supabase
+                .from('members')
+                .select('id, nombres, apellidos, photo_url')
+                .eq('is_active', true);
 
-              if (first) {
-                // Try exact match with first and last name
-                if (last) {
-                  const { data: candidate } = await supabase
-                    .from('members')
-                    .select('id, nombres, apellidos, photo_url')
-                    .ilike('nombres', `%${first}%`)
-                    .ilike('apellidos', `%${last}%`)
-                    .eq('is_active', true)
-                    .limit(1)
-                    .maybeSingle();
-                  if (candidate) {
-                    directorProfile = {
-                      id: candidate.id,
-                      full_name: `${candidate.nombres || ''} ${candidate.apellidos || ''}`.trim(),
-                      photo_url: candidate.photo_url
-                    };
-                  }
-                }
+              if (exactMatch && exactMatch.length > 0) {
+                // Find the member whose full name matches the leader name
+                const leaderName = service.leader.trim().toLowerCase();
+                const matchedMember = exactMatch.find(m => {
+                  const fullName = `${m.nombres || ''} ${m.apellidos || ''}`.trim().toLowerCase();
+                  return fullName === leaderName || 
+                         fullName.includes(leaderName) ||
+                         leaderName.includes(fullName);
+                });
 
-                // Fallback: try just first name
-                if (!directorProfile) {
-                  const { data: candidate2 } = await supabase
-                    .from('members')
-                    .select('id, nombres, apellidos, photo_url')
-                    .ilike('nombres', `%${first}%`)
-                    .eq('is_active', true)
-                    .limit(1)
-                    .maybeSingle();
-                  if (candidate2) {
+                if (matchedMember) {
+                  directorProfile = {
+                    id: matchedMember.id,
+                    full_name: `${matchedMember.nombres || ''} ${matchedMember.apellidos || ''}`.trim(),
+                    photo_url: matchedMember.photo_url
+                  };
+                } else {
+                  // Fallback: try partial word matching
+                  const parts = service.leader.trim().split(/\s+/);
+                  const firstWord = parts[0].toLowerCase();
+                  
+                  const partialMatch = exactMatch.find(m => {
+                    const nombres = (m.nombres || '').toLowerCase();
+                    const apellidos = (m.apellidos || '').toLowerCase();
+                    return nombres.includes(firstWord) || apellidos.includes(firstWord);
+                  });
+
+                  if (partialMatch) {
                     directorProfile = {
-                      id: candidate2.id,
-                      full_name: `${candidate2.nombres || ''} ${candidate2.apellidos || ''}`.trim(),
-                      photo_url: candidate2.photo_url
+                      id: partialMatch.id,
+                      full_name: `${partialMatch.nombres || ''} ${partialMatch.apellidos || ''}`.trim(),
+                      photo_url: partialMatch.photo_url
                     };
                   }
                 }
