@@ -7,6 +7,7 @@ import AddSongForm from '@/components/songs/AddSongForm';
 import CSVUpload from '@/components/songs/CSVUpload';
 import SongCatalog from '@/components/songs/SongCatalog';
 import NotificationTestButton from '@/components/NotificationTestButton';
+import GenerateNextYearServices from '@/components/agenda/GenerateNextYearServices';
 
 const RepertoirioMusical = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -53,9 +54,12 @@ const RepertoirioMusical = () => {
           </div>
         </div>
         
-        {/* Botón de prueba de notificaciones solo para administradores */}
+        {/* Botones de administrador */}
         {userRole === 'administrator' && (
-          <NotificationTestButton />
+          <div className="flex items-center gap-3">
+            <GenerateNextYearServices />
+            <NotificationTestButton />
+          </div>
         )}
       </div>
 
