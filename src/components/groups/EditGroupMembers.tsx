@@ -36,6 +36,7 @@ interface GroupMemberWithDetails {
   is_leader: boolean;
   is_active: boolean;
   notes: string | null;
+  mic_order: number | null;
   member: Member;
 }
 
@@ -88,6 +89,8 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
   const [loading, setLoading] = useState(false);
   const [editingMember, setEditingMember] = useState<string | null>(null);
   const [editVoice, setEditVoice] = useState<string>('');
+  const [editingMicOrder, setEditingMicOrder] = useState<string | null>(null);
+  const [editMicNumber, setEditMicNumber] = useState<string>('');
   const { toast } = useToast();
 
   const fetchGroupMembers = async () => {
@@ -102,6 +105,7 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
           is_leader,
           is_active,
           notes,
+          mic_order,
           members!group_members_user_id_fkey (
             id,
             nombres,
@@ -113,6 +117,7 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
         `)
         .eq('group_id', groupId)
         .eq('is_active', true)
+        .order('mic_order', { ascending: true, nullsFirst: false })
         .order('is_leader', { ascending: false })
         .order('created_at');
 
@@ -177,33 +182,62 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
     try {
       setLoading(true);
       
-      // Convert Spanish voice option to database enum value
-      const instrumentEnumValue = voiceToEnumMap[selectedVoice] || 'other';
+      // Check if member is already in the group
+      const existingMember = groupMembers.find(gm => gm.user_id === selectedMember);
       
-      const { error } = await supabase
-        .from('group_members')
-        .insert([
-          {
-            group_id: groupId,
-            user_id: selectedMember,
-            instrument: instrumentEnumValue,
-            is_leader: false,
-            is_active: true
-          }
-        ]);
+      if (existingMember) {
+        // Reactivate the member instead of creating a new one
+        const instrumentEnumValue = voiceToEnumMap[selectedVoice] || 'other';
+        
+        const { error: updateError } = await supabase
+          .from('group_members')
+          .update({
+            is_active: true,
+            instrument: instrumentEnumValue
+          })
+          .eq('id', existingMember.id);
 
-      if (error) throw error;
+        if (updateError) throw updateError;
+
+        toast({
+          title: "Éxito",
+          description: "Miembro reactivado en el grupo",
+        });
+      } else {
+        // Convert Spanish voice option to database enum value
+        const instrumentEnumValue = voiceToEnumMap[selectedVoice] || 'other';
+        
+        // Get next mic order number
+        const maxMicOrder = groupMembers.reduce((max, gm) => 
+          gm.mic_order && gm.mic_order > max ? gm.mic_order : max, 0
+        );
+        
+        const { error } = await supabase
+          .from('group_members')
+          .insert([
+            {
+              group_id: groupId,
+              user_id: selectedMember,
+              instrument: instrumentEnumValue,
+              is_leader: false,
+              is_active: true,
+              mic_order: maxMicOrder + 1
+            }
+          ]);
+
+        if (error) throw error;
+
+        toast({
+          title: "Éxito",
+          description: "Miembro agregado al grupo correctamente",
+        });
+      }
 
       // Update the member's voice in the members table (keep Spanish label)
       await supabase
         .from('members')
         .update({ voz_instrumento: selectedVoice })
         .eq('id', selectedMember);
-
-      toast({
-        title: "Éxito",
-        description: "Miembro agregado al grupo correctamente",
-      });
 
       setSelectedMember('');
       setSelectedVoice('');
@@ -302,21 +336,125 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
   const handleMoveUp = async (index: number) => {
     if (index === 0) return;
     
-    // This would require implementing a custom order field
-    // For now, we'll just show the toast
-    toast({
-      title: "Funcionalidad próximamente",
-      description: "La reordenación de miembros estará disponible pronto",
-    });
+    try {
+      setLoading(true);
+      const currentMember = groupMembers[index];
+      const previousMember = groupMembers[index - 1];
+      
+      // Swap mic_order values
+      const currentOrder = currentMember.mic_order || index + 1;
+      const previousOrder = previousMember.mic_order || index;
+      
+      await supabase
+        .from('group_members')
+        .update({ mic_order: previousOrder })
+        .eq('id', currentMember.id);
+        
+      await supabase
+        .from('group_members')
+        .update({ mic_order: currentOrder })
+        .eq('id', previousMember.id);
+      
+      toast({
+        title: "Éxito",
+        description: "Orden de micrófono actualizado",
+      });
+      
+      await fetchGroupMembers();
+      onUpdate();
+    } catch (error) {
+      console.error('Error moving member up:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo reordenar el miembro",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleMoveDown = async (index: number) => {
     if (index === groupMembers.length - 1) return;
     
-    toast({
-      title: "Funcionalidad próximamente", 
-      description: "La reordenación de miembros estará disponible pronto",
-    });
+    try {
+      setLoading(true);
+      const currentMember = groupMembers[index];
+      const nextMember = groupMembers[index + 1];
+      
+      // Swap mic_order values
+      const currentOrder = currentMember.mic_order || index + 1;
+      const nextOrder = nextMember.mic_order || index + 2;
+      
+      await supabase
+        .from('group_members')
+        .update({ mic_order: nextOrder })
+        .eq('id', currentMember.id);
+        
+      await supabase
+        .from('group_members')
+        .update({ mic_order: currentOrder })
+        .eq('id', nextMember.id);
+      
+      toast({
+        title: "Éxito",
+        description: "Orden de micrófono actualizado",
+      });
+      
+      await fetchGroupMembers();
+      onUpdate();
+    } catch (error) {
+      console.error('Error moving member down:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo reordenar el miembro",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateMicOrder = async (memberId: string, newOrder: string) => {
+    const orderNum = parseInt(newOrder);
+    if (isNaN(orderNum) || orderNum < 1 || orderNum > groupMembers.length) {
+      toast({
+        title: "Error",
+        description: `El número debe estar entre 1 y ${groupMembers.length}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase
+        .from('group_members')
+        .update({ mic_order: orderNum })
+        .eq('id', memberId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Éxito",
+        description: "Número de micrófono actualizado",
+      });
+
+      setEditingMicOrder(null);
+      setEditMicNumber('');
+      await fetchGroupMembers();
+      onUpdate();
+    } catch (error) {
+      console.error('Error updating mic order:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el número de micrófono",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getInitials = (nombres: string, apellidos: string) => {
@@ -467,10 +605,50 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
                               <ArrowDown className="w-3 h-3" />
                             </Button>
                           </div>
-                          <Badge variant="outline" className="text-xs">
-                            <Mic className="w-3 h-3 mr-1" />
-                            #{index + 1}
-                          </Badge>
+                          {editingMicOrder === groupMember.id ? (
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="number"
+                                min="1"
+                                max={groupMembers.length}
+                                value={editMicNumber}
+                                onChange={(e) => setEditMicNumber(e.target.value)}
+                                className="w-12 h-6 px-1 text-xs text-center border rounded"
+                                autoFocus
+                              />
+                              <Button
+                                size="sm"
+                                onClick={() => handleUpdateMicOrder(groupMember.id, editMicNumber)}
+                                disabled={loading || !editMicNumber}
+                                className="h-6 w-6 p-0"
+                              >
+                                <Check className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setEditingMicOrder(null);
+                                  setEditMicNumber('');
+                                }}
+                                className="h-6 w-6 p-0"
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <Badge 
+                              variant="outline" 
+                              className="text-xs cursor-pointer hover:bg-gray-100"
+                              onClick={() => {
+                                setEditingMicOrder(groupMember.id);
+                                setEditMicNumber(String(groupMember.mic_order || index + 1));
+                              }}
+                            >
+                              <Mic className="w-3 h-3 mr-1" />
+                              #{groupMember.mic_order || index + 1}
+                            </Badge>
+                          )}
                         </div>
 
                         <Avatar className="w-12 h-12">

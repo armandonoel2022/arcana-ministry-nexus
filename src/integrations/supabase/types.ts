@@ -514,6 +514,7 @@ export type Database = {
           is_active: boolean | null
           is_leader: boolean | null
           joined_date: string | null
+          mic_order: number | null
           notes: string | null
           user_id: string | null
         }
@@ -525,6 +526,7 @@ export type Database = {
           is_active?: boolean | null
           is_leader?: boolean | null
           joined_date?: string | null
+          mic_order?: number | null
           notes?: string | null
           user_id?: string | null
         }
@@ -536,6 +538,7 @@ export type Database = {
           is_active?: boolean | null
           is_leader?: boolean | null
           joined_date?: string | null
+          mic_order?: number | null
           notes?: string | null
           user_id?: string | null
         }
