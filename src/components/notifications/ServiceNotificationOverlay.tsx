@@ -235,8 +235,51 @@ const ServiceNotificationOverlay = ({
             let members: any[] = [];
             let directorProfile: any = null;
 
-            // Director profile will be derived from group_members after mapping
+            // First, try to find director by name in members table
+            if (service.leader) {
+              const parts = service.leader.trim().split(/\s+/);
+              const first = parts[0];
+              const last = parts.slice(1).join(' ');
 
+              if (first) {
+                // Try exact match with first and last name
+                if (last) {
+                  const { data: candidate } = await supabase
+                    .from('members')
+                    .select('id, nombres, apellidos, photo_url')
+                    .ilike('nombres', `%${first}%`)
+                    .ilike('apellidos', `%${last}%`)
+                    .eq('is_active', true)
+                    .limit(1)
+                    .maybeSingle();
+                  if (candidate) {
+                    directorProfile = {
+                      id: candidate.id,
+                      full_name: `${candidate.nombres || ''} ${candidate.apellidos || ''}`.trim(),
+                      photo_url: candidate.photo_url
+                    };
+                  }
+                }
+
+                // Fallback: try just first name
+                if (!directorProfile) {
+                  const { data: candidate2 } = await supabase
+                    .from('members')
+                    .select('id, nombres, apellidos, photo_url')
+                    .ilike('nombres', `%${first}%`)
+                    .eq('is_active', true)
+                    .limit(1)
+                    .maybeSingle();
+                  if (candidate2) {
+                    directorProfile = {
+                      id: candidate2.id,
+                      full_name: `${candidate2.nombres || ''} ${candidate2.apellidos || ''}`.trim(),
+                      photo_url: candidate2.photo_url
+                    };
+                  }
+                }
+              }
+            }
 
             if (service.assigned_group_id) {
               const { data: membersData, error: membersError } = await supabase
@@ -270,51 +313,10 @@ const ServiceNotificationOverlay = ({
                   }
                 }));
 
+                // As additional fallback, check if there's a leader marked in the group
                 const leader = members.find(m => m.is_leader);
                 if (!directorProfile && leader?.profiles) {
                   directorProfile = leader.profiles;
-                }
-
-                // Fallback: buscar director por nombre en members si no hay is_leader marcado
-                if (!directorProfile && service.leader) {
-                  const parts = service.leader.trim().split(/\s+/);
-                  const first = parts[0];
-                  const last = parts.slice(1).join(' ');
-
-                  if (first) {
-                    if (last) {
-                      const { data: candidate } = await supabase
-                        .from('members')
-                        .select('id, nombres, apellidos, photo_url')
-                        .ilike('nombres', `%${first}%`)
-                        .ilike('apellidos', `%${last}%`)
-                        .limit(1)
-                        .maybeSingle();
-                      if (candidate) {
-                        directorProfile = {
-                          id: candidate.id,
-                          full_name: `${candidate.nombres || ''} ${candidate.apellidos || ''}`.trim(),
-                          photo_url: candidate.photo_url
-                        };
-                      }
-                    }
-
-                    if (!directorProfile) {
-                      const { data: candidate2 } = await supabase
-                        .from('members')
-                        .select('id, nombres, apellidos, photo_url')
-                        .ilike('nombres', `%${first}%`)
-                        .limit(1)
-                        .maybeSingle();
-                      if (candidate2) {
-                        directorProfile = {
-                          id: candidate2.id,
-                          full_name: `${candidate2.nombres || ''} ${candidate2.apellidos || ''}`.trim(),
-                          photo_url: candidate2.photo_url
-                        };
-                      }
-                    }
-                  }
                 }
               }
             }
