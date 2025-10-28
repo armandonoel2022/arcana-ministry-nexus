@@ -669,7 +669,7 @@ const ServiceNotificationOverlay = ({
               <div className="flex flex-col items-center gap-3">
                 <div className="w-24 h-24 rounded-full border-4 border-blue-300 shadow-xl overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 flex-shrink-0">
                   <img
-                    src={directorMember?.profiles?.photo_url || service.director_profile?.photo_url}
+                    src={service.director_profile?.photo_url || directorMember?.profiles?.photo_url}
                     alt={service.leader}
                     className="w-full h-full object-cover"
                     onError={(e) => {
