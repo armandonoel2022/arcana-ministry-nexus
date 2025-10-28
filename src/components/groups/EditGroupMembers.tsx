@@ -60,6 +60,20 @@ const voiceOptions = [
   'Otro'
 ];
 
+// Map Spanish voice/instrument options to database enum values
+const voiceToEnumMap: Record<string, string> = {
+  'Voz Soprano': 'vocals',
+  'Voz Contralto': 'vocals',
+  'Voz Tenor': 'vocals',
+  'Voz Bajo': 'vocals',
+  'Piano': 'piano',
+  'Guitarra': 'guitar',
+  'Bajo': 'bass',
+  'Batería': 'drums',
+  'Teclado': 'piano',
+  'Otro': 'other'
+};
+
 const EditGroupMembers: React.FC<EditGroupMembersProps> = ({ 
   groupId, 
   groupName, 
@@ -163,13 +177,16 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
     try {
       setLoading(true);
       
+      // Convert Spanish voice option to database enum value
+      const instrumentEnumValue = voiceToEnumMap[selectedVoice] || 'other';
+      
       const { error } = await supabase
         .from('group_members')
         .insert([
           {
             group_id: groupId,
             user_id: selectedMember,
-            instrument: selectedVoice,
+            instrument: instrumentEnumValue,
             is_leader: false,
             is_active: true
           }
@@ -177,7 +194,7 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
 
       if (error) throw error;
 
-      // Update the member's voice in the members table
+      // Update the member's voice in the members table (keep Spanish label)
       await supabase
         .from('members')
         .update({ voz_instrumento: selectedVoice })
@@ -243,15 +260,18 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
       const member = groupMembers.find(gm => gm.id === memberId);
       if (!member) return;
 
-      // Update group_members table
+      // Convert Spanish voice option to database enum value
+      const instrumentEnumValue = voiceToEnumMap[newVoice] || 'other';
+
+      // Update group_members table with enum value
       const { error: groupError } = await supabase
         .from('group_members')
-        .update({ instrument: newVoice })
+        .update({ instrument: instrumentEnumValue })
         .eq('id', memberId);
 
       if (groupError) throw groupError;
 
-      // Update members table
+      // Update members table with Spanish label
       const { error: memberError } = await supabase
         .from('members')
         .update({ voz_instrumento: newVoice })
