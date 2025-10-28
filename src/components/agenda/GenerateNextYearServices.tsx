@@ -107,7 +107,8 @@ const GenerateNextYearServices = () => {
     sundayIndex: number, 
     serviceTime: '08:00' | '10:45',
     groupName: string,
-    directorIndex: { value: number }
+    directorIndex: { value: number },
+    usedDirectorsToday: Set<string>
   ) => {
     const groupKey = groupName.toUpperCase() as keyof typeof GROUPS;
     
@@ -129,7 +130,7 @@ const GenerateNextYearServices = () => {
     }
 
     // Si no hay director del grupo disponible, usar rotación general
-    // excluyendo directores que tienen grupo
+    // excluyendo directores que tienen grupo O que ya fueron usados hoy
     let attempts = 0;
     const directorsWithGroup = Object.keys(DIRECTORS.WITH_GROUP);
     
@@ -143,6 +144,11 @@ const GenerateNextYearServices = () => {
         continue;
       }
       
+      // Saltar directores ya usados hoy
+      if (usedDirectorsToday.has(director)) {
+        continue;
+      }
+      
       // Verificar restricciones de horario
       if (serviceTime === '10:45' && DIRECTORS.ONLY_8AM.includes(director)) {
         continue;
@@ -151,14 +157,18 @@ const GenerateNextYearServices = () => {
       return director;
     }
 
-    // Fallback - buscar cualquier director disponible
+    // Fallback - buscar cualquier director disponible que no haya sido usado hoy
     for (const director of DIRECTORS.ALL) {
+      if (usedDirectorsToday.has(director)) {
+        continue;
+      }
       if (serviceTime === '10:45' && DIRECTORS.ONLY_8AM.includes(director)) {
         continue;
       }
       return director;
     }
     
+    // Último recurso si todos fueron usados
     return DIRECTORS.ALL[0];
   };
 
@@ -179,9 +189,13 @@ const GenerateNextYearServices = () => {
         const sunday = sundays[i];
         const rotation = getGroupRotation(i);
         
+        // Conjunto de directores ya usados en este domingo
+        const usedDirectorsToday = new Set<string>();
+        
         // Servicio 8:00 AM
         const service1Group = rotation.service1;
-        const director1 = getDirectorForService(i, '08:00', service1Group, directorIndex);
+        const director1 = getDirectorForService(i, '08:00', service1Group, directorIndex, usedDirectorsToday);
+        usedDirectorsToday.add(director1);
         
         services.push({
           title: '08:00 a.m.',
@@ -195,7 +209,7 @@ const GenerateNextYearServices = () => {
 
         // Servicio 10:45 AM
         const service2Group = rotation.service2;
-        const director2 = getDirectorForService(i, '10:45', service2Group, directorIndex);
+        const director2 = getDirectorForService(i, '10:45', service2Group, directorIndex, usedDirectorsToday);
         
         services.push({
           title: '10:45 a.m.',
