@@ -6,7 +6,6 @@ import { supabase } from '@/integrations/supabase/client';
 import AddSongForm from '@/components/songs/AddSongForm';
 import CSVUpload from '@/components/songs/CSVUpload';
 import SongCatalog from '@/components/songs/SongCatalog';
-import NotificationTestButton from '@/components/NotificationTestButton';
 
 const RepertoirioMusical = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -42,21 +41,14 @@ const RepertoirioMusical = () => {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-arcana-gradient rounded-full flex items-center justify-center">
-            <Music className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold arcana-gradient-text">Repertorio Musical</h1>
-            <p className="text-gray-600">Gestión del catálogo de canciones del ministerio</p>
-          </div>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 bg-arcana-gradient rounded-full flex items-center justify-center">
+          <Music className="w-5 h-5 text-white" />
         </div>
-        
-        {/* Botón de prueba de notificaciones solo para administradores */}
-        {userRole === 'administrator' && (
-          <NotificationTestButton />
-        )}
+        <div>
+          <h1 className="text-3xl font-bold arcana-gradient-text">Repertorio Musical</h1>
+          <p className="text-gray-600">Gestión del catálogo de canciones del ministerio</p>
+        </div>
       </div>
 
       <Tabs defaultValue="view" className="w-full">

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Music, Save, Loader2 } from 'lucide-react';
+import { Music, Save, Loader2, Image as ImageIcon } from 'lucide-react';
 
 const songSchema = z.object({
   title: z.string().min(1, 'El título es obligatorio'),
@@ -26,6 +26,7 @@ const songSchema = z.object({
   youtube_link: z.string().url('Debe ser un URL válido').optional().or(z.literal('')),
   spotify_link: z.string().url('Debe ser un URL válido').optional().or(z.literal('')),
   tags: z.string().optional(),
+  cover_image: z.any().optional(),
 });
 
 type SongFormData = z.infer<typeof songSchema>;
@@ -33,6 +34,8 @@ type SongFormData = z.infer<typeof songSchema>;
 const AddSongForm = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
 
   const form = useForm<SongFormData>({
     resolver: zodResolver(songSchema),
@@ -53,11 +56,45 @@ const AddSongForm = () => {
 
   const mutation = useMutation({
     mutationFn: async (data: SongFormData) => {
+      let coverImageUrl = null;
+
+      // Subir carátula si existe
+      if (coverImageFile) {
+        setUploadingImage(true);
+        const fileExt = coverImageFile.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('song-covers')
+          .upload(filePath, coverImageFile);
+
+        if (uploadError) {
+          setUploadingImage(false);
+          throw new Error(`Error al subir la carátula: ${uploadError.message}`);
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('song-covers')
+          .getPublicUrl(filePath);
+
+        coverImageUrl = publicUrl;
+        setUploadingImage(false);
+      }
+
       const songData = {
-        ...data,
+        title: data.title,
+        artist: data.artist,
+        genre: data.genre,
+        difficulty_level: data.difficulty_level,
+        tempo: data.tempo,
+        key_signature: data.key_signature,
+        lyrics: data.lyrics,
+        chords: data.chords,
         tags: data.tags ? data.tags.split(',').map(tag => tag.trim()) : [],
         youtube_link: data.youtube_link || null,
         spotify_link: data.spotify_link || null,
+        cover_image_url: coverImageUrl,
         is_active: true,
       };
 
@@ -73,6 +110,7 @@ const AddSongForm = () => {
         description: 'La canción ha sido agregada al repertorio',
       });
       form.reset();
+      setCoverImageFile(null);
       queryClient.invalidateQueries({ queryKey: ['songs'] });
     },
     onError: (error) => {
@@ -190,6 +228,38 @@ const AddSongForm = () => {
                           placeholder="Separar con comas (ej: navidad, alegre, fácil)" 
                           {...field} 
                         />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="cover_image"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Carátula</FormLabel>
+                      <FormControl>
+                        <div className="flex flex-col gap-2">
+                          <Input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/jpg"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setCoverImageFile(file);
+                                field.onChange(file);
+                              }
+                            }}
+                          />
+                          {coverImageFile && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <ImageIcon className="w-4 h-4" />
+                              <span>{coverImageFile.name}</span>
+                            </div>
+                          )}
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -343,13 +413,13 @@ const AddSongForm = () => {
             <div className="flex justify-end">
               <Button 
                 type="submit" 
-                disabled={mutation.isPending}
+                disabled={mutation.isPending || uploadingImage}
                 className="bg-arcana-gradient hover:opacity-90"
               >
-                {mutation.isPending ? (
+                {mutation.isPending || uploadingImage ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Guardando...
+                    {uploadingImage ? 'Subiendo imagen...' : 'Guardando...'}
                   </>
                 ) : (
                   <>
