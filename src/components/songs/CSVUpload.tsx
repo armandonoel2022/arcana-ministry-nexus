@@ -9,7 +9,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Upload, FileText, Download, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-const CSVUpload = () => {
+interface CSVUploadProps {
+  onUploadComplete?: () => void;
+}
+
+const CSVUpload: React.FC<CSVUploadProps> = ({ onUploadComplete }) => {
   const [file, setFile] = useState<File | null>(null);
   const [uploadResults, setUploadResults] = useState<{
     success: number;
@@ -116,6 +120,8 @@ const CSVUpload = () => {
           description: `${results.errors.length} fila(s) tuvieron errores`,
         });
       }
+
+      if (onUploadComplete) onUploadComplete();
     },
     onError: (error) => {
       toast({

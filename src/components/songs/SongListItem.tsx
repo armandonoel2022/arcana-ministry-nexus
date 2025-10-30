@@ -2,10 +2,11 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, Clock, Star, ExternalLink, Play, Eye, Plus } from 'lucide-react';
+import { User, Clock, Star, ExternalLink, Play, Eye, Plus, Edit2, Music } from 'lucide-react';
 import SongLyrics from './SongLyrics';
 import SongSelectionDialog from './SongSelectionDialog';
 import SongSelectionIndicator from './SongSelectionIndicator';
+import EditSongDialog from './EditSongDialog';
 
 interface Song {
   id: string;
@@ -21,6 +22,7 @@ interface Song {
   last_used_date?: string;
   youtube_link?: string;
   spotify_link?: string;
+  cover_image_url?: string;
 }
 
 interface SongListItemProps {
@@ -59,106 +61,131 @@ const SongListItem: React.FC<SongListItemProps> = ({ song }) => {
   };
 
   return (
-    <div className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
-      <div className="flex items-center justify-between">
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Title and Artist */}
-          <div className="md:col-span-2">
-            <div className="flex items-start gap-2 mb-1">
-              <h3 className="font-semibold text-lg flex-1">{song.title}</h3>
-              <SongSelectionIndicator songId={song.id} compact={true} />
+    <div className="bg-card border rounded-xl p-3 sm:p-4 hover:shadow-lg transition-all duration-200 hover:border-primary/30">
+      <div className="flex gap-3 sm:gap-4">
+        {/* Cover Image */}
+        <div className="flex-shrink-0">
+          {song.cover_image_url ? (
+            <img 
+              src={song.cover_image_url} 
+              alt={song.title}
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover"
+            />
+          ) : (
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+              <Music className="w-8 h-8 text-primary/40" />
             </div>
-            {song.artist && (
-              <div className="flex items-center text-sm text-gray-600">
-                <User className="w-3 h-3 mr-1" />
-                {song.artist}
-              </div>
-            )}
-            {song.tags && song.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {song.tags.slice(0, 2).map((tag, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
-                    #{tag}
-                  </Badge>
-                ))}
-                {song.tags.length > 2 && (
-                  <Badge variant="outline" className="text-xs">
-                    +{song.tags.length - 2}
-                  </Badge>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Genre and Key */}
-          <div className="space-y-2">
-            {song.genre && (
-              <Badge variant="secondary" className="text-xs">
-                {song.genre}
-              </Badge>
-            )}
-            {song.key_signature && (
-              <div className="text-sm text-gray-600">
-                Tono: <span className="font-medium">{song.key_signature}</span>
-              </div>
-            )}
-            {song.tempo && (
-              <div className="flex items-center text-sm text-gray-600">
-                <Clock className="w-3 h-3 mr-1" />
-                {song.tempo}
-              </div>
-            )}
-          </div>
-
-          {/* Difficulty and Stats */}
-          <div className="space-y-2">
-            <Badge className={`text-xs ${getDifficultyColor(song.difficulty_level)}`}>
-              {getDifficultyLabel(song.difficulty_level)}
-            </Badge>
-            <div className="flex items-center text-xs text-gray-500">
-              <Star className="w-3 h-3 mr-1" />
-              {song.usage_count || 0} usos
-            </div>
-            <div className="text-xs text-gray-500">
-              {formatDate(song.created_at)}
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* Action buttons */}
-        <div className="flex items-center gap-2 ml-4">
-          {song.youtube_link && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => window.open(song.youtube_link, '_blank')}
-              className="h-8 w-8 p-0"
-            >
-              <Play className="w-4 h-4 text-red-600" />
-            </Button>
+        {/* Content */}
+        <div className="flex-1 min-w-0 space-y-2">
+          {/* Title and Artist Row */}
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-bold text-base sm:text-lg line-clamp-1">{song.title}</h3>
+                <SongSelectionIndicator songId={song.id} compact={true} />
+              </div>
+              {song.artist && (
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <User className="w-3 h-3 mr-1 flex-shrink-0" />
+                  <span className="line-clamp-1">{song.artist}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Info Grid - Responsive */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+            {/* Genre and Key */}
+            <div className="space-y-1">
+              {song.genre && (
+                <Badge variant="secondary" className="text-xs">{song.genre}</Badge>
+              )}
+            </div>
+
+            {/* Tonalidad */}
+            {song.key_signature && (
+              <div className="text-muted-foreground">
+                <span className="font-medium">Tono:</span> {song.key_signature}
+              </div>
+            )}
+
+            {/* Tempo and Difficulty */}
+            <div className="space-y-1">
+              {song.tempo && (
+                <div className="flex items-center text-muted-foreground text-xs">
+                  <Clock className="w-3 h-3 mr-1" />
+                  {song.tempo}
+                </div>
+              )}
+            </div>
+
+            {/* Stats */}
+            <div className="space-y-1">
+              <Badge className={`text-xs ${getDifficultyColor(song.difficulty_level)}`}>
+                {getDifficultyLabel(song.difficulty_level)}
+              </Badge>
+              <div className="flex items-center text-xs text-muted-foreground">
+                <Star className="w-3 h-3 mr-1" />
+                {song.usage_count || 0} usos
+              </div>
+            </div>
+          </div>
+
+          {/* Tags */}
+          {song.tags && song.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {song.tags.slice(0, 3).map((tag, index) => (
+                <Badge key={index} variant="outline" className="text-xs">#{tag}</Badge>
+              ))}
+              {song.tags.length > 3 && (
+                <Badge variant="outline" className="text-xs">+{song.tags.length - 3}</Badge>
+              )}
+            </div>
           )}
-          {song.spotify_link && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => window.open(song.spotify_link, '_blank')}
-              className="h-8 w-8 p-0"
-            >
-              <ExternalLink className="w-4 h-4 text-green-600" />
-            </Button>
-          )}
-          <SongLyrics songId={song.id}>
-            <Button variant="ghost" size="sm" className="h-8 px-2">
-              <Eye className="w-3 h-3 mr-1" />
-              Ver
-            </Button>
-          </SongLyrics>
-          <SongSelectionDialog song={song}>
-            <Button variant="ghost" size="sm" className="h-8 px-2">
-              <Plus className="w-3 h-3 mr-1" />
-              Seleccionar
-            </Button>
-          </SongSelectionDialog>
+
+          {/* Actions - Responsive */}
+          <div className="flex flex-wrap items-center gap-2 pt-2">
+            {song.youtube_link && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.open(song.youtube_link, '_blank')}
+                className="h-8 px-2 hover:bg-red-50"
+              >
+                <Play className="w-4 h-4 text-red-600" />
+              </Button>
+            )}
+            {song.spotify_link && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.open(song.spotify_link, '_blank')}
+                className="h-8 px-2 hover:bg-green-50"
+              >
+                <ExternalLink className="w-4 h-4 text-green-600" />
+              </Button>
+            )}
+            <SongLyrics songId={song.id}>
+              <Button variant="outline" size="sm" className="h-8 px-2">
+                <Eye className="w-3 h-3 mr-1" />
+                Ver
+              </Button>
+            </SongLyrics>
+            <SongSelectionDialog song={song}>
+              <Button variant="outline" size="sm" className="h-8 px-2">
+                <Plus className="w-3 h-3 mr-1" />
+                Seleccionar
+              </Button>
+            </SongSelectionDialog>
+            <EditSongDialog song={song}>
+              <Button variant="ghost" size="sm" className="h-8 px-2">
+                <Edit2 className="w-3 h-3" />
+              </Button>
+            </EditSongDialog>
+          </div>
         </div>
       </div>
     </div>

@@ -31,7 +31,11 @@ const songSchema = z.object({
 
 type SongFormData = z.infer<typeof songSchema>;
 
-const AddSongForm = () => {
+interface AddSongFormProps {
+  onSongAdded?: () => void;
+}
+
+const AddSongForm: React.FC<AddSongFormProps> = ({ onSongAdded }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -112,6 +116,7 @@ const AddSongForm = () => {
       form.reset();
       setCoverImageFile(null);
       queryClient.invalidateQueries({ queryKey: ['songs'] });
+      if (onSongAdded) onSongAdded();
     },
     onError: (error) => {
       toast({

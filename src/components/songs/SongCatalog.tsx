@@ -24,11 +24,16 @@ interface Song {
   created_at: string;
   usage_count?: number;
   last_used_date?: string;
+  cover_image_url?: string;
 }
 
 const ITEMS_PER_PAGE = 12;
 
-const SongCatalog = () => {
+interface SongCatalogProps {
+  category?: string;
+}
+
+const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general' }) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [genreFilter, setGenreFilter] = useState('all');
@@ -38,12 +43,13 @@ const SongCatalog = () => {
 
   // Fetch songs with filters and pagination
   const { data: songsData, isLoading, error } = useQuery({
-    queryKey: ['songs', searchTerm, genreFilter, difficultyFilter, sortBy, currentPage],
+    queryKey: ['songs', category, searchTerm, genreFilter, difficultyFilter, sortBy, currentPage],
     queryFn: async () => {
       let query = supabase
         .from('songs')
-        .select('*')
-        .eq('is_active', true);
+        .select('*', { count: 'exact' })
+        .eq('is_active', true)
+        .eq('category', category);
 
       // Apply search filter
       if (searchTerm) {

@@ -1365,6 +1365,7 @@ export type Database = {
       songs: {
         Row: {
           artist: string | null
+          category: string | null
           chords: string | null
           cover_image_url: string | null
           created_at: string | null
@@ -1390,6 +1391,7 @@ export type Database = {
         }
         Insert: {
           artist?: string | null
+          category?: string | null
           chords?: string | null
           cover_image_url?: string | null
           created_at?: string | null
@@ -1415,6 +1417,7 @@ export type Database = {
         }
         Update: {
           artist?: string | null
+          category?: string | null
           chords?: string | null
           cover_image_url?: string | null
           created_at?: string | null
