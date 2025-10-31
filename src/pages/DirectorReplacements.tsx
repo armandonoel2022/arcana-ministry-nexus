@@ -55,44 +55,46 @@ const DirectorReplacements = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-arcana-gradient rounded-full flex items-center justify-center">
-          <UserCheck className="w-5 h-5 text-white" />
+    <div className="container mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-arcana-gradient rounded-full flex items-center justify-center flex-shrink-0">
+          <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
         </div>
-        <div>
-          <h1 className="text-3xl font-bold arcana-gradient-text">Reemplazos de Director</h1>
-          <p className="text-gray-600">Gestión de solicitudes de reemplazo entre directores</p>
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold arcana-gradient-text truncate">Reemplazos de Director</h1>
+          <p className="text-xs sm:text-sm text-gray-600 truncate">Gestión de solicitudes de reemplazo entre directores</p>
         </div>
       </div>
 
       {/* Preview Buttons */}
       <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Eye className="w-5 h-5 text-purple-600" />
+        <CardHeader className="pb-3 sm:pb-4">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
             Vista Previa de Overlays
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-xs sm:text-sm">
             Prueba los overlays de solicitud y notificación
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex gap-3">
+        <CardContent className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <Button 
             onClick={handlePreviewRequest}
             variant="outline"
-            className="flex-1 border-blue-300 hover:bg-blue-50"
+            className="flex-1 border-blue-300 hover:bg-blue-50 text-xs sm:text-sm"
+            size="sm"
           >
-            <MessageSquare className="w-4 h-4 mr-2" />
-            Preview: Solicitud Recibida
+            <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="truncate">Preview: Solicitud Recibida</span>
           </Button>
           <Button 
             onClick={handlePreviewNotification}
             variant="outline"
-            className="flex-1 border-green-300 hover:bg-green-50"
+            className="flex-1 border-green-300 hover:bg-green-50 text-xs sm:text-sm"
+            size="sm"
           >
-            <UserCheck className="w-4 h-4 mr-2" />
-            Preview: Notificación de Cambio
+            <UserCheck className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="truncate">Preview: Notificación de Cambio</span>
           </Button>
         </CardContent>
       </Card>

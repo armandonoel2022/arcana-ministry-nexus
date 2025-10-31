@@ -443,17 +443,17 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
       />
       {/* Room Header */}
       <Card className="bg-gradient-to-r from-arcana-blue-50 to-arcana-gold-50">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-arcana-blue-gradient rounded-full flex items-center justify-center">
-              <Users className="w-6 h-6 text-white" />
+        <CardHeader className="pb-2 sm:pb-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-arcana-blue-gradient rounded-full flex items-center justify-center flex-shrink-0">
+              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <div>
-              <CardTitle className="text-xl">{room.name}</CardTitle>
+            <div className="min-w-0 flex-1">
+              <CardTitle className="text-base sm:text-xl truncate">{room.name}</CardTitle>
               {room.description && (
-                <p className="text-sm text-gray-600">{room.description}</p>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">{room.description}</p>
               )}
-              <p className="text-xs text-arcana-blue-600 mt-1">
+              <p className="text-[10px] sm:text-xs text-arcana-blue-600 mt-1">
                 💡 Escribe "ARCANA" o "@ARCANA" seguido de tu consulta sobre turnos, ensayos y canciones
               </p>
             </div>
@@ -462,9 +462,9 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
       </Card>
 
       {/* Messages Area */}
-      <Card className="h-[70vh]">
+      <Card className="h-[60vh] sm:h-[70vh]">
         <CardContent className="p-0 h-full flex flex-col">
-          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth">
+          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth">
             {messages.length === 0 ? (
               <div className="text-center text-gray-500 py-8">
                 No hay mensajes aún. ¡Sé el primero en escribir!

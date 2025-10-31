@@ -251,14 +251,14 @@ const DirectorRequestResponse: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="w-5 h-5" />
-            Solicitudes de Reemplazo Pendientes ({pendingRequests.length})
+        <CardHeader className="pb-3 sm:pb-4">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="truncate">Solicitudes Pendientes ({pendingRequests.length})</span>
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-xs sm:text-sm">
             Responde a las solicitudes de otros directores para dirigir servicios
           </CardDescription>
         </CardHeader>
@@ -266,33 +266,33 @@ const DirectorRequestResponse: React.FC = () => {
 
       {pendingRequests.map((request) => (
         <Card key={request.id} className={`${isExpired(request.expires_at) ? 'border-red-200 bg-red-50' : ''}`}>
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div>
-                 <CardTitle className="text-lg">{request.services?.title}</CardTitle>
-                 <CardDescription className="flex items-center gap-4">
+          <CardHeader className="pb-3 sm:pb-4">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                 <CardTitle className="text-base sm:text-lg truncate">{request.services?.title}</CardTitle>
+                 <CardDescription className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm">
                    <span className="flex items-center gap-1">
-                     <Calendar className="w-4 h-4" />
+                     <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
                      {request.services?.service_date && format(new Date(request.services.service_date), 'dd/MM/yyyy HH:mm', { locale: es })}
                    </span>
-                   <span>📍 {request.services?.location}</span>
+                   <span className="truncate">📍 {request.services?.location}</span>
                  </CardDescription>
               </div>
               {isExpired(request.expires_at) && (
-                <Badge variant="destructive">Expirado</Badge>
+                <Badge variant="destructive" className="flex-shrink-0 text-xs">Expirado</Badge>
               )}
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 sm:space-y-4">
             {/* Original Director Info */}
-            <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="p-3 sm:p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
-                <User className="w-4 h-4" />
-                <span className="font-medium">Solicitud de: {request.original_director?.full_name}</span>
+                <User className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="font-medium text-sm sm:text-base truncate">Solicitud de: {request.original_director?.full_name}</span>
               </div>
-               <div className="text-sm text-gray-600 space-y-1">
-                 <div>📞 {request.original_director?.phone}</div>
-                 <div>✉️ {request.original_director?.email}</div>
+               <div className="text-xs sm:text-sm text-gray-600 space-y-1">
+                 <div className="truncate">📞 {request.original_director?.phone}</div>
+                 <div className="truncate">✉️ {request.original_director?.email}</div>
                </div>
             </div>
 
@@ -306,27 +306,27 @@ const DirectorRequestResponse: React.FC = () => {
 
             {/* Reason */}
             <div className="space-y-2">
-              <h4 className="font-medium">Razón del reemplazo:</h4>
-              <p className="text-sm text-gray-600 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+              <h4 className="font-medium text-sm sm:text-base">Razón del reemplazo:</h4>
+              <p className="text-xs sm:text-sm text-gray-600 p-2 sm:p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
                 {request.reason}
               </p>
             </div>
 
             {/* Request Timeline */}
-            <div className="flex justify-between text-sm text-gray-500">
-              <span>Solicitado: {format(new Date(request.requested_at), 'dd/MM/yyyy HH:mm', { locale: es })}</span>
-              <span className={isExpired(request.expires_at) ? 'text-red-600 font-medium' : ''}>
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1 text-xs sm:text-sm text-gray-500">
+              <span className="truncate">Solicitado: {format(new Date(request.requested_at), 'dd/MM/yyyy HH:mm', { locale: es })}</span>
+              <span className={`truncate ${isExpired(request.expires_at) ? 'text-red-600 font-medium' : ''}`}>
                 Expira: {format(new Date(request.expires_at), 'dd/MM/yyyy HH:mm', { locale: es })}
               </span>
             </div>
 
             {/* Response Section */}
             {!isExpired(request.expires_at) && (
-              <div className="space-y-4 border-t pt-4">
+              <div className="space-y-3 sm:space-y-4 border-t pt-3 sm:pt-4">
                 {respondingTo === request.id ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">
+                      <label className="block text-xs sm:text-sm font-medium mb-2">
                         Notas de respuesta (opcional)
                       </label>
                       <Textarea
@@ -334,29 +334,34 @@ const DirectorRequestResponse: React.FC = () => {
                         onChange={(e) => setResponseNotes(e.target.value)}
                         placeholder="Agrega cualquier comentario adicional..."
                         rows={3}
+                        className="text-xs sm:text-sm"
                       />
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <Button 
                         onClick={() => handleResponse(request.id, 'accepted')}
                         disabled={isLoading}
-                        className="flex-1 bg-green-600 hover:bg-green-700"
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
+                        size="sm"
                       >
-                        <CheckCircle className="w-4 h-4 mr-2" />
+                        <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                         {isLoading ? 'Procesando...' : 'Aceptar'}
                       </Button>
                       <Button 
                         onClick={() => handleResponse(request.id, 'rejected')}
                         disabled={isLoading}
                         variant="destructive"
-                        className="flex-1"
+                        className="flex-1 text-xs sm:text-sm"
+                        size="sm"
                       >
-                        <XCircle className="w-4 h-4 mr-2" />
+                        <XCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                         {isLoading ? 'Procesando...' : 'Rechazar'}
                       </Button>
                       <Button 
                         onClick={() => setRespondingTo(null)}
                         variant="outline"
+                        className="text-xs sm:text-sm"
+                        size="sm"
                       >
                         Cancelar
                       </Button>
@@ -366,7 +371,8 @@ const DirectorRequestResponse: React.FC = () => {
                   <div className="flex gap-2">
                     <Button 
                       onClick={() => setRespondingTo(request.id)}
-                      className="flex-1"
+                      className="flex-1 text-xs sm:text-sm"
+                      size="sm"
                     >
                       Responder Solicitud
                     </Button>
