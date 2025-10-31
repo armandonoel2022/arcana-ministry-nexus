@@ -61,34 +61,34 @@ const SongListItem: React.FC<SongListItemProps> = ({ song }) => {
   };
 
   return (
-    <div className="bg-card border rounded-xl p-3 sm:p-4 hover:shadow-lg transition-all duration-200 hover:border-primary/30">
-      <div className="flex gap-3 sm:gap-4">
+    <div className="bg-card border rounded-xl p-2 sm:p-3 md:p-4 hover:shadow-lg transition-all duration-200 hover:border-primary/30">
+      <div className="flex gap-2 sm:gap-3 md:gap-4">
         {/* Cover Image */}
         <div className="flex-shrink-0">
           {song.cover_image_url ? (
             <img 
               src={song.cover_image_url} 
               alt={song.title}
-              className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover"
+              className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-lg object-cover"
             />
           ) : (
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
-              <Music className="w-8 h-8 text-primary/40" />
+            <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+              <Music className="w-6 h-6 sm:w-8 sm:h-8 text-primary/40" />
             </div>
           )}
         </div>
 
         {/* Content */}
-        <div className="flex-1 min-w-0 space-y-2">
+        <div className="flex-1 min-w-0 space-y-1.5 sm:space-y-2">
           {/* Title and Artist Row */}
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-bold text-base sm:text-lg line-clamp-1">{song.title}</h3>
+              <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
+                <h3 className="font-bold text-sm sm:text-base md:text-lg line-clamp-1">{song.title}</h3>
                 <SongSelectionIndicator songId={song.id} compact={true} />
               </div>
               {song.artist && (
-                <div className="flex items-center text-sm text-muted-foreground">
+                <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
                   <User className="w-3 h-3 mr-1 flex-shrink-0" />
                   <span className="line-clamp-1">{song.artist}</span>
                 </div>
@@ -97,8 +97,8 @@ const SongListItem: React.FC<SongListItemProps> = ({ song }) => {
           </div>
 
           {/* Info Grid - Responsive */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
-            {/* Genre and Key */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 text-xs sm:text-sm">
+            {/* Genre */}
             <div className="space-y-1">
               {song.genre && (
                 <Badge variant="secondary" className="text-xs">{song.genre}</Badge>
@@ -107,7 +107,7 @@ const SongListItem: React.FC<SongListItemProps> = ({ song }) => {
 
             {/* Tonalidad */}
             {song.key_signature && (
-              <div className="text-muted-foreground">
+              <div className="text-muted-foreground text-xs sm:text-sm">
                 <span className="font-medium">Tono:</span> {song.key_signature}
               </div>
             )}
@@ -137,25 +137,25 @@ const SongListItem: React.FC<SongListItemProps> = ({ song }) => {
           {/* Tags */}
           {song.tags && song.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {song.tags.slice(0, 3).map((tag, index) => (
+              {song.tags.slice(0, 2).map((tag, index) => (
                 <Badge key={index} variant="outline" className="text-xs">#{tag}</Badge>
               ))}
-              {song.tags.length > 3 && (
-                <Badge variant="outline" className="text-xs">+{song.tags.length - 3}</Badge>
+              {song.tags.length > 2 && (
+                <Badge variant="outline" className="text-xs">+{song.tags.length - 2}</Badge>
               )}
             </div>
           )}
 
-          {/* Actions - Responsive */}
-          <div className="flex flex-wrap items-center gap-2 pt-2">
+          {/* Actions - Responsive with better mobile layout */}
+          <div className="flex flex-wrap items-center gap-1 sm:gap-2 pt-1 sm:pt-2">
             {song.youtube_link && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => window.open(song.youtube_link, '_blank')}
-                className="h-8 px-2 hover:bg-red-50"
+                className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-red-50"
               >
-                <Play className="w-4 h-4 text-red-600" />
+                <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600" />
               </Button>
             )}
             {song.spotify_link && (
@@ -163,25 +163,25 @@ const SongListItem: React.FC<SongListItemProps> = ({ song }) => {
                 variant="ghost"
                 size="sm"
                 onClick={() => window.open(song.spotify_link, '_blank')}
-                className="h-8 px-2 hover:bg-green-50"
+                className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-green-50"
               >
-                <ExternalLink className="w-4 h-4 text-green-600" />
+                <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600" />
               </Button>
             )}
             <SongLyrics songId={song.id}>
-              <Button variant="outline" size="sm" className="h-8 px-2">
+              <Button variant="outline" size="sm" className="h-7 sm:h-8 px-2 text-xs sm:text-sm">
                 <Eye className="w-3 h-3 mr-1" />
-                Ver
+                <span className="hidden xs:inline">Ver</span>
               </Button>
             </SongLyrics>
             <SongSelectionDialog song={song}>
-              <Button variant="outline" size="sm" className="h-8 px-2">
+              <Button variant="outline" size="sm" className="h-7 sm:h-8 px-2 text-xs sm:text-sm">
                 <Plus className="w-3 h-3 mr-1" />
-                Seleccionar
+                <span className="hidden xs:inline">Seleccionar</span>
               </Button>
             </SongSelectionDialog>
             <EditSongDialog song={song}>
-              <Button variant="ghost" size="sm" className="h-8 px-2">
+              <Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0">
                 <Edit2 className="w-3 h-3" />
               </Button>
             </EditSongDialog>

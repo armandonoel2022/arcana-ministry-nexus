@@ -186,12 +186,12 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general' }) => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-4 items-center">
+      <div className="flex flex-wrap gap-2 sm:gap-4 items-center">
         <Select value={genreFilter} onValueChange={(value) => {
           setGenreFilter(value);
           setCurrentPage(1);
         }}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Filtrar por género" />
           </SelectTrigger>
           <SelectContent>
@@ -208,7 +208,7 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general' }) => {
           setDifficultyFilter(value);
           setCurrentPage(1);
         }}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Filtrar por dificultad" />
           </SelectTrigger>
           <SelectContent>
@@ -222,7 +222,7 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general' }) => {
         </Select>
 
         <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Ordenar por" />
           </SelectTrigger>
           <SelectContent>
@@ -234,7 +234,7 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general' }) => {
         </Select>
 
         {(searchTerm || genreFilter !== 'all' || difficultyFilter !== 'all' || sortBy !== 'title') && (
-          <Button variant="ghost" size="sm" onClick={resetFilters}>
+          <Button variant="ghost" size="sm" onClick={resetFilters} className="w-full sm:w-auto">
             <Filter className="w-4 h-4 mr-2" />
             Limpiar filtros
           </Button>

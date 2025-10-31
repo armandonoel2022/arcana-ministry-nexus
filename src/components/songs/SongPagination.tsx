@@ -52,25 +52,25 @@ const SongPagination: React.FC<SongPaginationProps> = ({
   const visiblePages = getVisiblePages();
 
   return (
-    <div className="flex justify-center mt-8">
+    <div className="flex justify-center mt-6 sm:mt-8 px-2 sm:px-0">
       <Pagination>
-        <PaginationContent>
+        <PaginationContent className="gap-1 sm:gap-2">
           <PaginationItem>
             <PaginationPrevious
               onClick={() => currentPage > 1 && onPageChange(currentPage - 1)}
-              className={currentPage <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+              className={`h-8 sm:h-10 px-2 sm:px-4 text-xs sm:text-sm ${currentPage <= 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
             />
           </PaginationItem>
 
           {visiblePages.map((page, index) => (
-            <PaginationItem key={index}>
+            <PaginationItem key={index} className="hidden sm:inline-flex">
               {page === '...' ? (
                 <PaginationEllipsis />
               ) : (
                 <PaginationLink
                   onClick={() => onPageChange(page as number)}
                   isActive={currentPage === page}
-                  className="cursor-pointer"
+                  className="cursor-pointer h-8 sm:h-10 text-xs sm:text-sm"
                 >
                   {page}
                 </PaginationLink>
@@ -78,10 +78,17 @@ const SongPagination: React.FC<SongPaginationProps> = ({
             </PaginationItem>
           ))}
 
+          {/* Mobile: Show current page only */}
+          <PaginationItem className="sm:hidden">
+            <span className="flex h-8 items-center justify-center px-3 text-xs font-medium">
+              {currentPage} / {totalPages}
+            </span>
+          </PaginationItem>
+
           <PaginationItem>
             <PaginationNext
               onClick={() => currentPage < totalPages && onPageChange(currentPage + 1)}
-              className={currentPage >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+              className={`h-8 sm:h-10 px-2 sm:px-4 text-xs sm:text-sm ${currentPage >= totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
             />
           </PaginationItem>
         </PaginationContent>
