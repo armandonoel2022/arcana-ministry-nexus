@@ -186,17 +186,34 @@ const ServiceNotificationOverlay = ({
     const currentDay = getDay(now);
     const currentHour = now.getHours();
     
-    let daysUntilFriday = (5 - currentDay + 7) % 7;
-    if (daysUntilFriday === 0 && currentHour >= 14) {
-      daysUntilFriday = 7;
+    let targetSunday: Date;
+    
+    if (currentDay === 0) {
+      // Es domingo
+      if (currentHour < 12) {
+        // Antes del mediodía - mostrar este domingo
+        targetSunday = new Date(now);
+        targetSunday.setHours(0, 0, 0, 0);
+      } else {
+        // Después del mediodía - mostrar el próximo domingo
+        targetSunday = new Date(now);
+        targetSunday.setDate(now.getDate() + 7);
+        targetSunday.setHours(0, 0, 0, 0);
+      }
+    } else {
+      // Cualquier otro día - mostrar el próximo domingo
+      const daysUntilSunday = (7 - currentDay) % 7 || 7;
+      targetSunday = new Date(now);
+      targetSunday.setDate(now.getDate() + daysUntilSunday);
+      targetSunday.setHours(0, 0, 0, 0);
     }
     
-    const friday = new Date(now);
-    friday.setDate(now.getDate() + daysUntilFriday);
+    // Establecer el rango del viernes al domingo
+    const friday = new Date(targetSunday);
+    friday.setDate(targetSunday.getDate() - 2);
     friday.setHours(0, 0, 0, 0);
     
-    const sunday = new Date(friday);
-    sunday.setDate(friday.getDate() + 2);
+    const sunday = new Date(targetSunday);
     sunday.setHours(23, 59, 59, 999);
     
     return { start: friday, end: sunday };
@@ -541,12 +558,12 @@ const ServiceNotificationOverlay = ({
         return;
       }
 
-      // Crear un contenedor temporal con el encabezado
+      // Crear un contenedor temporal con el encabezado - ancho fijo de 600px
       const container = document.createElement('div');
       container.style.position = 'fixed';
       container.style.left = '-9999px';
       container.style.top = '0';
-      container.style.width = element.offsetWidth + 'px';
+      container.style.width = '600px';
       container.style.backgroundColor = '#ffffff';
       container.style.padding = '0';
       
@@ -579,6 +596,12 @@ const ServiceNotificationOverlay = ({
       // Clonar el contenido del servicio
       const contentClone = element.cloneNode(true) as HTMLElement;
       contentClone.style.backgroundColor = '#ffffff';
+      contentClone.style.width = '600px';
+      contentClone.style.maxWidth = '600px';
+      
+      // Eliminar los botones de acción del contenido clonado
+      const actionButtons = contentClone.querySelectorAll('.service-action-buttons');
+      actionButtons.forEach(btn => btn.remove());
       
       // Agregar todo al contenedor
       container.appendChild(header);
@@ -835,7 +858,7 @@ const ServiceNotificationOverlay = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap gap-2 mt-6 pt-4 border-t border-gray-200">
+        <div className="service-action-buttons flex flex-wrap gap-2 mt-6 pt-4 border-t border-gray-200">
           <Button
             size="sm"
             variant="outline"

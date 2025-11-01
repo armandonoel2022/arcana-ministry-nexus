@@ -260,18 +260,18 @@ const BirthdayModule = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-0">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center">
-            <Gift className="w-5 h-5 text-white" />
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+            <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
           </div>
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent truncate">
               Módulo de Cumpleaños
             </h1>
-            <p className="text-gray-600">
+            <p className="text-xs sm:text-sm text-gray-600 truncate">
               Genera tarjetas profesionales y envía notificaciones de cumpleaños
             </p>
           </div>
@@ -279,27 +279,29 @@ const BirthdayModule = () => {
       </div>
 
       {/* Búsqueda y filtros */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
             placeholder="Buscar integrante por nombre o cargo..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 text-sm"
           />
         </div>
         <div className="flex items-center gap-2">
           <Button
             onClick={() => setShowThisMonthOnly(!showThisMonthOnly)}
             variant={showThisMonthOnly ? "default" : "outline"}
-            className={showThisMonthOnly ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white" : ""}
+            className={`text-xs sm:text-sm ${showThisMonthOnly ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white" : ""}`}
+            size="sm"
           >
-            <Filter className="w-4 h-4 mr-2" />
-            Solo este mes
+            <Filter className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Solo este mes</span>
+            <span className="sm:hidden">Este mes</span>
           </Button>
-          <Badge variant="secondary" className="bg-arcana-blue-50 text-arcana-blue-600">
-            {filteredMembers.length} cumpleaños
+          <Badge variant="secondary" className="bg-arcana-blue-50 text-arcana-blue-600 text-xs">
+            {filteredMembers.length}
           </Badge>
         </div>
       </div>
@@ -307,32 +309,32 @@ const BirthdayModule = () => {
       {/* Cumpleaños de hoy */}
       {todaysBirthdays.length > 0 && (
         <Card className="border-yellow-300 bg-gradient-to-r from-yellow-50 to-orange-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-yellow-700">
-              <Gift className="w-5 h-5" />
-              🎉 Cumpleaños de Hoy ({todaysBirthdays.length})
+          <CardHeader className="p-3 sm:p-6">
+            <CardTitle className="flex items-center gap-2 text-yellow-700 text-base sm:text-lg">
+              <Gift className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+              <span className="truncate">🎉 Cumpleaños de Hoy ({todaysBirthdays.length})</span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
+          <CardContent className="p-3 sm:p-6 pt-0">
+            <div className="space-y-3 sm:space-y-4">
               {todaysBirthdays.map((member) => (
-                <div key={member.id} className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border border-yellow-200">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="w-16 h-16 border-2 border-yellow-300">
+                <div key={member.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-yellow-200 gap-3">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <Avatar className="w-12 h-12 sm:w-16 sm:h-16 border-2 border-yellow-300 flex-shrink-0">
                       <AvatarImage
                         src={member.photo_url || undefined}
                         alt={`${member.nombres} ${member.apellidos}`}
                       />
-                      <AvatarFallback className="bg-yellow-gradient text-white text-lg">
+                      <AvatarFallback className="bg-yellow-gradient text-white text-sm sm:text-lg">
                         {member.nombres.charAt(0)}{member.apellidos.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <h3 className="font-bold text-lg text-yellow-700">
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-sm sm:text-lg text-yellow-700 truncate">
                         {member.nombres} {member.apellidos}
                       </h3>
-                      <p className="text-yellow-600">{getRoleLabel(member.cargo)}</p>
-                      <Badge className="bg-yellow-500 text-white text-xs">
+                      <p className="text-xs sm:text-sm text-yellow-600 truncate">{getRoleLabel(member.cargo)}</p>
+                      <Badge className="bg-yellow-500 text-white text-xs mt-1">
                         🎂 ¡Cumpleaños hoy!
                       </Badge>
                     </div>
@@ -340,29 +342,31 @@ const BirthdayModule = () => {
                   <div className="flex gap-2 flex-wrap">
                     <Button
                       onClick={() => generateBirthdayCard(member)}
-                      className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
+                      className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 flex-1 sm:flex-initial"
+                      size="sm"
                     >
-                      <Gift className="w-4 h-4 mr-2" />
-                      Generar Tarjeta
+                      <Gift className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                      <span className="text-xs sm:text-sm truncate">Tarjeta</span>
                     </Button>
                     <Button
                       onClick={() => sendBirthdayNotification(member)}
                       variant="outline"
-                      className="border-yellow-500 text-yellow-600 hover:bg-yellow-50"
+                      className="border-yellow-500 text-yellow-600 hover:bg-yellow-50 flex-1 sm:flex-initial"
+                      size="sm"
                     >
-                      <Bell className="w-4 h-4 mr-2" />
-                      Notificar
+                      <Bell className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                      <span className="text-xs sm:text-sm truncate">Notificar</span>
                     </Button>
                     <Button
                       onClick={() => {
-                        // Trigger overlay test with custom event
                         window.dispatchEvent(new CustomEvent('testBirthdayOverlay', { detail: member }));
                       }}
                       variant="outline"
-                      className="border-purple-500 text-purple-600 hover:bg-purple-50"
+                      className="border-purple-500 text-purple-600 hover:bg-purple-50 w-full sm:w-auto"
+                      size="sm"
                     >
-                      <Gift className="w-4 h-4 mr-2" />
-                      Probar Overlay
+                      <Gift className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                      <span className="text-xs sm:text-sm">Probar Overlay</span>
                     </Button>
                   </div>
                 </div>
@@ -375,37 +379,37 @@ const BirthdayModule = () => {
       {/* Panel de pruebas para administradores - siempre visible para debugging */}
       <BirthdayNotificationTest />
 
-      {/* Cumpleaños de hoy */}
+      {/* Próximos Cumpleaños */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
-            Próximos Cumpleaños ({upcomingBirthdays.length})
+        <CardHeader className="p-3 sm:p-6">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+            <span className="truncate">Próximos Cumpleaños ({upcomingBirthdays.length})</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 sm:p-6 pt-0">
           {upcomingBirthdays.length === 0 ? (
-            <div className="text-center py-8">
-              <Gift className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">No hay próximos cumpleaños registrados</p>
+            <div className="text-center py-6 sm:py-8">
+              <Gift className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+              <p className="text-sm sm:text-base text-gray-600">No hay próximos cumpleaños registrados</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {upcomingBirthdays.map((member) => (
-                <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-12 h-12">
+                <div key={member.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 sm:p-3 bg-gray-50 rounded-lg gap-2">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <Avatar className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
                       <AvatarImage
                         src={member.photo_url || undefined}
                         alt={`${member.nombres} ${member.apellidos}`}
                       />
-                      <AvatarFallback className="bg-arcana-blue-gradient text-white">
+                      <AvatarFallback className="bg-arcana-blue-gradient text-white text-sm">
                         {member.nombres.charAt(0)}{member.apellidos.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <h4 className="font-semibold">{member.nombres} {member.apellidos}</h4>
-                      <p className="text-sm text-gray-600">{getRoleLabel(member.cargo)}</p>
+                    <div className="min-w-0">
+                      <h4 className="font-semibold text-sm sm:text-base truncate">{member.nombres} {member.apellidos}</h4>
+                      <p className="text-xs sm:text-sm text-gray-600 truncate">{getRoleLabel(member.cargo)}</p>
                       {member.fecha_nacimiento && (() => {
                         const birth = parseDateOnly(member.fecha_nacimiento);
                         if (!birth) return null;
@@ -423,17 +427,19 @@ const BirthdayModule = () => {
                       onClick={() => generateBirthdayCard(member)}
                       variant="outline"
                       size="sm"
+                      className="flex-1 sm:flex-initial"
                     >
-                      <Gift className="w-4 h-4 mr-1" />
-                      Tarjeta
+                      <Gift className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                      <span className="text-xs sm:text-sm ml-1">Tarjeta</span>
                     </Button>
                     <Button
                       onClick={() => sendBirthdayNotification(member)}
                       variant="outline"
                       size="sm"
+                      className="flex-1 sm:flex-initial"
                     >
-                      <Bell className="w-4 h-4 mr-1" />
-                      Notificar
+                      <Bell className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                      <span className="text-xs sm:text-sm ml-1">Notificar</span>
                     </Button>
                   </div>
                 </div>
