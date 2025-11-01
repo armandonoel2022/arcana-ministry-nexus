@@ -94,13 +94,13 @@ const BirthdayNotificationBanner: React.FC<BirthdayNotificationBannerProps> = ({
     <>
       <ConfettiEffect trigger={true} onComplete={() => {}} />
       <Card className="border-pink-200 bg-gradient-to-r from-pink-50 via-purple-50 to-pink-50 shadow-lg border-2">
-        <CardContent className="p-6">
-          <div className="flex items-start space-x-4">
+        <CardContent className="p-3 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
             {/* Icono de regalo y foto */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 mx-auto sm:mx-0">
               <div className="relative">
-                <Gift className="w-8 h-8 text-pink-500 absolute -top-2 -right-2 z-10" />
-                <Avatar className="w-16 h-16 border-3 border-pink-300">
+                <Gift className="w-6 h-6 sm:w-8 sm:h-8 text-pink-500 absolute -top-2 -right-2 z-10" />
+                <Avatar className="w-14 h-14 sm:w-16 sm:h-16 border-3 border-pink-300">
                   <AvatarImage
                     src={notification.metadata.birthday_member_photo || undefined}
                     alt={(notification.metadata.birthday_member_name || notification.metadata.member_name) || 'Integrante del ministerio'}
@@ -110,7 +110,7 @@ const BirthdayNotificationBanner: React.FC<BirthdayNotificationBannerProps> = ({
                       e.currentTarget.style.display = 'none';
                     }}
                   />
-                  <AvatarFallback className="bg-gradient-to-r from-pink-400 to-purple-400 text-white text-lg font-bold">
+                  <AvatarFallback className="bg-gradient-to-r from-pink-400 to-purple-400 text-white text-base sm:text-lg font-bold">
                     {(notification.metadata.birthday_member_name || notification.metadata.member_name)
                       ? (notification.metadata.birthday_member_name || notification.metadata.member_name).split(' ').map(n => n[0]).join('')
                       : '?'
@@ -121,20 +121,20 @@ const BirthdayNotificationBanner: React.FC<BirthdayNotificationBannerProps> = ({
             </div>
 
             {/* Contenido de la notificación */}
-            <div className="flex-1 space-y-3">
+            <div className="flex-1 space-y-2 sm:space-y-3 min-w-0 w-full">
               <div>
-                <h3 className="text-xl font-bold text-pink-800 mb-1 flex items-center gap-2">
-                  {notification.title}
-                  <span className="text-2xl">🎉</span>
+                <h3 className="text-base sm:text-xl font-bold text-pink-800 mb-1 flex items-center gap-2 flex-wrap">
+                  <span className="break-words">{notification.title}</span>
+                  <span className="text-xl sm:text-2xl">🎉</span>
                 </h3>
                 {notification.metadata.is_birthday_person ? (
-                  <p className="text-pink-700 font-medium">
+                  <p className="text-sm sm:text-base text-pink-700 font-medium break-words">
                     ¡{(notification.metadata.birthday_member_name || notification.metadata.member_name)?.split(' ')[0] || 'Amigo/a'}, hoy es tu día especial!
                     Que Dios te bendiga grandemente en este nuevo año de vida. ✨
                   </p>
                 ) : (
-                  <p className="text-pink-700">
-                    ¡Hoy está de cumpleaños <strong>{(notification.metadata.birthday_member_name || notification.metadata.member_name) || 'un integrante del ministerio'}</strong>!
+                  <p className="text-sm sm:text-base text-pink-700 break-words">
+                    ¡Hoy está de cumpleaños <strong className="break-words">{(notification.metadata.birthday_member_name || notification.metadata.member_name) || 'un integrante del ministerio'}</strong>!
                     Recuerda ir a la sala de chat general y dedicarle un mensaje de felicitación. 
                     ¡Hagamos que se sienta especial en su día! ✨
                   </p>
@@ -142,28 +142,28 @@ const BirthdayNotificationBanner: React.FC<BirthdayNotificationBannerProps> = ({
               </div>
 
               {/* Botones de acción */}
-              <div className="flex flex-wrap gap-3 pt-2">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
                 <Button
                   onClick={goToChatRoom}
-                  className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white flex items-center gap-2"
+                  className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white flex items-center justify-center gap-2 w-full sm:w-auto"
                   size="sm"
                 >
-                  <MessageSquare className="w-4 h-4" />
-                  Ir a la sala de chat
+                  <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="text-xs sm:text-sm">Ir a la sala de chat</span>
                 </Button>
                 <Button
                   onClick={dismissNotification}
                   variant="outline"
                   size="sm"
-                  className="border-pink-300 text-pink-700 hover:bg-pink-50 flex items-center gap-2"
+                  className="border-pink-300 text-pink-700 hover:bg-pink-50 flex items-center justify-center gap-2 w-full sm:w-auto"
                 >
-                  <Clock className="w-4 h-4" />
-                  De acuerdo, lo haré más tarde
+                  <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="text-xs sm:text-sm">De acuerdo, lo haré más tarde</span>
                 </Button>
               </div>
 
               {/* Decoración de cumpleaños */}
-              <div className="flex justify-center space-x-2 text-2xl pt-2">
+              <div className="flex justify-center gap-2 text-xl sm:text-2xl pt-2">
                 <span>🎂</span>
                 <span>🎈</span>
                 <span>🎁</span>
