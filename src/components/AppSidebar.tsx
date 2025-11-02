@@ -210,13 +210,13 @@ export function AppSidebar() {
                     >
                       <Link 
                         to={item.url} 
-                        className="flex items-center gap-3 px-3 relative"
+                        className="flex items-center gap-3 px-3"
                         onClick={handleLinkClick}
                       >
                         <item.icon className="w-4 h-4" />
                         <span className="font-medium text-sm">{item.title}</span>
                         {item.title === "Notificaciones" && unreadCount > 0 && (
-                          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                          <span className="ml-auto bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center font-bold">
                             {unreadCount > 99 ? "99+" : unreadCount}
                           </span>
                         )}

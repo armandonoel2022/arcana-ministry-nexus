@@ -22,6 +22,7 @@ interface Notification {
   metadata: any;
   created_at: string;
   scheduled_for?: string;
+  recipient_id: string;
 }
 
 const NotificationCenter = () => {
@@ -45,21 +46,46 @@ const NotificationCenter = () => {
         },
         (payload) => {
           console.log('New notification received:', payload);
-          setNotifications(prev => [payload.new as Notification, ...prev]);
-          
-          // Show toast for new notification
           const newNotification = payload.new as Notification;
           
-          // Check if it's a birthday notification that should trigger confetti
-          if (newNotification.metadata?.show_confetti) {
-            console.log('Triggering confetti for birthday notification');
-            setShowConfetti(true);
-          }
-          
-          toast({
-            title: newNotification.title,
-            description: newNotification.message
+          // Solo agregar si es para el usuario actual
+          supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user && newNotification.recipient_id === user.id) {
+              setNotifications(prev => [newNotification, ...prev]);
+              
+              // Check if it's a birthday notification that should trigger confetti
+              if (newNotification.metadata?.show_confetti) {
+                console.log('Triggering confetti for birthday notification');
+                setShowConfetti(true);
+              }
+              
+              toast({
+                title: newNotification.title,
+                description: newNotification.message
+              });
+            }
           });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'system_notifications'
+        },
+        (payload) => {
+          console.log('Notification updated:', payload);
+          const updatedNotification = payload.new as Notification;
+          
+          // Actualizar la notificación en la lista
+          setNotifications(prev => 
+            prev.map(notification => 
+              notification.id === updatedNotification.id 
+                ? updatedNotification 
+                : notification
+            )
+          );
         }
       )
       .subscribe();
