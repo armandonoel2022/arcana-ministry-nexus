@@ -71,10 +71,19 @@ const NotificationCenter = () => {
 
   const fetchNotifications = async () => {
     try {
-      console.log('Fetching notifications...');
+      console.log('Fetching notifications for current user...');
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log('No user logged in');
+        setNotifications([]);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('system_notifications')
         .select('*')
+        .eq('recipient_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -82,7 +91,7 @@ const NotificationCenter = () => {
       
       if (error) throw error;
       
-      console.log(`Loaded ${data?.length || 0} notifications`);
+      console.log(`Loaded ${data?.length || 0} notifications for user ${user.id}`);
       setNotifications(data || []);
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -124,10 +133,14 @@ const NotificationCenter = () => {
 
   const markAllAsRead = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { error } = await supabase
         .from('system_notifications')
         .update({ is_read: true })
-        .eq('is_read', false);
+        .eq('is_read', false)
+        .eq('recipient_id', user.id);
 
       if (error) throw error;
 

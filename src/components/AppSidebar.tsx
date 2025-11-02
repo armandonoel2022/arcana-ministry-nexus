@@ -40,6 +40,7 @@ import { useUnreadNotifications } from "@/hooks/useUnreadNotifications"
 import { useAuth } from "@/hooks/useAuth"
 import { Button } from "@/components/ui/button"
 import { ThemeSelector } from "@/components/ThemeSelector"
+import { PushNotificationPermission } from "@/components/notifications/PushNotificationPermission"
 
 // Menu items organized by categories
 const menuCategories = [
@@ -257,8 +258,9 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
         
-        {/* Theme Selector and Logout Button */}
+        {/* Theme Selector, Push Notifications and Logout Button */}
         <div className="mt-auto p-4 border-t border-gray-100 space-y-2">
+          <PushNotificationPermission />
           <ThemeSelector />
           <Button
             onClick={signOut}

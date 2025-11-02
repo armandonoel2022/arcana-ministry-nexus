@@ -1,11 +1,10 @@
-// useUnreadNotifications.tsx
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth"; // Asegúrate de tener un hook de autenticación
+import { useAuth } from "@/hooks/useAuth";
 
 export const useUnreadNotifications = () => {
   const [unreadCount, setUnreadCount] = useState(0);
-  const { user } = useAuth(); // Obtenemos el usuario actual
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!user) {
@@ -19,7 +18,7 @@ export const useUnreadNotifications = () => {
           .from("system_notifications")
           .select("id", { count: "exact" })
           .eq("is_read", false)
-          .eq("recipient_id", user.id); // Filtramos por el usuario actual
+          .eq("recipient_id", user.id);
 
         if (error) {
           console.error("Error fetching unread notifications:", error);
@@ -34,16 +33,16 @@ export const useUnreadNotifications = () => {
 
     fetchUnreadCount();
 
-    // Suscribirse a cambios en tiempo real
+    // Suscribirse a cambios en tiempo real - solo para este usuario
     const channel = supabase
-      .channel("notifications-changes")
+      .channel(`notifications-changes-${user.id}`)
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "system_notifications",
-          filter: `recipient_id=eq.${user.id}`, // Solo escuchar cambios de notificaciones del usuario actual
+          filter: `recipient_id=eq.${user.id}`,
         },
         () => {
           fetchUnreadCount();
@@ -54,7 +53,7 @@ export const useUnreadNotifications = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]); // Dependencia del usuario
+  }, [user]);
 
   return unreadCount;
 };
