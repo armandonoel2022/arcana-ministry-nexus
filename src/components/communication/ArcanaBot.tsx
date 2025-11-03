@@ -22,7 +22,7 @@ export class ArcanaBot {
     
     // Detección MÁS FLEXIBLE de menciones - incluir comandos especiales
     const mentionsBot = 
-      /arcana|@arcana|bot|asistente|ayuda|turno|ensayo|canción|cancion|cumpleaños|versículo|versiculo|biblia/i.test(lowerMessage);
+      /arcana|@arcana|bot|asistente|ayuda|turno|ensayo|canción|cancion|cumpleaños|versículo|versiculo|biblia|repertorio|agenda|proximo|próximo/i.test(lowerMessage);
 
     if (!mentionsBot) {
       console.log("ARCANA: Mensaje no contiene mención del bot");
@@ -75,6 +75,8 @@ export class ArcanaBot {
   }
 
   private static extractUserFromQuery(message: string): string | null {
+    console.log("🔍 Extrayendo nombre de consulta:", message);
+
     // Primero verificar si es una consulta propia
     const selfQueryPatterns = [
       /(cuando\s+)?me\s+toca/i,
@@ -82,6 +84,8 @@ export class ArcanaBot {
       /pr[oó]ximo\s+turno/i,
       /\bme\b.*\btoca\b/i,
       /yo\s+(quiero\s+)?cantar/i,
+      /mi\s+agenda/i,
+      /proximos\s+turnos/i,
     ];
 
     for (const pattern of selfQueryPatterns) {
@@ -93,40 +97,58 @@ export class ArcanaBot {
 
     // Patrones mejorados para detectar nombres de otros usuarios
     const patterns = [
-      /(?:turno\s+(?:de|para)|le\s+toca\s+a|cuando\s+canta)\s+([a-záéíóúñü\s]{3,})/i,
-      /(?:toca\s+a)\s+([a-záéíóúñü\s]{3,})/i,
-      /(?:y\s+)?([a-záéíóúñü\s]{3,})\s+(?:cu[áa]ndo\s+le\s+toca|pr[oó]ximo\s+turno)/i,
+      /(?:turno\s+(?:de|para)|le\s+toca\s+a|cuando\s+canta|cu[áa]ndo\s+le\s+toca\s+a)\s+([a-záéíóúñü\s]{2,})/i,
+      /(?:toca\s+a)\s+([a-záéíóúñü\s]{2,})/i,
+      /(?:y\s+)?([a-záéíóúñü\s]{2,})\s+(?:cu[áa]ndo\s+le\s+toca|pr[oó]ximo\s+turno)/i,
     ];
 
     for (const pattern of patterns) {
       const match = message.match(pattern);
       if (match && match[1]) {
         const extractedName = match[1].trim();
+        console.log("Nombre extraído:", extractedName);
 
         // Filtrar palabras comunes más exhaustivamente
         const commonWords = [
-          "me", "mi", "cuando", "que", "el", "la", "un", "una", "este", "esta", 
-          "ese", "esa", "aquel", "aquella", "cantar", "toca", "turno", "próximo", 
+          "me", "mi", "cuando", "cuándo", "que", "qué", "el", "la", "un", "una", "este", "esta", 
+          "ese", "esa", "aquel", "aquella", "cantar", "toca", "turno", "próximo", "proximo",
           "siguiente", "ensayo", "canción", "cancion", "arcana", "por", "para", 
-          "de", "del", "al", "y", "o", "u", "con", "sin", "los", "las",
+          "de", "del", "al", "y", "o", "u", "con", "sin", "los", "las", "le",
         ];
 
         const words = extractedName.toLowerCase().split(/\s+/);
-        const isValidName = words.some((word) => word.length > 2 && !commonWords.includes(word));
+        const isValidName = words.some((word) => word.length >= 2 && !commonWords.includes(word));
 
-        if (isValidName && extractedName.length >= 3) {
+        if (isValidName && extractedName.length >= 2) {
           console.log("ARCANA extrajo nombre válido:", extractedName);
           return extractedName;
+        } else {
+          console.log("Nombre no válido, contiene palabras comunes:", extractedName);
         }
       }
     }
 
+    // Si no se encontró con patrones, buscar cualquier nombre después de "a"
+    const simplePattern = /a\s+([a-záéíóúñü]{2,}(?:\s+[a-záéíóúñü]{2,})*)/i;
+    const simpleMatch = message.match(simplePattern);
+    if (simpleMatch && simpleMatch[1]) {
+      const simpleName = simpleMatch[1].trim();
+      console.log("Nombre simple extraído:", simpleName);
+      
+      // Verificar que no sea una palabra común
+      const commonWords = ["mi", "tu", "su", "el", "la", "un", "una"];
+      if (!commonWords.includes(simpleName.toLowerCase()) && simpleName.length >= 2) {
+        return simpleName;
+      }
+    }
+
+    console.log("No se pudo extraer nombre válido de la consulta");
     return null;
   }
 
   private static async handleTurnosQueryForUser(userName: string): Promise<BotResponse> {
     try {
-      console.log("ARCANA consultando turnos para:", userName);
+      console.log("🔍 ARCANA consultando turnos para:", userName);
 
       // Búsqueda MÁS FLEXIBLE - incluir búsqueda por cualquier parte del nombre
       const searchTerms = userName
@@ -137,7 +159,7 @@ export class ArcanaBot {
 
       console.log("Términos de búsqueda procesados:", searchTerms);
 
-      let query = supabase.from("members").select("nombres, apellidos, email, cargo, voz_instrumento").eq("is_active", true);
+      let query = supabase.from("members").select("id, nombres, apellidos, email, cargo, voz_instrumento").eq("is_active", true);
 
       // Construir condiciones de búsqueda MÁS FLEXIBLES
       const searchConditions = [];
@@ -165,21 +187,22 @@ export class ArcanaBot {
       console.log("Miembros encontrados:", members);
 
       if (!members || members.length === 0) {
-        // Intentar búsqueda más amplia sin filtros estrictos
-        console.log("Intentando búsqueda más amplia...");
-        const { data: allMembers } = await supabase
+        // Mostrar algunos miembros para ayudar con la búsqueda
+        const { data: sampleMembers } = await supabase
           .from("members")
           .select("nombres, apellidos")
           .eq("is_active", true)
-          .limit(20);
+          .limit(5);
 
-        if (allMembers) {
-          console.log("Todos los miembros activos:", allMembers);
+        let sugerencia = "";
+        if (sampleMembers && sampleMembers.length > 0) {
+          const nombresEjemplo = sampleMembers.map(m => `${m.nombres} ${m.apellidos}`).join(", ");
+          sugerencia = `\n\n👥 **Algunos integrantes:** ${nombresEjemplo}`;
         }
 
         return {
           type: "turnos",
-          message: `🤖 Lo siento, no encontré al integrante "${userName}" en nuestro sistema.\n\n💡 **Sugerencias:**\n• Verifica la ortografía del nombre\n• Usa nombre y apellido si es posible\n• Consulta la lista de **[Integrantes Activos](/integrantes)**`,
+          message: `🤖 Lo siento, no encontré al integrante "${userName}" en nuestro sistema.${sugerencia}\n\n💡 **Sugerencias:**\n• Verifica la ortografía del nombre\n• Usa nombre y apellido si es posible\n• Consulta la lista de **[Integrantes Activos](/integrantes)**`,
           expression: 'worried',
         };
       }
@@ -221,7 +244,8 @@ export class ArcanaBot {
       /cu[áa]ndo\s+me\s+toca\s+cantar/,
       /agenda\s+personal/,
       /mis\s+turnos/,
-      /mi\s+agenda/, // AGREGADO: reconocer "mi agenda"
+      /mi\s+agenda/,
+      /pr[oó]ximos\s+turnos/,
     ];
 
     return turnosPatterns.some((pattern) => pattern.test(message));
@@ -775,7 +799,7 @@ export class ArcanaBot {
 
   private static async handleEnsayosQuery(): Promise<BotResponse> {
     try {
-      console.log("ARCANA consultando ensayos - respuesta fija para viernes");
+      console.log("ARCANA consultando ensayos");
 
       // Obtener la fecha actual
       const today = new Date();
@@ -784,8 +808,9 @@ export class ArcanaBot {
       let nextFriday: Date;
 
       if (currentDay === 5) {
-        // Si hoy es viernes, usar la fecha de hoy
-        nextFriday = today;
+        // Si hoy es viernes, usar el próximo viernes (no hoy)
+        nextFriday = new Date(today);
+        nextFriday.setDate(today.getDate() + 7);
       } else {
         // Calcular el próximo viernes
         const daysUntilFriday = (5 - currentDay + 7) % 7;
@@ -1153,19 +1178,30 @@ export class ArcanaBot {
 
       if (error) throw error;
 
-      // CORREGIDO: Mostrar TODOS los cumpleaños del mes, no filtrar por fecha
+      // CORREGIDO: Mostrar TODOS los cumpleaños del mes, incluyendo el 1 de noviembre
       const monthBirthdays =
         birthdays
           ?.filter((member) => {
             if (!member.fecha_nacimiento) return false;
-            const birthDate = new Date(member.fecha_nacimiento);
-            return birthDate.getMonth() + 1 === targetMonth;
+            try {
+              const birthDate = new Date(member.fecha_nacimiento);
+              return birthDate.getMonth() + 1 === targetMonth;
+            } catch (e) {
+              console.error("Error procesando fecha:", member.fecha_nacimiento, e);
+              return false;
+            }
           })
           .sort((a, b) => {
-            const dateA = new Date(a.fecha_nacimiento);
-            const dateB = new Date(b.fecha_nacimiento);
-            return dateA.getDate() - dateB.getDate();
+            try {
+              const dateA = new Date(a.fecha_nacimiento);
+              const dateB = new Date(b.fecha_nacimiento);
+              return dateA.getDate() - dateB.getDate();
+            } catch (e) {
+              return 0;
+            }
           }) || [];
+
+      console.log(`Cumpleaños encontrados para mes ${targetMonth}:`, monthBirthdays);
 
       if (monthBirthdays.length === 0) {
         const monthNames = [
@@ -1208,9 +1244,14 @@ export class ArcanaBot {
       let mensaje = `🎂 **Cumpleaños de ${monthNames[targetMonth]}:** 🎉\n\n`;
 
       monthBirthdays.forEach((member) => {
-        const birthDate = new Date(member.fecha_nacimiento);
-        const day = birthDate.getDate();
-        mensaje += `📅 ${day} - **${member.nombres} ${member.apellidos}**\n`;
+        try {
+          const birthDate = new Date(member.fecha_nacimiento);
+          const day = birthDate.getDate();
+          mensaje += `📅 ${day} - **${member.nombres} ${member.apellidos}**\n`;
+        } catch (e) {
+          console.error("Error formateando fecha:", member.fecha_nacimiento);
+          mensaje += `📅 ? - **${member.nombres} ${member.apellidos}**\n`;
+        }
       });
 
       mensaje += `\n💝 Total: ${monthBirthdays.length} cumpleañero${monthBirthdays.length > 1 ? "s" : ""}\n\n📅 Ver más en Módulo de Cumpleaños\n\n¡No olvides felicitar a tus hermanos en Cristo! 🙏✨`;
