@@ -56,15 +56,16 @@ class ArcanaCache {
   }
 }
 
-// Diccionario de nombres comunes y sus variantes
+// Diccionario de nombres comunes y sus variantes - MEJORADO
 const nameDictionary: { [key: string]: string[] } = {
   "nicolas": ["nicolas", "nicolás", "felix nicolas", "felix nicolás", "felix", "félix"],
   "felix": ["felix", "félix", "felix nicolas", "felix nicolás", "nicolas", "nicolás"],
   "keyla": ["keyla", "keyla yanira", "keyla medrano", "yanira"],
   "armando": ["armando", "armando noel", "noel"],
-  "damaris": ["damaris", "damaris castillo"],
+  "damaris": ["damaris", "damaris castillo", "massy", "massy castillo"],
+  "massy": ["massy", "damaris", "damaris castillo", "massy castillo"],
   "eliabi": ["eliabi", "eliabi joana", "joana"],
-  "roosevelt": ["roosevelt", "roosevelt martinez", "martinez"],
+  "roosevelt": ["roosevelt", "roosevelt martinez", "pastor roosevelt"],
   "denny": ["denny", "denny santana", "denny alberto"],
   "aleida": ["aleida", "aleida batista", "aleida geomar"],
   "ruth": ["ruth", "ruth santana", "ruth esther"],
@@ -276,13 +277,21 @@ export class ArcanaBot {
 
       console.log("Términos de búsqueda:", searchTerms);
 
-      // Buscar miembros que coincidan
+      // Buscar miembros que coincidan - MEJORADO con filtro más estricto
       const matchingMembers = members.filter(member => {
         const fullName = `${member.nombres} ${member.apellidos}`.toLowerCase();
         const normalizedFullName = fullName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         
+        // Búsqueda más estricta para evitar falsos positivos
         return searchTerms.some(term => {
           const normalizedTerm = term.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          
+          // Para nombres comunes como "martinez", buscar coincidencia exacta de palabra
+          if (term.length <= 3) {
+            const regex = new RegExp(`\\b${normalizedTerm}\\b`, "i");
+            return regex.test(normalizedFullName);
+          }
+          
           return fullName.includes(normalizedTerm) || 
                  normalizedFullName.includes(normalizedTerm) ||
                  member.nombres.toLowerCase().includes(normalizedTerm) ||
@@ -300,21 +309,35 @@ export class ArcanaBot {
         };
       }
 
-      // Si hay múltiples coincidencias
+      // Si hay múltiples coincidencias, filtrar mejor
+      let filteredMembers = matchingMembers;
       if (matchingMembers.length > 1) {
-        const opciones = matchingMembers.map((m, i) => 
+        // Filtrar por coincidencia exacta si es posible
+        const exactMatches = matchingMembers.filter(member => {
+          const fullName = `${member.nombres} ${member.apellidos}`.toLowerCase();
+          return searchTerms.some(term => fullName.includes(term));
+        });
+        
+        if (exactMatches.length > 0) {
+          filteredMembers = exactMatches;
+        }
+      }
+
+      // Si todavía hay múltiples coincidencias
+      if (filteredMembers.length > 1) {
+        const opciones = filteredMembers.map((m, i) => 
           `${i + 1}. **${m.nombres} ${m.apellidos}**`
         ).join("\n");
 
         return {
           type: "turnos",
-          message: `🤖 Encontré varios integrantes:\n\n${opciones}\n\n💡 Especifica mejor el nombre. Ejemplo: "ARCANA cuándo le toca a **${matchingMembers[0].nombres}**"`,
+          message: `🤖 Encontré varios integrantes:\n\n${opciones}\n\n💡 Especifica mejor el nombre. Ejemplo: "ARCANA cuándo le toca a **${filteredMembers[0].nombres}**"`,
           expression: 'thinking',
         };
       }
 
       // Un solo resultado
-      const member = matchingMembers[0];
+      const member = filteredMembers[0];
       const fullName = `${member.nombres} ${member.apellidos}`;
       return await this.searchUserInServices(fullName, member);
     } catch (error) {
@@ -359,14 +382,14 @@ export class ArcanaBot {
 
       console.log("Información del miembro encontrada:", memberInfo);
 
-      // Buscar servicios donde el usuario aparece como líder o en notes
+      // Buscar servicios donde el usuario aparece como líder o en notes - MEJORADO
       const { data: services, error: servicesError } = await supabase
         .from("services")
         .select("*")
         .or(`leader.ilike.%${profile.full_name}%,notes.ilike.%${profile.full_name}%`)
         .gte("service_date", new Date().toISOString().split("T")[0])
         .order("service_date", { ascending: true })
-        .limit(5);
+        .limit(10); // Aumentamos el límite para mejor filtrado
 
       if (servicesError) {
         console.error("Error obteniendo servicios:", servicesError);
@@ -415,20 +438,20 @@ export class ArcanaBot {
       mensaje += `\n`;
     }
 
+    // Filtrar servicios duplicados y limitar a 5
+    const uniqueServices = this.filterUniqueServices(services).slice(0, 5);
+
     mensaje += `🎯 **TU PRÓXIMO TURNO:**\n\n`;
 
-    const proximoService = services[0];
-    const serviceDate = new Date(proximoService.service_date);
-    const formattedDate = serviceDate.toLocaleDateString("es-ES", {
+    const proximoService = uniqueServices[0];
+    
+    // CORREGIDO: Formato de hora mejorado
+    const serviceTime = this.formatServiceTime(proximoService.service_date, proximoService.title);
+    const formattedDate = new Date(proximoService.service_date).toLocaleDateString("es-ES", {
       weekday: "long",
       year: "numeric",
       month: "long",
       day: "numeric",
-    });
-
-    const serviceTime = new Date(proximoService.service_date).toLocaleTimeString('es-ES', { 
-      hour: '2-digit', 
-      minute: '2-digit'
     });
 
     mensaje += `📅 ${serviceTime}\n`;
@@ -447,17 +470,18 @@ export class ArcanaBot {
 
     mensaje += `\n¡Prepárate para alabar al Señor! 🙏\n`;
 
-    // Turnos adicionales
-    if (services.length > 1) {
+    // Turnos adicionales (máximo 4 más)
+    if (uniqueServices.length > 1) {
       mensaje += `\n📋 **También tienes turnos en:**\n`;
-      services.slice(1).forEach((service) => {
+      uniqueServices.slice(1, 5).forEach((service) => {
         const fecha = new Date(service.service_date).toLocaleDateString('es-ES');
-        const hora = new Date(service.service_date).toLocaleTimeString('es-ES', { 
-          hour: '2-digit', 
-          minute: '2-digit'
-        });
+        const hora = this.formatServiceTime(service.service_date, service.title);
         mensaje += `• ${fecha} - ${hora}\n`;
       });
+      
+      if (uniqueServices.length > 5) {
+        mensaje += `• ... y ${uniqueServices.length - 5} más\n`;
+      }
     }
 
     return {
@@ -465,6 +489,65 @@ export class ArcanaBot {
       message: mensaje,
       expression: 'happy',
     };
+  }
+
+  // NUEVO: Filtrar servicios únicos por fecha y hora
+  private static filterUniqueServices(services: any[]): any[] {
+    const seen = new Set();
+    return services.filter(service => {
+      // Crear clave única basada en fecha y título/hora
+      const date = new Date(service.service_date).toISOString().split('T')[0];
+      const timeKey = service.title || this.extractTimeFromDate(service.service_date);
+      const key = `${date}-${timeKey}`;
+      
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+  }
+
+  // NUEVO: Extraer hora de la fecha
+  private static extractTimeFromDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('es-ES', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false 
+    });
+  }
+
+  // NUEVO: Formatear hora del servicio CORREGIDO
+  private static formatServiceTime(serviceDate: string, serviceTitle?: string): string {
+    // Si el título contiene la hora, usarla
+    if (serviceTitle) {
+      const timeMatch = serviceTitle.match(/(\d{1,2}:\d{2}\s*(?:a\.?m\.?|p\.?m\.?)?)/i);
+      if (timeMatch) {
+        return timeMatch[1].toUpperCase();
+      }
+      
+      // Si el título es "08:00 a.m." o similar
+      if (serviceTitle.includes('a.m.') || serviceTitle.includes('p.m.')) {
+        return serviceTitle;
+      }
+    }
+    
+    // Si no, extraer de la fecha pero formatear correctamente
+    const date = new Date(serviceDate);
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    
+    // Convertir a formato 12-horas
+    if (hours === 0 && minutes === 0) {
+      return "Hora por confirmar";
+    }
+    
+    const ampm = hours >= 12 ? 'p.m.' : 'a.m.';
+    const displayHours = hours % 12 || 12;
+    const displayMinutes = minutes.toString().padStart(2, '0');
+    
+    return `${displayHours}:${displayMinutes} ${ampm}`;
   }
 
   private static async searchUserInServices(fullName: string, memberData?: any): Promise<BotResponse> {
@@ -498,7 +581,7 @@ export class ArcanaBot {
         };
       }
 
-      // Búsqueda flexible
+      // Búsqueda flexible pero más específica
       const normalizedName = fullName.toLowerCase();
       const nameParts = normalizedName.split(/\s+/).filter(part => part.length >= 2);
 
@@ -513,10 +596,11 @@ export class ArcanaBot {
 
         const normalizedSearch = searchText.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
+        // Buscar coincidencia más específica
         return nameParts.some(part => {
           const normalizedPart = part.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-          return normalizedSearch.includes(normalizedPart) || 
-                 searchText.includes(part);
+          const regex = new RegExp(`\\b${normalizedPart}\\b`, "i");
+          return regex.test(normalizedSearch) || searchText.includes(part);
         });
       });
 
@@ -542,7 +626,10 @@ export class ArcanaBot {
   }
 
   private static formatUserTurnosResponse(fullName: string, memberData: any, eventos: any[]): BotResponse {
-    const proximoEvento = eventos[0];
+    // Filtrar servicios únicos
+    const uniqueEventos = this.filterUniqueServices(eventos).slice(0, 6); // Máximo 6 servicios
+
+    const proximoEvento = uniqueEventos[0];
     const fecha = new Date(proximoEvento.service_date).toLocaleDateString("es-ES", {
       weekday: "long",
       year: "numeric",
@@ -550,10 +637,8 @@ export class ArcanaBot {
       day: "numeric",
     });
 
-    const serviceTime = new Date(proximoEvento.service_date).toLocaleTimeString('es-ES', { 
-      hour: '2-digit', 
-      minute: '2-digit'
-    });
+    // CORREGIDO: Usar el nuevo formato de hora
+    const serviceTime = this.formatServiceTime(proximoEvento.service_date, proximoEvento.title);
 
     let mensaje = `🎵 **¡Hola ${fullName}!**\n\n`;
 
@@ -582,17 +667,18 @@ export class ArcanaBot {
 
     mensaje += `\n¡Prepárate para alabar al Señor! 🙏`;
 
-    // Turnos adicionales
-    if (eventos.length > 1) {
+    // Turnos adicionales (máximo 5 más)
+    if (uniqueEventos.length > 1) {
       mensaje += `\n\n📋 **También tienes turnos en:**\n`;
-      eventos.slice(1).forEach((evento) => {
+      uniqueEventos.slice(1, 6).forEach((evento) => {
         const fecha = new Date(evento.service_date).toLocaleDateString('es-ES');
-        const hora = new Date(evento.service_date).toLocaleTimeString('es-ES', { 
-          hour: '2-digit', 
-          minute: '2-digit'
-        });
+        const hora = this.formatServiceTime(evento.service_date, evento.title);
         mensaje += `• ${fecha} - ${hora}\n`;
       });
+      
+      if (uniqueEventos.length > 6) {
+        mensaje += `• ... y ${uniqueEventos.length - 6} más\n`;
+      }
     }
 
     return {
