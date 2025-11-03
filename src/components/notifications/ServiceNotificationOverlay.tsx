@@ -518,9 +518,9 @@ const ServiceNotificationOverlay = ({
 
   const getServiceTime = (serviceTitle: string) => {
     if (serviceTitle.toLowerCase().includes('primera') || serviceTitle.toLowerCase().includes('8:00') || serviceTitle.toLowerCase().includes('primer')) {
-      return '8:00 AM';
+      return 'Primer Servicio - 8:00 AM';
     } else if (serviceTitle.toLowerCase().includes('segunda') || serviceTitle.toLowerCase().includes('10:45') || serviceTitle.toLowerCase().includes('segundo')) {
-      return '10:45 AM';
+      return 'Segundo Servicio - 10:45 AM';
     }
     return serviceTitle;
   };
