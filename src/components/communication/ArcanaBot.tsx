@@ -128,32 +128,35 @@ export class ArcanaBot {
     try {
       console.log("ARCANA consultando turnos para:", userName);
 
-      // Búsqueda MÁS FLEXIBLE de miembros - incluir búsqueda por partes del nombre
+      // Búsqueda MÁS FLEXIBLE - incluir búsqueda por cualquier parte del nombre
       const searchTerms = userName
         .toLowerCase()
         .split(" ")
-        .filter((term) => term.length > 2)
+        .filter((term) => term.length >= 2) // Reducir a 2 caracteres mínimo
         .map((term) => term.normalize("NFD").replace(/[\u0300-\u036f]/g, "")); // Remover acentos
 
-      console.log("Términos de búsqueda:", searchTerms);
+      console.log("Términos de búsqueda procesados:", searchTerms);
 
       let query = supabase.from("members").select("nombres, apellidos, email, cargo, voz_instrumento").eq("is_active", true);
 
       // Construir condiciones de búsqueda MÁS FLEXIBLES
       const searchConditions = [];
-      for (const term of searchTerms) {
-        searchConditions.push(`nombres.ilike.%${term}%`);
-        searchConditions.push(`apellidos.ilike.%${term}%`);
-        // Buscar también en el campo completo del nombre
-        searchConditions.push(`nombres||' '||apellidos.ilike.%${term}%`);
-      }
-
-      // Si no hay términos válidos, buscar por el nombre completo
-      if (searchConditions.length === 0) {
+      
+      if (searchTerms.length > 0) {
+        for (const term of searchTerms) {
+          searchConditions.push(`nombres.ilike.%${term}%`);
+          searchConditions.push(`apellidos.ilike.%${term}%`);
+          // Buscar también en combinación nombre + apellido
+          searchConditions.push(`nombres||' '||apellidos.ilike.%${term}%`);
+        }
+      } else {
+        // Si no hay términos válidos, buscar por el nombre completo
         searchConditions.push(`nombres.ilike.%${userName}%`);
         searchConditions.push(`apellidos.ilike.%${userName}%`);
         searchConditions.push(`nombres||' '||apellidos.ilike.%${userName}%`);
       }
+
+      console.log("Condiciones de búsqueda:", searchConditions);
 
       const { data: members, error } = await query.or(searchConditions.join(",")).limit(10);
 
@@ -162,6 +165,18 @@ export class ArcanaBot {
       console.log("Miembros encontrados:", members);
 
       if (!members || members.length === 0) {
+        // Intentar búsqueda más amplia sin filtros estrictos
+        console.log("Intentando búsqueda más amplia...");
+        const { data: allMembers } = await supabase
+          .from("members")
+          .select("nombres, apellidos")
+          .eq("is_active", true)
+          .limit(20);
+
+        if (allMembers) {
+          console.log("Todos los miembros activos:", allMembers);
+        }
+
         return {
           type: "turnos",
           message: `🤖 Lo siento, no encontré al integrante "${userName}" en nuestro sistema.\n\n💡 **Sugerencias:**\n• Verifica la ortografía del nombre\n• Usa nombre y apellido si es posible\n• Consulta la lista de **[Integrantes Activos](/integrantes)**`,
@@ -183,6 +198,7 @@ export class ArcanaBot {
       // Un solo resultado - buscar en servicios
       const member = members[0];
       const fullName = `${member.nombres} ${member.apellidos}`;
+      console.log("Buscando turnos para:", fullName);
       return await this.searchUserInServices(fullName, member);
     } catch (error) {
       console.error("Error consultando turnos para otro usuario:", error);
@@ -205,6 +221,7 @@ export class ArcanaBot {
       /cu[áa]ndo\s+me\s+toca\s+cantar/,
       /agenda\s+personal/,
       /mis\s+turnos/,
+      /mi\s+agenda/, // AGREGADO: reconocer "mi agenda"
     ];
 
     return turnosPatterns.some((pattern) => pattern.test(message));
@@ -1136,6 +1153,7 @@ export class ArcanaBot {
 
       if (error) throw error;
 
+      // CORREGIDO: Mostrar TODOS los cumpleaños del mes, no filtrar por fecha
       const monthBirthdays =
         birthdays
           ?.filter((member) => {
