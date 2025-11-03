@@ -54,7 +54,37 @@ export const EditSelectedSongsDialog: React.FC<EditSelectedSongsDialogProps> = (
         .order('selected_at', { ascending: false });
 
       if (error) throw error;
-      setSelectedSongs(data || []);
+
+      if (data && data.length > 0) {
+        setSelectedSongs(data as any);
+      } else {
+        // Fallback: si aún no existen registros en song_selections, leer desde service_songs
+        const { data: fallback, error: fbErr } = await supabase
+          .from('service_songs')
+          .select(`
+            song_id,
+            songs ( title, artist, key_signature, difficulty_level, category )
+          `)
+          .eq('service_id', serviceId)
+          .order('song_order', { ascending: true });
+
+        if (!fbErr && fallback) {
+          const mapped = fallback.map((row: any) => ({
+            song_id: row.song_id,
+            song_title: row.songs?.title || 'Canción',
+            artist: row.songs?.artist || undefined,
+            key_signature: row.songs?.key_signature || undefined,
+            difficulty_level: row.songs?.difficulty_level || undefined,
+            selected_by_name: '—',
+            selection_reason: undefined,
+            selected_at: new Date().toISOString(),
+            category: row.songs?.category || undefined,
+          }));
+          setSelectedSongs(mapped);
+        } else {
+          setSelectedSongs([]);
+        }
+      }
     } catch (error) {
       console.error('Error fetching selected songs:', error);
       toast.error('Error al cargar las canciones seleccionadas');
@@ -65,13 +95,26 @@ export const EditSelectedSongsDialog: React.FC<EditSelectedSongsDialogProps> = (
 
   const handleRemoveSong = async (songId: string, songTitle: string) => {
     try {
-      const { error } = await supabase
+      // Eliminar de service_songs (programación real del servicio)
+      const { error: svcError } = await supabase
         .from('service_songs')
         .delete()
         .eq('service_id', serviceId)
         .eq('song_id', songId);
 
-      if (error) throw error;
+      if (svcError) throw svcError;
+
+      // Eliminar también de song_selections (fuente de la vista service_selected_songs)
+      const { error: selError } = await supabase
+        .from('song_selections')
+        .delete()
+        .eq('service_id', serviceId)
+        .eq('song_id', songId);
+
+      if (selError) {
+        // No bloquear por este error, solo loguear
+        console.warn('No se pudo eliminar de song_selections:', selError);
+      }
 
       toast.success(`"${songTitle}" eliminada del servicio`);
       await fetchSelectedSongs();

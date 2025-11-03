@@ -47,7 +47,38 @@ const SelectedSongsDisplay: React.FC<SelectedSongsDisplayProps> = ({
         .order('selected_at', { ascending: false });
 
       if (error) throw error;
-      setSelectedSongs(data || []);
+
+      if (data && data.length > 0) {
+        setSelectedSongs(data as any);
+      } else {
+        // Fallback: si aún no existen registros en song_selections, leer desde service_songs
+        const { data: fallback, error: fbErr } = await supabase
+          .from('service_songs')
+          .select(`
+            song_id,
+            songs ( title, artist, key_signature, difficulty_level )
+          `)
+          .eq('service_id', serviceId)
+          .order('song_order', { ascending: true });
+
+        if (!fbErr && fallback) {
+          const mapped = fallback.map((row: any) => ({
+            service_id: serviceId,
+            song_id: row.song_id,
+            song_title: row.songs?.title || 'Canción',
+            artist: row.songs?.artist || undefined,
+            key_signature: row.songs?.key_signature || undefined,
+            difficulty_level: row.songs?.difficulty_level || undefined,
+            selected_by_name: '—',
+            selected_at: new Date().toISOString(),
+            service_title: serviceTitle,
+            service_date: new Date().toISOString(),
+          }));
+          setSelectedSongs(mapped);
+        } else {
+          setSelectedSongs([]);
+        }
+      }
     } catch (error) {
       console.error('Error fetching selected songs:', error);
       if (!compact) {

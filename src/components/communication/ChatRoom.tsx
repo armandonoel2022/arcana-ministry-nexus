@@ -383,6 +383,33 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
 
         console.log('Canción insertada exitosamente');
 
+        // Asegurar que exista también el registro en song_selections (usado por la vista service_selected_songs)
+        console.log('Sincronizando con song_selections...');
+        const { data: existingSelection, error: selCheckError } = await supabase
+          .from('song_selections')
+          .select('id')
+          .eq('service_id', serviceId)
+          .eq('song_id', action.songId)
+          .maybeSingle();
+
+        if (selCheckError) {
+          console.error('Error verificando selección existente:', selCheckError);
+        }
+
+        if (!existingSelection) {
+          const { error: selInsertError } = await supabase
+            .from('song_selections')
+            .insert({
+              service_id: serviceId,
+              song_id: action.songId,
+              selected_by: user?.id,
+              selection_reason: (action as any).reason || 'Seleccionada por ARCANA'
+            });
+          if (selInsertError) {
+            console.error('Error insertando en song_selections:', selInsertError);
+          }
+        }
+
         // Obtener todos los miembros activos para enviarles notificación
         const { data: allMembers } = await supabase
           .from('profiles')
