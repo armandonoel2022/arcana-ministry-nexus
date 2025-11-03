@@ -9,85 +9,13 @@ export interface BotAction {
 }
 
 interface BotResponse {
-  type: "turnos" | "ensayos" | "canciones" | "general" | "biblico";
+  type: "turnos" | "ensayos" | "canciones" | "general";
   message: string;
   expression?: 'thinking' | 'happy' | 'worried';
   actions?: BotAction[];
 }
 
-// Cache para miembros con expiración de 5 minutos
-interface CacheEntry {
-  data: any;
-  timestamp: number;
-}
-
-class CacheManager {
-  private static instance: CacheManager;
-  private cache: Map<string, CacheEntry> = new Map();
-  private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
-
-  private constructor() {}
-
-  static getInstance(): CacheManager {
-    if (!CacheManager.instance) {
-      CacheManager.instance = new CacheManager();
-    }
-    return CacheManager.instance;
-  }
-
-  set(key: string, data: any): void {
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now()
-    });
-  }
-
-  get(key: string): any | null {
-    const entry = this.cache.get(key);
-    if (!entry) return null;
-
-    if (Date.now() - entry.timestamp > this.CACHE_DURATION) {
-      this.cache.delete(key);
-      return null;
-    }
-
-    return entry.data;
-  }
-
-  clear(): void {
-    this.cache.clear();
-  }
-
-  // Limpiar entradas expiradas
-  cleanup(): void {
-    const now = Date.now();
-    for (const [key, entry] of this.cache.entries()) {
-      if (now - entry.timestamp > this.CACHE_DURATION) {
-        this.cache.delete(key);
-      }
-    }
-  }
-}
-
 export class ArcanaBot {
-  private static cache = CacheManager.getInstance();
-
-  // Diccionario mejorado de nombres con variantes
-  private static nameDictionary: { [key: string]: string } = {
-    'massy': 'Damaris Castillo',
-    'damaris': 'Damaris Castillo',
-    'damaris castillo': 'Damaris Castillo',
-    'armando': 'Armando Noel',
-    'armando noel': 'Armando Noel',
-    'noel': 'Armando Noel',
-    'carlos': 'Carlos Rodriguez',
-    'carlos rodriguez': 'Carlos Rodriguez',
-    'maria': 'Maria Garcia',
-    'maria garcia': 'Maria Garcia',
-    'juan': 'Juan Perez',
-    'juan perez': 'Juan Perez'
-  };
-
   static async processMessage(message: string, roomId: string, userId: string): Promise<BotResponse | null> {
     // Detección más flexible de menciones
     const mentionsBot = /arcana|@arcana|bot|asistente/i.test(message);
@@ -111,12 +39,6 @@ export class ArcanaBot {
     // Si está vacío o es saludo
     if (!cleanMessage || /^(hola|hi|hey|buenos|buenas|saludos)/i.test(cleanMessage)) {
       return this.handleGeneralQuery("ayuda");
-    }
-
-    // Detectar consultas bíblicas primero
-    if (this.isBibleQuery(cleanMessage)) {
-      console.log("ARCANA detectó consulta bíblica");
-      return await this.handleBibleQuery(cleanMessage);
     }
 
     // Analizar el tipo de consulta
@@ -144,237 +66,6 @@ export class ArcanaBot {
     }
   }
 
-  // MEJORA: Detección mejorada de consultas bíblicas
-  private static isBibleQuery(message: string): boolean {
-    const biblePatterns = [
-      /vers[ií]culo\s+(?:del\s+)?d[ií]a/,
-      /vers[ií]culo\s+(?:aleatorio|random)/,
-      /cita\s+b[ií]blica/,
-      /biblia|b[ií]blico/,
-      /palabra\s+de\s+dios/,
-      /(?:buscar|encontrar)\s+vers[ií]culo/,
-      /tema\s+(?:b[ií]blico|espiritual)/,
-      /(?:amor|fe|esperanza|paz|gozo|paciencia)\s+(?:en\s+)?la\s+biblia/
-    ];
-
-    return biblePatterns.some(pattern => pattern.test(message));
-  }
-
-  // MEJORA: Manejo de consultas bíblicas con categorías específicas
-  private static async handleBibleQuery(query: string): Promise<BotResponse> {
-    try {
-      // Categorizar la consulta bíblica
-      if (this.isBibleDailyQuery(query)) {
-        return await this.getRandomVerse();
-      } else if (this.isBibleSpecificQuery(query)) {
-        const reference = this.extractBibleReference(query);
-        if (reference) {
-          return await this.getSpecificVerse(reference);
-        }
-      } else if (this.isBibleSearchQuery(query)) {
-        const topic = this.extractBibleTopic(query);
-        if (topic) {
-          return await this.searchVersesByTopic(topic);
-        }
-      }
-
-      // Por defecto, versículo del día
-      return await this.getRandomVerse();
-    } catch (error) {
-      console.error("Error en consulta bíblica:", error);
-      return {
-        type: "biblico",
-        message: "📖 Lo siento, hubo un error consultando la Biblia. Por favor intenta nuevamente.\n\n💡 Puedes intentar con: \"ARCANA versículo del día\" o \"ARCANA Juan 3:16\"",
-        expression: 'worried'
-      };
-    }
-  }
-
-  private static isBibleDailyQuery(message: string): boolean {
-    return /vers[ií]culo\s+(?:del\s+)?d[ií]a|vers[ií]culo\s+aleatorio|palabra\s+de\s+hoy/i.test(message);
-  }
-
-  private static isBibleSpecificQuery(message: string): boolean {
-    return /(?:[0-9]?\s*[a-záéíóúñ]+\s+[0-9]+:[0-9]+)|(?:vers[ií]culo\s+[a-záéíóúñ0-9\s:]+)/i.test(message);
-  }
-
-  private static isBibleSearchQuery(message: string): boolean {
-    return /(?:buscar|encontrar|sobre|acerca\s+de)\s+[a-záéíóúñ]+|tema\s+[a-záéíóúñ]+/i.test(message);
-  }
-
-  private static extractBibleReference(message: string): string | null {
-    const patterns = [
-      /(?:[0-9]?\s*[a-záéíóúñ]+\s+[0-9]+:[0-9]+)/i,
-      /vers[ií]culo\s+([a-záéíóúñ0-9\s:]+)/i
-    ];
-
-    for (const pattern of patterns) {
-      const match = message.match(pattern);
-      if (match) {
-        return match[0].replace(/vers[ií]culo\s+/i, '').trim();
-      }
-    }
-    return null;
-  }
-
-  private static extractBibleTopic(message: string): string | null {
-    const patterns = [
-      /(?:buscar|encontrar|sobre|acerca\s+de|tema)\s+([a-záéíóúñ\s]+)/i,
-      /(amor|fe|esperanza|paz|gozo|paciencia|fe|caridad|humildad)/i
-    ];
-
-    for (const pattern of patterns) {
-      const match = message.match(pattern);
-      if (match && match[1]) {
-        return match[1].trim();
-      }
-    }
-    return null;
-  }
-
-  // MEJORA: Integración con API Bíblica Externa
-  private static async getRandomVerse(): Promise<BotResponse> {
-    try {
-      const cacheKey = 'bible_random_verse';
-      const cached = this.cache.get(cacheKey);
-      
-      if (cached) {
-        console.log("ARCANA usando versículo en cache");
-        return cached;
-      }
-
-      const response = await fetch('https://bible-api.com/?random=verse');
-      
-      if (!response.ok) {
-        throw new Error(`Error en API bíblica: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      let message = `📖 **Versículo del Día** 🙏\n\n`;
-      message += `"${data.text}"\n\n`;
-      message += `**${data.reference}**\n\n`;
-      message += `💫 *Que la Palabra de Dios guíe tu día*`;
-
-      const result: BotResponse = {
-        type: "biblico",
-        message,
-        expression: 'happy'
-      };
-
-      // Cache por 5 minutos
-      this.cache.set(cacheKey, result);
-      return result;
-
-    } catch (error) {
-      console.error("Error obteniendo versículo aleatorio:", error);
-      // Versículo de respaldo
-      return {
-        type: "biblico",
-        message: `📖 **Versículo del Día** 🙏\n\n"Porque de tal manera amó Dios al mundo, que ha dado a su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna."\n\n**Juan 3:16**\n\n💫 *Que la Palabra de Dios guíe tu día*`,
-        expression: 'happy'
-      };
-    }
-  }
-
-  private static async getSpecificVerse(reference: string): Promise<BotResponse> {
-    try {
-      const cacheKey = `bible_verse_${reference}`;
-      const cached = this.cache.get(cacheKey);
-      
-      if (cached) {
-        console.log("ARCANA usando versículo específico en cache");
-        return cached;
-      }
-
-      const response = await fetch(`https://bible-api.com/${encodeURIComponent(reference)}`);
-      
-      if (!response.ok) {
-        throw new Error(`Error en API bíblica: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      let message = `📖 **${data.reference}** 🙏\n\n`;
-      message += `"${data.text}"\n\n`;
-      message += `📚 *${data.verses.length} versículo${data.verses.length > 1 ? 's' : ''} encontrado${data.verses.length > 1 ? 's' : ''}*`;
-
-      const result: BotResponse = {
-        type: "biblico",
-        message,
-        expression: 'happy'
-      };
-
-      this.cache.set(cacheKey, result);
-      return result;
-
-    } catch (error) {
-      console.error("Error obteniendo versículo específico:", error);
-      return {
-        type: "biblico",
-        message: `📖 Lo siento, no pude encontrar el versículo "${reference}".\n\n💡 Verifica la referencia e intenta nuevamente. Ejemplo: "ARCANA Juan 3:16"`,
-        expression: 'worried'
-      };
-    }
-  }
-
-  private static async searchVersesByTopic(topic: string): Promise<BotResponse> {
-    try {
-      const cacheKey = `bible_topic_${topic}`;
-      const cached = this.cache.get(cacheKey);
-      
-      if (cached) {
-        console.log("ARCANA usando búsqueda por tema en cache");
-        return cached;
-      }
-
-      // Para búsqueda por temas, usamos un enfoque más simple
-      const topicVerses: { [key: string]: string } = {
-        'amor': '1 Corintios 13:4-7',
-        'fe': 'Hebreos 11:1',
-        'esperanza': 'Romanos 15:13',
-        'paz': 'Filipenses 4:7',
-        'gozo': 'Filipenses 4:4',
-        'paciencia': 'Romanos 12:12',
-        'fe': 'Marcos 11:22-24',
-        'caridad': '1 Corintios 13:13',
-        'humildad': 'Filipenses 2:3-4'
-      };
-
-      const verseRef = topicVerses[topic.toLowerCase()] || 'Juan 3:16';
-      const response = await fetch(`https://bible-api.com/${encodeURIComponent(verseRef)}`);
-      
-      if (!response.ok) {
-        throw new Error(`Error en API bíblica: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      let message = `📖 **Sobre ${topic}** 🙏\n\n`;
-      message += `"${data.text}"\n\n`;
-      message += `**${data.reference}**\n\n`;
-      message += `💡 *¿Necesitas más versículos sobre ${topic}? Visita el Módulo Espiritual*`;
-
-      const result: BotResponse = {
-        type: "biblico",
-        message,
-        expression: 'happy'
-      };
-
-      this.cache.set(cacheKey, result);
-      return result;
-
-    } catch (error) {
-      console.error("Error buscando versículos por tema:", error);
-      return {
-        type: "biblico",
-        message: `📖 **Sobre ${topic}** 🙏\n\n"Y ahora permanecen la fe, la esperanza y el amor, estos tres; pero el mayor de ellos es el amor."\n\n**1 Corintios 13:13**\n\n💡 *Visita el Módulo Espiritual para más versículos*`,
-        expression: 'happy'
-      };
-    }
-  }
-
-  // MEJORA: Búsqueda de nombres mejorada con diccionario
   private static extractUserFromQuery(message: string): string | null {
     // Primero verificar si es una consulta propia
     const selfQueryPatterns = [
@@ -392,15 +83,6 @@ export class ArcanaBot {
       }
     }
 
-    // Verificar en el diccionario de nombres primero
-    const normalizedMessage = message.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    for (const [key, fullName] of Object.entries(this.nameDictionary)) {
-      if (normalizedMessage.includes(key.toLowerCase())) {
-        console.log("ARCANA encontró nombre en diccionario:", fullName);
-        return fullName;
-      }
-    }
-
     // Patrones mejorados para detectar nombres de otros usuarios
     const patterns = [
       /(?:turno\s+(?:de|para)|le\s+toca\s+a|cuando\s+canta)\s+([a-záéíóúñü\s]{3,})/i,
@@ -415,10 +97,41 @@ export class ArcanaBot {
 
         // Filtrar palabras comunes más exhaustivamente
         const commonWords = [
-          "me", "mi", "cuando", "que", "el", "la", "un", "una", "este", "esta", 
-          "ese", "esa", "aquel", "aquella", "cantar", "toca", "turno", "próximo", 
-          "siguiente", "ensayo", "canción", "cancion", "arcana", "por", "para", 
-          "de", "del", "al", "y", "o", "u", "con", "sin", "los", "las", "le", "lo"
+          "me",
+          "mi",
+          "cuando",
+          "que",
+          "el",
+          "la",
+          "un",
+          "una",
+          "este",
+          "esta",
+          "ese",
+          "esa",
+          "aquel",
+          "aquella",
+          "cantar",
+          "toca",
+          "turno",
+          "próximo",
+          "siguiente",
+          "ensayo",
+          "canción",
+          "cancion",
+          "arcana",
+          "por",
+          "para",
+          "de",
+          "del",
+          "al",
+          "y",
+          "o",
+          "u",
+          "con",
+          "sin",
+          "los",
+          "las",
         ];
 
         const words = extractedName.toLowerCase().split(/\s+/);
@@ -434,18 +147,9 @@ export class ArcanaBot {
     return null;
   }
 
-  // MEJORA: Sistema de cache para miembros
   private static async handleTurnosQueryForUser(userName: string): Promise<BotResponse> {
     try {
       console.log("ARCANA consultando turnos para:", userName);
-
-      const cacheKey = `turnos_${userName.toLowerCase().replace(/\s+/g, '_')}`;
-      const cached = this.cache.get(cacheKey);
-      
-      if (cached) {
-        console.log("ARCANA usando cache para turnos de:", userName);
-        return cached;
-      }
 
       // Búsqueda más flexible de miembros
       const searchTerms = userName
@@ -454,7 +158,7 @@ export class ArcanaBot {
         .filter((term) => term.length > 2)
         .map((term) => term.normalize("NFD").replace(/[\u0300-\u036f]/g, "")); // Remover acentos
 
-      let query = supabase.from("members").select("nombres, apellidos, email, photo_url").eq("is_active", true);
+      let query = supabase.from("members").select("nombres, apellidos, email").eq("is_active", true);
 
       // Construir condiciones de búsqueda
       const searchConditions = [];
@@ -468,34 +172,28 @@ export class ArcanaBot {
       if (error) throw error;
 
       if (!members || members.length === 0) {
-        const response: BotResponse = {
+        return {
           type: "turnos",
           message: `🤖 Lo siento, no encontré al integrante "${userName}" en nuestro sistema.\n\n💡 **Sugerencias:**\n• Verifica la ortografía del nombre\n• Usa nombre y apellido si es posible\n• Consulta la lista de **[Integrantes Activos](/integrantes)**`,
           expression: 'worried',
         };
-        return response;
       }
 
       // Si hay múltiples coincidencias
       if (members.length > 1) {
         const opciones = members.map((m, i) => `${i + 1}. **${m.nombres} ${m.apellidos}**`).join("\n");
 
-        const response: BotResponse = {
+        return {
           type: "turnos",
           message: `🤖 Encontré varios integrantes:\n\n${opciones}\n\n💡 Por favor especifica mejor el nombre. Ejemplo: "ARCANA cuándo le toca a **${members[0].nombres} ${members[0].apellidos.split(" ")[0]}**"`,
           expression: 'thinking',
         };
-        return response;
       }
 
       // Un solo resultado
       const member = members[0];
       const fullName = `${member.nombres} ${member.apellidos}`;
-      const response = await this.searchUserInServices(fullName);
-      
-      // Cachear el resultado
-      this.cache.set(cacheKey, response);
-      return response;
+      return await this.searchUserInServices(fullName);
     } catch (error) {
       console.error("Error consultando turnos para otro usuario:", error);
       return {
@@ -507,258 +205,6 @@ export class ArcanaBot {
     }
   }
 
-  // MEJORA: Función para obtener foto de usuario
-  static async getUserPhoto(userId: string): Promise<string | null> {
-    try {
-      const cacheKey = `user_photo_${userId}`;
-      const cached = this.cache.get(cacheKey);
-      
-      if (cached) {
-        return cached;
-      }
-
-      // Buscar en members por user_id
-      const { data: member, error } = await supabase
-        .from("members")
-        .select("photo_url")
-        .eq("user_id", userId)
-        .eq("is_active", true)
-        .single();
-
-      if (error) {
-        console.error("Error obteniendo foto de usuario:", error);
-        return null;
-      }
-
-      const photoUrl = member?.photo_url || null;
-      
-      if (photoUrl) {
-        this.cache.set(cacheKey, photoUrl);
-      }
-
-      return photoUrl;
-    } catch (error) {
-      console.error("Error en getUserPhoto:", error);
-      return null;
-    }
-  }
-
-  // MEJORA: Procesamiento de notas de voz
-  static async processVoiceMessage(audioBlob: Blob): Promise<string> {
-    try {
-      console.log("ARCANA procesando mensaje de voz");
-
-      // Simulación de STT (Speech-to-Text)
-      // En un entorno real, aquí integrarías con Google Speech-to-Text, Azure Cognitive Services, etc.
-      
-      // Por ahora, simulamos el procesamiento
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // En producción, reemplazar con:
-      // const transcription = await realSTTService.transcribe(audioBlob);
-      
-      const simulatedTranscription = "Este es un mensaje de voz simulado. En producción se integrará con un servicio real de STT.";
-      
-      console.log("ARCANA transcripción simulada:", simulatedTranscription);
-      return simulatedTranscription;
-
-    } catch (error) {
-      console.error("Error procesando mensaje de voz:", error);
-      throw new Error("No se pudo procesar el mensaje de voz. Por favor intenta nuevamente.");
-    }
-  }
-
-  // MEJORA: Corrección de horarios - formato mejorado
-  private static formatServiceTime(timeString: string | null): string {
-    if (!timeString) return "Por confirmar";
-
-    // Eliminar ":00" si es exactamente la hora
-    let cleanedTime = timeString.replace(/:00$/, '');
-    
-    // Convertir a formato 12 horas si es necesario
-    if (cleanedTime.includes(':')) {
-      const [hours, minutes] = cleanedTime.split(':').map(Number);
-      const period = hours >= 12 ? 'p.m.' : 'a.m.';
-      const twelveHour = hours % 12 || 12;
-      return `${twelveHour}:${minutes.toString().padStart(2, '0')} ${period}`;
-    }
-    
-    return cleanedTime;
-  }
-
-  // MEJORA: En handleTurnosQuery y searchUserInServices, usar el formato mejorado
-  private static async searchUserInServices(fullName: string): Promise<BotResponse> {
-    try {
-      console.log("Buscando servicios para:", fullName);
-
-      const cacheKey = `services_${fullName.toLowerCase().replace(/\s+/g, '_')}`;
-      const cached = this.cache.get(cacheKey);
-      
-      if (cached) {
-        console.log("ARCANA usando cache para servicios de:", fullName);
-        return cached;
-      }
-
-      // Normalizar el nombre para búsqueda
-      const normalizedName = fullName.toLowerCase().trim();
-      const nameParts = normalizedName.split(/\s+/).filter((part) => part.length > 2);
-
-      // Buscar eventos futuros y recientes (60 días)
-      const today = new Date();
-      const sixtyDaysAgo = new Date(today);
-      sixtyDaysAgo.setDate(today.getDate() - 60);
-
-      const { data: eventos, error: eventosError } = await supabase
-        .from("services")
-        .select("*")
-        .gte("service_date", sixtyDaysAgo.toISOString().split("T")[0])
-        .order("service_date", { ascending: true })
-        .limit(100);
-
-      if (eventosError) {
-        console.error("Error consultando eventos:", eventosError);
-        return {
-          type: "turnos",
-          message: "🤖 Lo siento, hubo un error consultando la agenda ministerial. Intenta nuevamente.",
-          expression: 'worried',
-        };
-      }
-
-      console.log("Total de eventos encontrados:", eventos?.length || 0);
-
-      if (!eventos || eventos.length === 0) {
-        const response: BotResponse = {
-          type: "turnos",
-          message: "🤖 No hay servicios programados en la agenda ministerial.",
-          expression: 'happy',
-        };
-        return response;
-      }
-
-      // Búsqueda más inteligente en los eventos
-      const eventosConUsuario = eventos.filter((evento) => {
-        const searchText = [
-          evento.leader || "",
-          evento.description || "",
-          evento.notes || "",
-          evento.title || "", // MEJORA: Priorizar title
-          evento.special_activity || "",
-          evento.choir_breaks || "",
-          evento.assigned_members || "",
-        ]
-          .join(" ")
-          .toLowerCase();
-
-        // Buscar coincidencias parciales de cada parte del nombre
-        const hasNameMatch = nameParts.some((part) => {
-          if (part.length < 3) return false;
-
-          // Buscar coincidencia exacta de palabra
-          const regex = new RegExp(`\\b${part}\\b`, "i");
-          return regex.test(searchText);
-        });
-
-        // También buscar el nombre completo
-        const hasFullNameMatch = searchText.includes(normalizedName);
-
-        return hasNameMatch || hasFullNameMatch;
-      });
-
-      console.log("Eventos con usuario encontrados:", eventosConUsuario.length);
-
-      // Separar eventos pasados y futuros
-      const today_str = today.toISOString().split("T")[0];
-      const eventosPasados = eventosConUsuario.filter((evento) => evento.service_date < today_str);
-      const eventosFuturos = eventosConUsuario.filter((evento) => evento.service_date >= today_str);
-
-      // Si hay eventos futuros, mostrar el próximo
-      if (eventosFuturos.length > 0) {
-        const proximoEvento = eventosFuturos[0];
-        const fecha = new Date(proximoEvento.service_date).toLocaleDateString("es-ES", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
-
-        let mensaje = `🎵 **¡Hola ${fullName}!**\n\nTu próximo turno es:\n\n📅 **${proximoEvento.title}**\n🗓️ ${fecha}\n📍 ${proximoEvento.location || "Ubicación por confirmar"}`;
-
-        // MEJORA: Usar formato de hora mejorado
-        if (proximoEvento.service_time) {
-          mensaje += `\n⏰ Hora: ${this.formatServiceTime(proximoEvento.service_time)}`;
-        }
-
-        if (proximoEvento.special_activity) {
-          mensaje += `\n🎯 Actividad: ${proximoEvento.special_activity}`;
-        }
-
-        if (proximoEvento.notes) {
-          mensaje += `\n📝 Notas: ${proximoEvento.notes}`;
-        }
-
-        mensaje += "\n\n¡Prepárate para alabar al Señor! 🙏";
-
-        // Si hay más turnos futuros
-        if (eventosFuturos.length > 1) {
-          const otrosEventos = eventosFuturos
-            .slice(1)
-            .map((evento) => `• ${new Date(evento.service_date).toLocaleDateString("es-ES")} - ${evento.title}`)
-            .join("\n");
-
-          mensaje += `\n\n📋 **También tienes:**\n${otrosEventos}`;
-        }
-
-        const response: BotResponse = {
-          type: "turnos",
-          message: mensaje,
-          expression: 'thinking',
-        };
-
-        this.cache.set(cacheKey, response);
-        return response;
-      }
-
-      // Si no hay futuros pero sí pasados
-      if (eventosPasados.length > 0) {
-        const ultimoEvento = eventosPasados[eventosPasados.length - 1];
-        const fecha = new Date(ultimoEvento.service_date).toLocaleDateString("es-ES", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
-
-        const response: BotResponse = {
-          type: "turnos",
-          message: `🎵 **Hola ${fullName}!**\n\nTu último turno registrado fue:\n\n📅 **${ultimoEvento.title}**\n🗓️ ${fecha}\n📍 ${ultimoEvento.location || "Ubicación por confirmar"}\n\n💡 No tienes turnos futuros programados. Consulta con tu líder de grupo para próximos servicios.`,
-          expression: 'thinking',
-        };
-
-        this.cache.set(cacheKey, response);
-        return response;
-      }
-
-      // Si no se encontró ningún evento
-      const response: BotResponse = {
-        type: "turnos",
-        message: `🤖 **Hola ${fullName}!**\n\nLo siento, no encontré turnos programados para ti en los próximos servicios.\n\n💡 **Sugerencias:**\n• Verifica que tu nombre esté correctamente escrito en el sistema\n• Consulta con tu líder de grupo sobre próximas asignaciones\n• Revisa la Agenda Ministerial completa`,
-        expression: 'worried',
-      };
-
-      this.cache.set(cacheKey, response);
-      return response;
-    } catch (error) {
-      console.error("Error buscando en servicios:", error);
-      return {
-        type: "turnos",
-        message:
-          "🤖 Lo siento, hubo un error consultando tus turnos. Intenta nuevamente o consulta directamente la agenda ministerial.",
-        expression: 'worried',
-      };
-    }
-  }
-
-  // Resto de los métodos existentes (sin cambios significativos)
   private static isTurnosQuery(message: string): boolean {
     const turnosPatterns = [
       /turno/,
@@ -1043,11 +489,6 @@ export class ArcanaBot {
         mensaje += `📍 **${service.title || "Servicio de Adoración"}**\n`;
         mensaje += `📆 ${formattedDate}\n`;
 
-        // MEJORA: Usar formato de hora mejorado
-        if (service.service_time) {
-          mensaje += `⏰ Hora: ${this.formatServiceTime(service.service_time)}\n`;
-        }
-
         if (service.worship_groups?.name) {
           mensaje += `🎵 Grupo: ${service.worship_groups.name}\n`;
         }
@@ -1088,6 +529,159 @@ export class ArcanaBot {
         type: "turnos",
         message:
           "🤖 Lo siento, hubo un error consultando los turnos. Por favor intenta nuevamente o consulta la agenda ministerial directamente.\n\n🔗 **[Ver Agenda Ministerial](/agenda)**",
+        expression: 'worried',
+      };
+    }
+  }
+
+  private static async searchUserInServices(fullName: string): Promise<BotResponse> {
+    try {
+      console.log("Buscando servicios para:", fullName);
+
+      // Normalizar el nombre para búsqueda
+      const normalizedName = fullName.toLowerCase().trim();
+      const nameParts = normalizedName.split(/\s+/).filter((part) => part.length > 2);
+
+      // Buscar eventos futuros y recientes (60 días)
+      const today = new Date();
+      const sixtyDaysAgo = new Date(today);
+      sixtyDaysAgo.setDate(today.getDate() - 60);
+
+      const { data: eventos, error: eventosError } = await supabase
+        .from("services")
+        .select("*")
+        .gte("service_date", sixtyDaysAgo.toISOString().split("T")[0])
+        .order("service_date", { ascending: true })
+        .limit(100);
+
+      if (eventosError) {
+        console.error("Error consultando eventos:", eventosError);
+        return {
+          type: "turnos",
+          message: "🤖 Lo siento, hubo un error consultando la agenda ministerial. Intenta nuevamente.",
+          expression: 'worried',
+        };
+      }
+
+      console.log("Total de eventos encontrados:", eventos?.length || 0);
+
+      if (!eventos || eventos.length === 0) {
+        return {
+          type: "turnos",
+          message: "🤖 No hay servicios programados en la agenda ministerial.",
+          expression: 'happy',
+        };
+      }
+
+      // Búsqueda más inteligente en los eventos
+      const eventosConUsuario = eventos.filter((evento) => {
+        const searchText = [
+          evento.leader || "",
+          evento.description || "",
+          evento.notes || "",
+          evento.title || "",
+          evento.special_activity || "",
+          evento.choir_breaks || "",
+          evento.assigned_members || "",
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        // Buscar coincidencias parciales de cada parte del nombre
+        const hasNameMatch = nameParts.some((part) => {
+          if (part.length < 3) return false;
+
+          // Buscar coincidencia exacta de palabra
+          const regex = new RegExp(`\\b${part}\\b`, "i");
+          return regex.test(searchText);
+        });
+
+        // También buscar el nombre completo
+        const hasFullNameMatch = searchText.includes(normalizedName);
+
+        return hasNameMatch || hasFullNameMatch;
+      });
+
+      console.log("Eventos con usuario encontrados:", eventosConUsuario.length);
+
+      // Separar eventos pasados y futuros
+      const today_str = today.toISOString().split("T")[0];
+      const eventosPasados = eventosConUsuario.filter((evento) => evento.service_date < today_str);
+      const eventosFuturos = eventosConUsuario.filter((evento) => evento.service_date >= today_str);
+
+      // Si hay eventos futuros, mostrar el próximo
+      if (eventosFuturos.length > 0) {
+        const proximoEvento = eventosFuturos[0];
+        const fecha = new Date(proximoEvento.service_date).toLocaleDateString("es-ES", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+
+        let mensaje = `🎵 **¡Hola ${fullName}!**\n\nTu próximo turno es:\n\n📅 **${proximoEvento.title}**\n🗓️ ${fecha}\n📍 ${proximoEvento.location || "Ubicación por confirmar"}`;
+
+        // Agregar información adicional
+        if (proximoEvento.service_time) {
+          mensaje += `\n⏰ Hora: ${proximoEvento.service_time}`;
+        }
+
+        if (proximoEvento.special_activity) {
+          mensaje += `\n🎯 Actividad: ${proximoEvento.special_activity}`;
+        }
+
+        if (proximoEvento.notes) {
+          mensaje += `\n📝 Notas: ${proximoEvento.notes}`;
+        }
+
+        mensaje += "\n\n¡Prepárate para alabar al Señor! 🙏";
+
+        // Si hay más turnos futuros
+        if (eventosFuturos.length > 1) {
+          const otrosEventos = eventosFuturos
+            .slice(1)
+            .map((evento) => `• ${new Date(evento.service_date).toLocaleDateString("es-ES")} - ${evento.title}`)
+            .join("\n");
+
+          mensaje += `\n\n📋 **También tienes:**\n${otrosEventos}`;
+        }
+
+        return {
+          type: "turnos",
+          message: mensaje,
+          expression: 'thinking',
+        };
+      }
+
+      // Si no hay futuros pero sí pasados
+      if (eventosPasados.length > 0) {
+        const ultimoEvento = eventosPasados[eventosPasados.length - 1];
+        const fecha = new Date(ultimoEvento.service_date).toLocaleDateString("es-ES", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+
+        return {
+          type: "turnos",
+          message: `🎵 **Hola ${fullName}!**\n\nTu último turno registrado fue:\n\n📅 **${ultimoEvento.title}**\n🗓️ ${fecha}\n📍 ${ultimoEvento.location || "Ubicación por confirmar"}\n\n💡 No tienes turnos futuros programados. Consulta con tu líder de grupo para próximos servicios.`,
+          expression: 'thinking',
+        };
+      }
+
+      // Si no se encontró ningún evento
+      return {
+        type: "turnos",
+        message: `🤖 **Hola ${fullName}!**\n\nLo siento, no encontré turnos programados para ti en los próximos servicios.\n\n💡 **Sugerencias:**\n• Verifica que tu nombre esté correctamente escrito en el sistema\n• Consulta con tu líder de grupo sobre próximas asignaciones\n• Revisa la Agenda Ministerial completa`,
+        expression: 'worried',
+      };
+    } catch (error) {
+      console.error("Error buscando en servicios:", error);
+      return {
+        type: "turnos",
+        message:
+          "🤖 Lo siento, hubo un error consultando tus turnos. Intenta nuevamente o consulta directamente la agenda ministerial.",
         expression: 'worried',
       };
     }
@@ -1313,6 +907,16 @@ export class ArcanaBot {
       return await this.handleBirthdayQuery(query);
     }
 
+    // Detectar consultas bíblicas
+    if (
+      query.includes("versículo") ||
+      query.includes("versiculo") ||
+      query.includes("biblia") ||
+      query.includes("cita bíblica")
+    ) {
+      return this.handleBibleQuery(query);
+    }
+
     // Respuestas predefinidas para consultas generales relacionadas con el ministerio
     const responses = {
       valores:
@@ -1349,7 +953,6 @@ export class ArcanaBot {
 📖 **BIBLIA Y ESPIRITUAL**
 • "Versículo del día"
 • "Cita bíblica sobre [tema]"
-• "Juan 3:16" (cualquier referencia bíblica)
 
 💡 **EJEMPLOS PRÁCTICOS:**
 • "ARCANA cuándo me toca cantar"
@@ -1359,8 +962,6 @@ export class ArcanaBot {
 • "ARCANA cumpleaños de hoy"
 • "ARCANA cumpleaños de noviembre"
 • "ARCANA versículo del día"
-• "ARCANA Juan 3:16"
-• "ARCANA biblia sobre amor"
 
 ¡Estoy aquí para servirte! 🙏🎵`,
     };
@@ -1378,7 +979,7 @@ export class ArcanaBot {
     return {
       type: "general",
       message:
-        '🤖 Lo siento, no entendí tu consulta. Escribe "ARCANA ayuda" para ver todas las opciones disponibles.\n\n💡 Puedo ayudarte con:\n• Turnos de canto\n• Información de ensayos\n• Búsqueda de canciones\n• Selección de repertorio\n• Cumpleaños del ministerio\n• Versículos bíblicos\n• Referencias específicas de la Biblia',
+        '🤖 Lo siento, no entendí tu consulta. Escribe "ARCANA ayuda" para ver todas las opciones disponibles.\n\n💡 Puedo ayudarte con:\n• Turnos de canto\n• Información de ensayos\n• Búsqueda de canciones\n• Selección de repertorio\n• Cumpleaños del ministerio\n• Versículos bíblicos',
       expression: 'worried',
     };
   }
@@ -1538,6 +1139,22 @@ export class ArcanaBot {
     }
   }
 
+  private static handleBibleQuery(query: string): BotResponse {
+    if (query.includes("día") || query.includes("hoy")) {
+      return {
+        type: "general",
+        message: `📖 **Versículo del día:**\n\n🤖 Para el versículo diario y reflexiones espirituales, visita el Módulo Espiritual.\n\nAllí encontrarás:\n• 📖 Versículo del día con reflexión\n• 📚 Historia de versículos anteriores\n• 🙏 Meditaciones y estudios\n• 💫 Inspiración diaria\n\n"La palabra de Dios es viva y eficaz" - Hebreos 4:12 🙏✨`,
+        expression: 'thinking',
+      };
+    }
+
+    return {
+      type: "general",
+      message: `📖 **Consultas bíblicas:**\n\n🤖 Para versículos, reflexiones y estudios bíblicos visita el Módulo Espiritual.\n\nPuedes consultar:\n• "ARCANA versículo del día"\n• "ARCANA cita bíblica sobre amor"\n• "ARCANA biblia de hoy"\n\n"Lámpara es a mis pies tu palabra, y lumbrera a mi camino" - Salmo 119:105 🙏✨`,
+      expression: 'thinking',
+    };
+  }
+
   static async sendBotResponse(roomId: string, response: BotResponse): Promise<void> {
     try {
       console.log("ARCANA enviando respuesta:", response.message.substring(0, 50) + "...");
@@ -1567,60 +1184,3 @@ export class ArcanaBot {
     }
   }
 }
-
-// MEJORA: Hooks de React para UI
-export const useUserTyping = () => {
-  // Hook para manejar el estado de escritura del usuario
-  // y mostrar foto mientras escribe
-  const [isTyping, setIsTyping] = useState(false);
-  const [userPhoto, setUserPhoto] = useState<string | null>(null);
-
-  const startTyping = useCallback(async (userId: string) => {
-    setIsTyping(true);
-    // Obtener foto del usuario mientras escribe
-    const photo = await ArcanaBot.getUserPhoto(userId);
-    setUserPhoto(photo);
-  }, []);
-
-  const stopTyping = useCallback(() => {
-    setIsTyping(false);
-  }, []);
-
-  return {
-    isTyping,
-    userPhoto,
-    startTyping,
-    stopTyping
-  };
-};
-
-export const useVoiceMessages = () => {
-  // Hook para manejar mensajes de voz
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [transcription, setTranscription] = useState<string | null>(null);
-
-  const processVoiceMessage = useCallback(async (audioBlob: Blob) => {
-    setIsProcessing(true);
-    try {
-      const text = await ArcanaBot.processVoiceMessage(audioBlob);
-      setTranscription(text);
-      return text;
-    } catch (error) {
-      console.error("Error procesando mensaje de voz:", error);
-      throw error;
-    } finally {
-      setIsProcessing(false);
-    }
-  }, []);
-
-  const clearTranscription = useCallback(() => {
-    setTranscription(null);
-  }, []);
-
-  return {
-    isProcessing,
-    transcription,
-    processVoiceMessage,
-    clearTranscription
-  };
-};
