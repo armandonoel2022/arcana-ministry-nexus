@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Music, Plus, Search, Upload, ArrowLeft } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
+import { useSearchParams } from 'react-router-dom';
 import AddSongForm from '@/components/songs/AddSongForm';
 import CSVUpload from '@/components/songs/CSVUpload';
 import SongCatalog from '@/components/songs/SongCatalog';
@@ -13,10 +14,24 @@ const RepertoirioMusical = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const [initialSearch, setInitialSearch] = useState<string>('');
 
   useEffect(() => {
     checkUserRole();
-  }, []);
+    
+    // Verificar si hay parámetros de categoría y búsqueda en la URL
+    const categoryParam = searchParams.get('category');
+    const searchParam = searchParams.get('search');
+    
+    if (categoryParam) {
+      setSelectedCategory(categoryParam);
+    }
+    
+    if (searchParam) {
+      setInitialSearch(searchParam);
+    }
+  }, [searchParams]);
 
   const checkUserRole = async () => {
     try {
@@ -105,7 +120,11 @@ const RepertoirioMusical = () => {
             </TabsList>
 
             <TabsContent value="view" className="space-y-4">
-              <SongCatalog category={selectedCategory} key={refreshTrigger} />
+              <SongCatalog 
+                category={selectedCategory} 
+                key={refreshTrigger} 
+                initialSearch={initialSearch}
+              />
             </TabsContent>
 
             <TabsContent value="add" className="space-y-4">

@@ -31,15 +31,23 @@ const ITEMS_PER_PAGE = 12;
 
 interface SongCatalogProps {
   category?: string;
+  initialSearch?: string;
 }
 
-const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general' }) => {
+const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initialSearch = '' }) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [genreFilter, setGenreFilter] = useState('all');
   const [difficultyFilter, setDifficultyFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState('title');
+  
+  // Actualizar el término de búsqueda cuando cambie initialSearch
+  useEffect(() => {
+    if (initialSearch) {
+      setSearchTerm(initialSearch);
+    }
+  }, [initialSearch]);
 
   // Fetch songs with filters and pagination
   const { data: songsData, isLoading, error } = useQuery({

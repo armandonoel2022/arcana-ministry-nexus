@@ -13,6 +13,7 @@ import ServiceActionsMenu from './ServiceActionsMenu';
 import DirectorChangeRequest from './DirectorChangeRequest';
 import SelectedSongsDisplay from './SelectedSongsDisplay';
 import { EditServiceForm } from './EditServiceForm';
+import { EditSelectedSongsDialog } from './EditSelectedSongsDialog';
 
 interface Service {
   id: string;
@@ -604,24 +605,16 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
         </DialogContent>
       </Dialog>
 
-      {/* Selected Songs Dialog */}
-      <Dialog open={!!selectedServiceForSongs} onOpenChange={() => setSelectedServiceForSongs(null)}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Music className="w-5 h-5" />
-              Canciones Seleccionadas
-            </DialogTitle>
-          </DialogHeader>
-          {selectedServiceForSongs && (
-            <SelectedSongsDisplay 
-              serviceId={selectedServiceForSongs.id} 
-              serviceTitle={selectedServiceForSongs.title}
-              compact={false} 
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Selected Songs Dialog with Edit Functionality */}
+      {selectedServiceForSongs && (
+        <EditSelectedSongsDialog
+          serviceId={selectedServiceForSongs.id}
+          serviceTitle={selectedServiceForSongs.title}
+          open={!!selectedServiceForSongs}
+          onOpenChange={(open) => !open && setSelectedServiceForSongs(null)}
+          onSongsUpdated={fetchServices}
+        />
+      )}
 
       {/* Edit Service Dialog */}
       <Dialog open={!!selectedServiceForEdit} onOpenChange={() => setSelectedServiceForEdit(null)}>

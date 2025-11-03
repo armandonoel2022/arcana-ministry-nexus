@@ -197,14 +197,22 @@ const GenerateNextYearServices = () => {
         const director1 = getDirectorForService(i, '08:00', service1Group, directorIndex, usedDirectorsToday);
         usedDirectorsToday.add(director1);
         
+        // Obtener el mes en español
+        const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                           'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        const monthName = monthNames[sunday.getMonth()];
+        const monthOrder = sunday.getMonth() + 1;
+        
         services.push({
           title: '08:00 a.m.',
           service_date: new Date(sunday.getTime() + 8 * 60 * 60 * 1000).toISOString(),
           leader: director1,
           assigned_group_id: GROUPS[service1Group as keyof typeof GROUPS],
-          service_type: 'regular',
+          service_type: 'Servicio Dominical',
           location: 'Templo Principal',
-          is_confirmed: false
+          is_confirmed: false,
+          month_name: monthName,
+          month_order: monthOrder
         });
 
         // Servicio 10:45 AM
@@ -216,9 +224,11 @@ const GenerateNextYearServices = () => {
           service_date: new Date(sunday.getTime() + 10.75 * 60 * 60 * 1000).toISOString(),
           leader: director2,
           assigned_group_id: GROUPS[service2Group as keyof typeof GROUPS],
-          service_type: 'regular',
+          service_type: 'Servicio Dominical',
           location: 'Templo Principal',
-          is_confirmed: false
+          is_confirmed: false,
+          month_name: monthName,
+          month_order: monthOrder
         });
       }
 

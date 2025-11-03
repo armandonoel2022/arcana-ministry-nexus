@@ -101,8 +101,8 @@ const SelectedSongsDisplay: React.FC<SelectedSongsDisplayProps> = ({
   if (compact) {
     return (
       <div className="space-y-1">
-        {selectedSongs.slice(0, 3).map((song, index) => (
-          <div key={`${song.service_id}-${song.song_id}`} className="flex items-center gap-1 text-sm">
+        {selectedSongs.map((song, index) => (
+          <div key={`${song.service_id}-${song.song_id}-${index}`} className="flex items-center gap-1 text-sm">
             <Music className="w-3 h-3 text-blue-600" />
             <span className="truncate max-w-32 font-medium">
               {song.song_title}
@@ -114,11 +114,6 @@ const SelectedSongsDisplay: React.FC<SelectedSongsDisplayProps> = ({
             )}
           </div>
         ))}
-        {selectedSongs.length > 3 && (
-          <div className="text-xs text-blue-600 font-medium">
-            +{selectedSongs.length - 3} más seleccionadas...
-          </div>
-        )}
       </div>
     );
   }

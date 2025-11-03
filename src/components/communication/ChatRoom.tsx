@@ -351,7 +351,22 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
           return;
         }
 
-        // Insertar en la tabla service_songs (sin select para evitar queries complejas)
+        // Obtener datos del usuario actual para la notificación
+        const { data: { user } } = await supabase.auth.getUser();
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user?.id)
+          .single();
+
+        // Obtener datos de la canción
+        const { data: songData } = await supabase
+          .from('songs')
+          .select('title, artist, key_signature, difficulty_level')
+          .eq('id', action.songId)
+          .single();
+
+        // Insertar en la tabla service_songs
         console.log('Insertando en service_songs...');
         const { error } = await supabase
           .from('service_songs')
@@ -367,6 +382,43 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
         }
 
         console.log('Canción insertada exitosamente');
+
+        // Obtener todos los miembros activos para enviarles notificación
+        const { data: allMembers } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('is_active', true);
+
+        // Obtener datos completos del servicio
+        const { data: fullServiceData } = await supabase
+          .from('services')
+          .select('*')
+          .eq('id', serviceId)
+          .single();
+
+        // Crear notificaciones para todos los miembros
+        if (allMembers && allMembers.length > 0) {
+          const notifications = allMembers.map(member => ({
+            recipient_id: member.id,
+            type: 'song_selection',
+            title: '🎵 Nueva Canción Seleccionada',
+            message: `${profile?.full_name || 'Un director'} ha seleccionado "${songData?.title}" para el servicio "${fullServiceData?.title}" del ${new Date(serviceDate!).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}`,
+            notification_category: 'repertory',
+            metadata: {
+              service_id: serviceId,
+              service_title: fullServiceData?.title,
+              service_date: serviceDate,
+              service_leader: fullServiceData?.leader,
+              song_id: action.songId,
+              song_title: songData?.title,
+              selected_by: profile?.full_name
+            }
+          }));
+
+          await supabase
+            .from('system_notifications')
+            .insert(notifications);
+        }
 
         // Contar cuántas canciones tiene ahora el servicio
         const { data: songCount, error: countError } = await supabase
