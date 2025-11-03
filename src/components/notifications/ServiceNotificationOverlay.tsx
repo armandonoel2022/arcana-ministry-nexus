@@ -105,15 +105,18 @@ const SUPLENTS = {
   }
 };
 
-// Diccionario de grupos con sus miembros y configuraciones - CORREGIDO
+// CORRECCIÓN COMPLETA: Configuración de grupos basada en los datos reales de la base de datos
 const GROUP_CONFIG = {
   'Grupo de Aleida': {
     color_theme: '#3B82F6',
     members: [
+      // Miembros base del grupo de Aleida
       { id: '00a916a8-ab94-4cc0-81ae-668dd6071416', name: 'Aleida Geomar Batista Ventura', voice: 'Soprano', mic: 'Micrófono #1', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/00a916a8-ab94-4cc0-81ae-668dd6071416.JPG' },
       { id: 'c4089748-7168-4472-8e7c-bf44b4355906', name: 'Eliabi Joana Sierra Castillo', voice: 'Soprano', mic: 'Micrófono #2', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG' },
-      { id: '8cebc294-ea61-40d0-9b04-08d7d474332c', name: 'Fior Daliza Paniagua', voice: 'Contralto', mic: 'Micrófono #4', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/8cebc294-ea61-40d0-9b04-08d7d474332c.JPG' }
-      // Se removió a Ruth Esmailin Ramirez para dejar espacio para el corista varón
+      { id: '8cebc294-ea61-40d0-9b04-08d7d474332c', name: 'Fior Daliza Paniagua', voice: 'Contralto', mic: 'Micrófono #4', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/8cebc294-ea61-40d0-9b04-08d7d474332c.JPG' },
+      { id: '619c1a4e-42db-4549-8890-16392cfa2a87', name: 'Ruth Esmailin Ramirez', voice: 'Contralto', mic: 'Micrófono #5', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/619c1a4e-42db-4549-8890-16392cfa2a87.JPG' },
+      // Agregar miembros adicionales del grupo de Aleida
+      { id: 'f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f', name: 'Felix Nicolas Peralta Hernandez', voice: 'Tenor', mic: 'Micrófono #3', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG' }
     ],
     maleSingers: ['Armando Noel', 'Nicolas Peralta']
   },
@@ -132,27 +135,25 @@ const GROUP_CONFIG = {
     members: [
       { id: '2a2fa0cd-d301-46ec-9965-2e4ea3692181', name: 'Rosely Montero', voice: 'Contralto', mic: 'Micrófono #1', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/2a2fa0cd-d301-46ec-9965-2e4ea3692181.jpeg' },
       { id: 'b5719097-187d-4804-8b7f-e84cc1ec9ad5', name: 'Jisell Amada Mauricio Paniagua', voice: 'Soprano', mic: 'Micrófono #2', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/b5719097-187d-4804-8b7f-e84cc1ec9ad5.JPG' },
-      { id: 'bdcc27cd-40ae-456e-a340-633ce7da08c0', name: 'Rodes Esther Santana Cuesta', voice: 'Contralto', mic: 'Micrófono #4', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/bdcc27cd-40ae-456e-a340-633ce7da08c0.JPG' }
+      { id: 'bdcc27cd-40ae-456e-a340-633ce7da08c0', name: 'Rodes Esther Santana Cuesta', voice: 'Contralto', mic: 'Micrófono #4', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/bdcc27cd-40ae-456e-a340-633ce7da08c0.JPG' },
+      { id: '7a1645d8-75fe-498c-a2e9-f1057ff3521f', name: 'Fredderid Abrahan Valera Montoya', voice: 'Tenor', mic: 'Micrófono #3', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/7a1645d8-75fe-498c-a2e9-f1057ff3521f.JPG' },
+      { id: 'cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38', name: 'Damaris Castillo Jimenez', voice: 'Soprano', mic: 'Micrófono #5', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38.JPG' }
     ],
     maleSingers: ['Abraham Valera', 'Denny Santana']
   }
 };
 
-// MEJORA: Función mejorada para obtener el próximo suplente
+// MEJORA: Función de rotación simplificada
 const getNextMaleSinger = (groupName: string, serviceTime: string, currentDirector: string) => {
-  console.log(`Buscando corista para: ${groupName}, Horario: ${serviceTime}, Director: ${currentDirector}`);
-  
   // Si el director actual es uno de los suplentes, no puede hacer coros
   const directorsWhoCannotSing = ['Armando Noel', 'Nicolas Peralta', 'Guarionex Garcia', 'Maria Del A. Perez Santana', 'Mariam Santana', 'Denny Alberto Santana'];
   
   if (directorsWhoCannotSing.some(name => currentDirector.includes(name))) {
-    console.log(`Director ${currentDirector} no puede hacer coros`);
     return null;
   }
 
   // Maria Santana solo puede hacer coros en servicios de 8:00 AM
   if (currentDirector.includes('Maria') && serviceTime !== '8:00 AM') {
-    console.log('Maria Santana solo puede hacer coros en servicios de 8:00 AM');
     return null;
   }
 
@@ -160,19 +161,106 @@ const getNextMaleSinger = (groupName: string, serviceTime: string, currentDirect
   if (groupName === 'Grupo de Aleida') {
     const groupConfig = GROUP_CONFIG['Grupo de Aleida'];
     const singerName = groupConfig.maleSingers[aleidaRotationCounter % groupConfig.maleSingers.length];
-    console.log(`Grupo Aleida - Corista seleccionado: ${singerName}, Rotación: ${aleidaRotationCounter}`);
     aleidaRotationCounter++;
     return SUPLENTS[singerName as keyof typeof SUPLENTS];
   } else if (groupName === 'Grupo de Massy') {
     const groupConfig = GROUP_CONFIG['Grupo de Massy'];
     const singerName = groupConfig.maleSingers[massyRotationCounter % groupConfig.maleSingers.length];
-    console.log(`Grupo Massy - Corista seleccionado: ${singerName}, Rotación: ${massyRotationCounter}`);
     massyRotationCounter++;
     return SUPLENTS[singerName as keyof typeof SUPLENTS];
   }
   
-  console.log(`No se encontró corista para el grupo: ${groupName}`);
   return null;
+};
+
+// MEJORA: Función mejorada para obtener miembros del grupo basada en datos reales
+const getGroupMembers = (groupName: string, serviceTime: string, currentDirector: string) => {
+  console.log(`Obteniendo miembros para: ${groupName}, Horario: ${serviceTime}, Director: ${currentDirector}`);
+  
+  const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG] || GROUP_CONFIG['Grupo de Aleida'];
+  
+  // Si es Grupo de Aleida, aplicar rotación de coristas varones
+  if (groupName === 'Grupo de Aleida') {
+    const members = [...groupConfig.members];
+    
+    // Verificar si el director actual es un corista varón que no puede cantar
+    const directorsWhoCannotSing = ['Armando Noel', 'Nicolas Peralta', 'Guarionex Garcia', 'Maria Del A. Perez Santana', 'Mariam Santana', 'Denny Alberto Santana'];
+    
+    if (!directorsWhoCannotSing.some(name => currentDirector.includes(name))) {
+      // Aplicar rotación para corista varón adicional
+      const maleSinger = getNextMaleSinger(groupName, serviceTime, currentDirector);
+      if (maleSinger) {
+        console.log(`Agregando corista varón rotativo: ${maleSinger.name}`);
+        // Reemplazar el corista varón existente con el de la rotación
+        const existingMaleIndex = members.findIndex(m => 
+          m.name.includes('Armando') || m.name.includes('Nicolas') || m.name.includes('Felix')
+        );
+        
+        if (existingMaleIndex !== -1) {
+          members[existingMaleIndex] = { 
+            ...maleSinger, 
+            mic: 'Micrófono #3',
+            voice: maleSinger.voice || 'Tenor'
+          };
+        } else {
+          members.push({ 
+            ...maleSinger, 
+            mic: 'Micrófono #3',
+            voice: maleSinger.voice || 'Tenor'
+          });
+        }
+      }
+    }
+    
+    return members;
+  }
+  
+  // Si es Grupo de Massy, aplicar rotación y lógica especial
+  if (groupName === 'Grupo de Massy') {
+    const members = [...groupConfig.members];
+    
+    // Aplicar rotación para corista varón
+    const directorsWhoCannotSing = ['Armando Noel', 'Nicolas Peralta', 'Guarionex Garcia', 'Maria Del A. Perez Santana', 'Mariam Santana', 'Denny Alberto Santana'];
+    
+    if (!directorsWhoCannotSing.some(name => currentDirector.includes(name))) {
+      const maleSinger = getNextMaleSinger(groupName, serviceTime, currentDirector);
+      if (maleSinger) {
+        console.log(`Agregando corista varón rotativo: ${maleSinger.name}`);
+        // Reemplazar el corista varón existente
+        const existingMaleIndex = members.findIndex(m => 
+          m.name.includes('Abraham') || m.name.includes('Fredderid')
+        );
+        
+        if (existingMaleIndex !== -1) {
+          members[existingMaleIndex] = { 
+            ...maleSinger, 
+            mic: 'Micrófono #3',
+            voice: maleSinger.voice || 'Tenor'
+          };
+        }
+      }
+    }
+    
+    // Lógica especial para Guarionex en servicios de 8:00 AM
+    if (serviceTime === '8:00 AM') {
+      const guarionex = SUPLENTS['Guarionex Garcia'];
+      if (guarionex && !currentDirector.includes('Guarionex')) {
+        console.log('Agregando Guarionex Garcia para servicio de 8:00 AM');
+        // Verificar si ya existe un miembro con micrófono #5 y reemplazarlo
+        const existingMemberIndex = members.findIndex(m => m.mic === 'Micrófono #5' && !m.name.includes('Damaris'));
+        if (existingMemberIndex !== -1) {
+          members[existingMemberIndex] = { ...guarionex, mic: 'Micrófono #5', voice: 'Tenor' };
+        } else {
+          members.push({ ...guarionex, mic: 'Micrófono #5', voice: 'Tenor' });
+        }
+      }
+    }
+    
+    return members;
+  }
+  
+  // Para otros grupos, retornar miembros base
+  return [...groupConfig.members];
 };
 
 const ServiceNotificationOverlay = ({ 
@@ -241,38 +329,14 @@ const ServiceNotificationOverlay = ({
         const groupName = service.group || 'Grupo de Alabanza';
         const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG] || GROUP_CONFIG['Grupo de Aleida'];
         const serviceTime = getServiceTime(service.time || service.title);
-        const formattedTitle = getFormattedServiceTitle(service.time || service.title);
         
-        // Obtener miembros base del grupo
-        let members = [...groupConfig.members];
-        
-        // Aplicar lógica de suplentes según el grupo y horario
-        const maleSinger = getNextMaleSinger(groupName, serviceTime, service.director?.name || service.director);
-        
-        if (maleSinger) {
-          console.log(`Agregando corista varón: ${maleSinger.name} con Micrófono #3`);
-          // Agregar el corista varón con micrófono #3
-          members.push({ 
-            ...maleSinger, 
-            mic: 'Micrófono #3',
-            voice: maleSinger.voice || 'Tenor'
-          });
-        }
-
-        // Lógica especial para Grupo de Massy en servicios de 8:00 AM
-        if (groupName === 'Grupo de Massy' && serviceTime === '8:00 AM') {
-          // Agregar Guarionex Garcia
-          const guarionex = SUPLENTS['Guarionex Garcia'];
-          if (guarionex && !service.director?.includes('Guarionex')) {
-            console.log('Agregando Guarionex Garcia para servicio de 8:00 AM');
-            members.push({ ...guarionex, mic: 'Micrófono #5' });
-          }
-        }
+        // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS
+        const members = getGroupMembers(groupName, serviceTime, service.director?.name || service.director);
 
         return {
           id: service.id || Date.now().toString(),
           service_date: metadata.service_date,
-          title: formattedTitle,
+          title: `${service.time === '8:00 a.m.' ? 'Primer Servicio - 8:00 AM' : 'Segundo Servicio - 10:45 AM'}`,
           leader: service.director?.name || service.director || 'Por asignar',
           service_type: 'regular',
           location: 'Templo Principal',
@@ -433,47 +497,22 @@ const ServiceNotificationOverlay = ({
               }
             }
 
-            // Obtener miembros del grupo desde la configuración con rotación
+            // Obtener miembros del grupo usando la nueva función
             const groupName = service.worship_groups?.name || 'Grupo de Alabanza';
-            const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG] || GROUP_CONFIG['Grupo de Aleida'];
             const serviceTime = getServiceTime(service.title);
-            const formattedTitle = getFormattedServiceTitle(service.title);
             
-            // Obtener miembros base
-            members = [...groupConfig.members];
+            // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS
+            members = getGroupMembers(groupName, serviceTime, service.leader);
             
-            // APLICAR LÓGICA DE SUPLENTES - SIEMPRE para Aleida y Massy
-            console.log(`Procesando servicio: ${formattedTitle}, Grupo: ${groupName}, Horario: ${serviceTime}`);
-            
-            if (groupName === 'Grupo de Aleida' || groupName === 'Grupo de Massy') {
-              const maleSinger = getNextMaleSinger(groupName, serviceTime, service.leader);
-              
-              if (maleSinger) {
-                console.log(`Agregando corista varón: ${maleSinger.name} con Micrófono #3`);
-                // Agregar el corista varón con micrófono #3
-                members.push({ 
-                  ...maleSinger, 
-                  mic: 'Micrófono #3',
-                  voice: maleSinger.voice || 'Tenor'
-                });
-              } else {
-                console.log('No se pudo agregar corista varón para este servicio');
-              }
-            }
-
-            // Lógica especial para Grupo de Massy en servicios de 8:00 AM
-            if (groupName === 'Grupo de Massy' && serviceTime === '8:00 AM') {
-              // Agregar Guarionex Garcia
-              const guarionex = SUPLENTS['Guarionex Garcia'];
-              if (guarionex && !service.leader?.includes('Guarionex')) {
-                console.log('Agregando Guarionex Garcia para servicio de 8:00 AM');
-                members.push({ ...guarionex, mic: 'Micrófono #5' });
-              }
-            }
+            console.log(`Miembros finales para ${groupName}:`, members.map(m => m.name));
 
             // Si no hay director encontrado, usar el primer miembro como líder
             if (!directorProfile && members.length > 0) {
-              directorProfile = members[0].profiles;
+              directorProfile = {
+                id: members[0].id,
+                full_name: members[0].name,
+                photo_url: members[0].photo_url
+              };
             }
 
             let selectedSongs: any[] = [];
@@ -514,9 +553,10 @@ const ServiceNotificationOverlay = ({
               }
             }
 
+            const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG] || GROUP_CONFIG['Grupo de Aleida'];
+
             return {   
               ...service,   
-              title: formattedTitle,
               group_members: members.map((member, index) => ({
                 id: `member-${service.id}-${index}`,
                 user_id: member.id,
@@ -659,26 +699,10 @@ const ServiceNotificationOverlay = ({
   };
 
   const getServiceTime = (serviceTitle: string) => {
-    if (serviceTitle.toLowerCase().includes('primera') || 
-        serviceTitle.toLowerCase().includes('8:00') || 
-        serviceTitle.toLowerCase().includes('primer') ||
-        serviceTitle.toLowerCase().includes('8:00 a.m.')) {
+    if (serviceTitle.toLowerCase().includes('primera') || serviceTitle.toLowerCase().includes('8:00') || serviceTitle.toLowerCase().includes('primer')) {
       return '8:00 AM';
-    } else if (serviceTitle.toLowerCase().includes('segunda') || 
-               serviceTitle.toLowerCase().includes('10:45') || 
-               serviceTitle.toLowerCase().includes('segundo') ||
-               serviceTitle.toLowerCase().includes('10:45 a.m.')) {
+    } else if (serviceTitle.toLowerCase().includes('segunda') || serviceTitle.toLowerCase().includes('10:45') || serviceTitle.toLowerCase().includes('segundo')) {
       return '10:45 AM';
-    }
-    return serviceTitle;
-  };
-
-  const getFormattedServiceTitle = (serviceTitle: string) => {
-    const time = getServiceTime(serviceTitle);
-    if (time === '8:00 AM') {
-      return 'Primer Servicio - 8:00 AM';
-    } else if (time === '10:45 AM') {
-      return 'Segundo Servicio - 10:45 AM';
     }
     return serviceTitle;
   };
@@ -801,7 +825,7 @@ const ServiceNotificationOverlay = ({
     }
   };
 
-  // ServiceCard component
+  // Nuevo diseño de ServiceCard mejorado
   const ServiceCard = ({ service }: { service: WeekendService }) => {
     const serviceTime = getServiceTime(service.title);
     const directorMember = service.group_members.find(m => m.is_leader);
