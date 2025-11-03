@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -71,9 +70,65 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
   }, [messages]);
 
   const getCurrentUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    setCurrentUser(user);
-    console.log('Usuario actual:', user?.id, user?.email);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('Usuario auth:', user);
+      
+      if (user) {
+        // Obtener el perfil
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) {
+          console.error('Error obteniendo perfil:', profileError);
+        }
+
+        let memberData = null;
+        
+        // Buscar en members por email
+        if (user.email) {
+          const { data: memberByEmail } = await supabase
+            .from('members')
+            .select('*')
+            .eq('email', user.email)
+            .eq('is_active', true)
+            .single();
+          memberData = memberByEmail;
+        }
+
+        // Si no se encontró por email, buscar por nombre aproximado
+        if (!memberData && profile?.full_name) {
+          const firstName = profile.full_name.split(' ')[0];
+          const { data: membersByName } = await supabase
+            .from('members')
+            .select('*')
+            .ilike('nombres', `%${firstName}%`)
+            .eq('is_active', true)
+            .limit(1);
+          
+          if (membersByName && membersByName.length > 0) {
+            memberData = membersByName[0];
+          }
+        }
+
+        console.log('Datos de member encontrados:', memberData);
+        
+        setCurrentUser({
+          ...user,
+          profile: profile,
+          member: memberData
+        });
+      } else {
+        setCurrentUser(null);
+      }
+    } catch (error) {
+      console.error('Error en getCurrentUser:', error);
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUser(user); // Fallback básico
+    }
   };
 
   const scrollToBottom = () => {
@@ -106,7 +161,6 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
       }
       
       console.log('Mensajes obtenidos:', data?.length || 0);
-      console.log('Datos de mensajes:', data);
       setMessages(data || []);
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -177,6 +231,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
 
     try {
       console.log('Enviando mensaje:', textToSend);
+      console.log('Usuario actual:', currentUser);
       
       // Agregar mensaje del usuario de forma optimista
       const tempUserMessage: Message = {
@@ -212,7 +267,8 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
       const botResponse = await ArcanaBot.processMessage(
         textToSend,
         room.id,
-        userId
+        userId,
+        currentUser // ← Pasar el usuario completo
       );
 
       if (botResponse) {
@@ -535,6 +591,11 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
               <p className="text-[10px] sm:text-xs text-arcana-blue-600 mt-1">
                 💡 Escribe "ARCANA" o "@ARCANA" seguido de tu consulta sobre turnos, ensayos y canciones
               </p>
+              {currentUser?.member && (
+                <p className="text-[10px] sm:text-xs text-arcana-gold-600 mt-1">
+                  👋 Hola {currentUser.member.nombres} - {currentUser.member.cargo}
+                </p>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -552,14 +613,6 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
               messages.map((message) => {
                 const isOwnMessage = message.user_id === currentUser?.id;
                 const isBotMessage = isBot(message);
-                
-                console.log('Renderizando mensaje:', {
-                  id: message.id,
-                  isBot: isBotMessage,
-                  user_id: message.user_id,
-                  is_bot: message.is_bot,
-                  message: message.message.substring(0, 50)
-                });
                 
                 return (
                   <div
