@@ -314,7 +314,6 @@ const ServiceNotificationOverlay = ({
     return finalFormation;
   };
 
-  // Resto del código se mantiene igual hasta la función fetchWeekendServices...
   useEffect(() => {
     if (forceShow) {
       setIsVisible(true);
@@ -323,6 +322,7 @@ const ServiceNotificationOverlay = ({
       return;
     }
 
+    // Limpiar localStorage para forzar mostrar el overlay
     localStorage.removeItem('serviceNotificationDismissed');
     localStorage.removeItem('serviceNotificationLastShown');
     
@@ -331,12 +331,15 @@ const ServiceNotificationOverlay = ({
     const today = new Date().toDateString();
 
     if (!hasInteracted || lastShownDate !== today) {
+      console.log('Fetching weekend services...');
       fetchWeekendServices();
     } else {
+      console.log('Overlay already shown today');
       setIsLoading(false);
     }
 
     const handleNotifications = (payload: any) => {
+      console.log('Notification received:', payload);
       if (
         payload.eventType === 'INSERT' &&
         payload.new.type === 'service_program' &&
@@ -359,9 +362,10 @@ const ServiceNotificationOverlay = ({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [forceShow]);
 
   const showServiceProgramOverlay = (metadata: ServiceProgramNotification) => {
+    console.log('Showing service program overlay:', metadata);
     if (metadata.services && Array.isArray(metadata.services)) {
       const formattedServices = metadata.services.map((service: any) => {
         const groupName = service.group || 'Grupo de Alabanza';
@@ -371,7 +375,7 @@ const ServiceNotificationOverlay = ({
         return {
           id: service.id || Date.now().toString(),
           service_date: metadata.service_date,
-          title: `${service.time === '8:00 a.m.' ? 'Primer Servicio - 8:00 AM' : 'Segundo Servicio - 10:45 AM'}`,
+          title: `${service.time === '8:00 a.m.' ? 'Primer Servicio - 08:00 A.M.' : 'Segundo Servicio - 10:45 A.M.'}`,
           leader: service.director?.name || service.director || 'Por asignar',
           service_type: 'regular',
           location: 'Templo Principal',
@@ -414,6 +418,7 @@ const ServiceNotificationOverlay = ({
         };
       });
       
+      console.log('Formatted services:', formattedServices);
       setServices(formattedServices);
       setIsVisible(true);
       setTimeout(() => setIsAnimating(true), 100);
@@ -458,6 +463,7 @@ const ServiceNotificationOverlay = ({
 
   const fetchWeekendServices = async () => {
     try {
+      console.log('Fetching weekend services from database...');
       const { start, end } = getNextWeekend();
       
       const { data, error } = await supabase
@@ -481,7 +487,12 @@ const ServiceNotificationOverlay = ({
         .lte('service_date', end.toISOString())
         .order('service_date', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching services:', error);
+        throw error;
+      }
+
+      console.log('Services found:', data);
 
       if (data && data.length > 0) {
         const servicesWithMembers = await Promise.all(  
@@ -516,7 +527,7 @@ const ServiceNotificationOverlay = ({
 
             // Obtener miembros del grupo con la formación corregida
             const groupName = service.worship_groups?.name || 'Grupo de Alabanza';
-            const serviceTime = service.title.toLowerCase().includes('8:00') ? '08:00' : '10:45';
+            const serviceTime = service.title.toLowerCase().includes('8:00') || service.title.toLowerCase().includes('08:00') ? '08:00' : '10:45';
             const formation = getGroupFormation(groupName, serviceTime, service.leader, service.id);
             
             const members = formation.map((member, index) => ({
@@ -596,11 +607,13 @@ const ServiceNotificationOverlay = ({
           })  
         );
 
+        console.log('Services with members:', servicesWithMembers);
         setServices(servicesWithMembers as WeekendService[]);
         
         setIsVisible(true);
         setTimeout(() => setIsAnimating(true), 100);
       } else {
+        console.log('No services found for weekend');
         setIsLoading(false);
       }
     } catch (error) {
@@ -609,7 +622,6 @@ const ServiceNotificationOverlay = ({
     }
   };
 
-  // Resto del código (closeOverlay, handleConfirmAttendance, etc.) se mantiene igual...
   const closeOverlay = () => {
     setIsAnimating(false);
     setTimeout(() => {
@@ -712,10 +724,10 @@ const ServiceNotificationOverlay = ({
   };
 
   const getServiceTime = (serviceTitle: string) => {
-    if (serviceTitle.toLowerCase().includes('primera') || serviceTitle.toLowerCase().includes('8:00') || serviceTitle.toLowerCase().includes('primer')) {
-      return '8:00 AM';
+    if (serviceTitle.toLowerCase().includes('primera') || serviceTitle.toLowerCase().includes('8:00') || serviceTitle.toLowerCase().includes('primer') || serviceTitle.toLowerCase().includes('08:00')) {
+      return 'Primer Servicio - 08:00 A.M.';
     } else if (serviceTitle.toLowerCase().includes('segunda') || serviceTitle.toLowerCase().includes('10:45') || serviceTitle.toLowerCase().includes('segundo')) {
-      return '10:45 AM';
+      return 'Segundo Servicio - 10:45 A.M.';
     }
     return serviceTitle;
   };
@@ -723,6 +735,22 @@ const ServiceNotificationOverlay = ({
   const getInitials = (name: string) => {
     if (!name) return 'NN';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  // Función para formatear nombres (nombre arriba, apellido abajo)
+  const formatMemberName = (fullName: string) => {
+    const parts = fullName.split(' ');
+    if (parts.length <= 2) return fullName;
+    
+    const firstName = parts[0];
+    const lastName = parts.slice(1).join(' ');
+    
+    return (
+      <div className="text-left">
+        <div className="font-medium text-gray-900">{firstName}</div>
+        <div className="text-xs text-gray-600">{lastName}</div>
+      </div>
+    );
   };
 
   const getResponsibleVoices = (members: WeekendService['group_members']) => {
@@ -838,7 +866,7 @@ const ServiceNotificationOverlay = ({
     }
   };
 
-  // ServiceCard component
+  // ServiceCard component mejorado
   const ServiceCard = ({ service }: { service: WeekendService }) => {
     const serviceTime = getServiceTime(service.title);
     const directorMember = service.group_members.find(m => m.is_leader);
@@ -1011,7 +1039,7 @@ const ServiceNotificationOverlay = ({
             )}
           </div>
 
-          {/* Right Column - Voices */}
+          {/* Right Column - Voices - MEJORADO */}
           <div>
             {responsibleVoices.length > 0 && (
               <div className="bg-blue-50 rounded-lg p-4 h-full">
@@ -1035,10 +1063,8 @@ const ServiceNotificationOverlay = ({
                           {getInitials(member.profiles?.full_name || 'NN')}
                         </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium text-gray-900">
-                          {member.profiles?.full_name}
-                        </div>
+                      <div className="min-w-0 flex-1 text-left">
+                        {formatMemberName(member.profiles?.full_name || '')}
                         <div className="text-xs text-blue-600">
                           {member.instrument}
                         </div>
