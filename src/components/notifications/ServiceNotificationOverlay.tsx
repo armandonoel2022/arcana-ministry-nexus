@@ -151,6 +151,101 @@ const ServiceNotificationOverlay = ({
   const [activeTab, setActiveTab] = useState<'services' | 'preparations'>('services');
   const serviceCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
+  // Función para formatear nombres (nombre arriba, apellido abajo) usando la lista proporcionada
+  const formatMemberName = (fullName: string) => {
+    // Mapeo de nombres completos a nombres y apellidos según la lista
+    const nameMapping: { [key: string]: { nombre: string, apellido: string } } = {
+      'Aleida Geomar Batista Ventura': { nombre: 'Aleida Geomar', apellido: 'Batista Ventura' },
+      'Yamilet Taveras': { nombre: 'Yamilet', apellido: 'Taveras' },
+      'Yindia Carolina Santana Castillo': { nombre: 'Yindia Carolina', apellido: 'Santana Castillo' },
+      'Camila Marie Marte Martinez': { nombre: 'Camila Marie', apellido: 'Marte Martinez' },
+      'Jose Neftali Castillo': { nombre: 'Jose Neftali', apellido: 'Castillo' },
+      'Wilton Gomez Portes': { nombre: 'Wilton', apellido: 'Gomez Portes' },
+      'Maria Del A. Perez Santana': { nombre: 'Maria Del A.', apellido: 'Perez Santana' },
+      'Aledi Martinez Hernandez': { nombre: 'Aledi', apellido: 'Martinez Hernandez' },
+      'Harold Javier Pinales Mora': { nombre: 'Harold Javier', apellido: 'Pinales Mora' },
+      'Rosely Montero': { nombre: 'Rosely', apellido: 'Montero' },
+      'Alonso Nunez': { nombre: 'Alonso', apellido: 'Nunez' },
+      'Arianny claribel Holguin Nunez': { nombre: 'Arianny Claribel', apellido: 'Holguin Nunez' },
+      'Ruth Esther Santana de Noel': { nombre: 'Ruth Esther', apellido: 'Santana de Noel' },
+      'David Santana': { nombre: 'David', apellido: 'Santana' },
+      'Delvin Josue Sanchez Ramirez': { nombre: 'Delvin Josue', apellido: 'Sanchez Ramirez' },
+      'Jessica Maria Cordero Medrano': { nombre: 'Jessica Maria', apellido: 'Cordero Medrano' },
+      'Arizoni Liriano Medina': { nombre: 'Arizoni', apellido: 'Liriano Medina' },
+      'Enger Julio F. Santana': { nombre: 'Enger Julio', apellido: 'F. Santana' },
+      'Jatniel Martinez Portes': { nombre: 'Jatniel', apellido: 'Martinez Portes' },
+      'Arismel Pena': { nombre: 'Arismel', apellido: 'Pena' },
+      'Roosevelt Martinez': { nombre: 'Roosevelt', apellido: 'Martinez' },
+      'Ruth Esmailin Ramirez': { nombre: 'Ruth Esmailin', apellido: 'Ramirez' },
+      'Elieser Leyba Ortiz': { nombre: 'Elieser', apellido: 'Leyba Ortiz' },
+      'Katherine Orquidea Lorenzo Rosario': { nombre: 'Katherine Orquidea', apellido: 'Lorenzo Rosario' },
+      'Denny Alberto Santana': { nombre: 'Denny Alberto', apellido: 'Santana' },
+      'Emely Paola Tejeda Lopez': { nombre: 'Emely Paola', apellido: 'Tejeda Lopez' },
+      'Hidekel Mateo Morillo': { nombre: 'Hidekel', apellido: 'Mateo Morillo' },
+      'Fredderid Abrahan Valera Montoya': { nombre: 'Fredderid Abrahan', apellido: 'Valera Montoya' },
+      'Maria Perier Alcantara': { nombre: 'Maria', apellido: 'Perier Alcantara' },
+      'Darianna Jamilee Castillo Pereyra': { nombre: 'Darianna Jamilee', apellido: 'Castillo Pereyra' },
+      'Aida Lorena Pacheco De Santana': { nombre: 'Aida Lorena', apellido: 'Pacheco De Santana' },
+      'Robert Caraballo': { nombre: 'Robert', apellido: 'Caraballo' },
+      'Jose Ramon Henriquez Toribio': { nombre: 'Jose Ramon', apellido: 'Henriquez Toribio' },
+      'Fior Daliza Paniagua': { nombre: 'Fior Daliza', apellido: 'Paniagua' },
+      'Luis Alberto Marte Batista': { nombre: 'Luis Alberto', apellido: 'Marte Batista' },
+      'Jose Oziel Liberato Martínez': { nombre: 'Jose Oziel', apellido: 'Liberato Martínez' },
+      'Guarionex Garcia': { nombre: 'Guarionex', apellido: 'Garcia' },
+      'Jisell Amada Mauricio Paniagua': { nombre: 'Jisell Amada', apellido: 'Mauricio Paniagua' },
+      'Rodes Esther Santana Cuesta': { nombre: 'Rodes Esther', apellido: 'Santana Cuesta' },
+      'Sugey A. Gonzalez Garo': { nombre: 'Sugey A.', apellido: 'Gonzalez Garo' },
+      'Keyla Yanira Medrano Medrano': { nombre: 'Keyla Yanira', apellido: 'Medrano Medrano' },
+      'Eliabi Joana Sierra Castillo': { nombre: 'Eliabi Joana', apellido: 'Sierra Castillo' },
+      'Carmery Martinez': { nombre: 'Carmery', apellido: 'Martinez' },
+      'Ashley Rossely Jimenez Gonzalez': { nombre: 'Ashley Rossely', apellido: 'Jimenez Gonzalez' },
+      'Damaris Castillo Jimenez': { nombre: 'Damaris', apellido: 'Castillo Jimenez' },
+      'Dhaviana Rafaelina Munoz Azor': { nombre: 'Dhaviana Rafaelina', apellido: 'Munoz Azor' },
+      'Mayker Martinez Lara': { nombre: 'Mayker', apellido: 'Martinez Lara' },
+      'Armando Noel Charle': { nombre: 'Armando', apellido: 'Noel Charle' },
+      'Narda Rafaelina Azor Mejia': { nombre: 'Narda Rafaelina', apellido: 'Azor Mejia' },
+      'Iham Francisco': { nombre: 'Iham', apellido: 'Francisco' },
+      'Sarah Esther Burgos Perier': { nombre: 'Sarah Esther', apellido: 'Burgos Perier' },
+      'Alisha Jimenez': { nombre: 'Alisha', apellido: 'Jimenez' },
+      'Jose Uziel Liberato Martinez': { nombre: 'Jose Uziel', apellido: 'Liberato Martinez' },
+      'Jhoyve Shantal Rosario Cabrera': { nombre: 'Jhoyve Shantal', apellido: 'Rosario Cabrera' },
+      'Felix Nicolas Peralta Hernandez': { nombre: 'Felix Nicolas', apellido: 'Peralta Hernandez' },
+      'Gerson Daniel Sanchez Santana': { nombre: 'Gerson Daniel', apellido: 'Sanchez Santana' }
+    };
+
+    // Buscar en el mapeo primero
+    if (nameMapping[fullName]) {
+      const { nombre, apellido } = nameMapping[fullName];
+      return (
+        <div className="text-left">
+          <div className="font-medium text-gray-900">{nombre}</div>
+          <div className="text-xs text-gray-600">{apellido}</div>
+        </div>
+      );
+    }
+
+    // Si no está en el mapeo, usar lógica de respaldo
+    const parts = fullName.split(' ');
+    if (parts.length <= 2) {
+      return (
+        <div className="text-left">
+          <div className="font-medium text-gray-900">{fullName}</div>
+        </div>
+      );
+    }
+    
+    // Para nombres con más de 2 partes, tomar las primeras 1-2 como nombre y el resto como apellido
+    const nombre = parts.slice(0, Math.min(2, parts.length - 1)).join(' ');
+    const apellido = parts.slice(Math.min(2, parts.length - 1)).join(' ');
+    
+    return (
+      <div className="text-left">
+        <div className="font-medium text-gray-900">{nombre}</div>
+        <div className="text-xs text-gray-600">{apellido}</div>
+      </div>
+    );
+  };
+
   // Función para obtener la formación correcta según las reglas
   const getGroupFormation = (groupName: string, serviceTime: string, directorName: string, serviceId: string) => {
     const groupConfig = BASE_GROUP_CONFIG[groupName as keyof typeof BASE_GROUP_CONFIG];
@@ -735,22 +830,6 @@ const ServiceNotificationOverlay = ({
   const getInitials = (name: string) => {
     if (!name) return 'NN';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  };
-
-  // Función para formatear nombres (nombre arriba, apellido abajo)
-  const formatMemberName = (fullName: string) => {
-    const parts = fullName.split(' ');
-    if (parts.length <= 2) return fullName;
-    
-    const firstName = parts[0];
-    const lastName = parts.slice(1).join(' ');
-    
-    return (
-      <div className="text-left">
-        <div className="font-medium text-gray-900">{firstName}</div>
-        <div className="text-xs text-gray-600">{lastName}</div>
-      </div>
-    );
   };
 
   const getResponsibleVoices = (members: WeekendService['group_members']) => {
