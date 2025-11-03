@@ -130,7 +130,7 @@ export class ArcanaBot {
         return await this.handleCancionesBuscar(cleanMessage, userId);
       
       case 'canciones_seleccionar':
-        return await this.handleCancionesSeleccionar(cleanMessage);
+        return await this.handleCancionesSeleccionar(cleanMessage, userId);
       
       case 'cumpleanos':
         return await this.handleBirthdayQuery(cleanMessage);
@@ -681,6 +681,30 @@ export class ArcanaBot {
         };
       }
 
+      // Obtener próximo servicio para el usuario si es director
+      let nextService = null;
+      if (userId) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (profile?.full_name) {
+          const { data: service } = await supabase
+            .from("services")
+            .select("id, service_date, title")
+            .ilike('leader', `%${profile.full_name}%`)
+            .gte('service_date', new Date().toISOString().split('T')[0])
+            .order('service_date', { ascending: true })
+            .limit(1)
+            .maybeSingle();
+          nextService = service;
+        }
+      }
+
+      const serviceDate = nextService?.service_date;
+
       let mensaje = `🎵 **Encontré ${canciones.length} canción(es):**\n\n`;
 
       canciones.forEach((cancion, index) => {
@@ -691,10 +715,29 @@ export class ArcanaBot {
         mensaje += "\n";
       });
 
+      // Agregar botones si el usuario es director y tiene próximo servicio
+      const actions: BotAction[] = [];
+      if (nextService) {
+        mensaje += `💡 **Haz clic en los botones para agregar al servicio del ${new Date(serviceDate!).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}**\n\n`;
+        
+        actions.push(...canciones.map((c: any) => ({
+          type: 'select_song',
+          songId: c.id,
+          songName: c.title,
+          serviceDate: nextService.service_date,
+          serviceId: nextService.id
+        })));
+      } else {
+        mensaje += "💡 **Opciones disponibles:**\n";
+        mensaje += "• 📖 Ver Repertorio Completo\n";
+        mensaje += "• Solo los directores pueden agregar canciones a los servicios\n";
+      }
+
       return {
         type: "canciones",
         message: mensaje,
         expression: 'happy',
+        actions: actions.length > 0 ? actions : undefined
       };
     } catch (error) {
       console.error("Error buscando canciones:", error);
@@ -706,12 +749,152 @@ export class ArcanaBot {
     }
   }
 
-  private static async handleCancionesSeleccionar(query: string): Promise<BotResponse> {
-    return {
-      type: "canciones",
-      message: "🤖 Para seleccionar canciones visita la sección de Repertorio en la agenda ministerial.",
-      expression: 'thinking',
-    };
+  private static async handleCancionesSeleccionar(query: string, userId?: string): Promise<BotResponse> {
+    try {
+      console.log("ARCANA procesando selección de canción:", query);
+
+      // Extraer el nombre de la canción del query
+      const patterns = [
+        /seleccionar\s+([a-záéíóúñ\s]+)\s+para/i,
+        /elegir\s+([a-záéíóúñ\s]+)\s+para/i,
+        /añadir\s+([a-záéíóúñ\s]+)\s+para/i,
+        /agregar\s+([a-záéíóúñ\s]+)\s+para/i,
+        /(?:seleccionar|elegir|añadir|agregar)\s+(.+)/i,
+      ];
+
+      let nombreCancion = null;
+      for (const pattern of patterns) {
+        const match = query.match(pattern);
+        if (match && match[1]) {
+          nombreCancion = match[1].trim();
+          break;
+        }
+      }
+
+      if (!nombreCancion || nombreCancion.length < 3) {
+        return {
+          type: "canciones",
+          message: '🤖 Lo siento, para seleccionar una canción especifica el nombre completo. Ejemplo: "ARCANA seleccionar Como Lluvia para próximo servicio"',
+          expression: 'worried',
+        };
+      }
+
+      // Buscar la canción en el repertorio
+      const { data: canciones, error } = await supabase
+        .from("songs")
+        .select("*")
+        .or(`title.ilike.%${nombreCancion}%,artist.ilike.%${nombreCancion}%`)
+        .eq("is_active", true)
+        .limit(3);
+
+      if (error) {
+        console.error("Error buscando canción:", error);
+        return {
+          type: "canciones",
+          message: "🤖 Lo siento, hubo un error buscando la canción. Intenta nuevamente.",
+          expression: 'worried',
+        };
+      }
+
+      if (!canciones || canciones.length === 0) {
+        return {
+          type: "canciones",
+          message: `🤖 Lo siento, no encontré la canción "${nombreCancion}" en nuestro repertorio.\n\n💡 Puedes:\n• 🔍 Buscar en el Repertorio\n• ➕ Agregar Nueva Canción`,
+          expression: 'worried',
+        };
+      }
+
+      // Obtener próximo servicio para el usuario si es director
+      let nextService = null;
+      if (userId) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (profile?.full_name) {
+          const { data: service } = await supabase
+            .from("services")
+            .select("id, service_date, title")
+            .ilike('leader', `%${profile.full_name}%`)
+            .gte('service_date', new Date().toISOString().split('T')[0])
+            .order('service_date', { ascending: true })
+            .limit(1)
+            .maybeSingle();
+          nextService = service;
+        }
+      }
+
+      const serviceDate = nextService?.service_date;
+
+      // Si hay múltiples canciones, mostrar opciones con botones
+      if (canciones.length > 1) {
+        let mensaje = `🎵 Encontré ${canciones.length} canciones similares a "${nombreCancion}":\n\n`;
+        canciones.forEach((cancion, index) => {
+          mensaje += `${index + 1}. **${cancion.title}**`;
+          if (cancion.artist) mensaje += ` - ${cancion.artist}`;
+          mensaje += `\n`;
+        });
+        
+        mensaje += `\n💡 Haz clic en el botón para agregarla al próximo servicio${serviceDate ? ` (${new Date(serviceDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })})` : ''}.`;
+
+        const actions: BotAction[] = nextService ? canciones.map((c: any) => ({
+          type: 'select_song',
+          songId: c.id,
+          songName: c.title,
+          serviceDate: nextService.service_date,
+          serviceId: nextService.id
+        })) : [];
+
+        return {
+          type: "canciones",
+          message: mensaje,
+          expression: 'happy',
+          actions
+        };
+      }
+
+      // Una sola canción encontrada
+      const cancion = canciones[0];
+      let mensaje = `🎵 **Canción encontrada:** ${cancion.title}\n`;
+      if (cancion.artist) mensaje += `🎤 **Artista:** ${cancion.artist}\n`;
+      if (cancion.genre) mensaje += `🎼 **Género:** ${cancion.genre}\n`;
+      if (cancion.key_signature) mensaje += `🎹 **Tono:** ${cancion.key_signature}\n\n`;
+
+      if (nextService) {
+        mensaje += `💡 Haz clic en el botón para agregarla al servicio del ${new Date(serviceDate!).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}.`;
+
+        const actions: BotAction[] = [{
+          type: 'select_song',
+          songId: cancion.id,
+          songName: cancion.title,
+          serviceDate: nextService.service_date,
+          serviceId: nextService.id
+        }];
+
+        return {
+          type: "canciones",
+          message: mensaje,
+          expression: 'happy',
+          actions
+        };
+      } else {
+        mensaje += "💡 Para agregar canciones a servicios, necesitas ser director de un servicio próximo.";
+        return {
+          type: "canciones",
+          message: mensaje,
+          expression: 'thinking',
+        };
+      }
+    } catch (error) {
+      console.error("Error en selección de canción:", error);
+      return {
+        type: "canciones",
+        message: "🤖 Lo siento, hubo un error procesando tu solicitud. Para seleccionar canciones visita la Agenda Ministerial.",
+        expression: 'worried',
+      };
+    }
   }
 
   private static async handleBirthdayQuery(query: string): Promise<BotResponse> {
