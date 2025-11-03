@@ -61,6 +61,39 @@ interface ServiceNotificationOverlayProps {
   onNavigate?: (path: string) => void;
 }
 
+// Diccionario de grupos con sus miembros y configuraciones
+const GROUP_CONFIG = {
+  'Grupo de Aleida': {
+    color_theme: '#3B82F6',
+    members: [
+      { id: '00a916a8-ab94-4cc0-81ae-668dd6071416', name: 'Aleida Geomar Batista Ventura', voice: 'Soprano', mic: 'Micrófono #1', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/00a916a8-ab94-4cc0-81ae-668dd6071416.JPG' },
+      { id: 'c4089748-7168-4472-8e7c-bf44b4355906', name: 'Eliabi Joana Sierra Castillo', voice: 'Soprano', mic: 'Micrófono #2', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG' },
+      { id: 'f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f', name: 'Felix Nicolas Peralta Hernandez', voice: 'Tenor', mic: 'Micrófono #3', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG' },
+      { id: '8cebc294-ea61-40d0-9b04-08d7d474332c', name: 'Fior Daliza Paniagua', voice: 'Contralto', mic: 'Micrófono #4', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/8cebc294-ea61-40d0-9b04-08d7d474332c.JPG' },
+      { id: '619c1a4e-42db-4549-8890-16392cfa2a87', name: 'Ruth Esmailin Ramirez', voice: 'Contralto', mic: 'Micrófono #5', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/619c1a4e-42db-4549-8890-16392cfa2a87.JPG' }
+    ]
+  },
+  'Grupo de Keyla': {
+    color_theme: '#8B5CF6',
+    members: [
+      { id: 'c24659e9-b473-4ecd-97e7-a90526d23502', name: 'Keyla Yanira Medrano Medrano', voice: 'Soprano', mic: 'Micrófono #1', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c24659e9-b473-4ecd-97e7-a90526d23502.JPG' },
+      { id: '11328db1-559f-4dcf-9024-9aef18435700', name: 'Yindia Carolina Santana Castillo', voice: 'Soprano', mic: 'Micrófono #2', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/11328db1-559f-4dcf-9024-9aef18435700.JPG' },
+      { id: '4eed809d-9437-48d5-935e-cf8b4aa8024a', name: 'Arizoni Liriano medina', voice: 'Bajo', mic: 'Micrófono #3', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/4eed809d-9437-48d5-935e-cf8b4aa8024a.png' },
+      { id: '82b62449-5046-455f-af7b-da8e5dbc6327', name: 'Aida Lorena Pacheco De Santana', voice: 'Contralto', mic: 'Micrófono #4', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/82b62449-5046-455f-af7b-da8e5dbc6327.JPG' },
+      { id: 'be61d066-5707-4763-8d8c-16d19597dc3a', name: 'Sugey A. Gonzalez Garo', voice: 'Contralto', mic: 'Micrófono #5', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/be61d066-5707-4763-8d8c-16d19597dc3a.JPG' }
+    ]
+  },
+  'Grupo de Massy': {
+    color_theme: '#EC4899',
+    members: [
+      { id: '2a2fa0cd-d301-46ec-9965-2e4ea3692181', name: 'Rosely Montero', voice: 'Contralto', mic: 'Micrófono #1', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/2a2fa0cd-d301-46ec-9965-2e4ea3692181.jpeg' },
+      { id: '7a1645d8-75fe-498c-a2e9-f1057ff3521f', name: 'Fredderid Abrahan Valera Montoya', voice: 'Tenor', mic: 'Micrófono #2', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/7a1645d8-75fe-498c-a2e9-f1057ff3521f.JPG' },
+      { id: 'b5719097-187d-4804-8b7f-e84cc1ec9ad5', name: 'Jisell Amada Mauricio Paniagua', voice: 'Soprano', mic: 'Micrófono #3', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/b5719097-187d-4804-8b7f-e84cc1ec9ad5.JPG' },
+      { id: 'bdcc27cd-40ae-456e-a340-633ce7da08c0', name: 'Rodes Esther Santana Cuesta', voice: 'Contralto', mic: 'Micrófono #4', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/bdcc27cd-40ae-456e-a340-633ce7da08c0.JPG' }
+    ]
+  }
+};
+
 const ServiceNotificationOverlay = ({ 
   forceShow = false, 
   onClose, 
@@ -123,54 +156,55 @@ const ServiceNotificationOverlay = ({
 
   const showServiceProgramOverlay = (metadata: ServiceProgramNotification) => {
     if (metadata.services && Array.isArray(metadata.services)) {
-      const formattedServices = metadata.services.map((service: any) => ({
-        id: service.id || Date.now().toString(),
-        service_date: metadata.service_date,
-        title: `${service.time === '8:00 a.m.' ? 'Primer Servicio - 8:00 AM' : 'Segundo Servicio - 10:45 AM'}`,
-        leader: service.director?.name || service.director || 'Por asignar',
-        service_type: 'regular',
-        location: 'Templo Principal',
-        special_activity: metadata.special_event || null,
-        worship_groups: service.group ? {
-          id: '1',
-          name: service.group,
-          color_theme: '#3B82F6'
-        } : undefined,
-        group_members: [
-          ...(service.director ? [{
-            id: 'director-' + service.time,
-            user_id: 'director',
-            instrument: 'Director',
-            is_leader: true,
-            profiles: {
-              id: 'director',
-              full_name: service.director?.name || service.director,
-              photo_url: service.director?.photo
-            }
-          }] : []),
-          ...((service.voices || []).map((voice: any, index: number) => ({
-            id: 'voice-' + service.time + '-' + index,
-            user_id: 'voice-' + index,
-            instrument: index === 0 ? 'Soprano - Micrófono #1' : 
-                       index === 1 ? 'Contralto - Micrófono #2' : 
-                       index === 2 ? 'Tenor - Micrófono #3' : 
-                       index === 3 ? 'Bajo - Micrófono #4' : 
-                       `Voz ${index + 1} - Micrófono #${index + 1}`,
-            is_leader: false,
-            profiles: {
-              id: 'voice-' + index,
-              full_name: voice.name || 'Sin nombre',
-              photo_url: voice.photo
-            }
-          })))
-        ],
-        selected_songs: (service.songs || []).map((song: any) => ({
-          id: song.id || `song-${Date.now()}-${Math.random()}`,
-          title: song.title || 'Sin título',
-          artist: song.artist || 'Artista desconocido',
-          song_order: song.song_order || 0
-        }))
-      }));
+      const formattedServices = metadata.services.map((service: any) => {
+        const groupName = service.group || 'Grupo de Alabanza';
+        const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG] || GROUP_CONFIG['Grupo de Aleida'];
+        
+        return {
+          id: service.id || Date.now().toString(),
+          service_date: metadata.service_date,
+          title: `${service.time === '8:00 a.m.' ? 'Primer Servicio - 8:00 AM' : 'Segundo Servicio - 10:45 AM'}`,
+          leader: service.director?.name || service.director || 'Por asignar',
+          service_type: 'regular',
+          location: 'Templo Principal',
+          special_activity: metadata.special_event || null,
+          worship_groups: {
+            id: '1',
+            name: groupName,
+            color_theme: groupConfig.color_theme
+          },
+          group_members: [
+            ...(service.director ? [{
+              id: 'director-' + service.time,
+              user_id: 'director',
+              instrument: 'Director',
+              is_leader: true,
+              profiles: {
+                id: 'director',
+                full_name: service.director?.name || service.director,
+                photo_url: service.director?.photo
+              }
+            }] : []),
+            ...groupConfig.members.map((member, index) => ({
+              id: `member-${service.time}-${index}`,
+              user_id: member.id,
+              instrument: `${member.voice} - ${member.mic}`,
+              is_leader: false,
+              profiles: {
+                id: member.id,
+                full_name: member.name,
+                photo_url: member.photo_url
+              }
+            }))
+          ],
+          selected_songs: (service.songs || []).map((song: any) => ({
+            id: song.id || `song-${Date.now()}-${Math.random()}`,
+            title: song.title || 'Sin título',
+            artist: song.artist || 'Artista desconocido',
+            song_order: song.song_order || 0
+          }))
+        };
+      });
       
       setServices(formattedServices);
       setIsVisible(true);
@@ -189,26 +223,21 @@ const ServiceNotificationOverlay = ({
     let targetSunday: Date;
     
     if (currentDay === 0) {
-      // Es domingo
       if (currentHour < 12) {
-        // Antes del mediodía - mostrar este domingo
         targetSunday = new Date(now);
         targetSunday.setHours(0, 0, 0, 0);
       } else {
-        // Después del mediodía - mostrar el próximo domingo
         targetSunday = new Date(now);
         targetSunday.setDate(now.getDate() + 7);
         targetSunday.setHours(0, 0, 0, 0);
       }
     } else {
-      // Cualquier otro día - mostrar el próximo domingo
       const daysUntilSunday = (7 - currentDay) % 7 || 7;
       targetSunday = new Date(now);
       targetSunday.setDate(now.getDate() + daysUntilSunday);
       targetSunday.setHours(0, 0, 0, 0);
     }
     
-    // Establecer el rango del viernes al domingo
     const friday = new Date(targetSunday);
     friday.setDate(targetSunday.getDate() - 2);
     friday.setHours(0, 0, 0, 0);
@@ -252,16 +281,14 @@ const ServiceNotificationOverlay = ({
             let members: any[] = [];
             let directorProfile: any = null;
 
-            // First, try to find director by name in members table
+            // Buscar director por nombre en la tabla members
             if (service.leader) {
-              // Try to match the full name by searching in concatenated nombres + apellidos
               const { data: exactMatch } = await supabase
                 .from('members')
                 .select('id, nombres, apellidos, photo_url')
                 .eq('is_active', true);
 
               if (exactMatch && exactMatch.length > 0) {
-                // Find the member whose full name matches the leader name
                 const leaderName = service.leader.trim().toLowerCase();
                 const matchedMember = exactMatch.find(m => {
                   const fullName = `${m.nombres || ''} ${m.apellidos || ''}`.trim().toLowerCase();
@@ -277,7 +304,6 @@ const ServiceNotificationOverlay = ({
                     photo_url: matchedMember.photo_url
                   };
                 } else {
-                  // Fallback: try partial word matching
                   const parts = service.leader.trim().split(/\s+/);
                   const firstWord = parts[0].toLowerCase();
                   
@@ -298,44 +324,25 @@ const ServiceNotificationOverlay = ({
               }
             }
 
-            if (service.assigned_group_id) {
-              const { data: membersData, error: membersError } = await supabase
-                .from('group_members')
-                .select('id, user_id, instrument, is_leader')
-                .eq('group_id', service.assigned_group_id)
-                .eq('is_active', true);
-
-              if (!membersError && membersData && membersData.length > 0) {
-                const userIds = membersData.map(m => m.user_id);
-
-                const { data: membersProfiles } = await supabase
-                  .from('members')
-                  .select('id, nombres, apellidos, photo_url')
-                  .in('id', userIds);
-
-                const profileMap = new Map(
-                  (membersProfiles || []).map((p: any) => [p.id, {
-                    id: p.id,
-                    full_name: ((p.nombres || '') + ' ' + (p.apellidos || '')).trim(),
-                    photo_url: p.photo_url
-                  }])
-                );
-
-                members = membersData.map(member => ({
-                  ...member,
-                  profiles: profileMap.get(member.user_id) || {
-                    id: member.user_id,
-                    full_name: 'Desconocido',
-                    photo_url: null
-                  }
-                }));
-
-                // As additional fallback, check if there's a leader marked in the group
-                const leader = members.find(m => m.is_leader);
-                if (!directorProfile && leader?.profiles) {
-                  directorProfile = leader.profiles;
-                }
+            // Obtener miembros del grupo desde la configuración
+            const groupName = service.worship_groups?.name || 'Grupo de Alabanza';
+            const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG] || GROUP_CONFIG['Grupo de Aleida'];
+            
+            members = groupConfig.members.map((member, index) => ({
+              id: `member-${service.id}-${index}`,
+              user_id: member.id,
+              instrument: `${member.voice} - ${member.mic}`,
+              is_leader: false,
+              profiles: {
+                id: member.id,
+                full_name: member.name,
+                photo_url: member.photo_url
               }
+            }));
+
+            // Si no hay director encontrado, usar el primer miembro como líder
+            if (!directorProfile && members.length > 0) {
+              directorProfile = members[0].profiles;
             }
 
             let selectedSongs: any[] = [];
@@ -382,8 +389,15 @@ const ServiceNotificationOverlay = ({
               selected_songs: selectedSongs,  
               director_profile: directorProfile,
               worship_groups: Array.isArray(service.worship_groups) && service.worship_groups.length > 0   
-                ? service.worship_groups[0]   
-                : null  
+                ? { 
+                    ...service.worship_groups[0],
+                    color_theme: groupConfig.color_theme
+                  }  
+                : {
+                    id: '1',
+                    name: groupName,
+                    color_theme: groupConfig.color_theme
+                  }  
             };  
           })  
         );
@@ -444,20 +458,6 @@ const ServiceNotificationOverlay = ({
     const message = `Necesito ayuda para prepararme para el servicio "${service.title}" del ${format(new Date(service.service_date), 'EEEE, dd \'de\' MMMM', { locale: es })}. ¿Qué canciones debo practicar?`;
     onOpenChat?.(message);
     closeOverlay();
-  };
-
-  const handleVoiceReminder = (service: WeekendService) => {
-    if ('speechSynthesis' in window) {
-      const speech = new SpeechSynthesisUtterance();
-      speech.text = `Recordatorio: Tienes el servicio ${service.title} el ${format(new Date(service.service_date), 'EEEE, dd \'de\' MMMM', { locale: es })} a las ${getServiceTime(service.title)}. No olvides prepararte.`;
-      speech.lang = 'es-ES';
-      speech.rate = 0.9;
-      
-      window.speechSynthesis.speak(speech);
-      toast.success('Recordatorio de voz activado 🎙️');
-    } else {
-      toast.error('Tu navegador no soporta síntesis de voz');
-    }
   };
 
   const saveToNotifications = async () => {
@@ -551,14 +551,12 @@ const ServiceNotificationOverlay = ({
         return;
       }
 
-      // Encontrar el servicio para obtener la fecha y hora
       const service = services.find(s => s.id === serviceId);
       if (!service) {
         toast.error('No se pudo encontrar la información del servicio');
         return;
       }
 
-      // Crear un contenedor temporal con el encabezado - ancho fijo de 600px
       const container = document.createElement('div');
       container.style.position = 'fixed';
       container.style.left = '-9999px';
@@ -567,7 +565,6 @@ const ServiceNotificationOverlay = ({
       container.style.backgroundColor = '#ffffff';
       container.style.padding = '0';
       
-      // Crear el encabezado con la fecha y hora (estilo simple)
       const header = document.createElement('div');
       header.style.backgroundColor = '#ffffff';
       header.style.padding = '20px 24px';
@@ -593,22 +590,18 @@ const ServiceNotificationOverlay = ({
       header.appendChild(title);
       header.appendChild(dateTime);
       
-      // Clonar el contenido del servicio
       const contentClone = element.cloneNode(true) as HTMLElement;
       contentClone.style.backgroundColor = '#ffffff';
       contentClone.style.width = '600px';
       contentClone.style.maxWidth = '600px';
       
-      // Eliminar los botones de acción del contenido clonado
       const actionButtons = contentClone.querySelectorAll('.service-action-buttons');
       actionButtons.forEach(btn => btn.remove());
       
-      // Agregar todo al contenedor
       container.appendChild(header);
       container.appendChild(contentClone);
       document.body.appendChild(container);
 
-      // Esperar a que todas las imágenes estén cargadas
       const images = container.getElementsByTagName('img');
       const imagePromises = Array.from(images).map((img) => {
         if (img.complete) {
@@ -626,7 +619,6 @@ const ServiceNotificationOverlay = ({
 
       await Promise.all(imagePromises);
 
-      // Pequeña espera para asegurar que todo esté renderizado
       await new Promise(resolve => setTimeout(resolve, 100));
 
       const canvas = await html2canvas(container, {
@@ -637,7 +629,6 @@ const ServiceNotificationOverlay = ({
         logging: false,
       });
 
-      // Eliminar el contenedor temporal
       document.body.removeChild(container);
 
       const link = document.createElement('a');
@@ -652,7 +643,7 @@ const ServiceNotificationOverlay = ({
     }
   };
 
-  // Nuevo diseño de ServiceCard inspirado en NotificationTesting
+  // Nuevo diseño de ServiceCard mejorado
   const ServiceCard = ({ service }: { service: WeekendService }) => {
     const serviceTime = getServiceTime(service.title);
     const directorMember = service.group_members.find(m => m.is_leader);
@@ -670,11 +661,19 @@ const ServiceNotificationOverlay = ({
       >
         {/* Service Header */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-3 h-8 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full"></div>
+          <div 
+            className="w-3 h-8 rounded-full"
+            style={{ 
+              background: `linear-gradient(to bottom, ${service.worship_groups?.color_theme || '#3B82F6'}99, ${service.worship_groups?.color_theme || '#3B82F6'})`
+            }}
+          ></div>
           <div>
             <h3 className="text-xl font-bold text-blue-900">{service.title}</h3>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-sm text-blue-700 font-medium">
+              <span 
+                className="text-sm font-medium px-2 py-1 rounded-full text-white"
+                style={{ backgroundColor: service.worship_groups?.color_theme || '#3B82F6' }}
+              >
                 {service.worship_groups?.name || 'Grupo de Alabanza'}
               </span>
               <span className="text-sm text-gray-500">•</span>
@@ -686,11 +685,11 @@ const ServiceNotificationOverlay = ({
         <div className="grid md:grid-cols-2 gap-6">
           {/* Left Column - Director and Songs */}
           <div className="space-y-4">
-            {/* Director - Más grande y prominente */}
-            <div className="bg-blue-50 rounded-lg p-5">
-              <div className="text-sm font-semibold text-blue-800 mb-4">Director/a de Alabanza</div>
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-24 h-24 rounded-full border-4 border-blue-300 shadow-xl overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 flex-shrink-0">
+            {/* Director */}
+            <div className="bg-blue-50 rounded-lg p-4">
+              <div className="text-sm font-semibold text-blue-800 mb-3">Director/a de Alabanza</div>
+              <div className="flex items-center gap-3">
+                <div className="w-16 h-16 rounded-full border-3 border-blue-300 shadow-lg overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600">
                   <img
                     src={service.director_profile?.photo_url || directorMember?.profiles?.photo_url}
                     alt={service.leader}
@@ -702,12 +701,12 @@ const ServiceNotificationOverlay = ({
                       if (fallback) fallback.style.display = 'flex';
                     }}
                   />
-                  <div className="w-full h-full hidden items-center justify-center text-white text-2xl font-bold">
+                  <div className="w-full h-full hidden items-center justify-center text-white text-lg font-bold">
                     {getInitials(service.leader)}
                   </div>
                 </div>
-                <div className="text-center">
-                  <div className="font-bold text-gray-900 text-lg">{service.leader}</div>
+                <div>
+                  <div className="font-semibold text-gray-900">{service.leader}</div>
                   <div className="text-sm text-blue-600">Líder del Servicio</div>
                 </div>
               </div>
@@ -721,11 +720,11 @@ const ServiceNotificationOverlay = ({
                   </div>
                   <div className="space-y-2">
                     {worshipSongs.map((song, index) => (
-                      <div key={song.id} className="flex items-start gap-2 text-sm">
-                        <span className="w-5 h-5 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                      <div key={song.id} className="flex items-center gap-2 text-sm">
+                        <span className="w-5 h-5 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold">
                           {index + 1}
                         </span>
-                        <div className="min-w-0 flex-1">
+                        <div>
                           <div className="font-medium text-gray-900">{song.title}</div>
                           {song.artist && (
                             <div className="text-xs text-gray-600">{song.artist}</div>
