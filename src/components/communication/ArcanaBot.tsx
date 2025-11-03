@@ -16,16 +16,12 @@ interface BotResponse {
 }
 
 export class ArcanaBot {
-  static async processMessage(message: string, roomId: string, userId: string, currentUser?: any): Promise<BotResponse | null> {
-    // Convertir a minúsculas para comparación más flexible
-    const lowerMessage = message.toLowerCase();
-    
-    // Detección MÁS FLEXIBLE de menciones - incluir comandos especiales
-    const mentionsBot = 
-      /arcana|@arcana|bot|asistente|ayuda|turno|ensayo|canción|cancion|cumpleaños|versículo|versiculo|biblia|repertorio|agenda|proximo|próximo/i.test(lowerMessage);
+  static async processMessage(message: string, roomId: string, userId: string): Promise<BotResponse | null> {
+    // Detección más flexible de menciones
+    const mentionsBot = /arcana|@arcana|bot|asistente/i.test(message);
 
     if (!mentionsBot) {
-      console.log("ARCANA: Mensaje no contiene mención del bot");
+      console.log("ARCANA: Mensaje no contiene mención");
       return null;
     }
 
@@ -40,24 +36,20 @@ export class ArcanaBot {
 
     console.log("ARCANA procesando mensaje limpio:", cleanMessage);
 
-    // Si está vacío o es saludo o es específicamente "ayuda"
-    if (!cleanMessage || /^(hola|hi|hey|buenos|buenas|saludos|ayuda|help|que puedes hacer|qué puedes hacer)$/i.test(cleanMessage)) {
-      console.log("ARCANA detectó consulta de ayuda/saludo");
+    // Si está vacío o es saludo
+    if (!cleanMessage || /^(hola|hi|hey|buenos|buenas|saludos)/i.test(cleanMessage)) {
       return this.handleGeneralQuery("ayuda");
     }
 
     // Analizar el tipo de consulta
     if (this.isTurnosQuery(cleanMessage)) {
       console.log("ARCANA detectó consulta de turnos");
-      console.log("Usuario actual recibido:", currentUser);
-      
       // Verificar si está preguntando por otro usuario
       const otherUser = this.extractUserFromQuery(cleanMessage);
       if (otherUser) {
         return await this.handleTurnosQueryForUser(otherUser);
       } else {
-        // Pasar el currentUser completo para mejor identificación
-        return await this.handleTurnosQuery(userId, currentUser);
+        return await this.handleTurnosQuery(userId);
       }
     } else if (this.isEnsayosQuery(cleanMessage)) {
       console.log("ARCANA detectó consulta de ensayos");
@@ -75,8 +67,6 @@ export class ArcanaBot {
   }
 
   private static extractUserFromQuery(message: string): string | null {
-    console.log("🔍 Extrayendo nombre de consulta:", message);
-
     // Primero verificar si es una consulta propia
     const selfQueryPatterns = [
       /(cuando\s+)?me\s+toca/i,
@@ -84,8 +74,7 @@ export class ArcanaBot {
       /pr[oó]ximo\s+turno/i,
       /\bme\b.*\btoca\b/i,
       /yo\s+(quiero\s+)?cantar/i,
-      /mi\s+agenda/i,
-      /proximos\s+turnos/i,
+      /mi\s+agenda/i
     ];
 
     for (const pattern of selfQueryPatterns) {
@@ -97,7 +86,7 @@ export class ArcanaBot {
 
     // Patrones mejorados para detectar nombres de otros usuarios
     const patterns = [
-      /(?:turno\s+(?:de|para)|le\s+toca\s+a|cuando\s+canta|cu[áa]ndo\s+le\s+toca\s+a)\s+([a-záéíóúñü\s]{2,})/i,
+      /(?:turno\s+(?:de|para)|le\s+toca\s+a|cuando\s+canta|cuando\s+le\s+toca\s+a)\s+([a-záéíóúñü\s]{2,})/i,
       /(?:toca\s+a)\s+([a-záéíóúñü\s]{2,})/i,
       /(?:y\s+)?([a-záéíóúñü\s]{2,})\s+(?:cu[áa]ndo\s+le\s+toca|pr[oó]ximo\s+turno)/i,
     ];
@@ -106,14 +95,13 @@ export class ArcanaBot {
       const match = message.match(pattern);
       if (match && match[1]) {
         const extractedName = match[1].trim();
-        console.log("Nombre extraído:", extractedName);
 
         // Filtrar palabras comunes más exhaustivamente
         const commonWords = [
-          "me", "mi", "cuando", "cuándo", "que", "qué", "el", "la", "un", "una", "este", "esta", 
-          "ese", "esa", "aquel", "aquella", "cantar", "toca", "turno", "próximo", "proximo",
+          "me", "mi", "cuando", "que", "el", "la", "un", "una", "este", "esta", 
+          "ese", "esa", "aquel", "aquella", "cantar", "toca", "turno", "próximo", 
           "siguiente", "ensayo", "canción", "cancion", "arcana", "por", "para", 
-          "de", "del", "al", "y", "o", "u", "con", "sin", "los", "las", "le",
+          "de", "del", "al", "y", "o", "u", "con", "sin", "los", "las", "su", "sus"
         ];
 
         const words = extractedName.toLowerCase().split(/\s+/);
@@ -122,87 +110,49 @@ export class ArcanaBot {
         if (isValidName && extractedName.length >= 2) {
           console.log("ARCANA extrajo nombre válido:", extractedName);
           return extractedName;
-        } else {
-          console.log("Nombre no válido, contiene palabras comunes:", extractedName);
         }
       }
     }
 
-    // Si no se encontró con patrones, buscar cualquier nombre después de "a"
-    const simplePattern = /a\s+([a-záéíóúñü]{2,}(?:\s+[a-záéíóúñü]{2,})*)/i;
-    const simpleMatch = message.match(simplePattern);
-    if (simpleMatch && simpleMatch[1]) {
-      const simpleName = simpleMatch[1].trim();
-      console.log("Nombre simple extraído:", simpleName);
-      
-      // Verificar que no sea una palabra común
-      const commonWords = ["mi", "tu", "su", "el", "la", "un", "una"];
-      if (!commonWords.includes(simpleName.toLowerCase()) && simpleName.length >= 2) {
-        return simpleName;
-      }
-    }
-
-    console.log("No se pudo extraer nombre válido de la consulta");
     return null;
   }
 
   private static async handleTurnosQueryForUser(userName: string): Promise<BotResponse> {
     try {
-      console.log("🔍 ARCANA consultando turnos para:", userName);
+      console.log("ARCANA consultando turnos para:", userName);
 
-      // Búsqueda MÁS FLEXIBLE - incluir búsqueda por cualquier parte del nombre
+      // Búsqueda más flexible de miembros
       const searchTerms = userName
         .toLowerCase()
         .split(" ")
-        .filter((term) => term.length >= 2) // Reducir a 2 caracteres mínimo
+        .filter((term) => term.length >= 2)
         .map((term) => term.normalize("NFD").replace(/[\u0300-\u036f]/g, "")); // Remover acentos
-
-      console.log("Términos de búsqueda procesados:", searchTerms);
 
       let query = supabase.from("members").select("id, nombres, apellidos, email, cargo, voz_instrumento").eq("is_active", true);
 
-      // Construir condiciones de búsqueda MÁS FLEXIBLES
+      // Construir condiciones de búsqueda
       const searchConditions = [];
-      
-      if (searchTerms.length > 0) {
-        for (const term of searchTerms) {
-          searchConditions.push(`nombres.ilike.%${term}%`);
-          searchConditions.push(`apellidos.ilike.%${term}%`);
-          // Buscar también en combinación nombre + apellido
-          searchConditions.push(`nombres||' '||apellidos.ilike.%${term}%`);
-        }
-      } else {
-        // Si no hay términos válidos, buscar por el nombre completo
-        searchConditions.push(`nombres.ilike.%${userName}%`);
-        searchConditions.push(`apellidos.ilike.%${userName}%`);
-        searchConditions.push(`nombres||' '||apellidos.ilike.%${userName}%`);
+      for (const term of searchTerms) {
+        searchConditions.push(`nombres.ilike.%${term}%`);
+        searchConditions.push(`apellidos.ilike.%${term}%`);
       }
 
-      console.log("Condiciones de búsqueda:", searchConditions);
+      if (searchConditions.length === 0) {
+        return {
+          type: "turnos",
+          message: `🤖 Lo siento, el nombre "${userName}" es muy corto para buscar. Usa al menos 2 caracteres.`,
+          expression: 'worried',
+        };
+      }
 
-      const { data: members, error } = await query.or(searchConditions.join(",")).limit(10);
+      const { data: members, error } = await query.or(searchConditions.join(",")).limit(5);
 
       if (error) throw error;
 
-      console.log("Miembros encontrados:", members);
-
       if (!members || members.length === 0) {
-        // Mostrar algunos miembros para ayudar con la búsqueda
-        const { data: sampleMembers } = await supabase
-          .from("members")
-          .select("nombres, apellidos")
-          .eq("is_active", true)
-          .limit(5);
-
-        let sugerencia = "";
-        if (sampleMembers && sampleMembers.length > 0) {
-          const nombresEjemplo = sampleMembers.map(m => `${m.nombres} ${m.apellidos}`).join(", ");
-          sugerencia = `\n\n👥 **Algunos integrantes:** ${nombresEjemplo}`;
-        }
-
         return {
           type: "turnos",
-          message: `🤖 Lo siento, no encontré al integrante "${userName}" en nuestro sistema.${sugerencia}\n\n💡 **Sugerencias:**\n• Verifica la ortografía del nombre\n• Usa nombre y apellido si es posible\n• Consulta la lista de **[Integrantes Activos](/integrantes)**`,
+          message: `🤖 Lo siento, no encontré al integrante "${userName}" en nuestro sistema.\n\n💡 **Sugerencias:**\n• Verifica la ortografía del nombre\n• Usa nombre y apellido si es posible\n• Consulta la lista de **[Integrantes Activos](/integrantes)**`,
           expression: 'worried',
         };
       }
@@ -218,10 +168,9 @@ export class ArcanaBot {
         };
       }
 
-      // Un solo resultado - buscar en servicios
+      // Un solo resultado
       const member = members[0];
       const fullName = `${member.nombres} ${member.apellidos}`;
-      console.log("Buscando turnos para:", fullName);
       return await this.searchUserInServices(fullName, member);
     } catch (error) {
       console.error("Error consultando turnos para otro usuario:", error);
@@ -245,7 +194,6 @@ export class ArcanaBot {
       /agenda\s+personal/,
       /mis\s+turnos/,
       /mi\s+agenda/,
-      /pr[oó]ximos\s+turnos/,
     ];
 
     return turnosPatterns.some((pattern) => pattern.test(message));
@@ -400,81 +348,39 @@ export class ArcanaBot {
     }
   }
 
-  private static async handleTurnosQuery(userId: string, currentUser?: any): Promise<BotResponse> {
-    console.log("🔍 ARCANA consultando turnos para usuario:", userId);
-    console.log("👤 Datos del usuario actual:", currentUser);
-
+  private static async handleTurnosQuery(userId: string): Promise<BotResponse> {
+    console.log("ARCANA consultando turnos para usuario:", userId);
     try {
-      let memberData = null;
-      let profileName = "Usuario";
+      // Obtener datos del usuario
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("full_name, email")
+        .eq("id", userId)
+        .single();
 
-      // Si tenemos datos del member en currentUser, usarlos
-      if (currentUser?.member) {
-        memberData = currentUser.member;
-        profileName = `${memberData.nombres} ${memberData.apellidos}`;
-        console.log("✅ Usando datos de member:", memberData);
-      } else {
-        // Si no, buscar por userId
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("full_name, email")
-          .eq("id", userId)
-          .single();
-
-        if (profileError) {
-          console.error("❌ Error obteniendo perfil:", profileError);
-          return {
-            type: "turnos",
-            message:
-              "🤖 Lo siento, no pude identificar tu perfil. Por favor verifica que tu cuenta esté configurada correctamente.",
-            expression: 'worried',
-          };
-        }
-
-        profileName = profile.full_name;
-        console.log("📋 Perfil obtenido:", profile);
-
-        // Buscar en members por email o nombre
-        if (profile.email) {
-          const { data: memberByEmail } = await supabase
-            .from("members")
-            .select("*")
-            .eq("email", profile.email)
-            .eq("is_active", true)
-            .single();
-          
-          if (memberByEmail) {
-            memberData = memberByEmail;
-            console.log("✅ Member encontrado por email:", memberData);
-          }
-        }
-
-        // Si no se encontró por email, buscar por nombre
-        if (!memberData && profile.full_name) {
-          const firstName = profile.full_name.split(' ')[0];
-          const { data: membersByName } = await supabase
-            .from("members")
-            .select("*")
-            .ilike("nombres", `%${firstName}%`)
-            .eq("is_active", true)
-            .limit(1);
-          
-          if (membersByName && membersByName.length > 0) {
-            memberData = membersByName[0];
-            console.log("✅ Member encontrado por nombre:", memberData);
-          }
-        }
+      if (profileError) {
+        console.error("Error obteniendo perfil:", profileError);
+        return {
+          type: "turnos",
+          message:
+            "🤖 Lo siento, no pude identificar tu perfil. Por favor verifica que tu cuenta esté configurada correctamente.",
+          expression: 'worried',
+        };
       }
 
-      // Si tenemos datos del member, buscar en servicios
-      if (memberData) {
-        const fullName = `${memberData.nombres} ${memberData.apellidos}`;
-        console.log("🔍 Buscando servicios para:", fullName);
-        return await this.searchUserInServices(fullName, memberData);
-      }
+      console.log("Perfil obtenido:", profile);
 
-      // Si no se encontró member, buscar por grupos (método antiguo como fallback)
-      console.log("🔄 Usando método de búsqueda por grupos como fallback");
+      // Buscar en members table para obtener más información
+      const { data: memberInfo } = await supabase
+        .from("members")
+        .select("cargo, voz_instrumento")
+        .ilike("nombres", `%${profile.full_name.split(' ')[0]}%`)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      console.log("Información del miembro:", memberInfo);
+
+      // Obtener grupos del usuario con instrumento
       const { data: userGroups, error: groupsError } = await supabase
         .from("group_members")
         .select(
@@ -492,7 +398,7 @@ export class ArcanaBot {
         .eq("is_active", true);
 
       if (groupsError) {
-        console.error("❌ Error obteniendo grupos:", groupsError);
+        console.error("Error obteniendo grupos:", groupsError);
         return {
           type: "turnos",
           message:
@@ -501,7 +407,7 @@ export class ArcanaBot {
         };
       }
 
-      console.log("👥 Grupos del usuario:", userGroups);
+      console.log("Grupos del usuario:", userGroups);
 
       if (!userGroups || userGroups.length === 0) {
         return {
@@ -531,7 +437,7 @@ export class ArcanaBot {
         .limit(5);
 
       if (servicesError) {
-        console.error("❌ Error obteniendo servicios:", servicesError);
+        console.error("Error obteniendo servicios:", servicesError);
         return {
           type: "turnos",
           message:
@@ -540,7 +446,7 @@ export class ArcanaBot {
         };
       }
 
-      console.log("📅 Servicios encontrados:", services);
+      console.log("Servicios encontrados:", services);
 
       if (!services || services.length === 0) {
         return {
@@ -552,54 +458,68 @@ export class ArcanaBot {
       }
 
       // Construir mensaje con los próximos turnos
-      let mensaje = `👋 **Hola ${profileName}!**\n\n`;
-      mensaje += `🎤 Encontré ${services.length} turno${services.length > 1 ? "s" : ""} programado${services.length > 1 ? "s" : ""} para ti:\n\n`;
-
-      services.forEach((service, index) => {
-        const serviceDate = new Date(service.service_date);
-        const formattedDate = serviceDate.toLocaleDateString("es-ES", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
-
-        // Indicar si es el próximo turno
-        const isNext = index === 0;
-        const prefix = isNext ? "🎯 **PRÓXIMO TURNO:**" : `📅 Turno ${index + 1}:`;
-
-        mensaje += `${prefix}\n`;
-        mensaje += `📍 **${service.title || "Servicio de Adoración"}**\n`;
-        mensaje += `📆 ${formattedDate}\n`;
-
-        if (service.worship_groups?.name) {
-          mensaje += `🎵 Grupo: ${service.worship_groups.name}\n`;
+      let mensaje = `👋 **¡Hola ${profile.full_name}!**\n\n`;
+      
+      // Agregar información del cargo y voz/instrumento
+      if (memberInfo) {
+        mensaje += `🎤 **Cargo:** ${memberInfo.cargo || 'No especificado'}\n`;
+        if (memberInfo.voz_instrumento) {
+          mensaje += `🎵 **Voz/Instrumento:** ${memberInfo.voz_instrumento}\n`;
         }
+        mensaje += `\n`;
+      }
 
-        if (service.leader) {
-          mensaje += `👤 Director: ${service.leader}\n`;
-        }
+      mensaje += `🎯 **TU PRÓXIMO TURNO:**\n\n`;
 
-        if (service.location) {
-          mensaje += `📍 Lugar: ${service.location}\n`;
-        }
-
-        // Obtener instrumento del usuario para este grupo
-        const userGroupInfo = userGroups.find((g) => g.group_id === service.assigned_group_id);
-        if (userGroupInfo) {
-          mensaje += `🎸 Tu instrumento: ${userGroupInfo.instrument}\n`;
-          if (userGroupInfo.is_leader) {
-            mensaje += `⭐ Eres director de este grupo\n`;
-          }
-        }
-
-        mensaje += "\n";
+      const proximoService = services[0];
+      const serviceDate = new Date(proximoService.service_date);
+      const formattedDate = serviceDate.toLocaleDateString("es-ES", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       });
 
-      mensaje += "💡 **Recuerda:**\n";
-      mensaje += "• 🎵 Prepara tu instrumento con anticipación\n";
-      mensaje += "• 📖 Revisa el repertorio asignado\n";
-      mensaje += "• ⏰ Llega con tiempo para el ensayo previo\n";
+      // Extraer hora del service_date
+      const serviceTime = new Date(proximoService.service_date).toLocaleTimeString('es-ES', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: false 
+      });
+
+      mensaje += `📅 ${serviceTime}\n`;
+      mensaje += `🗓️ ${formattedDate}\n`;
+      mensaje += `📍 ${proximoService.location || "Templo Principal"}\n`;
+      
+      if (proximoService.leader) {
+        mensaje += `👤 **Director:** ${proximoService.leader}\n`;
+      }
+
+      if (proximoService.special_activity) {
+        mensaje += `🎯 **Actividad especial:** ${proximoService.special_activity}\n`;
+      } else {
+        mensaje += `🎯 **Actividad especial:** Ninguna\n`;
+      }
+
+      if (proximoService.notes) {
+        mensaje += `📝 **Notas:** ${proximoService.notes}\n`;
+      }
+
+      mensaje += `\n¡Prepárate para alabar al Señor! 🙏\n`;
+
+      // Si hay más turnos futuros
+      if (services.length > 1) {
+        mensaje += `\n📋 **También tienes turnos en:**\n`;
+        services.slice(1).forEach((service) => {
+          const fecha = new Date(service.service_date).toLocaleDateString('es-ES');
+          const hora = new Date(service.service_date).toLocaleTimeString('es-ES', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          });
+          mensaje += `• ${fecha} - ${hora}\n`;
+        });
+      }
 
       return {
         type: "turnos",
@@ -607,7 +527,7 @@ export class ArcanaBot {
         expression: 'happy',
       };
     } catch (error) {
-      console.error("💥 Error consultando turnos:", error);
+      console.error("Error consultando turnos:", error);
       return {
         type: "turnos",
         message:
@@ -620,11 +540,12 @@ export class ArcanaBot {
   private static async searchUserInServices(fullName: string, memberData?: any): Promise<BotResponse> {
     try {
       console.log("🔍 Buscando servicios para:", fullName);
-      console.log("📋 Datos del member:", memberData);
 
-      // Normalizar el nombre para búsqueda
+      // Normalizar el nombre para búsqueda - manejar caracteres especiales
       const normalizedName = fullName.toLowerCase().trim();
-      const nameParts = normalizedName.split(/\s+/).filter((part) => part.length > 2);
+      const nameParts = normalizedName.split(/\s+/).filter((part) => part.length >= 2);
+
+      console.log("Partes del nombre para búsqueda:", nameParts);
 
       // Buscar eventos futuros (desde hoy en adelante)
       const today = new Date();
@@ -656,7 +577,7 @@ export class ArcanaBot {
         };
       }
 
-      // Búsqueda más inteligente en los eventos
+      // Búsqueda MÁS FLEXIBLE en los eventos
       const eventosConUsuario = eventos.filter((evento) => {
         const searchText = [
           evento.leader || "",
@@ -665,30 +586,38 @@ export class ArcanaBot {
           evento.title || "",
           evento.special_activity || "",
           evento.choir_breaks || "",
-          evento.assigned_members || "",
         ]
           .join(" ")
           .toLowerCase();
 
+        console.log("Texto de búsqueda en evento:", searchText.substring(0, 100));
+
         // Buscar coincidencias parciales de cada parte del nombre
         const hasNameMatch = nameParts.some((part) => {
-          if (part.length < 3) return false;
-          // Buscar coincidencia exacta de palabra
-          const regex = new RegExp(`\\b${part}\\b`, "i");
+          if (part.length < 2) return false;
+          
+          // Buscar coincidencia flexible
+          const regex = new RegExp(part, "i");
           return regex.test(searchText);
         });
 
         // También buscar el nombre completo
         const hasFullNameMatch = searchText.includes(normalizedName);
 
-        return hasNameMatch || hasFullNameMatch;
+        // Buscar por partes del nombre sin acentos
+        const normalizedSearch = searchText.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const hasNormalizedMatch = nameParts.some(part => 
+          normalizedSearch.includes(part.normalize("NFD").replace(/[\u0300-\u036f]/g, ""))
+        );
+
+        return hasNameMatch || hasFullNameMatch || hasNormalizedMatch;
       });
 
       console.log("✅ Eventos con usuario encontrados:", eventosConUsuario.length);
 
-      // Si no se encontraron eventos específicos, mostrar el próximo servicio disponible
-      if (eventosConUsuario.length === 0) {
-        const proximoEvento = eventos[0]; // El primer evento futuro
+      // Si hay eventos futuros, mostrar el próximo
+      if (eventosConUsuario.length > 0) {
+        const proximoEvento = eventosConUsuario[0];
         const fecha = new Date(proximoEvento.service_date).toLocaleDateString("es-ES", {
           weekday: "long",
           year: "numeric",
@@ -696,95 +625,71 @@ export class ArcanaBot {
           day: "numeric",
         });
 
-        let mensaje = `👋 **¡Hola ${fullName}!**\n\n`;
-        
-        if (memberData?.cargo) {
-          mensaje += `🎤 **Cargo:** ${memberData.cargo}\n`;
-        }
-        if (memberData?.voz_instrumento) {
-          mensaje += `🎵 **Voz/Instrumento:** ${memberData.voz_instrumento}\n\n`;
+        // Extraer hora del service_date
+        const serviceTime = new Date(proximoEvento.service_date).toLocaleTimeString('es-ES', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        });
+
+        let mensaje = `🎵 **¡Hola ${fullName}!**\n\n`;
+
+        // Agregar información del cargo si está disponible
+        if (memberData) {
+          mensaje += `🎤 **Cargo:** ${memberData.cargo || 'No especificado'}\n`;
+          if (memberData.voz_instrumento) {
+            mensaje += `🎵 **Voz/Instrumento:** ${memberData.voz_instrumento}\n`;
+          }
+          mensaje += `\n`;
         }
 
-        mensaje += `📅 **Próximo servicio en la agenda:**\n\n`;
-        mensaje += `**${proximoEvento.title}**\n`;
+        mensaje += `🎯 **PRÓXIMO TURNO:**\n\n`;
+        mensaje += `📅 ${serviceTime}\n`;
         mensaje += `🗓️ ${fecha}\n`;
+        mensaje += `📍 ${proximoEvento.location || "Templo Principal"}\n`;
         
-        if (proximoEvento.location) {
-          mensaje += `📍 ${proximoEvento.location}\n`;
-        }
-        
-        if (proximoEvento.service_time) {
-          mensaje += `⏰ Hora: ${proximoEvento.service_time}\n`;
+        if (proximoEvento.leader) {
+          mensaje += `👤 **Director:** ${proximoEvento.leader}\n`;
         }
 
-        mensaje += `\n💡 **Nota:** No tienes un turno específico asignado para este servicio.\n`;
-        mensaje += `Consulta con tu líder ministerial para confirmar tu participación.`;
+        if (proximoEvento.special_activity) {
+          mensaje += `🎯 **Actividad especial:** ${proximoEvento.special_activity}\n`;
+        } else {
+          mensaje += `🎯 **Actividad especial:** Ninguna\n`;
+        }
+
+        if (proximoEvento.notes) {
+          mensaje += `📝 **Notas:** ${proximoEvento.notes}\n`;
+        }
+
+        mensaje += `\n¡Prepárate para alabar al Señor! 🙏`;
+
+        // Si hay más turnos futuros
+        if (eventosConUsuario.length > 1) {
+          mensaje += `\n\n📋 **También tienes turnos en:**\n`;
+          eventosConUsuario.slice(1).forEach((evento) => {
+            const fecha = new Date(evento.service_date).toLocaleDateString('es-ES');
+            const hora = new Date(evento.service_date).toLocaleTimeString('es-ES', { 
+              hour: '2-digit', 
+              minute: '2-digit',
+              hour12: false 
+            });
+            mensaje += `• ${fecha} - ${hora}\n`;
+          });
+        }
 
         return {
           type: "turnos",
           message: mensaje,
-          expression: 'thinking',
+          expression: 'happy',
         };
       }
 
-      // Mostrar el próximo evento encontrado
-      const proximoEvento = eventosConUsuario[0];
-      const fecha = new Date(proximoEvento.service_date).toLocaleDateString("es-ES", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-
-      let mensaje = `🎵 **¡Hola ${fullName}!**\n\n`;
-
-      if (memberData?.cargo) {
-        mensaje += `🎤 **Cargo:** ${memberData.cargo}\n`;
-      }
-      if (memberData?.voz_instrumento) {
-        mensaje += `🎵 **Voz/Instrumento:** ${memberData.voz_instrumento}\n\n`;
-      }
-
-      mensaje += `**🎯 TU PRÓXIMO TURNO:**\n\n`;
-      mensaje += `📅 **${proximoEvento.title}**\n`;
-      mensaje += `🗓️ ${fecha}\n`;
-      
-      if (proximoEvento.location) {
-        mensaje += `📍 ${proximoEvento.location}\n`;
-      }
-      
-      if (proximoEvento.service_time) {
-        mensaje += `⏰ Hora: ${proximoEvento.service_time}\n`;
-      }
-
-      if (proximoEvento.leader) {
-        mensaje += `👤 **Director:** ${proximoEvento.leader}\n`;
-      }
-
-      if (proximoEvento.special_activity) {
-        mensaje += `🎯 **Actividad especial:** ${proximoEvento.special_activity}\n`;
-      }
-
-      if (proximoEvento.notes) {
-        mensaje += `📝 **Notas:** ${proximoEvento.notes}\n`;
-      }
-
-      mensaje += "\n¡Prepárate para alabar al Señor! 🙏";
-
-      // Si hay más turnos futuros
-      if (eventosConUsuario.length > 1) {
-        const otrosEventos = eventosConUsuario
-          .slice(1)
-          .map((evento) => `• ${new Date(evento.service_date).toLocaleDateString("es-ES")} - ${evento.title}`)
-          .join("\n");
-
-        mensaje += `\n\n📋 **También tienes turnos en:**\n${otrosEventos}`;
-      }
-
+      // Si no se encontró ningún evento
       return {
         type: "turnos",
-        message: mensaje,
-        expression: 'happy',
+        message: `🤖 **Hola ${fullName}!**\n\nLo siento, no encontré turnos programados para ti en los próximos servicios.\n\n💡 **Sugerencias:**\n• Verifica que tu nombre esté correctamente escrito en el sistema\n• Consulta con tu líder de grupo sobre próximas asignaciones\n• Revisa la Agenda Ministerial completa`,
+        expression: 'worried',
       };
     } catch (error) {
       console.error("💥 Error buscando en servicios:", error);
@@ -889,7 +794,6 @@ export class ArcanaBot {
       }
 
       // Obtener próximo servicio donde el usuario es director/leader
-      // Obtener info del usuario
       let profileName: string | null = null;
       const { data: profile } = await supabase
         .from('profiles')
@@ -1118,7 +1022,7 @@ export class ArcanaBot {
 
     try {
       // Buscar cumpleaños de hoy
-      if (query.includes("hoy") || query.includes("día")) {
+      if (query.includes("hoy") || query.includes("día") || query.includes("dia")) {
         const { data: birthdays, error } = await supabase
           .from("members")
           .select("nombres, apellidos, fecha_nacimiento")
@@ -1130,8 +1034,27 @@ export class ArcanaBot {
         const todayBirthdays =
           birthdays?.filter((member) => {
             if (!member.fecha_nacimiento) return false;
-            const birthDate = new Date(member.fecha_nacimiento);
-            return birthDate.getMonth() + 1 === currentMonth && birthDate.getDate() === currentDay;
+            
+            try {
+              // Manejar diferentes formatos de fecha
+              let birthDate: Date;
+              if (typeof member.fecha_nacimiento === 'string') {
+                // Si es string, puede estar en formato "1/11/25" o "2025-11-01"
+                if (member.fecha_nacimiento.includes('/')) {
+                  const [day, month, year] = member.fecha_nacimiento.split('/').map(Number);
+                  birthDate = new Date(2000 + year, month - 1, day);
+                } else {
+                  birthDate = new Date(member.fecha_nacimiento);
+                }
+              } else {
+                birthDate = new Date(member.fecha_nacimiento);
+              }
+              
+              return birthDate.getMonth() + 1 === currentMonth && birthDate.getDate() === currentDay;
+            } catch (e) {
+              console.error("Error procesando fecha:", member.fecha_nacimiento, e);
+              return false;
+            }
           }) || [];
 
         if (todayBirthdays.length === 0) {
@@ -1178,13 +1101,24 @@ export class ArcanaBot {
 
       if (error) throw error;
 
-      // CORREGIDO: Mostrar TODOS los cumpleaños del mes, incluyendo el 1 de noviembre
       const monthBirthdays =
         birthdays
           ?.filter((member) => {
             if (!member.fecha_nacimiento) return false;
+            
             try {
-              const birthDate = new Date(member.fecha_nacimiento);
+              let birthDate: Date;
+              if (typeof member.fecha_nacimiento === 'string') {
+                if (member.fecha_nacimiento.includes('/')) {
+                  const [day, month, year] = member.fecha_nacimiento.split('/').map(Number);
+                  birthDate = new Date(2000 + year, month - 1, day);
+                } else {
+                  birthDate = new Date(member.fecha_nacimiento);
+                }
+              } else {
+                birthDate = new Date(member.fecha_nacimiento);
+              }
+              
               return birthDate.getMonth() + 1 === targetMonth;
             } catch (e) {
               console.error("Error procesando fecha:", member.fecha_nacimiento, e);
@@ -1193,15 +1127,21 @@ export class ArcanaBot {
           })
           .sort((a, b) => {
             try {
-              const dateA = new Date(a.fecha_nacimiento);
-              const dateB = new Date(b.fecha_nacimiento);
-              return dateA.getDate() - dateB.getDate();
+              const getDate = (member: any) => {
+                if (typeof member.fecha_nacimiento === 'string') {
+                  if (member.fecha_nacimiento.includes('/')) {
+                    const [day, month, year] = member.fecha_nacimiento.split('/').map(Number);
+                    return new Date(2000 + year, month - 1, day).getDate();
+                  }
+                }
+                return new Date(member.fecha_nacimiento).getDate();
+              };
+              
+              return getDate(a) - getDate(b);
             } catch (e) {
               return 0;
             }
           }) || [];
-
-      console.log(`Cumpleaños encontrados para mes ${targetMonth}:`, monthBirthdays);
 
       if (monthBirthdays.length === 0) {
         const monthNames = [
@@ -1245,11 +1185,26 @@ export class ArcanaBot {
 
       monthBirthdays.forEach((member) => {
         try {
-          const birthDate = new Date(member.fecha_nacimiento);
-          const day = birthDate.getDate();
+          let birthDate: Date;
+          let day: number;
+          
+          if (typeof member.fecha_nacimiento === 'string') {
+            if (member.fecha_nacimiento.includes('/')) {
+              const [d, m, y] = member.fecha_nacimiento.split('/').map(Number);
+              birthDate = new Date(2000 + y, m - 1, d);
+              day = d;
+            } else {
+              birthDate = new Date(member.fecha_nacimiento);
+              day = birthDate.getDate();
+            }
+          } else {
+            birthDate = new Date(member.fecha_nacimiento);
+            day = birthDate.getDate();
+          }
+          
           mensaje += `📅 ${day} - **${member.nombres} ${member.apellidos}**\n`;
         } catch (e) {
-          console.error("Error formateando fecha:", member.fecha_nacimiento);
+          console.error("Error formateando fecha:", member.fecha_nacimiento, e);
           mensaje += `📅 ? - **${member.nombres} ${member.apellidos}**\n`;
         }
       });
@@ -1268,7 +1223,7 @@ export class ArcanaBot {
   }
 
   private static handleBibleQuery(query: string): BotResponse {
-    if (query.includes("día") || query.includes("hoy")) {
+    if (query.includes("día") || query.includes("hoy") || query.includes("dia")) {
       return {
         type: "general",
         message: `📖 **Versículo del día:**\n\n🤖 Para el versículo diario y reflexiones espirituales, visita el Módulo Espiritual.\n\nAllí encontrarás:\n• 📖 Versículo del día con reflexión\n• 📚 Historia de versículos anteriores\n• 🙏 Meditaciones y estudios\n• 💫 Inspiración diaria\n\n"La palabra de Dios es viva y eficaz" - Hebreos 4:12 🙏✨`,
@@ -1285,7 +1240,7 @@ export class ArcanaBot {
 
   static async sendBotResponse(roomId: string, response: BotResponse): Promise<void> {
     try {
-      console.log("🤖 ARCANA enviando respuesta:", response.message.substring(0, 50) + "...");
+      console.log("ARCANA enviando respuesta:", response.message.substring(0, 50) + "...");
 
       // Preparar el mensaje con las acciones si existen
       const messageData: any = {
@@ -1302,13 +1257,13 @@ export class ArcanaBot {
       const { error } = await supabase.from("chat_messages").insert([messageData]);
 
       if (error) {
-        console.error("❌ Error enviando respuesta del bot:", error);
+        console.error("Error enviando respuesta del bot:", error);
         throw error;
       }
 
-      console.log("✅ ARCANA respuesta enviada exitosamente");
+      console.log("ARCANA respuesta enviada exitosamente");
     } catch (error) {
-      console.error("💥 Error enviando respuesta del bot:", error);
+      console.error("Error enviando respuesta del bot:", error);
     }
   }
 }
