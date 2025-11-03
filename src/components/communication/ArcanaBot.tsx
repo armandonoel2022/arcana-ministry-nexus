@@ -17,11 +17,15 @@ interface BotResponse {
 
 export class ArcanaBot {
   static async processMessage(message: string, roomId: string, userId: string, currentUser?: any): Promise<BotResponse | null> {
-    // Detección más flexible de menciones
-    const mentionsBot = /arcana|@arcana|bot|asistente/i.test(message);
+    // Convertir a minúsculas para comparación más flexible
+    const lowerMessage = message.toLowerCase();
+    
+    // Detección MÁS FLEXIBLE de menciones - incluir comandos especiales
+    const mentionsBot = 
+      /arcana|@arcana|bot|asistente|ayuda|turno|ensayo|canción|cancion|cumpleaños|versículo|versiculo|biblia/i.test(lowerMessage);
 
     if (!mentionsBot) {
-      console.log("ARCANA: Mensaje no contiene mención");
+      console.log("ARCANA: Mensaje no contiene mención del bot");
       return null;
     }
 
@@ -36,8 +40,9 @@ export class ArcanaBot {
 
     console.log("ARCANA procesando mensaje limpio:", cleanMessage);
 
-    // Si está vacío o es saludo
-    if (!cleanMessage || /^(hola|hi|hey|buenos|buenas|saludos)/i.test(cleanMessage)) {
+    // Si está vacío o es saludo o es específicamente "ayuda"
+    if (!cleanMessage || /^(hola|hi|hey|buenos|buenas|saludos|ayuda|help|que puedes hacer|qué puedes hacer)$/i.test(cleanMessage)) {
+      console.log("ARCANA detectó consulta de ayuda/saludo");
       return this.handleGeneralQuery("ayuda");
     }
 
@@ -123,25 +128,38 @@ export class ArcanaBot {
     try {
       console.log("ARCANA consultando turnos para:", userName);
 
-      // Búsqueda más flexible de miembros
+      // Búsqueda MÁS FLEXIBLE de miembros - incluir búsqueda por partes del nombre
       const searchTerms = userName
         .toLowerCase()
         .split(" ")
         .filter((term) => term.length > 2)
         .map((term) => term.normalize("NFD").replace(/[\u0300-\u036f]/g, "")); // Remover acentos
 
+      console.log("Términos de búsqueda:", searchTerms);
+
       let query = supabase.from("members").select("nombres, apellidos, email, cargo, voz_instrumento").eq("is_active", true);
 
-      // Construir condiciones de búsqueda
+      // Construir condiciones de búsqueda MÁS FLEXIBLES
       const searchConditions = [];
       for (const term of searchTerms) {
         searchConditions.push(`nombres.ilike.%${term}%`);
         searchConditions.push(`apellidos.ilike.%${term}%`);
+        // Buscar también en el campo completo del nombre
+        searchConditions.push(`nombres||' '||apellidos.ilike.%${term}%`);
       }
 
-      const { data: members, error } = await query.or(searchConditions.join(",")).limit(5);
+      // Si no hay términos válidos, buscar por el nombre completo
+      if (searchConditions.length === 0) {
+        searchConditions.push(`nombres.ilike.%${userName}%`);
+        searchConditions.push(`apellidos.ilike.%${userName}%`);
+        searchConditions.push(`nombres||' '||apellidos.ilike.%${userName}%`);
+      }
+
+      const { data: members, error } = await query.or(searchConditions.join(",")).limit(10);
 
       if (error) throw error;
+
+      console.log("Miembros encontrados:", members);
 
       if (!members || members.length === 0) {
         return {
@@ -738,7 +756,473 @@ export class ArcanaBot {
     }
   }
 
-  // ... (el resto de los métodos se mantienen igual - handleEnsayosQuery, handleCancionesQuery, etc.)
+  private static async handleEnsayosQuery(): Promise<BotResponse> {
+    try {
+      console.log("ARCANA consultando ensayos - respuesta fija para viernes");
+
+      // Obtener la fecha actual
+      const today = new Date();
+      const currentDay = today.getDay(); // 0 = Domingo, 5 = Viernes
+
+      let nextFriday: Date;
+
+      if (currentDay === 5) {
+        // Si hoy es viernes, usar la fecha de hoy
+        nextFriday = today;
+      } else {
+        // Calcular el próximo viernes
+        const daysUntilFriday = (5 - currentDay + 7) % 7;
+        nextFriday = new Date(today);
+        nextFriday.setDate(today.getDate() + daysUntilFriday);
+      }
+
+      // Formatear la fecha en español
+      const fechaEnsayo = nextFriday.toLocaleDateString("es-ES", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      const mensaje = `🎵 **Próximo Ensayo:**\n\n📅 ${fechaEnsayo}\n⏰ 07:00 p.m. a 09:00 p.m.\n📍 Ubicación habitual de ensayo\n\n¡No faltes! La alabanza requiere preparación. 🙏`;
+
+      return {
+        type: "ensayos",
+        message: mensaje,
+        expression: 'happy',
+      };
+    } catch (error) {
+      console.error("Error generando respuesta de ensayos:", error);
+      return {
+        type: "ensayos",
+        message:
+          "🤖 Lo siento, hubo un error consultando los ensayos. Los ensayos son todos los viernes de 07:00 p.m. a 09:00 p.m.",
+        expression: 'worried',
+      };
+    }
+  }
+
+  private static async handleCancionesQuery(query: string, userId?: string): Promise<BotResponse> {
+    try {
+      console.log("ARCANA consultando canciones con query:", query);
+
+      // Extraer términos de búsqueda
+      const searchTerms = query.replace(/canción|cancion|canciones|buscar|repertorio|música|song/gi, "").trim();
+
+      if (!searchTerms) {
+        return {
+          type: "canciones",
+          message:
+            '🤖 Lo siento, para buscar canciones, especifica el nombre o categoría. Ejemplo: "ARCANA buscar alabanza" o "ARCANA canción espíritu santo"',
+          expression: 'worried',
+        };
+      }
+
+      const { data: canciones, error } = await supabase
+        .from("songs")
+        .select("*")
+        .or(
+          `title.ilike.%${searchTerms}%,artist.ilike.%${searchTerms}%,genre.ilike.%${searchTerms}%,tags.cs.{${searchTerms}}`,
+        )
+        .eq("is_active", true)
+        .limit(5);
+
+      if (error) {
+        console.error("Error buscando canciones:", error);
+        return {
+          type: "canciones",
+          message: "🤖 Lo siento, hubo un error buscando canciones. Consulta directamente el repertorio musical.",
+          expression: 'worried',
+        };
+      }
+
+      console.log("Canciones encontradas:", canciones?.length || 0);
+
+      if (!canciones || canciones.length === 0) {
+        return {
+          type: "canciones",
+          message: `🤖 Lo siento, no encontré canciones con "${searchTerms}". Puedes buscar por título, artista, género o etiquetas en nuestro repertorio.\n\n🔗 Ver Repertorio Completo`,
+          expression: 'worried',
+        };
+      }
+
+      // Obtener próximo servicio donde el usuario es director/leader
+      // Obtener info del usuario
+      let profileName: string | null = null;
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', userId)
+        .maybeSingle();
+      profileName = profile?.full_name || null;
+
+      console.log("Usuario buscando servicios:", profileName, "ID:", userId);
+
+      let nextService = null;
+
+      // 1) Verificar grupos donde es líder
+      const { data: userGroups } = await supabase
+        .from("group_members")
+        .select("group_id, is_leader")
+        .eq("user_id", userId)
+        .eq("is_active", true)
+        .eq("is_leader", true);
+
+      const userGroupIds = userGroups?.map(g => g.group_id) || [];
+      console.log("Grupos donde es líder:", userGroupIds);
+
+      if (userGroupIds.length > 0) {
+        const { data } = await supabase
+          .from("services")
+          .select("id, service_date, title")
+          .in("assigned_group_id", userGroupIds)
+          .gte("service_date", new Date().toISOString().split("T")[0])
+          .order("service_date", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        nextService = data || null;
+      }
+
+      // 2) Si no encontró por grupos, buscar por nombre en campo leader
+      if (!nextService && profileName) {
+        console.log("Buscando servicios por nombre en leader:", profileName);
+        const { data } = await supabase
+          .from('services')
+          .select('id, service_date, title, leader')
+          .gte('service_date', new Date().toISOString().split('T')[0])
+          .ilike('leader', `%${profileName}%`)
+          .order('service_date', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        nextService = data || null;
+        console.log("Servicio encontrado por leader:", nextService);
+      }
+
+      const serviceDate = nextService?.service_date;
+
+      let mensaje = `🎵 **Encontré ${canciones.length} canción(es) con "${searchTerms}":**\n\n`;
+
+      canciones.forEach((cancion, index) => {
+        mensaje += `${index + 1}. **${cancion.title}**\n`;
+        if (cancion.artist) mensaje += `🎤 ${cancion.artist}\n`;
+        if (cancion.genre) mensaje += `🎼 ${cancion.genre}\n`;
+        if (cancion.key_signature) mensaje += `🎹 Tono: ${cancion.key_signature}\n`;
+        if (cancion.difficulty_level) {
+          const difficulty = ["", "Muy Fácil", "Fácil", "Intermedio", "Difícil", "Muy Difícil"][
+            cancion.difficulty_level
+          ];
+          mensaje += `⭐ Dificultad: ${difficulty}\n`;
+        }
+
+        // Agregar enlaces clicables
+        if (cancion.youtube_link) {
+          mensaje += `🔗 [Ver en YouTube](${cancion.youtube_link})\n`;
+        }
+        if (cancion.spotify_link) {
+          mensaje += `🔗 [Escuchar en Spotify](${cancion.spotify_link})\n`;
+        }
+
+        mensaje += "\n";
+      });
+
+      // Agregar información sobre botones solo si es director
+      console.log("¿Es director?", { 
+        userGroupIds: userGroupIds.length, 
+        nextService: !!nextService,
+        serviceDate,
+        serviceId: nextService?.id 
+      });
+      
+      if (nextService) {
+        mensaje += `💡 **Haz clic en los botones para agregar al servicio del ${new Date(serviceDate!).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}**\n\n`;
+      } else {
+        mensaje += "💡 **Opciones disponibles:**\n";
+        mensaje += "• 📖 Ver Repertorio Completo\n";
+        mensaje += "• Solo los directores pueden agregar canciones a los servicios\n";
+      }
+
+      // Crear botones solo si tiene servicios asignados
+      const actions: BotAction[] = nextService ? canciones.map((c: any) => ({
+        type: 'select_song',
+        songId: c.id,
+        songName: c.title,
+        serviceDate: nextService.service_date,
+        serviceId: nextService.id
+      })) : [];
+
+      console.log("Acciones generadas:", actions.length, actions);
+
+      return {
+        type: "canciones",
+        message: mensaje,
+        expression: 'happy',
+        actions
+      };
+    } catch (error) {
+      console.error("Error buscando canciones:", error);
+      return {
+        type: "canciones",
+        message: "🤖 Lo siento, hubo un error buscando canciones. Consulta directamente el repertorio musical.",
+        expression: 'worried',
+      };
+    }
+  }
+
+  private static async handleGeneralQuery(query: string): Promise<BotResponse> {
+    console.log("ARCANA manejando consulta general:", query);
+
+    // Detectar consultas de cumpleaños
+    if (query.includes("cumpleaños") || query.includes("cumpleanos")) {
+      return await this.handleBirthdayQuery(query);
+    }
+
+    // Detectar consultas bíblicas
+    if (
+      query.includes("versículo") ||
+      query.includes("versiculo") ||
+      query.includes("biblia") ||
+      query.includes("cita bíblica")
+    ) {
+      return this.handleBibleQuery(query);
+    }
+
+    // Respuestas predefinidas para consultas generales relacionadas con el ministerio
+    const responses = {
+      valores:
+        "🤖 Nuestros valores fundamentales son: **Fe, Adoración, Comunidad, Servicio y Excelencia**. Cada integrante del ministerio debe reflejar estos valores en su vida y servicio.",
+      horarios:
+        "🤖 Los horarios regulares son: Ensayos los miércoles 7:00 PM, Servicio domingo 9:00 AM. Para horarios específicos, consulta la agenda ministerial.",
+      contacto:
+        "🤖 Para contactar a los líderes del ministerio, puedes usar este sistema de comunicación o consultar en la sección de Integrantes.",
+      ayuda: `🤖 **¡Hola! Soy ARCANA, tu asistente del ministerio ADN Arca de Noé.** ✨
+
+**¿En qué puedo ayudarte?**
+
+🎵 **TURNOS Y AGENDA**
+• "¿Cuándo me toca cantar?"
+• "¿Cuándo le toca a [nombre]?"
+• "Próximo turno"
+• "Mi agenda"
+
+📅 **ENSAYOS**
+• "Próximo ensayo"
+• "Cuándo es el ensayo"
+• "Horario de ensayos"
+
+🎶 **CANCIONES Y REPERTORIO**
+• "Buscar [nombre canción]"
+• "Seleccionar [canción] para servicio"
+• "Repertorio de alabanza"
+
+🎂 **CUMPLEAÑOS**
+• "Cumpleaños de hoy"
+• "Cumpleaños del mes"
+• "Cumpleaños de [mes]"
+
+📖 **BIBLIA Y ESPIRITUAL**
+• "Versículo del día"
+• "Cita bíblica sobre [tema]"
+
+💡 **EJEMPLOS PRÁCTICOS:**
+• "ARCANA cuándo me toca cantar"
+• "ARCANA buscar Como Lluvia"
+• "ARCANA cuándo le toca a Armando Noel"
+• "ARCANA próximo ensayo"
+• "ARCANA cumpleaños de hoy"
+• "ARCANA cumpleaños de noviembre"
+• "ARCANA versículo del día"
+
+¡Estoy aquí para servirte! 🙏🎵`,
+    };
+
+    // Buscar coincidencias en las consultas
+    for (const [key, response] of Object.entries(responses)) {
+      if (query.includes(key)) {
+        console.log("ARCANA encontró respuesta para:", key);
+        return { type: "general", message: response, expression: 'happy' };
+      }
+    }
+
+    // Respuesta por defecto
+    console.log("ARCANA usando respuesta por defecto");
+    return {
+      type: "general",
+      message:
+        '🤖 Lo siento, no entendí tu consulta. Escribe "ARCANA ayuda" para ver todas las opciones disponibles.\n\n💡 Puedo ayudarte con:\n• Turnos de canto\n• Información de ensayos\n• Búsqueda de canciones\n• Selección de repertorio\n• Cumpleaños del ministerio\n• Versículos bíblicos',
+      expression: 'worried',
+    };
+  }
+
+  private static async handleBirthdayQuery(query: string): Promise<BotResponse> {
+    const today = new Date();
+    const currentMonth = today.getMonth() + 1;
+    const currentDay = today.getDate();
+
+    // Mapeo de nombres de meses a números
+    const monthMap: { [key: string]: number } = {
+      enero: 1,
+      febrero: 2,
+      marzo: 3,
+      abril: 4,
+      mayo: 5,
+      junio: 6,
+      julio: 7,
+      agosto: 8,
+      septiembre: 9,
+      octubre: 10,
+      noviembre: 11,
+      diciembre: 12,
+    };
+
+    try {
+      // Buscar cumpleaños de hoy
+      if (query.includes("hoy") || query.includes("día")) {
+        const { data: birthdays, error } = await supabase
+          .from("members")
+          .select("nombres, apellidos, fecha_nacimiento")
+          .eq("is_active", true)
+          .not("fecha_nacimiento", "is", null);
+
+        if (error) throw error;
+
+        const todayBirthdays =
+          birthdays?.filter((member) => {
+            if (!member.fecha_nacimiento) return false;
+            const birthDate = new Date(member.fecha_nacimiento);
+            return birthDate.getMonth() + 1 === currentMonth && birthDate.getDate() === currentDay;
+          }) || [];
+
+        if (todayBirthdays.length === 0) {
+          return {
+            type: "general",
+            message: `🎂 **Cumpleaños de hoy (${currentDay}/${currentMonth}):**\n\n😊 No hay cumpleaños registrados para hoy.\n\n📅 Ver Módulo de Cumpleaños para consultar los próximos cumpleaños del ministerio.\n\n¡Celebremos juntos! 🙏✨`,
+            expression: 'happy',
+          };
+        }
+
+        let mensaje = `🎂 **¡Cumpleaños de hoy!** 🎉\n\n`;
+        todayBirthdays.forEach((member) => {
+          mensaje += `🎈 **${member.nombres} ${member.apellidos}**\n`;
+        });
+        mensaje += `\n💝 ¡No olvides felicitar a ${todayBirthdays.length > 1 ? "nuestros hermanos" : "nuestro hermano"}!\n\n📅 Ver más en Módulo de Cumpleaños`;
+
+        return { type: "general", message: mensaje, expression: 'happy' };
+      }
+
+      // Buscar cumpleaños del mes específico
+      let targetMonth = currentMonth;
+      let specifiedMonth = "";
+
+      // Buscar si se especificó un mes en la consulta
+      for (const [monthName, monthNumber] of Object.entries(monthMap)) {
+        if (query.includes(monthName)) {
+          targetMonth = monthNumber;
+          specifiedMonth = monthName;
+          break;
+        }
+      }
+
+      // Si se menciona "mes" sin especificar, usar el mes actual
+      if (query.includes("mes") && !specifiedMonth) {
+        targetMonth = currentMonth;
+        specifiedMonth = Object.keys(monthMap).find((key) => monthMap[key] === currentMonth) || "";
+      }
+
+      const { data: birthdays, error } = await supabase
+        .from("members")
+        .select("nombres, apellidos, fecha_nacimiento")
+        .eq("is_active", true)
+        .not("fecha_nacimiento", "is", null);
+
+      if (error) throw error;
+
+      const monthBirthdays =
+        birthdays
+          ?.filter((member) => {
+            if (!member.fecha_nacimiento) return false;
+            const birthDate = new Date(member.fecha_nacimiento);
+            return birthDate.getMonth() + 1 === targetMonth;
+          })
+          .sort((a, b) => {
+            const dateA = new Date(a.fecha_nacimiento);
+            const dateB = new Date(b.fecha_nacimiento);
+            return dateA.getDate() - dateB.getDate();
+          }) || [];
+
+      if (monthBirthdays.length === 0) {
+        const monthNames = [
+          "",
+          "Enero",
+          "Febrero",
+          "Marzo",
+          "Abril",
+          "Mayo",
+          "Junio",
+          "Julio",
+          "Agosto",
+          "Septiembre",
+          "Octubre",
+          "Noviembre",
+          "Diciembre",
+        ];
+        return {
+          type: "general",
+          message: `🎂 **Cumpleaños de ${monthNames[targetMonth]}:**\n\n😊 No hay cumpleaños registrados para este mes.\n\n📅 Ver Módulo de Cumpleaños\n\n¡Celebremos juntos! 🙏✨`,
+          expression: 'happy',
+        };
+      }
+
+      const monthNames = [
+        "",
+        "Enero",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto",
+        "Septiembre",
+        "Octubre",
+        "Noviembre",
+        "Diciembre",
+      ];
+      let mensaje = `🎂 **Cumpleaños de ${monthNames[targetMonth]}:** 🎉\n\n`;
+
+      monthBirthdays.forEach((member) => {
+        const birthDate = new Date(member.fecha_nacimiento);
+        const day = birthDate.getDate();
+        mensaje += `📅 ${day} - **${member.nombres} ${member.apellidos}**\n`;
+      });
+
+      mensaje += `\n💝 Total: ${monthBirthdays.length} cumpleañero${monthBirthdays.length > 1 ? "s" : ""}\n\n📅 Ver más en Módulo de Cumpleaños\n\n¡No olvides felicitar a tus hermanos en Cristo! 🙏✨`;
+
+      return { type: "general", message: mensaje, expression: 'happy' };
+    } catch (error) {
+      console.error("Error consultando cumpleaños:", error);
+      return {
+        type: "general",
+        message: `🎂 **Cumpleaños:**\n\n🤖 Lo siento, hubo un error consultando los cumpleaños. Por favor visita el Módulo de Cumpleaños.\n\n¡Celebremos juntos! 🙏✨`,
+        expression: 'worried',
+      };
+    }
+  }
+
+  private static handleBibleQuery(query: string): BotResponse {
+    if (query.includes("día") || query.includes("hoy")) {
+      return {
+        type: "general",
+        message: `📖 **Versículo del día:**\n\n🤖 Para el versículo diario y reflexiones espirituales, visita el Módulo Espiritual.\n\nAllí encontrarás:\n• 📖 Versículo del día con reflexión\n• 📚 Historia de versículos anteriores\n• 🙏 Meditaciones y estudios\n• 💫 Inspiración diaria\n\n"La palabra de Dios es viva y eficaz" - Hebreos 4:12 🙏✨`,
+        expression: 'thinking',
+      };
+    }
+
+    return {
+      type: "general",
+      message: `📖 **Consultas bíblicas:**\n\n🤖 Para versículos, reflexiones y estudios bíblicos visita el Módulo Espiritual.\n\nPuedes consultar:\n• "ARCANA versículo del día"\n• "ARCANA cita bíblica sobre amor"\n• "ARCANA biblia de hoy"\n\n"Lámpara es a mis pies tu palabra, y lumbrera a mi camino" - Salmo 119:105 🙏✨`,
+      expression: 'thinking',
+    };
+  }
 
   static async sendBotResponse(roomId: string, response: BotResponse): Promise<void> {
     try {
