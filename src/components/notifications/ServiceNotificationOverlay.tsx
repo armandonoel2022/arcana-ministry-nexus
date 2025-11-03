@@ -61,54 +61,53 @@ interface ServiceNotificationOverlayProps {
   onNavigate?: (path: string) => void;
 }
 
-// Pool de coristas rotativos
+// Pool de coristas rotativos con IDs correctos de la base de datos
 const ROTATIVE_SINGERS = {
   male: [
-    { id: 'guarionex', name: 'Guarionex', voice: 'Bajo', is_director: true },
-    { id: 'abrahan-valera', name: 'Abrahan Valera', voice: 'Bajo', is_director: false },
-    { id: 'nicolas-peralta', name: 'Nicolás Peralta', voice: 'Bajo', is_director: true },
-    { id: 'armando-noel', name: 'Armando Noel', voice: 'Bajo', is_director: true },
-    { id: 'denny-santana', name: 'Denny Santana', voice: 'Bajo', is_director: true }
+    { id: 'a71697a2-bf8e-4967-8190-2e3e2d01f150', name: 'Guarionex Garcia', voice: 'Bajo', is_director: true },
+    { id: '7a1645d8-75fe-498c-a2e9-f1057ff3521f', name: 'Fredderid Abrahan Valera Montoya', voice: 'Tenor', is_director: false },
+    { id: 'f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f', name: 'Felix Nicolas Peralta Hernandez', voice: 'Tenor', is_director: true },
+    { id: 'd6602109-ad3e-4db6-ab4a-2984dadfc569', name: 'Armando Noel Charle', voice: 'Tenor', is_director: true },
+    { id: '6a5bfaa9-fdf0-4b0e-aad3-79266444604f', name: 'Denny Alberto Santana', voice: 'Tenor', is_director: true }
   ],
   female: [
-    { id: 'ashley', name: 'Ashley', voice: 'Soprano', is_director: false },
-    { id: 'fior-dalisa', name: 'Fior Dalisa Paniagua', voice: 'Soprano', is_director: false }
+    { id: 'cd2d8fda-0029-4280-a9a1-c23ed5c4f9ad', name: 'Ashley Rossely Jimenez Gonzalez', voice: 'Soprano', is_director: false },
+    { id: '8cebc294-ea61-40d0-9b04-08d7d474332c', name: 'Fior Daliza Paniagua', voice: 'Contralto', is_director: false }
   ]
 };
 
-// Configuración base de grupos
+// Configuración base de grupos con miembros fijos
 const BASE_GROUP_CONFIG = {
   'Grupo de Aleida': {
     color_theme: '#3B82F6',
     base_members: [
       { id: '00a916a8-ab94-4cc0-81ae-668dd6071416', name: 'Aleida Geomar Batista Ventura', voice: 'Soprano', is_director: true },
-      { id: 'c4089748-7168-4472-8e7c-bf44b4355906', name: 'Eliabi Joana Sierra Castillo', voice: 'Soprano' },
-      { id: '8cebc294-ea61-40d0-9b04-08d7d474332c', name: 'Fior Daliza Paniagua', voice: 'Contralto' },
-      { id: '619c1a4e-42db-4549-8890-16392cfa2a87', name: 'Ruth Esmailin Ramirez', voice: 'Contralto' }
+      { id: 'c4089748-7168-4472-8e7c-bf44b4355906', name: 'Eliabi Joana Sierra Castillo', voice: 'Soprano', is_director: true },
+      { id: '619c1a4e-42db-4549-8890-16392cfa2a87', name: 'Ruth Esmailin Ramirez', voice: 'Contralto', is_director: false }
     ]
   },
   'Grupo de Keyla': {
     color_theme: '#8B5CF6',
     base_members: [
       { id: 'c24659e9-b473-4ecd-97e7-a90526d23502', name: 'Keyla Yanira Medrano Medrano', voice: 'Soprano', is_director: true },
-      { id: '11328db1-559f-4dcf-9024-9aef18435700', name: 'Yindia Carolina Santana Castillo', voice: 'Soprano' },
-      { id: '4eed809d-9437-48d5-935e-cf8b4aa8024a', name: 'Arizoni Liriano Medina', voice: 'Bajo' },
-      { id: '82b62449-5046-455f-af7b-da8e5dbc6327', name: 'Aida Lorena Pacheco De Santana', voice: 'Contralto' },
-      { id: 'be61d066-5707-4763-8d8c-16d19597dc3a', name: 'Sugey A. Gonzalez Garo', voice: 'Contralto' }
+      { id: '11328db1-559f-4dcf-9024-9aef18435700', name: 'Yindia Carolina Santana Castillo', voice: 'Soprano', is_director: false },
+      { id: '4eed809d-9437-48d5-935e-cf8b4aa8024a', name: 'Arizoni Liriano Medina', voice: 'Bajo', is_director: false },
+      { id: '82b62449-5046-455f-af7b-da8e5dbc6327', name: 'Aida Lorena Pacheco De Santana', voice: 'Contralto', is_director: false },
+      { id: 'be61d066-5707-4763-8d8c-16d19597dc3a', name: 'Sugey A. Gonzalez Garo', voice: 'Contralto', is_director: false }
     ]
   },
   'Grupo de Massy': {
     color_theme: '#EC4899',
     base_members: [
-      { id: '2a2fa0cd-d301-46ec-9965-2e4ea3692181', name: 'Rosely Montero', voice: 'Contralto' },
-      { id: 'b5719097-187d-4804-8b7f-e84cc1ec9ad5', name: 'Jisell Amada Mauricio Paniagua', voice: 'Soprano' },
-      { id: 'bdcc27cd-40ae-456e-a340-633ce7da08c0', name: 'Rodes Esther Santana Cuesta', voice: 'Contralto' },
-      { id: 'damaris-castillo', name: 'Damaris Castillo', voice: 'Soprano', is_director: true }
+      { id: 'cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38', name: 'Damaris Castillo Jimenez', voice: 'Soprano', is_director: true },
+      { id: '2a2fa0cd-d301-46ec-9965-2e4ea3692181', name: 'Rosely Montero', voice: 'Contralto', is_director: false },
+      { id: 'b5719097-187d-4804-8b7f-e84cc1ec9ad5', name: 'Jisell Amada Mauricio Paniagua', voice: 'Soprano', is_director: false },
+      { id: 'bdcc27cd-40ae-456e-a340-633ce7da08c0', name: 'Rodes Esther Santana Cuesta', voice: 'Contralto', is_director: false }
     ]
   }
 };
 
-// URLs de fotos (mantenemos las existentes)
+// URLs de fotos
 const PHOTO_URLS = {
   '00a916a8-ab94-4cc0-81ae-668dd6071416': 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/00a916a8-ab94-4cc0-81ae-668dd6071416.JPG',
   'c4089748-7168-4472-8e7c-bf44b4355906': 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG',
@@ -122,7 +121,13 @@ const PHOTO_URLS = {
   '2a2fa0cd-d301-46ec-9965-2e4ea3692181': 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/2a2fa0cd-d301-46ec-9965-2e4ea3692181.jpeg',
   'b5719097-187d-4804-8b7f-e84cc1ec9ad5': 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/b5719097-187d-4804-8b7f-e84cc1ec9ad5.JPG',
   'bdcc27cd-40ae-456e-a340-633ce7da08c0': 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/bdcc27cd-40ae-456e-a340-633ce7da08c0.JPG',
-  '7a1645d8-75fe-498c-a2e9-f1057ff3521f': 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/7a1645d8-75fe-498c-a2e9-f1057ff3521f.JPG'
+  '7a1645d8-75fe-498c-a2e9-f1057ff3521f': 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/7a1645d8-75fe-498c-a2e9-f1057ff3521f.JPG',
+  'a71697a2-bf8e-4967-8190-2e3e2d01f150': 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/a71697a2-bf8e-4967-8190-2e3e2d01f150.JPG',
+  'f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f': 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG',
+  'd6602109-ad3e-4db6-ab4a-2984dadfc569': 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/d6602109-ad3e-4db6-ab4a-2984dadfc569.JPG',
+  '6a5bfaa9-fdf0-4b0e-aad3-79266444604f': 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/6a5bfaa9-fdf0-4b0e-aad3-79266444604f.JPG',
+  'cd2d8fda-0029-4280-a9a1-c23ed5c4f9ad': 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/cd2d8fda-0029-4280-a9a1-c23ed5c4f9ad.JPG',
+  'cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38': 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38.JPG'
 };
 
 const ServiceNotificationOverlay = ({ 
@@ -138,16 +143,16 @@ const ServiceNotificationOverlay = ({
   const [confirmedServices, setConfirmedServices] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'services' | 'preparations'>('services');
   const serviceCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-  const [lastRotations, setLastRotations] = useState<{
+  const [rotationState, setRotationState] = useState<{
     soprano: string;
-    services: string[];
+    lastServices: string[];
   }>({
-    soprano: 'fior-dalisa',
-    services: []
+    soprano: 'fior-daliza',
+    lastServices: []
   });
 
   // Función para obtener la formación correcta según las reglas
-  const getGroupFormation = (groupName: string, serviceTime: string, directorName: string) => {
+  const getGroupFormation = (groupName: string, serviceTime: string, directorName: string, serviceId: string) => {
     const groupConfig = BASE_GROUP_CONFIG[groupName as keyof typeof BASE_GROUP_CONFIG];
     if (!groupConfig) return [];
 
@@ -155,43 +160,23 @@ const ServiceNotificationOverlay = ({
     
     // REGLA: Grupo de Keyla tiene formación fija
     if (groupName === 'Grupo de Keyla') {
-      return formation.map(member => ({
+      return formation.map((member, index) => ({
         ...member,
-        mic: `Micrófono #${formation.indexOf(member) + 1}`,
+        mic: `Micrófono #${index + 1}`,
         photo_url: PHOTO_URLS[member.id as keyof typeof PHOTO_URLS]
       }));
     }
 
-    // REGLA: Rotación de sopranos (Ashley y Fior Dalisa)
-    const currentSopranoRotation = lastRotations.soprano === 'ashley' ? 'fior-dalisa' : 'ashley';
-    const availableSoprano = ROTATIVE_SINGERS.female.find(s => s.id === currentSopranoRotation);
-    
-    // Reemplazar sopranos en los grupos según necesidad
-    if (groupName === 'Grupo de Aleida' || groupName === 'Grupo de Massy') {
-      const hasSoprano = formation.some(m => m.voice === 'Soprano' && !m.is_director);
-      if (hasSoprano && availableSoprano) {
-        // Reemplazar un soprano no director
-        const sopranoIndex = formation.findIndex(m => m.voice === 'Soprano' && !m.is_director);
-        if (sopranoIndex !== -1) {
-          formation[sopranoIndex] = {
-            ...availableSoprano,
-            id: availableSoprano.id,
-            photo_url: availableSoprano.id === 'fior-dalisa' ? PHOTO_URLS['8cebc294-ea61-40d0-9b04-08d7d474332c'] : undefined
-          };
-        }
-      }
-    }
-
-    // REGLA: Asignar corista varón según grupo y horario
+    // REGLA: Asignar corista varón según grupo y horario (SIEMPRE en micrófono #3)
     let maleSinger;
     if (groupName === 'Grupo de Massy') {
       maleSinger = serviceTime === '08:00' 
-        ? ROTATIVE_SINGERS.male.find(s => s.name === 'Guarionex')
-        : ROTATIVE_SINGERS.male.find(s => s.name === 'Abrahan Valera');
+        ? ROTATIVE_SINGERS.male.find(s => s.name === 'Guarionex Garcia')
+        : ROTATIVE_SINGERS.male.find(s => s.name === 'Fredderid Abrahan Valera Montoya');
     } else if (groupName === 'Grupo de Aleida') {
       maleSinger = serviceTime === '08:00'
-        ? ROTATIVE_SINGERS.male.find(s => s.name === 'Armando Noel')
-        : ROTATIVE_SINGERS.male.find(s => s.name === 'Nicolás Peralta');
+        ? ROTATIVE_SINGERS.male.find(s => s.name === 'Armando Noel Charle')
+        : ROTATIVE_SINGERS.male.find(s => s.name === 'Felix Nicolas Peralta Hernandez');
     }
 
     // REGLA: No duplicación - si el corista es el director, buscar alternativo
@@ -202,47 +187,122 @@ const ServiceNotificationOverlay = ({
       ) || ROTATIVE_SINGERS.male.find(s => s.name !== directorName);
     }
 
-    // Agregar corista varón a la formación
-    if (maleSinger) {
-      formation.push({
-        ...maleSinger,
-        id: maleSinger.id,
-        photo_url: maleSinger.name === 'Abrahan Valera' ? PHOTO_URLS['7a1645d8-75fe-498c-a2e9-f1057ff3521f'] : undefined
-      });
+    // REGLA: Rotación de sopranos (Ashley y Fior Daliza) - NO pueden estar juntas
+    const currentSopranoRotation = rotationState.soprano === 'ashley' ? 'fior-daliza' : 'ashley';
+    const availableSoprano = ROTATIVE_SINGERS.female.find(s => 
+      s.id === (currentSopranoRotation === 'ashley' ? 'cd2d8fda-0029-4280-a9a1-c23ed5c4f9ad' : '8cebc294-ea61-40d0-9b04-08d7d474332c')
+    );
+
+    // Actualizar estado de rotación para el próximo servicio
+    if (!rotationState.lastServices.includes(serviceId)) {
+      setRotationState(prev => ({
+        soprano: currentSopranoRotation,
+        lastServices: [...prev.lastServices, serviceId]
+      }));
     }
 
-    // REGLA: Asegurar formación de 2 sopranos, 1 varón, 2 contraltos
-    const sopranos = formation.filter(m => m.voice === 'Soprano');
-    const contraltos = formation.filter(m => m.voice === 'Contralto');
-    const maleSingers = formation.filter(m => m.voice === 'Bajo');
+    // Para Grupos Aleida y Massy, construir formación dinámica
+    if (groupName === 'Grupo de Aleida' || groupName === 'Grupo de Massy') {
+      // Filtrar miembros base que no sean el director actual
+      const baseMembersWithoutDirector = formation.filter(member => 
+        !member.is_director || member.name !== directorName
+      );
 
-    // Completar sopranos si es necesario
-    if (sopranos.length < 2) {
-      const neededSopranos = 2 - sopranos.length;
-      const availableSopranos = ROTATIVE_SINGERS.female.filter(s => 
-        !formation.some(m => m.name === s.name)
-      ).slice(0, neededSopranos);
-      
-      formation.push(...availableSopranos.map(soprano => ({
-        ...soprano,
-        photo_url: soprano.id === 'fior-dalisa' ? PHOTO_URLS['8cebc294-ea61-40d0-9b04-08d7d474332c'] : undefined
-      })));
+      // Obtener sopranos y contraltos actuales
+      const currentSopranos = baseMembersWithoutDirector.filter(m => m.voice === 'Soprano');
+      const currentContraltos = baseMembersWithoutDirector.filter(m => m.voice === 'Contralto');
+
+      let finalFormation = [];
+      let micNumber = 1;
+
+      // Micrófono #1: Primer soprano disponible
+      if (currentSopranos.length > 0) {
+        finalFormation.push({
+          ...currentSopranos[0],
+          mic: `Micrófono #${micNumber}`,
+          photo_url: PHOTO_URLS[currentSopranos[0].id as keyof typeof PHOTO_URLS]
+        });
+        micNumber++;
+      }
+
+      // Micrófono #2: Segundo soprano o soprano rotativo
+      if (currentSopranos.length > 1) {
+        finalFormation.push({
+          ...currentSopranos[1],
+          mic: `Micrófono #${micNumber}`,
+          photo_url: PHOTO_URLS[currentSopranos[1].id as keyof typeof PHOTO_URLS]
+        });
+        micNumber++;
+      } else if (availableSoprano && availableSoprano.voice === 'Soprano') {
+        // Usar Ashley como segundo soprano si está disponible
+        finalFormation.push({
+          ...availableSoprano,
+          mic: `Micrófono #${micNumber}`,
+          photo_url: PHOTO_URLS[availableSoprano.id as keyof typeof PHOTO_URLS]
+        });
+        micNumber++;
+      }
+
+      // Micrófono #3: SIEMPRE el corista varón
+      if (maleSinger) {
+        finalFormation.push({
+          ...maleSinger,
+          mic: `Micrófono #${micNumber}`,
+          photo_url: PHOTO_URLS[maleSinger.id as keyof typeof PHOTO_URLS]
+        });
+        micNumber++;
+      }
+
+      // Micrófono #4: Primera contralto
+      if (currentContraltos.length > 0) {
+        finalFormation.push({
+          ...currentContraltos[0],
+          mic: `Micrófono #${micNumber}`,
+          photo_url: PHOTO_URLS[currentContraltos[0].id as keyof typeof PHOTO_URLS]
+        });
+        micNumber++;
+      } else if (availableSoprano && availableSoprano.voice === 'Contralto') {
+        // Usar Fior Daliza como contralto si está disponible
+        finalFormation.push({
+          ...availableSoprano,
+          mic: `Micrófono #${micNumber}`,
+          photo_url: PHOTO_URLS[availableSoprano.id as keyof typeof PHOTO_URLS]
+        });
+        micNumber++;
+      }
+
+      // Micrófono #5: Segunda contralto o completar formación
+      if (currentContraltos.length > 1) {
+        finalFormation.push({
+          ...currentContraltos[1],
+          mic: `Micrófono #${micNumber}`,
+          photo_url: PHOTO_URLS[currentContraltos[1].id as keyof typeof PHOTO_URLS]
+        });
+      } else if (finalFormation.length < 5) {
+        // Completar con otro miembro disponible si es necesario
+        const remainingMembers = baseMembersWithoutDirector.filter(member => 
+          !finalFormation.some(f => f.id === member.id)
+        );
+        if (remainingMembers.length > 0) {
+          finalFormation.push({
+            ...remainingMembers[0],
+            mic: `Micrófono #${micNumber}`,
+            photo_url: PHOTO_URLS[remainingMembers[0].id as keyof typeof PHOTO_URLS]
+          });
+        }
+      }
+
+      return finalFormation;
     }
 
-    // Completar contraltos si es necesario
-    if (contraltos.length < 2) {
-      const neededContraltos = 2 - contraltos.length;
-      // En una implementación real, aquí buscaríamos contraltos disponibles
-    }
-
-    // Asignar números de micrófono
     return formation.map((member, index) => ({
       ...member,
       mic: `Micrófono #${index + 1}`,
-      photo_url: member.photo_url || PHOTO_URLS[member.id as keyof typeof PHOTO_URLS]
+      photo_url: PHOTO_URLS[member.id as keyof typeof PHOTO_URLS]
     }));
   };
 
+  // Resto del código se mantiene igual hasta la función fetchWeekendServices...
   useEffect(() => {
     if (forceShow) {
       setIsVisible(true);
@@ -294,7 +354,7 @@ const ServiceNotificationOverlay = ({
       const formattedServices = metadata.services.map((service: any) => {
         const groupName = service.group || 'Grupo de Alabanza';
         const serviceTime = service.time === '8:00 a.m.' ? '08:00' : '10:45';
-        const formation = getGroupFormation(groupName, serviceTime, service.director?.name);
+        const formation = getGroupFormation(groupName, serviceTime, service.director?.name, service.id);
         
         return {
           id: service.id || Date.now().toString(),
@@ -445,7 +505,7 @@ const ServiceNotificationOverlay = ({
             // Obtener miembros del grupo con la formación corregida
             const groupName = service.worship_groups?.name || 'Grupo de Alabanza';
             const serviceTime = service.title.toLowerCase().includes('8:00') ? '08:00' : '10:45';
-            const formation = getGroupFormation(groupName, serviceTime, service.leader);
+            const formation = getGroupFormation(groupName, serviceTime, service.leader, service.id);
             
             const members = formation.map((member, index) => ({
               id: `member-${service.id}-${index}`,
@@ -537,6 +597,7 @@ const ServiceNotificationOverlay = ({
     }
   };
 
+  // Resto del código (closeOverlay, handleConfirmAttendance, etc.) se mantiene igual...
   const closeOverlay = () => {
     setIsAnimating(false);
     setTimeout(() => {
@@ -765,7 +826,7 @@ const ServiceNotificationOverlay = ({
     }
   };
 
-  // ServiceCard component mejorado con las nuevas reglas
+  // ServiceCard component
   const ServiceCard = ({ service }: { service: WeekendService }) => {
     const serviceTime = getServiceTime(service.title);
     const directorMember = service.group_members.find(m => m.is_leader);
