@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send, Users, Bot } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ArcanaBot, BotAction } from "./ArcanaBot";
@@ -30,6 +30,7 @@ interface Message {
   actions?: BotAction[];
   profiles?: {
     full_name: string;
+    photo_url?: string;
   };
 }
 
@@ -148,7 +149,8 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
         .select(`
           *,
           profiles:user_id (
-            full_name
+            full_name,
+            photo_url
           )
         `)
         .eq('room_id', room.id)
@@ -161,7 +163,36 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
       }
       
       console.log('Mensajes obtenidos:', data?.length || 0);
-      setMessages(data || []);
+      
+      // Enriquecer mensajes con fotos de members si no tienen en profile
+      const enrichedMessages = await Promise.all(
+        (data || []).map(async (msg) => {
+          if (msg.profiles && !msg.profiles.photo_url && msg.user_id) {
+            // Intentar obtener foto desde members
+            const firstName = msg.profiles.full_name?.split(' ')[0];
+            if (firstName) {
+              const { data: memberData } = await supabase
+                .from('members')
+                .select('photo_url')
+                .ilike('nombres', `%${firstName}%`)
+                .single();
+              
+              if (memberData?.photo_url) {
+                return {
+                  ...msg,
+                  profiles: {
+                    ...msg.profiles,
+                    photo_url: memberData.photo_url
+                  }
+                };
+              }
+            }
+          }
+          return msg;
+        })
+      );
+      
+      setMessages(enrichedMessages);
     } catch (error) {
       console.error('Error fetching messages:', error);
       toast({
@@ -619,7 +650,14 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
                     className={`flex gap-3 ${isOwnMessage && !isBotMessage ? 'justify-end' : 'justify-start'}`}
                   >
                     {(!isOwnMessage || isBotMessage) && (
-                      <Avatar className="w-8 h-8">
+                      <Avatar className="w-8 h-8 flex-shrink-0">
+                        {!isBotMessage && message.profiles?.photo_url && (
+                          <AvatarImage 
+                            src={message.profiles.photo_url} 
+                            alt={getUserDisplayName(message)}
+                            className="object-cover"
+                          />
+                        )}
                         <AvatarFallback className={`text-xs ${isBotMessage ? 'bg-purple-100' : 'bg-arcana-blue-100'}`}>
                           {isBotMessage ? (
                             <Bot className="w-4 h-4 text-purple-600" />
@@ -674,9 +712,19 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
                       </p>
                     </div>
                     {isOwnMessage && !isBotMessage && (
-                      <Avatar className="w-8 h-8">
+                      <Avatar className="w-8 h-8 flex-shrink-0">
+                        {(currentUser?.profile?.photo_url || currentUser?.member?.photo_url) && (
+                          <AvatarImage 
+                            src={currentUser?.profile?.photo_url || currentUser?.member?.photo_url} 
+                            alt="Tu foto"
+                            className="object-cover"
+                          />
+                        )}
                         <AvatarFallback className="text-xs bg-arcana-gold-100">
-                          Tú
+                          {currentUser?.profile?.full_name ? 
+                            getInitials(currentUser.profile.full_name) : 
+                            'Tú'
+                          }
                         </AvatarFallback>
                       </Avatar>
                     )}
