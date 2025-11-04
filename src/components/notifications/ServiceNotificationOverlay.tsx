@@ -621,7 +621,7 @@ const ServiceNotificationOverlay = ({
             }
 
             // Obtener miembros del grupo con la formación corregida
-            const groupName = service.worship_groups?.name || 'Grupo de Alabanza';
+            const groupName = service.worship_groups?.[0]?.name || 'Grupo de Alabanza';
             const serviceTime = service.title.toLowerCase().includes('8:00') || service.title.toLowerCase().includes('08:00') ? '08:00' : '10:45';
             const formation = getGroupFormation(groupName, serviceTime, service.leader, service.id);
             

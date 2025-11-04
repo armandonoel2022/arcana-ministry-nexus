@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getRandomVerse, getSpecificVerse, searchVersesByTopic } from "@/utils/bibleApi";
 
 export interface BotAction {
   type: 'select_song';
@@ -53,6 +54,39 @@ class ArcanaCache {
   clearCache() {
     this.membersCache = null;
     this.membersCacheTime = 0;
+  }
+
+  // NUEVO: Obtener foto de usuario desde members
+  async getUserPhoto(userId: string): Promise<string | null> {
+    try {
+      // Primero buscar en profiles
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, photo_url')
+        .eq('id', userId)
+        .single();
+
+      if (profile?.photo_url) {
+        return profile.photo_url;
+      }
+
+      // Si no hay foto en profile, buscar en members por nombre
+      if (profile?.full_name) {
+        const firstName = profile.full_name.split(' ')[0];
+        const { data: member } = await supabase
+          .from('members')
+          .select('photo_url')
+          .ilike('nombres', `%${firstName}%`)
+          .single();
+
+        return member?.photo_url || null;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error getting user photo:', error);
+      return null;
+    }
   }
 }
 
@@ -136,8 +170,14 @@ export class ArcanaBot {
       case 'cumpleanos':
         return await this.handleBirthdayQuery(cleanMessage);
       
-      case 'biblico':
-        return this.getBibleResponse(cleanMessage);
+      case 'biblico_diario':
+        return await this.getBibleDailyVerse();
+      
+      case 'biblico_especifico':
+        return await this.getBibleSpecificVerse(cleanMessage);
+      
+      case 'biblico_buscar':
+        return await this.getBibleSearchByTopic(cleanMessage);
       
       case 'ayuda':
         return this.getHelpResponse();
@@ -192,12 +232,23 @@ export class ArcanaBot {
         /fiesta/,
         /natalicio/
       ],
-      biblico: [
-        /vers[ií]culo/,
-        /biblia/,
+      biblico_diario: [
+        /vers[ií]culo\s+del\s+d[ií]a/,
+        /palabra\s+del\s+d[ií]a/,
+        /lectura\s+diaria/,
+        /devocional/
+      ],
+      biblico_especifico: [
+        /vers[ií]culo\s+[a-z0-9]/,
+        /(?:juan|salmo|genesis|mateo|romanos)\s+\d/,
         /cita\s+b[ií]blica/,
-        /palabra/,
-        /evangelio/
+        /lee\s+[a-z]+\s+\d/
+      ],
+      biblico_buscar: [
+        /vers[ií]culo\s+(?:sobre|de|del)\s+/,
+        /busca(?:r)?\s+vers[ií]culo/,
+        /(?:amor|fe|esperanza|paz|gracia)\s+en\s+la\s+biblia/,
+        /palabra\s+sobre/
       ],
       ayuda: [
         /ayuda/,
@@ -806,8 +857,8 @@ export class ArcanaBot {
       if (nextService) {
         mensaje += `💡 **Haz clic en los botones para agregar al servicio del ${new Date(serviceDate!).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}**\n\n`;
         
-        actions.push(...canciones.map((c: any) => ({
-          type: 'select_song',
+        actions.push(...canciones.map((c: any): BotAction => ({
+          type: 'select_song' as const,
           songId: c.id,
           songName: c.title,
           serviceDate: nextService.service_date,
@@ -1084,12 +1135,121 @@ export class ArcanaBot {
     }
   }
 
-  private static getBibleResponse(query: string): BotResponse {
-    return {
-      type: "general",
-      message: `📖 **Consultas bíblicas:**\n\nVisita el Módulo Espiritual para versículos y reflexiones.\n\n"Lámpara es a mis pies tu palabra" - Salmo 119:105 🙏`,
-      expression: 'thinking',
-    };
+  // NUEVO: Versículo del día desde API Bíblica Externa
+  private static async getBibleDailyVerse(): Promise<BotResponse> {
+    try {
+      const verse = await getRandomVerse();
+      
+      if (!verse) {
+        throw new Error('No se pudo obtener versículo');
+      }
+
+      const message = `📖 **Versículo del Día** 🙏\n\n` +
+        `*${verse.reference}*\n\n` +
+        `"${verse.text}"\n\n` +
+        `✨ *${verse.translation_name}*`;
+
+      return {
+        type: "general",
+        message,
+        expression: 'happy',
+      };
+    } catch (error) {
+      console.error("Error obteniendo versículo del día:", error);
+      return {
+        type: "general",
+        message: `📖 **Versículo del Día** 🙏\n\n*Juan 3:16*\n\n"Porque de tal manera amó Dios al mundo, que ha dado a su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna."\n\n✨ *Reina Valera 1960*`,
+        expression: 'happy',
+      };
+    }
+  }
+
+  // NUEVO: Versículo específico desde API Bíblica Externa
+  private static async getBibleSpecificVerse(query: string): Promise<BotResponse> {
+    try {
+      // Extraer referencia del mensaje
+      const referenceMatch = query.match(/(?:juan|salmo|salmos|genesis|mateo|romanos|filipenses|proverbios|isaías|hebreos|efesios|corintios|santiago|hechos)\s+\d+:?\d*/i);
+      
+      if (!referenceMatch) {
+        return {
+          type: "general",
+          message: "📖 Por favor especifica la referencia. Ejemplo:\n• 'Juan 3:16'\n• 'Salmo 23:1'\n• 'Romanos 8:28'",
+          expression: 'thinking',
+        };
+      }
+
+      const reference = referenceMatch[0];
+      const verse = await getSpecificVerse(reference);
+      
+      if (!verse) {
+        throw new Error('No se pudo obtener versículo');
+      }
+
+      const message = `📖 **${verse.reference}** 🙏\n\n` +
+        `"${verse.text}"\n\n` +
+        `✨ *${verse.translation_name}*`;
+
+      return {
+        type: "general",
+        message,
+        expression: 'happy',
+      };
+    } catch (error) {
+      console.error("Error obteniendo versículo específico:", error);
+      return {
+        type: "general",
+        message: "📖 No pude encontrar ese versículo. Intenta con otro formato como 'Juan 3:16'.",
+        expression: 'worried',
+      };
+    }
+  }
+
+  // NUEVO: Buscar versículos por tema desde API Bíblica Externa
+  private static async getBibleSearchByTopic(query: string): Promise<BotResponse> {
+    try {
+      // Extraer tema del mensaje
+      const topicMatch = query.match(/(?:sobre|de|del)\s+([a-záéíóúñü]+)/i);
+      
+      if (!topicMatch) {
+        return {
+          type: "general",
+          message: "📖 ¿Sobre qué tema quieres versículos?\n\n" +
+            "Temas disponibles:\n" +
+            "• Amor\n• Fe\n• Esperanza\n• Paz\n• Fortaleza\n" +
+            "• Salvación\n• Gracia\n• Alabanza\n• Gozo\n• Perdón",
+          expression: 'thinking',
+        };
+      }
+
+      const topic = topicMatch[1];
+      const verses = await searchVersesByTopic(topic);
+      
+      if (verses.length === 0) {
+        throw new Error('No se encontraron versículos');
+      }
+
+      let message = `📖 **Versículos sobre: ${topic.charAt(0).toUpperCase() + topic.slice(1)}** 🙏\n\n`;
+      
+      verses.forEach((verse, index) => {
+        message += `${index + 1}. **${verse.reference}**\n`;
+        message += `"${verse.text}"\n\n`;
+      });
+
+      message += `✨ *${verses[0].translation_name}*`;
+
+      return {
+        type: "general",
+        message,
+        expression: 'happy',
+      };
+    } catch (error) {
+      console.error("Error buscando versículos por tema:", error);
+      return {
+        type: "general",
+        message: "📖 No pude buscar versículos sobre ese tema. Intenta con: amor, fe, esperanza, paz, etc.",
+        expression: 'worried',
+      };
+    }
   }
 
   private static getHelpResponse(): BotResponse {
@@ -1119,8 +1279,9 @@ export class ArcanaBot {
 • "Cumpleaños de [mes]"
 
 📖 **BIBLIA Y ESPIRITUAL**
-• "Versículo del día"
-• "Cita bíblica sobre [tema]"
+• "Versículo del día" - Palabra inspiradora diaria
+• "Juan 3:16" o "Salmo 23" - Versículo específico
+• "Versículo sobre amor" - Buscar por tema (fe, paz, esperanza, etc.)
 
 💡 **EJEMPLOS PRÁCTICOS:**
 • "ARCANA cuándo me toca cantar"
@@ -1130,6 +1291,12 @@ export class ArcanaBot {
 • "ARCANA cumpleaños de hoy"
 • "ARCANA cumpleaños de noviembre"
 • "ARCANA versículo del día"
+• "ARCANA versículo sobre fe"
+• "ARCANA lee Juan 3:16"
+
+📱 **TIPS:**
+• Puedes simplemente mencionar "ARCANA" o "@ARCANA"
+• Soy tu asistente 24/7 para cualquier duda del ministerio
 
 ¡Estoy aquí para servirte! 🙏🎵`;
 

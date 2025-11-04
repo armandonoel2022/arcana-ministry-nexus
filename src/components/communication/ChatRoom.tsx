@@ -267,8 +267,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
       const botResponse = await ArcanaBot.processMessage(
         textToSend,
         room.id,
-        userId,
-        currentUser // ← Pasar el usuario completo
+        userId
       );
 
       if (botResponse) {
