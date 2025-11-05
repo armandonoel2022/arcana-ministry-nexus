@@ -110,7 +110,7 @@ const ROTATIVE_SINGERS = {
   ],
 };
 
-// Configuración base de grupos con miembros fijos - CORREGIDA SEGÚN EL ORDEN ESPECIFICADO
+// Configuración base de grupos con miembros fijos
 const BASE_GROUP_CONFIG = {
   "Grupo de Aleida": {
     color_theme: "#3B82F6",
@@ -119,36 +119,25 @@ const BASE_GROUP_CONFIG = {
         id: "00a916a8-ab94-4cc0-81ae-668dd6071416",
         name: "Aleida Geomar Batista Ventura",
         voice: "Soprano",
-        is_director: false,
-        mic: "Micrófono #2",
+        is_director: true,
       },
       {
         id: "c4089748-7168-4472-8e7c-bf44b4355906",
         name: "Eliabi Joana Sierra Castillo",
         voice: "Soprano",
         is_director: true,
-        mic: "Micrófono #1",
-      },
-      {
-        id: "f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f",
-        name: "Felix Nicolas Peralta Hernandez",
-        voice: "Tenor",
-        is_director: false,
-        mic: "Micrófono #3",
       },
       {
         id: "8cebc294-ea61-40d0-9b04-08d7d474332c",
         name: "Fior Daliza Paniagua",
         voice: "Contralto",
         is_director: false,
-        mic: "Micrófono #4",
       },
       {
         id: "619c1a4e-42db-4549-8890-16392cfa2a87",
         name: "Ruth Esmailin Ramirez",
         voice: "Contralto",
         is_director: false,
-        mic: "Micrófono #5",
       },
     ],
   },
@@ -160,35 +149,25 @@ const BASE_GROUP_CONFIG = {
         name: "Keyla Yanira Medrano Medrano",
         voice: "Soprano",
         is_director: true,
-        mic: "Micrófono #2",
       },
       {
         id: "11328db1-559f-4dcf-9024-9aef18435700",
         name: "Yindia Carolina Santana Castillo",
         voice: "Soprano",
         is_director: false,
-        mic: "Micrófono #1",
       },
-      {
-        id: "4eed809d-9437-48d5-935e-cf8b4aa8024a",
-        name: "Arizoni Liriano Medina",
-        voice: "Bajo",
-        is_director: false,
-        mic: "Micrófono #3",
-      },
+      { id: "4eed809d-9437-48d5-935e-cf8b4aa8024a", name: "Arizoni Liriano Medina", voice: "Bajo", is_director: false },
       {
         id: "82b62449-5046-455f-af7b-da8e5dbc6327",
         name: "Aida Lorena Pacheco De Santana",
         voice: "Contralto",
         is_director: false,
-        mic: "Micrófono #4",
       },
       {
         id: "be61d066-5707-4763-8d8c-16d19597dc3a",
         name: "Sugey A. Gonzalez Garo",
         voice: "Contralto",
         is_director: false,
-        mic: "Micrófono #5",
       },
     ],
   },
@@ -200,35 +179,19 @@ const BASE_GROUP_CONFIG = {
         name: "Damaris Castillo Jimenez",
         voice: "Soprano",
         is_director: true,
-        mic: "Micrófono #2",
       },
+      { id: "2a2fa0cd-d301-46ec-9965-2e4ea3692181", name: "Rosely Montero", voice: "Contralto", is_director: false },
       {
         id: "b5719097-187d-4804-8b7f-e84cc1ec9ad5",
         name: "Jisell Amada Mauricio Paniagua",
         voice: "Soprano",
-        is_director: true,
-        mic: "Micrófono #1",
-      },
-      {
-        id: "7a1645d8-75fe-498c-a2e9-f1057ff3521f",
-        name: "Fredderid Abrahan Valera Montoya",
-        voice: "Tenor",
         is_director: false,
-        mic: "Micrófono #3",
-      },
-      {
-        id: "2a2fa0cd-d301-46ec-9965-2e4ea3692181",
-        name: "Rosely Montero",
-        voice: "Contralto",
-        is_director: false,
-        mic: "Micrófono #4",
       },
       {
         id: "bdcc27cd-40ae-456e-a340-633ce7da08c0",
         name: "Rodes Esther Santana Cuesta",
         voice: "Contralto",
         is_director: false,
-        mic: "Micrófono #5",
       },
     ],
   },
@@ -391,21 +354,169 @@ const ServiceNotificationOverlay = ({
     );
   };
 
-  // FUNCIÓN CORREGIDA: getGroupFormation con el orden exacto especificado
+  // Función para obtener la formación correcta según las reglas
   const getGroupFormation = (groupName: string, serviceTime: string, directorName: string, serviceId: string) => {
     const groupConfig = BASE_GROUP_CONFIG[groupName as keyof typeof BASE_GROUP_CONFIG];
     if (!groupConfig) return [];
 
-    console.log(`Building formation for ${groupName} at ${serviceTime}`);
+    // REGLA: Grupo de Keyla tiene formación fija
+    if (groupName === "Grupo de Keyla") {
+      return groupConfig.base_members.map((member, index) => ({
+        ...member,
+        mic: `Micrófono #${index + 1}`,
+        photo_url: PHOTO_URLS[member.id as keyof typeof PHOTO_URLS],
+      }));
+    }
 
-    // Para todos los grupos, usar la formación fija según la especificación
-    const formation = groupConfig.base_members.map((member) => ({
-      ...member,
-      photo_url: PHOTO_URLS[member.id as keyof typeof PHOTO_URLS],
-    }));
+    // REGLA: Asignar corista varón según grupo y horario (SIEMPRE en micrófono #3)
+    let maleSinger;
+    if (groupName === "Grupo de Massy") {
+      maleSinger =
+        serviceTime === "08:00"
+          ? ROTATIVE_SINGERS.male.find((s) => s.name === "Guarionex Garcia")
+          : ROTATIVE_SINGERS.male.find((s) => s.name === "Fredderid Abrahan Valera Montoya");
+    } else if (groupName === "Grupo de Aleida") {
+      maleSinger =
+        serviceTime === "08:00"
+          ? ROTATIVE_SINGERS.male.find((s) => s.name === "Armando Noel Charle")
+          : ROTATIVE_SINGERS.male.find((s) => s.name === "Felix Nicolas Peralta Hernandez");
+    }
 
-    console.log(`Final formation for ${groupName}:`, formation);
-    return formation;
+    // REGLA: No duplicación - si el corista es el director, buscar alternativo
+    if (maleSinger && maleSinger.name === directorName) {
+      maleSinger =
+        ROTATIVE_SINGERS.male.find((s) => s.name !== directorName && !s.is_director) ||
+        ROTATIVE_SINGERS.male.find((s) => s.name !== directorName);
+    }
+
+    // REGLA: Rotación de sopranos (Ashley y Fior Daliza) - NO pueden estar juntas
+    // Solo rotar si este es un servicio nuevo
+    if (serviceId !== globalRotationState.lastServiceId) {
+      globalRotationState.soprano = globalRotationState.soprano === "ashley" ? "fior-daliza" : "ashley";
+      globalRotationState.lastServiceId = serviceId;
+    }
+
+    const availableSoprano =
+      globalRotationState.soprano === "ashley"
+        ? ROTATIVE_SINGERS.female.find((s) => s.id === "cd2d8fda-0029-4280-a9a1-c23ed5c4f9ad")
+        : ROTATIVE_SINGERS.female.find((s) => s.id === "8cebc294-ea61-40d0-9b04-08d7d474332c");
+
+    // Para Grupos Aleida y Massy, construir formación dinámica
+    let finalFormation = [];
+    let micNumber = 1;
+
+    // REGLA: Para Grupo de Aleida
+    if (groupName === "Grupo de Aleida") {
+      // Micrófono #1: Aleida (soprano fija)
+      const aleida = groupConfig.base_members.find((m) => m.name === "Aleida Geomar Batista Ventura");
+      if (aleida) {
+        finalFormation.push({
+          ...aleida,
+          mic: `Micrófono #${micNumber}`,
+          photo_url: PHOTO_URLS[aleida.id as keyof typeof PHOTO_URLS],
+        });
+        micNumber++;
+      }
+
+      // Micrófono #2: Eliabi (soprano fija)
+      const eliabi = groupConfig.base_members.find((m) => m.name === "Eliabi Joana Sierra Castillo");
+      if (eliabi) {
+        finalFormation.push({
+          ...eliabi,
+          mic: `Micrófono #${micNumber}`,
+          photo_url: PHOTO_URLS[eliabi.id as keyof typeof PHOTO_URLS],
+        });
+        micNumber++;
+      }
+
+      // Micrófono #3: SIEMPRE el corista varón
+      if (maleSinger) {
+        finalFormation.push({
+          ...maleSinger,
+          mic: `Micrófono #${micNumber}`,
+          photo_url: PHOTO_URLS[maleSinger.id as keyof typeof PHOTO_URLS],
+        });
+        micNumber++;
+      }
+
+      // Micrófono #4: Ruth Esmailin (contralto fija)
+      const ruth = groupConfig.base_members.find((m) => m.name === "Ruth Esmailin Ramirez");
+      if (ruth) {
+        finalFormation.push({
+          ...ruth,
+          mic: `Micrófono #${micNumber}`,
+          photo_url: PHOTO_URLS[ruth.id as keyof typeof PHOTO_URLS],
+        });
+        micNumber++;
+      }
+
+      // Micrófono #5: Fior Daliza o Ashley (según rotación)
+      if (availableSoprano) {
+        finalFormation.push({
+          ...availableSoprano,
+          mic: `Micrófono #${micNumber}`,
+          photo_url: PHOTO_URLS[availableSoprano.id as keyof typeof PHOTO_URLS],
+        });
+      }
+    }
+
+    // REGLA: Para Grupo de Massy
+    else if (groupName === "Grupo de Massy") {
+      // Micrófono #1: Damaris (soprano fija)
+      const damaris = groupConfig.base_members.find((m) => m.name === "Damaris Castillo Jimenez");
+      if (damaris) {
+        finalFormation.push({
+          ...damaris,
+          mic: `Micrófono #${micNumber}`,
+          photo_url: PHOTO_URLS[damaris.id as keyof typeof PHOTO_URLS],
+        });
+        micNumber++;
+      }
+
+      // Micrófono #2: Jisell (soprano fija)
+      const jisell = groupConfig.base_members.find((m) => m.name === "Jisell Amada Mauricio Paniagua");
+      if (jisell) {
+        finalFormation.push({
+          ...jisell,
+          mic: `Micrófono #${micNumber}`,
+          photo_url: PHOTO_URLS[jisell.id as keyof typeof PHOTO_URLS],
+        });
+        micNumber++;
+      }
+
+      // Micrófono #3: SIEMPRE el corista varón
+      if (maleSinger) {
+        finalFormation.push({
+          ...maleSinger,
+          mic: `Micrófono #${micNumber}`,
+          photo_url: PHOTO_URLS[maleSinger.id as keyof typeof PHOTO_URLS],
+        });
+        micNumber++;
+      }
+
+      // Micrófono #4: Rosely (contralto fija)
+      const roselly = groupConfig.base_members.find((m) => m.name === "Rosely Montero");
+      if (roselly) {
+        finalFormation.push({
+          ...roselly,
+          mic: `Micrófono #${micNumber}`,
+          photo_url: PHOTO_URLS[roselly.id as keyof typeof PHOTO_URLS],
+        });
+        micNumber++;
+      }
+
+      // Micrófono #5: Rodes (contralto fija)
+      const rodes = groupConfig.base_members.find((m) => m.name === "Rodes Esther Santana Cuesta");
+      if (rodes) {
+        finalFormation.push({
+          ...rodes,
+          mic: `Micrófono #${micNumber}`,
+          photo_url: PHOTO_URLS[rodes.id as keyof typeof PHOTO_URLS],
+        });
+      }
+    }
+
+    return finalFormation;
   };
 
   useEffect(() => {
@@ -876,6 +987,7 @@ const ServiceNotificationOverlay = ({
         instrument.includes("voice") ||
         instrument.includes("voz") ||
         instrument.includes("vocals") ||
+        // Agrega más coincidencias según cómo se guardan en tu BD
         instrument.includes("soprano - micrófono") ||
         instrument.includes("contralto - micrófono") ||
         instrument.includes("tenor - micrófono") ||
