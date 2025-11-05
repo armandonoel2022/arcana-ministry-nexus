@@ -4,13 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Users, Bot } from "lucide-react";
+import { Send, Users, Bot, Smile, Paperclip, AtSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ArcanaBot, BotAction } from "./ArcanaBot";
 import { ArcanaAvatar } from "./ArcanaAvatar";
 import { VoiceRecognition } from "./VoiceRecognition";
 import { VoiceNoteRecorder } from "./VoiceNoteRecorder";
 import { SongLimitOverlay } from "./SongLimitOverlay";
+import { EmoticonPicker } from "./EmoticonPicker";
+import { useEmoticons } from "@/hooks/useEmoticons";
+import { useSounds } from "@/hooks/useSounds";
+import { useMediaUpload } from "@/hooks/useMediaUpload";
 
 interface ChatRoomData {
   id: string;
@@ -28,6 +32,8 @@ interface Message {
   user_id: string | null; // Allow null for bot messages
   is_bot?: boolean;
   actions?: BotAction[];
+  media_url?: string;
+  media_type?: 'image' | 'video' | 'audio';
   profiles?: {
     full_name: string;
     photo_url?: string;
@@ -47,12 +53,19 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
   const [arcanaExpression, setArcanaExpression] = useState<'greeting' | 'thinking' | 'happy' | 'worried' | 'idle'>('idle');
   const [showSongLimitOverlay, setShowSongLimitOverlay] = useState(false);
   const [songLimitData, setSongLimitData] = useState<{ count: number; serviceName: string } | null>(null);
+  const [showEmoticons, setShowEmoticons] = useState(false);
+  const [attachedMedia, setAttachedMedia] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const { replaceEmoticons } = useEmoticons();
+  const { preloadSounds, playNotification, playSound } = useSounds();
+  const { uploadMedia, uploading, progress } = useMediaUpload();
 
   useEffect(() => {
+    preloadSounds(); // Precargar sonidos al montar
     getCurrentUser();
     fetchMessages();
     setupRealtimeSubscription();
@@ -234,10 +247,13 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
   };
 
   const sendMessage = async (messageText?: string) => {
-    const textToSend = messageText || newMessage.trim();
+    const rawText = messageText || newMessage.trim();
     
-    if (!textToSend) {
-      console.log('No se puede enviar mensaje vacío');
+    // Procesar emoticones
+    const textToSend = replaceEmoticons(rawText);
+    
+    if (!textToSend && !attachedMedia) {
+      console.log('No hay mensaje ni archivo para enviar');
       return;
     }
 
@@ -261,8 +277,33 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
     }
 
     try {
+      // Si hay multimedia adjunta
+      if (attachedMedia) {
+        const { error } = await supabase
+          .from('chat_messages')
+          .insert({
+            room_id: room.id,
+            user_id: userId,
+            message: textToSend || '📎 Archivo compartido',
+            media_url: attachedMedia.url,
+            media_type: attachedMedia.type,
+            is_bot: false
+          });
+
+        if (error) throw error;
+        
+        playSound('notification', 0.5);
+        setAttachedMedia(null);
+        setNewMessage("");
+        fetchMessages();
+        return;
+      }
+
       console.log('Enviando mensaje:', textToSend);
       console.log('Usuario actual:', currentUser);
+      
+      // Reproducir sonido de envío
+      playSound('alert', 0.3);
       
       // Agregar mensaje del usuario de forma optimista
       const tempUserMessage: Message = {
@@ -307,6 +348,9 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
         // Activar avatar con la expresión correspondiente
         setArcanaActive(true);
         setArcanaExpression(botResponse.expression || 'thinking');
+        
+        // Reproducir sonido para respuesta de ARCANA
+        playNotification('msn');
         
         // Esperar un momento antes de que el bot responda para que parezca más natural
         setTimeout(async () => {
@@ -691,6 +735,25 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
                           }}
                         />
                         
+                        {/* Multimedia */}
+                        {message.media_url && (
+                          <div className="mt-2">
+                            {message.media_type === 'image' && (
+                              <img src={message.media_url} alt="Imagen" className="max-w-full rounded-lg max-h-64 object-contain" loading="lazy" />
+                            )}
+                            {message.media_type === 'video' && (
+                              <video controls className="max-w-full rounded-lg max-h-64">
+                                <source src={message.media_url} type="video/mp4" />
+                              </video>
+                            )}
+                            {message.media_type === 'audio' && (
+                              <audio controls className="w-full">
+                                <source src={message.media_url} type="audio/mpeg" />
+                              </audio>
+                            )}
+                          </div>
+                        )}
+                        
                         {/* Render action buttons if available */}
                         {message.actions && message.actions.length > 0 && (
                           <div className="mt-3 flex flex-col gap-2">
@@ -737,6 +800,98 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
 
           {/* Message Input */}
           <div className="border-t p-4 sticky bottom-0 bg-white/95 backdrop-blur">
+            {/* Toolbar para emoticones y archivos */}
+            <div className="flex gap-2 mb-2 relative">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowEmoticons(!showEmoticons)}
+                title="Emoticones"
+              >
+                <Smile className="w-4 h-4" />
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => inputRef.current?.click()}
+                disabled={uploading}
+                title="Adjuntar archivo"
+              >
+                <Paperclip className="w-4 h-4" />
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setNewMessage(prev => prev + ' @');
+                  document.querySelector('input')?.focus();
+                }}
+                title="Mencionar usuario"
+              >
+                <AtSign className="w-4 h-4" />
+              </Button>
+
+              <input
+                ref={inputRef}
+                type="file"
+                accept="image/*,video/*,audio/*"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file && currentUser?.id) {
+                    try {
+                      const media = await uploadMedia(file, room.id, currentUser.id);
+                      setAttachedMedia(media);
+                      toast({ title: "✅ Archivo listo para enviar" });
+                    } catch (error) {
+                      toast({ 
+                        title: "Error", 
+                        description: "No se pudo subir el archivo",
+                        variant: "destructive" 
+                      });
+                    }
+                  }
+                }}
+              />
+
+              <EmoticonPicker
+                visible={showEmoticons}
+                onClose={() => setShowEmoticons(false)}
+                onSelect={(emoticon) => {
+                  setNewMessage(prev => prev + emoticon);
+                  setShowEmoticons(false);
+                }}
+              />
+
+              {uploading && (
+                <div className="absolute left-0 bottom-full mb-2 bg-white p-2 rounded-lg shadow-md">
+                  <div className="text-xs text-muted-foreground">Subiendo... {progress.toFixed(0)}%</div>
+                  <div className="w-32 h-1 bg-secondary rounded-full mt-1">
+                    <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {attachedMedia && (
+              <div className="mb-2 p-2 bg-secondary rounded-lg flex items-center justify-between">
+                <span className="text-sm truncate flex-1">📎 {attachedMedia.name}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setAttachedMedia(null)}
+                >
+                  ✕
+                </Button>
+              </div>
+            )}
+
             <div className="flex gap-2 items-end">
               <VoiceRecognition 
                 onCommand={handleVoiceCommand}
@@ -750,12 +905,12 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 onFocus={() => setTimeout(scrollToBottom, 50)}
-                placeholder="Escribe o habla... (prueba: ARCANA ayuda)"
+                placeholder="Escribe... (usa :) para emoticones, @ para mencionar)"
                 className="flex-1"
               />
               <Button
                 onClick={() => sendMessage()}
-                disabled={!newMessage.trim()}
+                disabled={!newMessage.trim() && !attachedMedia}
                 className="bg-arcana-blue-gradient hover:opacity-90"
               >
                 <Send className="w-4 h-4" />

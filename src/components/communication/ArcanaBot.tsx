@@ -110,8 +110,67 @@ const nameDictionary: { [key: string]: string[] } = {
   "jhoyve": ["jhoyve", "jhoyve shantal", "shantal"]
 };
 
+// NUEVO: Diccionario de nicknames para menciones
+const nicknameDictionary: { [key: string]: string } = {
+  'masy': 'Damaris Castillo',
+  'massey': 'Damaris Castillo',
+  'masi': 'Damaris Castillo',
+  'armand': 'Armando Noel',
+  'armandito': 'Armando Noel',
+  'noe': 'Armando Noel',
+  'charly': 'Carlos Rodriguez',
+  'charli': 'Carlos Rodriguez',
+  'mary': 'Maria Garcia',
+  'mery': 'Maria Garcia',
+  'nico': 'Felix Nicolas',
+  'feli': 'Felix Nicolas',
+};
+
 export class ArcanaBot {
   private static cache = ArcanaCache.getInstance();
+
+  // NUEVO: Extraer menciones de mensajes
+  private static extractMentions(message: string): string[] {
+    const mentionRegex = /@([a-zA-ZáéíóúñÁÉÍÓÚÑ\s]{2,})/g;
+    const matches = message.matchAll(mentionRegex);
+    const mentions: string[] = [];
+    
+    for (const match of matches) {
+      if (match[1]) {
+        mentions.push(match[1].trim());
+      }
+    }
+    
+    return mentions;
+  }
+
+  // NUEVO: Buscar usuario por nickname
+  private static async findUserByNickname(nickname: string): Promise<string | null> {
+    const normalizedNick = nickname.toLowerCase().trim();
+    
+    // Buscar en el diccionario de nicknames
+    if (nicknameDictionary[normalizedNick]) {
+      return nicknameDictionary[normalizedNick];
+    }
+
+    // Buscar en la base de datos por nombre o apellido
+    try {
+      const { data: members, error } = await supabase
+        .from('members')
+        .select('nombres, apellidos')
+        .eq('is_active', true)
+        .or(`nombres.ilike.%${normalizedNick}%,apellidos.ilike.%${normalizedNick}%`)
+        .limit(1);
+
+      if (!error && members && members.length > 0) {
+        return `${members[0].nombres} ${members[0].apellidos}`;
+      }
+    } catch (error) {
+      console.error('Error buscando usuario por nickname:', error);
+    }
+
+    return null;
+  }
 
   static async processMessage(message: string, roomId: string, userId: string): Promise<BotResponse | null> {
     // Detección más flexible de menciones
@@ -1179,6 +1238,7 @@ export class ArcanaBot {
       }
 
       const reference = referenceMatch[0];
+      console.log('Buscando versículo:', reference);
       const verse = await getSpecificVerse(reference);
       
       if (!verse) {
@@ -1196,9 +1256,10 @@ export class ArcanaBot {
       };
     } catch (error) {
       console.error("Error obteniendo versículo específico:", error);
+      // FIX: En lugar de devolver siempre Juan 3:16, dar error útil
       return {
         type: "general",
-        message: "📖 No pude encontrar ese versículo. Intenta con otro formato como 'Juan 3:16'.",
+        message: `📖 No pude encontrar ese versículo. Verifica el formato:\n• 'Juan 3:16'\n• 'Salmo 23'\n• 'Romanos 8:28'\n\n❌ Error: ${error instanceof Error ? error.message : 'Error desconocido'}`,
         expression: 'worried',
       };
     }
