@@ -75,170 +75,336 @@ interface ServiceNotificationOverlayProps {
   onNavigate?: (path: string) => void;
 }
 
-// Configuración base de grupos con miembros fijos en el ORDEN CORRECTO
-const BASE_GROUP_CONFIG = {
+// Contadores de rotación por grupo
+let aleidaRotationCounter = 0;
+let massyRotationCounter = 0;
+
+// Suplentes disponibles
+const SUPLENTS = {
+  "Armando Noel": {
+    id: "d6602109-ad3e-4db6-ab4a-2984dadfc569",
+    name: "Armando Noel",
+    voice: "Tenor",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/d6602109-ad3e-4db6-ab4a-2984dadfc569.JPG",
+  },
+  "Nicolas Peralta": {
+    id: "f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f",
+    name: "Felix Nicolas Peralta Hernandez",
+    voice: "Tenor",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG",
+  },
+  "Abraham Valera": {
+    id: "7a1645d8-75fe-498c-a2e9-f1057ff3521f",
+    name: "Fredderid Abrahan Valera Montoya",
+    voice: "Tenor",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/7a1645d8-75fe-498c-a2e9-f1057ff3521f.JPG",
+  },
+  "Denny Santana": {
+    id: "6a5bfaa9-fdf0-4b0e-aad3-79266444604f",
+    name: "Denny Alberto Santana",
+    voice: "Tenor",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/6a5bfaa9-fdf0-4b0e-aad3-79266444604f.JPG",
+  },
+  "Guarionex Garcia": {
+    id: "a71697a2-bf8e-4967-8190-2e3e2d01f150",
+    name: "Guarionex Garcia",
+    voice: "Tenor",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/a71697a2-bf8e-4967-8190-2e3e2d01f150.JPG",
+  },
+  "Maria Santana": {
+    id: "1d5866c9-cdc1-439e-976a-2d2e6a5aef80",
+    name: "Maria Del A. Perez Santana",
+    voice: "Soprano",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/1d5866c9-cdc1-439e-976a-2d2e6a5aef80.jpeg",
+  },
+};
+
+// CORRECCIÓN COMPLETA: Configuración de grupos basada en los datos reales de la base de datos
+const GROUP_CONFIG = {
   "Grupo de Aleida": {
     color_theme: "#3B82F6",
-    base_members: [
-      {
-        id: "c4089748-7168-4472-8e7c-bf44b4355906",
-        name: "Eliabi Joana Sierra Castillo",
-        voice: "Soprano",
-        is_director: true,
-        mic: "Micrófono #1",
-      },
+    members: [
+      // Miembros base del grupo de Aleida
       {
         id: "00a916a8-ab94-4cc0-81ae-668dd6071416",
         name: "Aleida Geomar Batista Ventura",
         voice: "Soprano",
-        is_director: false,
-        mic: "Micrófono #2",
+        mic: "Micrófono #1",
+        photo_url:
+          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/00a916a8-ab94-4cc0-81ae-668dd6071416.JPG",
       },
       {
-        id: "f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f",
-        name: "Félix Nicolás Peralta Hernández",
-        voice: "Tenor",
-        is_director: false,
-        mic: "Micrófono #3",
+        id: "c4089748-7168-4472-8e7c-bf44b4355906",
+        name: "Eliabi Joana Sierra Castillo",
+        voice: "Soprano",
+        mic: "Micrófono #2",
+        photo_url:
+          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG",
       },
       {
         id: "8cebc294-ea61-40d0-9b04-08d7d474332c",
         name: "Fior Daliza Paniagua",
         voice: "Contralto",
-        is_director: false,
         mic: "Micrófono #4",
+        photo_url:
+          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/8cebc294-ea61-40d0-9b04-08d7d474332c.JPG",
       },
       {
         id: "619c1a4e-42db-4549-8890-16392cfa2a87",
         name: "Ruth Esmailin Ramirez",
         voice: "Contralto",
-        is_director: false,
         mic: "Micrófono #5",
+        photo_url:
+          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/619c1a4e-42db-4549-8890-16392cfa2a87.JPG",
+      },
+      // Agregar miembros adicionales del grupo de Aleida
+      {
+        id: "f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f",
+        name: "Felix Nicolas Peralta Hernandez",
+        voice: "Tenor",
+        mic: "Micrófono #3",
+        photo_url:
+          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG",
       },
     ],
+    maleSingers: ["Armando Noel", "Nicolas Peralta"],
   },
   "Grupo de Keyla": {
     color_theme: "#8B5CF6",
-    base_members: [
+    members: [
       {
         id: "c24659e9-b473-4ecd-97e7-a90526d23502",
         name: "Keyla Yanira Medrano Medrano",
         voice: "Soprano",
-        is_director: true,
-        mic: "Micrófono #2",
+        mic: "Micrófono #1",
+        photo_url:
+          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c24659e9-b473-4ecd-97e7-a90526d23502.JPG",
       },
       {
         id: "11328db1-559f-4dcf-9024-9aef18435700",
-        name: "Yindhia Carolina Santana Castillo",
+        name: "Yindia Carolina Santana Castillo",
         voice: "Soprano",
-        is_director: false,
-        mic: "Micrófono #1",
+        mic: "Micrófono #2",
+        photo_url:
+          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/11328db1-559f-4dcf-9024-9aef18435700.JPG",
       },
       {
         id: "4eed809d-9437-48d5-935e-cf8b4aa8024a",
-        name: "Arizoni Liriano Medina",
+        name: "Arizoni Liriano medina",
         voice: "Bajo",
-        is_director: false,
         mic: "Micrófono #3",
+        photo_url:
+          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/4eed809d-9437-48d5-935e-cf8b4aa8024a.png",
       },
       {
         id: "82b62449-5046-455f-af7b-da8e5dbc6327",
         name: "Aida Lorena Pacheco De Santana",
         voice: "Contralto",
-        is_director: false,
         mic: "Micrófono #4",
+        photo_url:
+          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/82b62449-5046-455f-af7b-da8e5dbc6327.JPG",
       },
       {
         id: "be61d066-5707-4763-8d8c-16d19597dc3a",
         name: "Sugey A. Gonzalez Garo",
         voice: "Contralto",
-        is_director: false,
         mic: "Micrófono #5",
+        photo_url:
+          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/be61d066-5707-4763-8d8c-16d19597dc3a.JPG",
       },
     ],
   },
   "Grupo de Massy": {
     color_theme: "#EC4899",
-    base_members: [
+    members: [
       {
-        id: "cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38",
-        name: "Damaris Castillo Jimenez",
-        voice: "Soprano",
-        is_director: true,
-        mic: "Micrófono #2",
+        id: "2a2fa0cd-d301-46ec-9965-2e4ea3692181",
+        name: "Rosely Montero",
+        voice: "Contralto",
+        mic: "Micrófono #1",
+        photo_url:
+          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/2a2fa0cd-d301-46ec-9965-2e4ea3692181.jpeg",
       },
       {
         id: "b5719097-187d-4804-8b7f-e84cc1ec9ad5",
         name: "Jisell Amada Mauricio Paniagua",
         voice: "Soprano",
-        is_director: false,
-        mic: "Micrófono #1",
-      },
-      {
-        id: "7a1645d8-75fe-498c-a2e9-f1057ff3521f",
-        name: "Fredderid Abrahan Valera Montoya",
-        voice: "Tenor",
-        is_director: false,
-        mic: "Micrófono #3",
-      },
-      {
-        id: "2a2fa0cd-d301-46ec-9965-2e4ea3692181",
-        name: "Rosely Montero",
-        voice: "Contralto",
-        is_director: false,
-        mic: "Micrófono #4",
+        mic: "Micrófono #2",
+        photo_url:
+          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/b5719097-187d-4804-8b7f-e84cc1ec9ad5.JPG",
       },
       {
         id: "bdcc27cd-40ae-456e-a340-633ce7da08c0",
         name: "Rodes Esther Santana Cuesta",
         voice: "Contralto",
-        is_director: false,
+        mic: "Micrófono #4",
+        photo_url:
+          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/bdcc27cd-40ae-456e-a340-633ce7da08c0.JPG",
+      },
+      {
+        id: "7a1645d8-75fe-498c-a2e9-f1057ff3521f",
+        name: "Fredderid Abrahan Valera Montoya",
+        voice: "Tenor",
+        mic: "Micrófono #3",
+        photo_url:
+          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/7a1645d8-75fe-498c-a2e9-f1057ff3521f.JPG",
+      },
+      {
+        id: "cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38",
+        name: "Damaris Castillo Jimenez",
+        voice: "Soprano",
         mic: "Micrófono #5",
+        photo_url:
+          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38.JPG",
       },
     ],
+    maleSingers: ["Abraham Valera", "Denny Santana"],
   },
 };
 
-// URLs de fotos
-const PHOTO_URLS = {
-  "00a916a8-ab94-4cc0-81ae-668dd6071416":
-    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/00a916a8-ab94-4cc0-81ae-668dd6071416.JPG",
-  "c4089748-7168-4472-8e7c-bf44b4355906":
-    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG",
-  "8cebc294-ea61-40d0-9b04-08d7d474332c":
-    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/8cebc294-ea61-40d0-9b04-08d7d474332c.JPG",
-  "619c1a4e-42db-4549-8890-16392cfa2a87":
-    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/619c1a4e-42db-4549-8890-16392cfa2a87.JPG",
-  "c24659e9-b473-4ecd-97e7-a90526d23502":
-    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c24659e9-b473-4ecd-97e7-a90526d23502.JPG",
-  "11328db1-559f-4dcf-9024-9aef18435700":
-    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/11328db1-559f-4dcf-9024-9aef18435700.JPG",
-  "4eed809d-9437-48d5-935e-cf8b4aa8024a":
-    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/4eed809d-9437-48d5-935e-cf8b4aa8024a.png",
-  "82b62449-5046-455f-af7b-da8e5dbc6327":
-    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/82b62449-5046-455f-af7b-da8e5dbc6327.JPG",
-  "be61d066-5707-4763-8d8c-16d19597dc3a":
-    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/be61d066-5707-4763-8d8c-16d19597dc3a.JPG",
-  "2a2fa0cd-d301-46ec-9965-2e4ea3692181":
-    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/2a2fa0cd-d301-46ec-9965-2e4ea3692181.jpeg",
-  "b5719097-187d-4804-8b7f-e84cc1ec9ad5":
-    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/b5719097-187d-4804-8b7f-e84cc1ec9ad5.JPG",
-  "bdcc27cd-40ae-456e-a340-633ce7da08c0":
-    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/bdcc27cd-40ae-456e-a340-633ce7da08c0.JPG",
-  "7a1645d8-75fe-498c-a2e9-f1057ff3521f":
-    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/7a1645d8-75fe-498c-a2e9-f1057ff3521f.JPG",
-  "a71697a2-bf8e-4967-8190-2e3e2d01f150":
-    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/a71697a2-bf8e-4967-8190-2e3e2d01f150.JPG",
-  "f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f":
-    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG",
-  "d6602109-ad3e-4db6-ab4a-2984dadfc569":
-    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/d6602109-ad3e-4db6-ab4a-2984dadfc569.JPG",
-  "6a5bfaa9-fdf0-4b0e-aad3-79266444604f":
-    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/6a5bfaa9-fdf0-4b0e-aad3-79266444604f.JPG",
-  "cd2d8fda-0029-4280-a9a1-c23ed5c4f9ad":
-    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/cd2d8fda-0029-4280-a9a1-c23ed5c4f9ad.JPG",
-  "cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38":
-    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38.JPG",
+// MEJORA: Función de rotación simplificada
+const getNextMaleSinger = (groupName: string, serviceTime: string, currentDirector: string) => {
+  // Si el director actual es uno de los suplentes, no puede hacer coros
+  const directorsWhoCannotSing = [
+    "Armando Noel",
+    "Nicolas Peralta",
+    "Guarionex Garcia",
+    "Maria Del A. Perez Santana",
+    "Mariam Santana",
+    "Denny Alberto Santana",
+  ];
+
+  if (directorsWhoCannotSing.some((name) => currentDirector.includes(name))) {
+    return null;
+  }
+
+  // Maria Santana solo puede hacer coros en servicios de 8:00 AM
+  if (currentDirector.includes("Maria") && serviceTime !== "8:00 AM") {
+    return null;
+  }
+
+  // Lógica específica para cada grupo
+  if (groupName === "Grupo de Aleida") {
+    const groupConfig = GROUP_CONFIG["Grupo de Aleida"];
+    const singerName = groupConfig.maleSingers[aleidaRotationCounter % groupConfig.maleSingers.length];
+    aleidaRotationCounter++;
+    return SUPLENTS[singerName as keyof typeof SUPLENTS];
+  } else if (groupName === "Grupo de Massy") {
+    const groupConfig = GROUP_CONFIG["Grupo de Massy"];
+    const singerName = groupConfig.maleSingers[massyRotationCounter % groupConfig.maleSingers.length];
+    massyRotationCounter++;
+    return SUPLENTS[singerName as keyof typeof SUPLENTS];
+  }
+
+  return null;
+};
+
+// MEJORA: Función mejorada para obtener miembros del grupo basada en datos reales
+const getGroupMembers = (groupName: string, serviceTime: string, currentDirector: string) => {
+  console.log(`Obteniendo miembros para: ${groupName}, Horario: ${serviceTime}, Director: ${currentDirector}`);
+
+  const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG] || GROUP_CONFIG["Grupo de Aleida"];
+
+  // Si es Grupo de Aleida, aplicar rotación de coristas varones
+  if (groupName === "Grupo de Aleida") {
+    const members = [...groupConfig.members];
+
+    // Verificar si el director actual es un corista varón que no puede cantar
+    const directorsWhoCannotSing = [
+      "Armando Noel",
+      "Nicolas Peralta",
+      "Guarionex Garcia",
+      "Maria Del A. Perez Santana",
+      "Mariam Santana",
+      "Denny Alberto Santana",
+    ];
+
+    if (!directorsWhoCannotSing.some((name) => currentDirector.includes(name))) {
+      // Aplicar rotación para corista varón adicional
+      const maleSinger = getNextMaleSinger(groupName, serviceTime, currentDirector);
+      if (maleSinger) {
+        console.log(`Agregando corista varón rotativo: ${maleSinger.name}`);
+        // Reemplazar el corista varón existente con el de la rotación
+        const existingMaleIndex = members.findIndex(
+          (m) => m.name.includes("Armando") || m.name.includes("Nicolas") || m.name.includes("Felix"),
+        );
+
+        if (existingMaleIndex !== -1) {
+          members[existingMaleIndex] = {
+            ...maleSinger,
+            mic: "Micrófono #3",
+            voice: maleSinger.voice || "Tenor",
+          };
+        } else {
+          members.push({
+            ...maleSinger,
+            mic: "Micrófono #3",
+            voice: maleSinger.voice || "Tenor",
+          });
+        }
+      }
+    }
+
+    return members;
+  }
+
+  // Si es Grupo de Massy, aplicar rotación y lógica especial
+  if (groupName === "Grupo de Massy") {
+    const members = [...groupConfig.members];
+
+    // Aplicar rotación para corista varón
+    const directorsWhoCannotSing = [
+      "Armando Noel",
+      "Nicolas Peralta",
+      "Guarionex Garcia",
+      "Maria Del A. Perez Santana",
+      "Mariam Santana",
+      "Denny Alberto Santana",
+    ];
+
+    if (!directorsWhoCannotSing.some((name) => currentDirector.includes(name))) {
+      const maleSinger = getNextMaleSinger(groupName, serviceTime, currentDirector);
+      if (maleSinger) {
+        console.log(`Agregando corista varón rotativo: ${maleSinger.name}`);
+        // Reemplazar el corista varón existente
+        const existingMaleIndex = members.findIndex((m) => m.name.includes("Abraham") || m.name.includes("Fredderid"));
+
+        if (existingMaleIndex !== -1) {
+          members[existingMaleIndex] = {
+            ...maleSinger,
+            mic: "Micrófono #3",
+            voice: maleSinger.voice || "Tenor",
+          };
+        }
+      }
+    }
+
+    // Lógica especial para Guarionex en servicios de 8:00 AM
+    if (serviceTime === "8:00 AM") {
+      const guarionex = SUPLENTS["Guarionex Garcia"];
+      if (guarionex && !currentDirector.includes("Guarionex")) {
+        console.log("Agregando Guarionex Garcia para servicio de 8:00 AM");
+        // Verificar si ya existe un miembro con micrófono #5 y reemplazarlo
+        const existingMemberIndex = members.findIndex((m) => m.mic === "Micrófono #5" && !m.name.includes("Damaris"));
+        if (existingMemberIndex !== -1) {
+          members[existingMemberIndex] = { ...guarionex, mic: "Micrófono #5", voice: "Tenor" };
+        } else {
+          members.push({ ...guarionex, mic: "Micrófono #5", voice: "Tenor" });
+        }
+      }
+    }
+
+    return members;
+  }
+
+  // Para otros grupos, retornar miembros base
+  return [...groupConfig.members];
 };
 
 const ServiceNotificationOverlay = ({
@@ -254,70 +420,6 @@ const ServiceNotificationOverlay = ({
   const [confirmedServices, setConfirmedServices] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<"services" | "preparations">("services");
   const serviceCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-
-  // Función para formatear nombres (nombre arriba, apellido abajo)
-  const formatMemberName = (fullName: string) => {
-    const nameMapping: { [key: string]: { nombre: string; apellido: string } } = {
-      "Aleida Geomar Batista Ventura": { nombre: "Aleida Geomar", apellido: "Batista Ventura" },
-      "Eliabi Joana Sierra Castillo": { nombre: "Eliabi Joana", apellido: "Sierra Castillo" },
-      "Félix Nicolás Peralta Hernández": { nombre: "Félix Nicolás", apellido: "Peralta Hernández" },
-      "Fior Daliza Paniagua": { nombre: "Fior Daliza", apellido: "Paniagua" },
-      "Ruth Esmailin Ramirez": { nombre: "Ruth Esmailin", apellido: "Ramirez" },
-      "Keyla Yanira Medrano Medrano": { nombre: "Keyla Yanira", apellido: "Medrano Medrano" },
-      "Yindhia Carolina Santana Castillo": { nombre: "Yindhia Carolina", apellido: "Santana Castillo" },
-      "Arizoni Liriano Medina": { nombre: "Arizoni", apellido: "Liriano Medina" },
-      "Aida Lorena Pacheco De Santana": { nombre: "Aida Lorena", apellido: "Pacheco De Santana" },
-      "Sugey A. Gonzalez Garo": { nombre: "Sugey A.", apellido: "Gonzalez Garo" },
-      "Damaris Castillo Jimenez": { nombre: "Damaris", apellido: "Castillo Jimenez" },
-      "Jisell Amada Mauricio Paniagua": { nombre: "Jisell Amada", apellido: "Mauricio Paniagua" },
-      "Fredderid Abrahan Valera Montoya": { nombre: "Fredderid Abrahan", apellido: "Valera Montoya" },
-      "Rosely Montero": { nombre: "Rosely", apellido: "Montero" },
-      "Rodes Esther Santana Cuesta": { nombre: "Rodes Esther", apellido: "Santana Cuesta" },
-    };
-
-    // Buscar en el mapeo primero
-    if (nameMapping[fullName]) {
-      const { nombre, apellido } = nameMapping[fullName];
-      return (
-        <div className="text-left">
-          <div className="font-medium text-gray-900">{nombre}</div>
-          <div className="text-xs text-gray-600">{apellido}</div>
-        </div>
-      );
-    }
-
-    // Si no está en el mapeo, usar lógica de respaldo
-    const parts = fullName.split(" ");
-    if (parts.length <= 2) {
-      return (
-        <div className="text-left">
-          <div className="font-medium text-gray-900">{fullName}</div>
-        </div>
-      );
-    }
-
-    // Para nombres con más de 2 partes, tomar las primeras 1-2 como nombre y el resto como apellido
-    const nombre = parts.slice(0, Math.min(2, parts.length - 1)).join(" ");
-    const apellido = parts.slice(Math.min(2, parts.length - 1)).join(" ");
-
-    return (
-      <div className="text-left">
-        <div className="font-medium text-gray-900">{nombre}</div>
-        <div className="text-xs text-gray-600">{apellido}</div>
-      </div>
-    );
-  };
-
-  // Función para obtener la formación correcta
-  const getGroupFormation = (groupName: string) => {
-    const groupConfig = BASE_GROUP_CONFIG[groupName as keyof typeof BASE_GROUP_CONFIG];
-    if (!groupConfig) return [];
-
-    return groupConfig.base_members.map((member) => ({
-      ...member,
-      photo_url: PHOTO_URLS[member.id as keyof typeof PHOTO_URLS],
-    }));
-  };
 
   useEffect(() => {
     if (forceShow) {
@@ -335,12 +437,21 @@ const ServiceNotificationOverlay = ({
     const today = new Date().toDateString();
 
     if (!hasInteracted || lastShownDate !== today) {
-      console.log("Fetching weekend services...");
       fetchWeekendServices();
     } else {
-      console.log("Overlay already shown today");
       setIsLoading(false);
     }
+
+    const handleNotifications = (payload: any) => {
+      if (
+        payload.eventType === "INSERT" &&
+        payload.new.type === "service_program" &&
+        payload.new.notification_category === "agenda" &&
+        payload.new.metadata?.service_date
+      ) {
+        showServiceProgramOverlay(payload.new.metadata);
+      }
+    };
 
     const channel = supabase
       .channel("service-notifications")
@@ -351,36 +462,29 @@ const ServiceNotificationOverlay = ({
           schema: "public",
           table: "system_notifications",
         },
-        (payload) => {
-          console.log("Notification received:", payload);
-          if (
-            payload.eventType === "INSERT" &&
-            payload.new.type === "service_program" &&
-            payload.new.notification_category === "agenda" &&
-            payload.new.metadata?.service_date
-          ) {
-            showServiceProgramOverlay(payload.new.metadata);
-          }
-        },
+        handleNotifications,
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [forceShow]);
+  }, []);
 
   const showServiceProgramOverlay = (metadata: ServiceProgramNotification) => {
-    console.log("Showing service program overlay:", metadata);
     if (metadata.services && Array.isArray(metadata.services)) {
       const formattedServices = metadata.services.map((service: any) => {
         const groupName = service.group || "Grupo de Alabanza";
-        const formation = getGroupFormation(groupName);
+        const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG] || GROUP_CONFIG["Grupo de Aleida"];
+        const serviceTime = getServiceTime(service.time || service.title);
+
+        // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS
+        const members = getGroupMembers(groupName, serviceTime, service.director?.name || service.director);
 
         return {
           id: service.id || Date.now().toString(),
           service_date: metadata.service_date,
-          title: `${service.time === "8:00 a.m." ? "Primer Servicio - 08:00 A.M." : "Segundo Servicio - 10:45 A.M."}`,
+          title: `${service.time === "8:00 a.m." ? "Primer Servicio - 8:00 AM" : "Segundo Servicio - 10:45 AM"}`,
           leader: service.director?.name || service.director || "Por asignar",
           service_type: "regular",
           location: "Templo Principal",
@@ -388,14 +492,29 @@ const ServiceNotificationOverlay = ({
           worship_groups: {
             id: "1",
             name: groupName,
-            color_theme: BASE_GROUP_CONFIG[groupName as keyof typeof BASE_GROUP_CONFIG]?.color_theme || "#3B82F6",
+            color_theme: groupConfig.color_theme,
           },
           group_members: [
-            ...formation.map((member, index) => ({
+            ...(service.director
+              ? [
+                  {
+                    id: "director-" + service.time,
+                    user_id: "director",
+                    instrument: "Director",
+                    is_leader: true,
+                    profiles: {
+                      id: "director",
+                      full_name: service.director?.name || service.director,
+                      photo_url: service.director?.photo,
+                    },
+                  },
+                ]
+              : []),
+            ...members.map((member, index) => ({
               id: `member-${service.time}-${index}`,
               user_id: member.id,
               instrument: `${member.voice} - ${member.mic}`,
-              is_leader: member.is_director || false,
+              is_leader: false,
               profiles: {
                 id: member.id,
                 full_name: member.name,
@@ -412,7 +531,6 @@ const ServiceNotificationOverlay = ({
         };
       });
 
-      console.log("Formatted services:", formattedServices);
       setServices(formattedServices);
       setIsVisible(true);
       setTimeout(() => setIsAnimating(true), 100);
@@ -457,7 +575,6 @@ const ServiceNotificationOverlay = ({
 
   const fetchWeekendServices = async () => {
     try {
-      console.log("Fetching weekend services from database...");
       const { start, end } = getNextWeekend();
 
       const { data, error } = await supabase
@@ -483,35 +600,75 @@ const ServiceNotificationOverlay = ({
         .lte("service_date", end.toISOString())
         .order("service_date", { ascending: true });
 
-      if (error) {
-        console.error("Error fetching services:", error);
-        throw error;
-      }
-
-      console.log("Services found:", data);
+      if (error) throw error;
 
       if (data && data.length > 0) {
         const servicesWithMembers = await Promise.all(
           data.map(async (service) => {
-            // Obtener miembros del grupo con la formación corregida
-            const groupName = service.worship_groups?.[0]?.name || "Grupo de Alabanza";
-            const formation = getGroupFormation(groupName);
+            let members: any[] = [];
+            let directorProfile: any = null;
 
-            const members = formation.map((member, index) => ({
-              id: `member-${service.id}-${index}`,
-              user_id: member.id,
-              instrument: `${member.voice} - ${member.mic}`,
-              is_leader: member.is_director || false,
-              profiles: {
-                id: member.id,
-                full_name: member.name,
-                photo_url: member.photo_url,
-              },
-            }));
+            // Buscar director por nombre en la tabla members
+            if (service.leader) {
+              const { data: exactMatch } = await supabase
+                .from("members")
+                .select("id, nombres, apellidos, photo_url")
+                .eq("is_active", true);
 
-            // Encontrar el director del grupo
-            const directorMember = members.find((m) => m.is_leader);
-            const directorProfile = directorMember ? directorMember.profiles : null;
+              if (exactMatch && exactMatch.length > 0) {
+                const leaderName = service.leader.trim().toLowerCase();
+                const matchedMember = exactMatch.find((m) => {
+                  const fullName = `${m.nombres || ""} ${m.apellidos || ""}`.trim().toLowerCase();
+                  return fullName === leaderName || fullName.includes(leaderName) || leaderName.includes(fullName);
+                });
+
+                if (matchedMember) {
+                  directorProfile = {
+                    id: matchedMember.id,
+                    full_name: `${matchedMember.nombres || ""} ${matchedMember.apellidos || ""}`.trim(),
+                    photo_url: matchedMember.photo_url,
+                  };
+                } else {
+                  const parts = service.leader.trim().split(/\s+/);
+                  const firstWord = parts[0].toLowerCase();
+
+                  const partialMatch = exactMatch.find((m) => {
+                    const nombres = (m.nombres || "").toLowerCase();
+                    const apellidos = (m.apellidos || "").toLowerCase();
+                    return nombres.includes(firstWord) || apellidos.includes(firstWord);
+                  });
+
+                  if (partialMatch) {
+                    directorProfile = {
+                      id: partialMatch.id,
+                      full_name: `${partialMatch.nombres || ""} ${partialMatch.apellidos || ""}`.trim(),
+                      photo_url: partialMatch.photo_url,
+                    };
+                  }
+                }
+              }
+            }
+
+            // Obtener miembros del grupo usando la nueva función
+            const groupName = service.worship_groups?.name || "Grupo de Alabanza";
+            const serviceTime = getServiceTime(service.title);
+
+            // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS
+            members = getGroupMembers(groupName, serviceTime, service.leader);
+
+            console.log(
+              `Miembros finales para ${groupName}:`,
+              members.map((m) => m.name),
+            );
+
+            // Si no hay director encontrado, usar el primer miembro como líder
+            if (!directorProfile && members.length > 0) {
+              directorProfile = {
+                id: members[0].id,
+                full_name: members[0].name,
+                photo_url: members[0].photo_url,
+              };
+            }
 
             let selectedSongs: any[] = [];
             const { data: songsData, error: songsError } = await supabase
@@ -553,35 +710,43 @@ const ServiceNotificationOverlay = ({
               }
             }
 
+            const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG] || GROUP_CONFIG["Grupo de Aleida"];
+
             return {
               ...service,
-              group_members: members,
+              group_members: members.map((member, index) => ({
+                id: `member-${service.id}-${index}`,
+                user_id: member.id,
+                instrument: `${member.voice} - ${member.mic}`,
+                is_leader: false,
+                profiles: {
+                  id: member.id,
+                  full_name: member.name,
+                  photo_url: member.photo_url,
+                },
+              })),
               selected_songs: selectedSongs,
               director_profile: directorProfile,
               worship_groups:
                 Array.isArray(service.worship_groups) && service.worship_groups.length > 0
                   ? {
                       ...service.worship_groups[0],
-                      color_theme:
-                        BASE_GROUP_CONFIG[groupName as keyof typeof BASE_GROUP_CONFIG]?.color_theme || "#3B82F6",
+                      color_theme: groupConfig.color_theme,
                     }
                   : {
                       id: "1",
                       name: groupName,
-                      color_theme:
-                        BASE_GROUP_CONFIG[groupName as keyof typeof BASE_GROUP_CONFIG]?.color_theme || "#3B82F6",
+                      color_theme: groupConfig.color_theme,
                     },
             };
           }),
         );
 
-        console.log("Services with members:", servicesWithMembers);
         setServices(servicesWithMembers as WeekendService[]);
 
         setIsVisible(true);
         setTimeout(() => setIsAnimating(true), 100);
       } else {
-        console.log("No services found for weekend");
         setIsLoading(false);
       }
     } catch (error) {
@@ -604,20 +769,109 @@ const ServiceNotificationOverlay = ({
     }, 300);
   };
 
+  const handleConfirmAttendance = async (serviceId: string) => {
+    try {
+      setConfirmedServices((prev) => new Set(prev).add(serviceId));
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const { error } = await supabase.from("service_confirmations").upsert({
+          service_id: serviceId,
+          user_id: user.id,
+          confirmed: true,
+          confirmed_at: new Date().toISOString(),
+        });
+
+        if (error) throw error;
+      }
+
+      toast.success("Asistencia confirmada ✅");
+    } catch (error) {
+      console.error("Error confirmando asistencia:", error);
+      toast.error("Error al confirmar asistencia");
+    }
+  };
+
+  const handleAskArcana = (service: WeekendService) => {
+    const message = `Necesito ayuda para prepararme para el servicio "${service.title}" del ${format(new Date(service.service_date), "EEEE, dd 'de' MMMM", { locale: es })}. ¿Qué canciones debo practicar?`;
+    onOpenChat?.(message);
+    closeOverlay();
+  };
+
+  const saveToNotifications = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      if (services.length === 0) {
+        toast.error("No hay servicios para guardar");
+        return;
+      }
+
+      const servicesList = services
+        .map((service) => {
+          const time = getServiceTime(service.title);
+          const songsText =
+            service.selected_songs && service.selected_songs.length > 0
+              ? `\nCanciones: ${service.selected_songs.map((s) => s.title).join(", ")}`
+              : "";
+          return `${time} - ${service.leader}${songsText}`;
+        })
+        .join("\n\n• ");
+
+      await supabase.from("system_notifications").insert({
+        recipient_id: user.id,
+        type: "service_program",
+        title: "Programa de Servicios - Fin de Semana",
+        message: `Servicios programados para ${format(new Date(services[0].service_date), "EEEE, dd 'de' MMMM", { locale: es })}:\n\n• ${servicesList}`,
+        notification_category: "agenda",
+        metadata: {
+          service_date: services[0].service_date,
+          services: services.map((s) => ({
+            id: s.id,
+            date: s.service_date,
+            title: s.title,
+            leader: s.leader,
+            group: s.worship_groups?.name,
+            time: getServiceTime(s.title),
+            director: {
+              name: s.leader,
+              photo: s.group_members.find((m) => m.is_leader)?.profiles?.photo_url,
+            },
+            voices: getResponsibleVoices(s.group_members).map((v) => ({
+              name: v.profiles?.full_name,
+              photo: v.profiles?.photo_url,
+            })),
+            songs: s.selected_songs || [],
+          })),
+        },
+      });
+
+      toast.success("Programa guardado en notificaciones");
+      closeOverlay();
+    } catch (error) {
+      console.error("Error saving notification:", error);
+      toast.error("Error al guardar la notificación");
+    }
+  };
+
   const getServiceTime = (serviceTitle: string) => {
     if (
       serviceTitle.toLowerCase().includes("primera") ||
       serviceTitle.toLowerCase().includes("8:00") ||
-      serviceTitle.toLowerCase().includes("primer") ||
-      serviceTitle.toLowerCase().includes("08:00")
+      serviceTitle.toLowerCase().includes("primer")
     ) {
-      return "Primer Servicio - 08:00 A.M.";
+      return "8:00 AM";
     } else if (
       serviceTitle.toLowerCase().includes("segunda") ||
       serviceTitle.toLowerCase().includes("10:45") ||
       serviceTitle.toLowerCase().includes("segundo")
     ) {
-      return "Segundo Servicio - 10:45 A.M.";
+      return "10:45 AM";
     }
     return serviceTitle;
   };
@@ -633,23 +887,17 @@ const ServiceNotificationOverlay = ({
   };
 
   const getResponsibleVoices = (members: WeekendService["group_members"]) => {
-    return members.filter((member) => {
-      const instrument = member.instrument?.toLowerCase() || "";
-      return (
-        instrument.includes("soprano") ||
-        instrument.includes("alto") ||
-        instrument.includes("tenor") ||
-        instrument.includes("bajo") ||
-        instrument.includes("contralto") ||
-        instrument.includes("voice") ||
-        instrument.includes("voz") ||
-        instrument.includes("vocals") ||
-        instrument.includes("soprano - micrófono") ||
-        instrument.includes("contralto - micrófono") ||
-        instrument.includes("tenor - micrófono") ||
-        instrument.includes("bajo - micrófono")
-      );
-    });
+    return members.filter(
+      (member) =>
+        member.instrument?.toLowerCase().includes("soprano") ||
+        member.instrument?.toLowerCase().includes("alto") ||
+        member.instrument?.toLowerCase().includes("tenor") ||
+        member.instrument?.toLowerCase().includes("bajo") ||
+        member.instrument?.toLowerCase().includes("voice") ||
+        member.instrument?.toLowerCase().includes("voz") ||
+        member.instrument?.toLowerCase().includes("contralto") ||
+        member.instrument?.toLowerCase().includes("vocals"),
+    );
   };
 
   const downloadServiceImage = async (serviceId: string, serviceTitle: string) => {
@@ -752,7 +1000,7 @@ const ServiceNotificationOverlay = ({
     }
   };
 
-  // ServiceCard component mejorado
+  // Nuevo diseño de ServiceCard mejorado
   const ServiceCard = ({ service }: { service: WeekendService }) => {
     const serviceTime = getServiceTime(service.title);
     const directorMember = service.group_members.find((m) => m.is_leader);
@@ -815,9 +1063,7 @@ const ServiceNotificationOverlay = ({
                   </div>
                 </div>
                 <div>
-                  <div className="font-semibold text-gray-900">
-                    {directorMember?.profiles?.full_name || service.leader}
-                  </div>
+                  <div className="font-semibold text-gray-900">{service.leader}</div>
                   <div className="text-sm text-blue-600">Líder del Servicio</div>
                 </div>
               </div>
@@ -949,8 +1195,8 @@ const ServiceNotificationOverlay = ({
                           {getInitials(member.profiles?.full_name || "NN")}
                         </div>
                       </div>
-                      <div className="min-w-0 flex-1 text-left">
-                        {formatMemberName(member.profiles?.full_name || "")}
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-medium text-gray-900">{member.profiles?.full_name}</div>
                         <div className="text-xs text-blue-600">{member.instrument}</div>
                       </div>
                     </div>
@@ -1036,9 +1282,17 @@ const ServiceNotificationOverlay = ({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={closeOverlay} className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={saveToNotifications} className="flex items-center gap-2">
+                    <Save className="w-4 h-4" />
+                    Guardar
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={closeOverlay}
+                    className="text-destructive hover:text-destructive"
+                  >
                     <X className="w-4 h-4" />
-                    Cerrar
                   </Button>
                 </div>
               </div>
