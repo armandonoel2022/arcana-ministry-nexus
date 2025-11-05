@@ -75,41 +75,6 @@ interface ServiceNotificationOverlayProps {
   onNavigate?: (path: string) => void;
 }
 
-// Pool de coristas rotativos con IDs correctos de la base de datos
-const ROTATIVE_SINGERS = {
-  male: [
-    { id: "a71697a2-bf8e-4967-8190-2e3e2d01f150", name: "Guarionex Garcia", voice: "Bajo", is_director: true },
-    {
-      id: "7a1645d8-75fe-498c-a2e9-f1057ff3521f",
-      name: "Fredderid Abrahan Valera Montoya",
-      voice: "Tenor",
-      is_director: false,
-    },
-    {
-      id: "f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f",
-      name: "Félix Nicolás Peralta Hernández",
-      voice: "Tenor",
-      is_director: false,
-    },
-    { id: "d6602109-ad3e-4db6-ab4a-2984dadfc569", name: "Armando Noel Charle", voice: "Tenor", is_director: true },
-    { id: "6a5bfaa9-fdf0-4b0e-aad3-79266444604f", name: "Denny Alberto Santana", voice: "Tenor", is_director: true },
-  ],
-  female: [
-    {
-      id: "cd2d8fda-0029-4280-a9a1-c23ed5c4f9ad",
-      name: "Ashley Rossely Jimenez Gonzalez",
-      voice: "Soprano",
-      is_director: false,
-    },
-    {
-      id: "8cebc294-ea61-40d0-9b04-08d7d474332c",
-      name: "Fior Daliza Paniagua",
-      voice: "Contralto",
-      is_director: false,
-    },
-  ],
-};
-
 // Configuración base de grupos con miembros fijos en el ORDEN CORRECTO
 const BASE_GROUP_CONFIG = {
   "Grupo de Aleida": {
@@ -276,12 +241,6 @@ const PHOTO_URLS = {
     "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38.JPG",
 };
 
-// Estado global para rotación entre servicios
-let globalRotationState = {
-  soprano: "fior-daliza",
-  lastServiceId: "",
-};
-
 const ServiceNotificationOverlay = ({
   forceShow = false,
   onClose,
@@ -296,9 +255,8 @@ const ServiceNotificationOverlay = ({
   const [activeTab, setActiveTab] = useState<"services" | "preparations">("services");
   const serviceCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
-  // Función para formatear nombres (nombre arriba, apellido abajo) usando la lista proporcionada
+  // Función para formatear nombres (nombre arriba, apellido abajo)
   const formatMemberName = (fullName: string) => {
-    // Mapeo de nombres completos a nombres y apellidos según la lista
     const nameMapping: { [key: string]: { nombre: string; apellido: string } } = {
       "Aleida Geomar Batista Ventura": { nombre: "Aleida Geomar", apellido: "Batista Ventura" },
       "Eliabi Joana Sierra Castillo": { nombre: "Eliabi Joana", apellido: "Sierra Castillo" },
@@ -350,12 +308,11 @@ const ServiceNotificationOverlay = ({
     );
   };
 
-  // Función para obtener la formación correcta según las reglas - SIMPLIFICADA
-  const getGroupFormation = (groupName: string, serviceTime: string, directorName: string, serviceId: string) => {
+  // Función para obtener la formación correcta
+  const getGroupFormation = (groupName: string) => {
     const groupConfig = BASE_GROUP_CONFIG[groupName as keyof typeof BASE_GROUP_CONFIG];
     if (!groupConfig) return [];
 
-    // Para todos los grupos, usar la formación base definida en el orden correcto
     return groupConfig.base_members.map((member) => ({
       ...member,
       photo_url: PHOTO_URLS[member.id as keyof typeof PHOTO_URLS],
@@ -370,7 +327,6 @@ const ServiceNotificationOverlay = ({
       return;
     }
 
-    // Limpiar localStorage para forzar mostrar el overlay
     localStorage.removeItem("serviceNotificationDismissed");
     localStorage.removeItem("serviceNotificationLastShown");
 
@@ -386,18 +342,6 @@ const ServiceNotificationOverlay = ({
       setIsLoading(false);
     }
 
-    const handleNotifications = (payload: any) => {
-      console.log("Notification received:", payload);
-      if (
-        payload.eventType === "INSERT" &&
-        payload.new.type === "service_program" &&
-        payload.new.notification_category === "agenda" &&
-        payload.new.metadata?.service_date
-      ) {
-        showServiceProgramOverlay(payload.new.metadata);
-      }
-    };
-
     const channel = supabase
       .channel("service-notifications")
       .on(
@@ -407,7 +351,17 @@ const ServiceNotificationOverlay = ({
           schema: "public",
           table: "system_notifications",
         },
-        handleNotifications,
+        (payload) => {
+          console.log("Notification received:", payload);
+          if (
+            payload.eventType === "INSERT" &&
+            payload.new.type === "service_program" &&
+            payload.new.notification_category === "agenda" &&
+            payload.new.metadata?.service_date
+          ) {
+            showServiceProgramOverlay(payload.new.metadata);
+          }
+        },
       )
       .subscribe();
 
@@ -421,8 +375,7 @@ const ServiceNotificationOverlay = ({
     if (metadata.services && Array.isArray(metadata.services)) {
       const formattedServices = metadata.services.map((service: any) => {
         const groupName = service.group || "Grupo de Alabanza";
-        const serviceTime = service.time === "8:00 a.m." ? "08:00" : "10:45";
-        const formation = getGroupFormation(groupName, serviceTime, service.director?.name, service.id);
+        const formation = getGroupFormation(groupName);
 
         return {
           id: service.id || Date.now().toString(),
@@ -438,21 +391,6 @@ const ServiceNotificationOverlay = ({
             color_theme: BASE_GROUP_CONFIG[groupName as keyof typeof BASE_GROUP_CONFIG]?.color_theme || "#3B82F6",
           },
           group_members: [
-            ...(service.director
-              ? [
-                  {
-                    id: "director-" + service.time,
-                    user_id: "director",
-                    instrument: "Director",
-                    is_leader: true,
-                    profiles: {
-                      id: "director",
-                      full_name: service.director?.name || service.director,
-                      photo_url: service.director?.photo,
-                    },
-                  },
-                ]
-              : []),
             ...formation.map((member, index) => ({
               id: `member-${service.time}-${index}`,
               user_id: member.id,
@@ -555,39 +493,9 @@ const ServiceNotificationOverlay = ({
       if (data && data.length > 0) {
         const servicesWithMembers = await Promise.all(
           data.map(async (service) => {
-            let directorProfile: any = null;
-
-            // Buscar director por nombre en la tabla members
-            if (service.leader) {
-              const { data: exactMatch } = await supabase
-                .from("members")
-                .select("id, nombres, apellidos, photo_url")
-                .eq("is_active", true);
-
-              if (exactMatch && exactMatch.length > 0) {
-                const leaderName = service.leader.trim().toLowerCase();
-                const matchedMember = exactMatch.find((m) => {
-                  const fullName = `${m.nombres || ""} ${m.apellidos || ""}`.trim().toLowerCase();
-                  return fullName === leaderName || fullName.includes(leaderName) || leaderName.includes(fullName);
-                });
-
-                if (matchedMember) {
-                  directorProfile = {
-                    id: matchedMember.id,
-                    full_name: `${matchedMember.nombres || ""} ${matchedMember.apellidos || ""}`.trim(),
-                    photo_url: matchedMember.photo_url,
-                  };
-                }
-              }
-            }
-
             // Obtener miembros del grupo con la formación corregida
             const groupName = service.worship_groups?.[0]?.name || "Grupo de Alabanza";
-            const serviceTime =
-              service.title.toLowerCase().includes("8:00") || service.title.toLowerCase().includes("08:00")
-                ? "08:00"
-                : "10:45";
-            const formation = getGroupFormation(groupName, serviceTime, service.leader, service.id);
+            const formation = getGroupFormation(groupName);
 
             const members = formation.map((member, index) => ({
               id: `member-${service.id}-${index}`,
@@ -601,13 +509,9 @@ const ServiceNotificationOverlay = ({
               },
             }));
 
-            // Si no hay director encontrado, usar el primer miembro director como líder
-            if (!directorProfile) {
-              const directorMember = members.find((m) => m.is_leader);
-              if (directorMember) {
-                directorProfile = directorMember.profiles;
-              }
-            }
+            // Encontrar el director del grupo
+            const directorMember = members.find((m) => m.is_leader);
+            const directorProfile = directorMember ? directorMember.profiles : null;
 
             let selectedSongs: any[] = [];
             const { data: songsData, error: songsError } = await supabase
@@ -700,96 +604,6 @@ const ServiceNotificationOverlay = ({
     }, 300);
   };
 
-  const handleConfirmAttendance = async (serviceId: string) => {
-    try {
-      setConfirmedServices((prev) => new Set(prev).add(serviceId));
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        const { error } = await supabase.from("service_confirmations").upsert({
-          service_id: serviceId,
-          user_id: user.id,
-          confirmed: true,
-          confirmed_at: new Date().toISOString(),
-        });
-
-        if (error) throw error;
-      }
-
-      toast.success("Asistencia confirmada ✅");
-    } catch (error) {
-      console.error("Error confirmando asistencia:", error);
-      toast.error("Error al confirmar asistencia");
-    }
-  };
-
-  const handleAskArcana = (service: WeekendService) => {
-    const message = `Necesito ayuda para prepararme para el servicio "${service.title}" del ${format(new Date(service.service_date), "EEEE, dd 'de' MMMM", { locale: es })}. ¿Qué canciones debo practicar?`;
-    onOpenChat?.(message);
-    closeOverlay();
-  };
-
-  const saveToNotifications = async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      if (services.length === 0) {
-        toast.error("No hay servicios para guardar");
-        return;
-      }
-
-      const servicesList = services
-        .map((service) => {
-          const time = getServiceTime(service.title);
-          const songsText =
-            service.selected_songs && service.selected_songs.length > 0
-              ? `\nCanciones: ${service.selected_songs.map((s) => s.title).join(", ")}`
-              : "";
-          return `${time} - ${service.leader}${songsText}`;
-        })
-        .join("\n\n• ");
-
-      await supabase.from("system_notifications").insert({
-        recipient_id: user.id,
-        type: "service_program",
-        title: "Programa de Servicios - Fin de Semana",
-        message: `Servicios programados para ${format(new Date(services[0].service_date), "EEEE, dd 'de' MMMM", { locale: es })}:\n\n• ${servicesList}`,
-        notification_category: "agenda",
-        metadata: {
-          service_date: services[0].service_date,
-          services: services.map((s) => ({
-            id: s.id,
-            date: s.service_date,
-            title: s.title,
-            leader: s.leader,
-            group: s.worship_groups?.name,
-            time: getServiceTime(s.title),
-            director: {
-              name: s.leader,
-              photo: s.group_members.find((m) => m.is_leader)?.profiles?.photo_url,
-            },
-            voices: getResponsibleVoices(s.group_members).map((v) => ({
-              name: v.profiles?.full_name,
-              photo: v.profiles?.photo_url,
-            })),
-            songs: s.selected_songs || [],
-          })),
-        },
-      });
-
-      toast.success("Programa guardado en notificaciones");
-      closeOverlay();
-    } catch (error) {
-      console.error("Error saving notification:", error);
-      toast.error("Error al guardar la notificación");
-    }
-  };
-
   const getServiceTime = (serviceTitle: string) => {
     if (
       serviceTitle.toLowerCase().includes("primera") ||
@@ -830,7 +644,6 @@ const ServiceNotificationOverlay = ({
         instrument.includes("voice") ||
         instrument.includes("voz") ||
         instrument.includes("vocals") ||
-        // Agrega más coincidencias según cómo se guardan en tu BD
         instrument.includes("soprano - micrófono") ||
         instrument.includes("contralto - micrófono") ||
         instrument.includes("tenor - micrófono") ||
@@ -1002,7 +815,9 @@ const ServiceNotificationOverlay = ({
                   </div>
                 </div>
                 <div>
-                  <div className="font-semibold text-gray-900">{service.leader}</div>
+                  <div className="font-semibold text-gray-900">
+                    {directorMember?.profiles?.full_name || service.leader}
+                  </div>
                   <div className="text-sm text-blue-600">Líder del Servicio</div>
                 </div>
               </div>
@@ -1110,7 +925,7 @@ const ServiceNotificationOverlay = ({
             )}
           </div>
 
-          {/* Right Column - Voices - MEJORADO */}
+          {/* Right Column - Voices */}
           <div>
             {responsibleVoices.length > 0 && (
               <div className="bg-blue-50 rounded-lg p-4 h-full">
@@ -1221,17 +1036,9 @@ const ServiceNotificationOverlay = ({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={saveToNotifications} className="flex items-center gap-2">
-                    <Save className="w-4 h-4" />
-                    Guardar
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={closeOverlay}
-                    className="text-destructive hover:text-destructive"
-                  >
+                  <Button variant="outline" size="sm" onClick={closeOverlay} className="flex items-center gap-2">
                     <X className="w-4 h-4" />
+                    Cerrar
                   </Button>
                 </div>
               </div>
