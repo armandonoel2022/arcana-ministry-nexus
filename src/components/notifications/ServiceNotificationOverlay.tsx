@@ -135,7 +135,7 @@ const GROUP_CONFIG = {
         id: "00a916a8-ab94-4cc0-81ae-668dd6071416",
         name: "Aleida Geomar Batista Ventura",
         voice: "Soprano",
-        mic: "Micrófono #1",
+        mic: "Micrófono #2",
         photo_url:
           "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/00a916a8-ab94-4cc0-81ae-668dd6071416.JPG",
       },
@@ -143,10 +143,21 @@ const GROUP_CONFIG = {
         id: "c4089748-7168-4472-8e7c-bf44b4355906",
         name: "Eliabi Joana Sierra Castillo",
         voice: "Soprano",
-        mic: "Micrófono #2",
+        mic: "Micrófono #1",
         photo_url:
           "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG",
       },
+      // Agregar miembros adicionales del grupo de Aleida
+      {
+        id: "f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f",
+        name: "Felix Nicolas Peralta Hernandez",
+        voice: "Tenor",
+        mic: "Micrófono #3",
+        photo_url:
+          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG",
+      },
+    ],
+    maleSingers: ["Armando Noel", "Nicolas Peralta"],
       {
         id: "8cebc294-ea61-40d0-9b04-08d7d474332c",
         name: "Fior Daliza Paniagua",
@@ -163,17 +174,7 @@ const GROUP_CONFIG = {
         photo_url:
           "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/619c1a4e-42db-4549-8890-16392cfa2a87.JPG",
       },
-      // Agregar miembros adicionales del grupo de Aleida
-      {
-        id: "f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f",
-        name: "Felix Nicolas Peralta Hernandez",
-        voice: "Tenor",
-        mic: "Micrófono #3",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG",
-      },
-    ],
-    maleSingers: ["Armando Noel", "Nicolas Peralta"],
+      
   },
   "Grupo de Keyla": {
     color_theme: "#8B5CF6",
