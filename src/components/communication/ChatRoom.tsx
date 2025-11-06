@@ -12,6 +12,7 @@ import { VoiceRecognition } from "./VoiceRecognition";
 import { VoiceNoteRecorder } from "./VoiceNoteRecorder";
 import { SongLimitOverlay } from "./SongLimitOverlay";
 import { EmoticonPicker } from "./EmoticonPicker";
+import { VoiceMessagePlayer } from "./VoiceMessagePlayer";
 import { useEmoticons } from "@/hooks/useEmoticons";
 import { useSounds } from "@/hooks/useSounds";
 import { useMediaUpload } from "@/hooks/useMediaUpload";
@@ -33,7 +34,7 @@ interface Message {
   is_bot?: boolean;
   actions?: BotAction[];
   media_url?: string;
-  media_type?: 'image' | 'video' | 'audio';
+  media_type?: 'image' | 'video' | 'audio' | 'voice';
   profiles?: {
     full_name: string;
     photo_url?: string;
@@ -746,10 +747,8 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
                                 <source src={message.media_url} type="video/mp4" />
                               </video>
                             )}
-                            {message.media_type === 'audio' && (
-                              <audio controls className="w-full">
-                                <source src={message.media_url} type="audio/mpeg" />
-                              </audio>
+                            {(message.media_type === 'audio' || message.media_type === 'voice') && (
+                              <VoiceMessagePlayer audioUrl={message.media_url} />
                             )}
                           </div>
                         )}

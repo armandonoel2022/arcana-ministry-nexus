@@ -1,14 +1,16 @@
 
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChatRooms } from "@/components/communication/ChatRooms";
+import { ChatRoomAutoAdd } from "@/components/communication/ChatRoomAutoAdd";
 import { WalkieTalkie } from "@/components/communication/WalkieTalkie";
 import { MessageCircle, Radio } from "lucide-react";
 
 const Communication = () => {
   return (
     <div className="container mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
+      {/* Componente invisible que auto-agrega miembros a sala General */}
+      <ChatRoomAutoAdd />
       <div className="text-center space-y-1 sm:space-y-2 px-2">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
           Centro de Comunicación

@@ -69,21 +69,24 @@ export const getSpecificVerse = async (reference: string): Promise<BibleVerse | 
   try {
     // Normalizar referencia para español
     const normalizedRef = normalizeReference(reference);
+    console.log('Buscando versículo:', reference, '-> Normalizado:', normalizedRef);
     
-    const response = await fetch(
-      `${BIBLE_API_URL}/${encodeURIComponent(normalizedRef)}?translation=${DEFAULT_VERSION}`,
-      {
-        headers: {
-          'Accept': 'application/json'
-        }
+    const url = `${BIBLE_API_URL}/${encodeURIComponent(normalizedRef)}?translation=${DEFAULT_VERSION}`;
+    console.log('URL de API:', url);
+    
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json'
       }
-    );
+    });
 
     if (!response.ok) {
+      console.error(`Bible API error: ${response.status} ${response.statusText}`);
       throw new Error(`API error: ${response.status}`);
     }
 
     const data: BibleApiResponse = await response.json();
+    console.log('Respuesta de API recibida:', data.reference);
     
     return {
       reference: data.reference,
@@ -92,7 +95,7 @@ export const getSpecificVerse = async (reference: string): Promise<BibleVerse | 
       translation_name: data.translation_name
     };
   } catch (error) {
-    console.error('Error fetching specific verse:', error);
+    console.error('Error fetching specific verse:', error, 'para referencia:', reference);
     return getFallbackVerse();
   }
 };

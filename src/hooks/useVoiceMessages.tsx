@@ -7,6 +7,7 @@ interface VoiceMessageState {
   isProcessing: boolean;
   transcript: string | null;
   audioUrl: string | null;
+  audioBlob: Blob | null;
 }
 
 /**
@@ -18,7 +19,8 @@ export const useVoiceMessages = () => {
     isRecording: false,
     isProcessing: false,
     transcript: null,
-    audioUrl: null
+    audioUrl: null,
+    audioBlob: null,
   });
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -42,7 +44,7 @@ export const useVoiceMessages = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const audioUrl = URL.createObjectURL(audioBlob);
         
-        setState(prev => ({ ...prev, audioUrl, isProcessing: true }));
+        setState(prev => ({ ...prev, audioUrl, audioBlob, isProcessing: true }));
 
         // Procesar con edge function para transcripción
         await processVoiceMessage(audioBlob);
@@ -114,7 +116,8 @@ export const useVoiceMessages = () => {
       isRecording: false,
       isProcessing: false,
       transcript: null,
-      audioUrl: null
+      audioUrl: null,
+      audioBlob: null,
     });
   };
 

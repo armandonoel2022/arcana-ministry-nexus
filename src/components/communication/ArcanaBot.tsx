@@ -537,7 +537,7 @@ export class ArcanaBot {
     memberInfo: any, 
     services: any[]
   ): BotResponse {
-    let mensaje = `🎵 **¡Hola ${userName}!**\n\n`;
+    let mensaje = `🎵 **Información de turnos para ${userName}**\n\n`;
     
     // Información del miembro
     if (memberInfo) {

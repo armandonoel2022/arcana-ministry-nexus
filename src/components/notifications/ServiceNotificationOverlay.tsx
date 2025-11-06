@@ -156,8 +156,6 @@ const GROUP_CONFIG = {
         photo_url:
           "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG",
       },
-    ],
-    maleSingers: ["Armando Noel", "Nicolas Peralta"],
       {
         id: "8cebc294-ea61-40d0-9b04-08d7d474332c",
         name: "Fior Daliza Paniagua",
@@ -174,7 +172,8 @@ const GROUP_CONFIG = {
         photo_url:
           "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/619c1a4e-42db-4549-8890-16392cfa2a87.JPG",
       },
-      
+    ],
+    maleSingers: ["Armando Noel", "Nicolas Peralta"],
   },
   "Grupo de Keyla": {
     color_theme: "#8B5CF6",
@@ -651,7 +650,14 @@ const ServiceNotificationOverlay = ({
             }
 
             // Obtener miembros del grupo usando la nueva función
-            const groupName = service.worship_groups?.name || "Grupo de Alabanza";
+            let groupName = "Grupo de Alabanza";
+            if (service.worship_groups) {
+              if (Array.isArray(service.worship_groups) && service.worship_groups.length > 0) {
+                groupName = (service.worship_groups[0]?.name as string) || groupName;
+              } else if (typeof service.worship_groups === 'object' && 'name' in service.worship_groups) {
+                groupName = (service.worship_groups.name as string) || groupName;
+              }
+            }
             const serviceTime = getServiceTime(service.title);
 
             // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS
