@@ -1,6 +1,6 @@
 /**
- * Utilidades para integración con Bible API
- * API Externa: bible-api.com
+ * Utilidades mejoradas para integración con Bible API
+ * SIN VERSÍCULOS DE FALLBACK
  */
 
 interface BibleVerse {
@@ -24,157 +24,205 @@ interface BibleApiResponse {
   translation_name: string;
 }
 
-const BIBLE_API_URL = 'https://bible-api.com';
-const DEFAULT_VERSION = 'rvr60'; // Reina Valera 1960
+const BIBLE_API_URL = "https://bible-api.com";
+const DEFAULT_VERSION = "rvr1960";
+const FALLBACK_VERSION = "rvr60";
 
 /**
- * Obtiene un versículo aleatorio del día
+ * Obtiene un versículo aleatorio del día - SIN FALLBACK
  */
 export const getRandomVerse = async (): Promise<BibleVerse | null> => {
   try {
-    // Lista de versículos populares para el día
     const popularVerses = [
-      'John 3:16',
-      'Psalm 23:1',
-      'Jeremiah 29:11',
-      'Philippians 4:13',
-      'Proverbs 3:5-6',
-      'Romans 8:28',
-      'Isaiah 41:10',
-      'Matthew 6:33',
-      'Psalm 46:1',
-      'Joshua 1:9',
-      '1 Corinthians 13:4-8',
-      'Ephesians 2:8-9',
-      'Psalm 37:4',
-      'Matthew 11:28',
-      'Romans 12:2'
+      "Salmos 100:1-2",
+      "Salmos 150:6",
+      "Colosenses 3:16",
+      "Efesios 5:19",
+      "Salmos 95:1-2",
+      "Salmos 96:1-2",
+      "2 Samuel 22:4",
+      "Salmos 34:1-3",
+      "Hebreos 13:15",
+      "Salmos 98:1",
+      "Isaías 12:5",
+      "Filipenses 4:4-7",
+      "Salmos 103:1-2",
+      "Salmos 136:1",
+      "1 Crónicas 16:23-25",
+      "Salmos 33:1-3",
     ];
 
     const randomIndex = Math.floor(Math.random() * popularVerses.length);
     const verse = popularVerses[randomIndex];
-    
-    return await getSpecificVerse(verse);
+
+    console.log("🎲 [BibleAPI] Versículo aleatorio seleccionado:", verse);
+    const result = await getSpecificVerse(verse);
+
+    if (result) {
+      return result;
+    }
+
+    // Si falla, intentar con otro
+    const alternativeIndex = (randomIndex + 1) % popularVerses.length;
+    const alternativeVerse = popularVerses[alternativeIndex];
+    console.log("🔄 [BibleAPI] Intentando versículo alternativo:", alternativeVerse);
+    return await getSpecificVerse(alternativeVerse);
   } catch (error) {
-    console.error('Error getting random verse:', error);
-    return getFallbackVerse();
+    console.error("❌ [BibleAPI] Error en versículo aleatorio:", error);
+    return null; // NO HAY FALLBACK
   }
 };
 
 /**
- * Obtiene un versículo específico por referencia
- * @param reference Referencia bíblica (ej: "John 3:16", "Salmos 23:1")
+ * Obtiene un versículo específico - SIN FALLBACK
  */
 export const getSpecificVerse = async (reference: string): Promise<BibleVerse | null> => {
   try {
-    // Normalizar referencia para español
     const normalizedRef = normalizeReference(reference);
-    console.log('🔍 [BibleAPI] Buscando versículo:', reference, '-> Normalizado:', normalizedRef);
-    
-    const url = `${BIBLE_API_URL}/${encodeURIComponent(normalizedRef)}?translation=${DEFAULT_VERSION}`;
-    console.log('🌐 [BibleAPI] URL de API:', url);
-    
-    const response = await fetch(url, {
-      headers: {
-        'Accept': 'application/json'
-      }
-    });
+    console.log("🔍 [BibleAPI] Buscando:", reference, "-> Normalizado:", normalizedRef);
 
-    console.log('📡 [BibleAPI] Status de respuesta:', response.status, response.statusText);
+    let url = `${BIBLE_API_URL}/${encodeURIComponent(normalizedRef)}?translation=${DEFAULT_VERSION}`;
+    console.log("🌐 [BibleAPI] URL principal:", url);
+
+    let response = await fetchWithTimeout(url, 8000);
 
     if (!response.ok) {
-      console.error(`❌ [BibleAPI] Error HTTP: ${response.status} ${response.statusText}`);
-      const text = await response.text();
-      console.error('❌ [BibleAPI] Cuerpo de respuesta:', text.substring(0, 200));
-      throw new Error(`API error: ${response.status}`);
+      console.log("🔄 [BibleAPI] Intentando con versión alternativa...");
+      url = `${BIBLE_API_URL}/${encodeURIComponent(normalizedRef)}?translation=${FALLBACK_VERSION}`;
+      response = await fetchWithTimeout(url, 8000);
+    }
+
+    if (!response.ok) {
+      console.error(`❌ [BibleAPI] Error HTTP: ${response.status}`);
+      return null; // NO FALLBACK
     }
 
     const data: BibleApiResponse = await response.json();
-    console.log('✅ [BibleAPI] Versículo recibido:', data.reference);
-    console.log('📖 [BibleAPI] Texto:', data.text?.substring(0, 100) + '...');
-    
+
     if (!data.text || data.text.trim().length === 0) {
-      console.error('❌ [BibleAPI] Respuesta sin texto');
-      throw new Error('Empty response');
+      console.error("❌ [BibleAPI] Respuesta vacía");
+      return null; // NO FALLBACK
     }
-    
+
+    console.log("✅ [BibleAPI] Versículo encontrado:", data.reference);
+
     return {
       reference: data.reference,
-      text: data.text.trim(),
+      text: cleanVerseText(data.text),
       translation_id: data.translation_id,
-      translation_name: data.translation_name
+      translation_name: data.translation_name,
     };
   } catch (error) {
-    console.error('❌ [BibleAPI] Error completo:', error);
-    console.error('❌ [BibleAPI] Referencia solicitada:', reference);
-    console.error('⚠️ [BibleAPI] Retornando versículo de fallback (Juan 3:16)');
-    return getFallbackVerse();
+    console.error("❌ [BibleAPI] Error completo:", error);
+    return null; // NO FALLBACK
   }
 };
 
 /**
- * Busca versículos por tema
- * @param topic Tema a buscar (amor, fe, esperanza, etc.)
+ * Fetch con timeout
  */
-export const searchVersesByTopic = async (topic: string): Promise<BibleVerse[]> => {
+const fetchWithTimeout = async (url: string, timeout: number = 8000): Promise<Response> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
   try {
-    // Mapeo de temas a versículos relevantes
-    const topicVerses: { [key: string]: string[] } = {
-      'amor': ['1 Corinthians 13:4-8', 'John 3:16', '1 John 4:8'],
-      'fe': ['Hebrews 11:1', 'Romans 10:17', 'James 2:17'],
-      'esperanza': ['Jeremiah 29:11', 'Romans 15:13', 'Psalm 42:11'],
-      'paz': ['John 14:27', 'Philippians 4:7', 'Isaiah 26:3'],
-      'fortaleza': ['Philippians 4:13', 'Isaiah 41:10', 'Psalm 46:1'],
-      'salvación': ['Acts 4:12', 'Romans 10:9', 'Ephesians 2:8-9'],
-      'gracia': ['Ephesians 2:8', '2 Corinthians 12:9', 'Titus 2:11'],
-      'alabanza': ['Psalm 150:6', 'Psalm 100:4', 'Hebrews 13:15'],
-      'gozo': ['Nehemiah 8:10', 'Psalm 16:11', 'John 15:11'],
-      'perdón': ['1 John 1:9', 'Ephesians 4:32', 'Colossians 3:13']
-    };
-
-    const normalizedTopic = topic.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const verses = topicVerses[normalizedTopic] || topicVerses['amor']; // Default a amor
-
-    const results = await Promise.all(
-      verses.map(ref => getSpecificVerse(ref))
-    );
-
-    return results.filter(v => v !== null) as BibleVerse[];
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: { Accept: "application/json" },
+    });
+    clearTimeout(timeoutId);
+    return response;
   } catch (error) {
-    console.error('Error searching verses by topic:', error);
-    return [getFallbackVerse()].filter(v => v !== null) as BibleVerse[];
+    clearTimeout(timeoutId);
+    throw error;
   }
 };
 
 /**
- * Normaliza referencias bíblicas de español a inglés para la API
+ * Limpiar texto del versículo
+ */
+const cleanVerseText = (text: string): string => {
+  return text.replace(/\s+/g, " ").trim();
+};
+
+/**
+ * Normalización de referencias
  */
 const normalizeReference = (reference: string): string => {
   const bookMap: { [key: string]: string } = {
-    'juan': 'john',
-    'salmos': 'psalm',
-    'salmo': 'psalm',
-    'jeremías': 'jeremiah',
-    'filipenses': 'philippians',
-    'proverbios': 'proverbs',
-    'romanos': 'romans',
-    'isaías': 'isaiah',
-    'mateo': 'matthew',
-    'josué': 'joshua',
-    'corintios': 'corinthians',
-    'efesios': 'ephesians',
-    'hebreos': 'hebrews',
-    'santiago': 'james',
-    'hechos': 'acts',
-    'tito': 'titus',
-    'nehemías': 'nehemiah',
-    'colosenses': 'colossians'
+    génesis: "genesis",
+    éxodo: "exodus",
+    levítico: "leviticus",
+    números: "numbers",
+    deuteronomio: "deuteronomy",
+    josué: "joshua",
+    jueces: "judges",
+    rut: "ruth",
+    "1 samuel": "1 samuel",
+    "2 samuel": "2 samuel",
+    "1 reyes": "1 kings",
+    "2 reyes": "2 kings",
+    "1 crónicas": "1 chronicles",
+    "2 crónicas": "2 chronicles",
+    esdras: "ezra",
+    nehemías: "nehemiah",
+    ester: "esther",
+    job: "job",
+    salmos: "psalms",
+    salmo: "psalms",
+    proverbios: "proverbs",
+    eclesiastés: "ecclesiastes",
+    cantares: "song of solomon",
+    isaías: "isaiah",
+    jeremías: "jeremiah",
+    lamentaciones: "lamentations",
+    ezequiel: "ezekiel",
+    daniel: "daniel",
+    oseas: "hosea",
+    joel: "joel",
+    amós: "amos",
+    abdías: "obadiah",
+    jonás: "jonah",
+    miqueas: "micah",
+    nahúm: "nahum",
+    habacuc: "habakkuk",
+    sofonías: "zephaniah",
+    hageo: "haggai",
+    zacarías: "zechariah",
+    malaquías: "malachi",
+    mateo: "matthew",
+    marcos: "mark",
+    lucas: "luke",
+    juan: "john",
+    hechos: "acts",
+    romanos: "romans",
+    "1 corintios": "1 corinthians",
+    "2 corintios": "2 corinthians",
+    gálatas: "galatians",
+    efesios: "ephesians",
+    filipenses: "philippians",
+    colosenses: "colossians",
+    "1 tesalonicenses": "1 thessalonians",
+    "2 tesalonicenses": "2 thessalonians",
+    "1 timoteo": "1 timothy",
+    "2 timoteo": "2 timothy",
+    tito: "titus",
+    filemón: "philemon",
+    hebreos: "hebrews",
+    santiago: "james",
+    "1 pedro": "1 peter",
+    "2 pedro": "2 peter",
+    "1 juan": "1 john",
+    "2 juan": "2 john",
+    "3 juan": "3 john",
+    judas: "jude",
+    apocalipsis: "revelation",
   };
 
-  let normalized = reference.toLowerCase();
-  
+  let normalized = reference.toLowerCase().trim();
+
   for (const [spanish, english] of Object.entries(bookMap)) {
-    if (normalized.includes(spanish)) {
+    if (normalized.startsWith(spanish) || normalized.includes(` ${spanish}`)) {
       normalized = normalized.replace(spanish, english);
       break;
     }
@@ -184,13 +232,46 @@ const normalizeReference = (reference: string): string => {
 };
 
 /**
- * Versículo de respaldo cuando la API falla
+ * Buscar versículos por tema - SIN FALLBACK
  */
-const getFallbackVerse = (): BibleVerse => {
-  return {
-    reference: 'Juan 3:16',
-    text: 'Porque de tal manera amó Dios al mundo, que ha dado a su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna.',
-    translation_id: 'rvr60',
-    translation_name: 'Reina Valera 1960'
-  };
+export const searchVersesByTopic = async (topic: string): Promise<BibleVerse[]> => {
+  try {
+    const topicVerses: { [key: string]: string[] } = {
+      adoracion: ["Salmos 95:6", "Juan 4:23-24", "Salmos 100:1-2", "Hebreos 13:15", "Salmos 150:6"],
+      alabanza: ["Salmos 150:6", "Salmos 100:4", "Hebreos 13:15", "Salmos 95:1-2", "Salmos 34:1"],
+      amor: ["1 Corintios 13:4-8", "1 Juan 4:8", "Romanos 5:8", "Efesios 5:25", "Juan 13:34-35"],
+      fe: ["Hebreos 11:1", "Romanos 10:17", "Santiago 2:17", "Marcos 11:22-24", "2 Corintios 5:7"],
+      esperanza: ["Jeremías 29:11", "Romanos 15:13", "Salmos 42:11", "Isaías 40:31", "1 Pedro 1:3"],
+      paz: ["Juan 14:27", "Filipenses 4:7", "Isaías 26:3", "Romanos 5:1", "Colosenses 3:15"],
+      fortaleza: ["Filipenses 4:13", "Isaías 41:10", "Salmos 46:1", "2 Corintios 12:9", "Josué 1:9"],
+      gracia: ["Efesios 2:8", "2 Corintios 12:9", "Tito 2:11", "Romanos 3:24", "Juan 1:16"],
+      gozo: ["Nehemías 8:10", "Salmos 16:11", "Juan 15:11", "Filipenses 4:4", "Gálatas 5:22"],
+      perdón: ["1 Juan 1:9", "Efesios 4:32", "Colosenses 3:13", "Mateo 6:14-15", "Lucas 6:37"],
+      santidad: ["1 Pedro 1:15-16", "Hebreos 12:14", "Levítico 11:44", "2 Corintios 7:1", "1 Tesalonicenses 4:7"],
+      servicio: ["Marcos 10:45", "Gálatas 5:13", "1 Pedro 4:10", "Romanos 12:1", "Filipenses 2:7"],
+    };
+
+    const normalizedTopic = topic
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+    const verses = topicVerses[normalizedTopic] || topicVerses["adoracion"];
+
+    console.log(`🔍 [BibleAPI] Buscando ${verses.length} versículos sobre: ${topic}`);
+
+    const results = await Promise.all(
+      verses.map(async (ref, index) => {
+        if (index > 0) await new Promise((resolve) => setTimeout(resolve, 100));
+        return await getSpecificVerse(ref);
+      }),
+    );
+
+    const validResults = results.filter((v) => v !== null) as BibleVerse[];
+
+    console.log(`✅ [BibleAPI] Encontrados ${validResults.length} versículos válidos sobre ${topic}`);
+    return validResults.slice(0, 3);
+  } catch (error) {
+    console.error("❌ [BibleAPI] Error buscando versículos por tema:", error);
+    return []; // ARRAY VACÍO, NO FALLBACK
+  }
 };
