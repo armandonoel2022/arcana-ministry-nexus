@@ -69,10 +69,10 @@ export const getSpecificVerse = async (reference: string): Promise<BibleVerse | 
   try {
     // Normalizar referencia para español
     const normalizedRef = normalizeReference(reference);
-    console.log('Buscando versículo:', reference, '-> Normalizado:', normalizedRef);
+    console.log('🔍 [BibleAPI] Buscando versículo:', reference, '-> Normalizado:', normalizedRef);
     
     const url = `${BIBLE_API_URL}/${encodeURIComponent(normalizedRef)}?translation=${DEFAULT_VERSION}`;
-    console.log('URL de API:', url);
+    console.log('🌐 [BibleAPI] URL de API:', url);
     
     const response = await fetch(url, {
       headers: {
@@ -80,13 +80,23 @@ export const getSpecificVerse = async (reference: string): Promise<BibleVerse | 
       }
     });
 
+    console.log('📡 [BibleAPI] Status de respuesta:', response.status, response.statusText);
+
     if (!response.ok) {
-      console.error(`Bible API error: ${response.status} ${response.statusText}`);
+      console.error(`❌ [BibleAPI] Error HTTP: ${response.status} ${response.statusText}`);
+      const text = await response.text();
+      console.error('❌ [BibleAPI] Cuerpo de respuesta:', text.substring(0, 200));
       throw new Error(`API error: ${response.status}`);
     }
 
     const data: BibleApiResponse = await response.json();
-    console.log('Respuesta de API recibida:', data.reference);
+    console.log('✅ [BibleAPI] Versículo recibido:', data.reference);
+    console.log('📖 [BibleAPI] Texto:', data.text?.substring(0, 100) + '...');
+    
+    if (!data.text || data.text.trim().length === 0) {
+      console.error('❌ [BibleAPI] Respuesta sin texto');
+      throw new Error('Empty response');
+    }
     
     return {
       reference: data.reference,
@@ -95,7 +105,9 @@ export const getSpecificVerse = async (reference: string): Promise<BibleVerse | 
       translation_name: data.translation_name
     };
   } catch (error) {
-    console.error('Error fetching specific verse:', error, 'para referencia:', reference);
+    console.error('❌ [BibleAPI] Error completo:', error);
+    console.error('❌ [BibleAPI] Referencia solicitada:', reference);
+    console.error('⚠️ [BibleAPI] Retornando versículo de fallback (Juan 3:16)');
     return getFallbackVerse();
   }
 };

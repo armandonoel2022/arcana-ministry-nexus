@@ -1169,14 +1169,27 @@ export class ArcanaBot {
       monthBirthdays.forEach((member) => {
         try {
           let day: number;
-          if (typeof member.fecha_nacimiento === 'string' && member.fecha_nacimiento.includes('/')) {
-            const [d] = member.fecha_nacimiento.split('/').map(Number);
-            day = d;
+          if (!member.fecha_nacimiento) {
+            mensaje += `📅 ? - **${member.nombres} ${member.apellidos}**\n`;
+            return;
+          }
+          
+          // CORREGIDO: Mismo formato que MemberProfile.tsx para evitar desfase de fecha
+          if (typeof member.fecha_nacimiento === 'string') {
+            if (member.fecha_nacimiento.includes('/')) {
+              const [d] = member.fecha_nacimiento.split('/').map(Number);
+              day = d;
+            } else {
+              // Formato YYYY-MM-DD - parse manualmente para evitar zona horaria
+              const parts = member.fecha_nacimiento.split('-').map(Number);
+              day = parts[2]; // día
+            }
           } else {
             day = new Date(member.fecha_nacimiento).getDate();
           }
           mensaje += `📅 ${day} - **${member.nombres} ${member.apellidos}**\n`;
         } catch (e) {
+          console.error('Error procesando fecha de cumpleaños:', e);
           mensaje += `📅 ? - **${member.nombres} ${member.apellidos}**\n`;
         }
       });
