@@ -430,9 +430,113 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
     sendMessage(`ARCANA ${command}`);
   };
 
-  const handleVoiceNote = (transcript: string) => {
-    console.log('Nota de voz transcrita:', transcript);
-    sendMessage(transcript);
+  const handleVoiceNote = async (audioUrl: string) => {
+    console.log('Audio URL recibido:', audioUrl);
+    
+    // Enviar mensaje con el audio
+    try {
+      let userId = currentUser?.id;
+      if (!userId) {
+        const { data: profiles } = await supabase.from('profiles').select('id').limit(1);
+        if (profiles && profiles.length > 0) {
+          userId = profiles[0].id;
+        } else {
+          toast({
+            title: "Error",
+            description: "No se pudo identificar al usuario",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+
+      const { error } = await supabase
+        .from('chat_messages')
+        .insert({
+          room_id: room.id,
+          user_id: userId,
+          message: '🎤 Mensaje de voz',
+          media_url: audioUrl,
+          media_type: 'voice',
+          is_bot: false
+        });
+
+      if (error) throw error;
+      
+      playSound('notification', 0.5);
+      fetchMessages();
+    } catch (error) {
+      console.error('Error enviando audio:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo enviar el audio",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo de archivo
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/quicktime'];
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: "Error",
+        description: "Solo se permiten imágenes (JPG, PNG, WEBP, GIF) y videos (MP4, MOV)",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validar tamaño (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "El archivo no puede ser mayor a 10MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      let userId = currentUser?.id;
+      if (!userId) {
+        const { data: profiles } = await supabase.from('profiles').select('id').limit(1);
+        if (profiles && profiles.length > 0) {
+          userId = profiles[0].id;
+        } else {
+          toast({
+            title: "Error",
+            description: "No se pudo identificar al usuario",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+
+      const mediaFile = await uploadMedia(file, room.id, userId);
+      if (mediaFile) {
+        setAttachedMedia(mediaFile);
+        toast({
+          title: "✅ Archivo listo",
+          description: "Presiona enviar para compartir el archivo",
+        });
+      }
+    } catch (error) {
+      console.error('Error subiendo archivo:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo subir el archivo. Intenta de nuevo.",
+        variant: "destructive"
+      });
+    } finally {
+      // Limpiar el input
+      if (e.target) {
+        e.target.value = '';
+      }
+    }
   };
 
   const handleActionClick = async (action: BotAction) => {
@@ -838,24 +942,9 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
               <input
                 ref={inputRef}
                 type="file"
-                accept="image/*,video/*,audio/*"
+                accept="image/*,video/*"
                 className="hidden"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (file && currentUser?.id) {
-                    try {
-                      const media = await uploadMedia(file, room.id, currentUser.id);
-                      setAttachedMedia(media);
-                      toast({ title: "✅ Archivo listo para enviar" });
-                    } catch (error) {
-                      toast({ 
-                        title: "Error", 
-                        description: "No se pudo subir el archivo",
-                        variant: "destructive" 
-                      });
-                    }
-                  }
-                }}
+                onChange={handleFileSelect}
               />
 
               <EmoticonPicker
@@ -898,6 +987,8 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
               />
               <VoiceNoteRecorder 
                 onVoiceNote={handleVoiceNote}
+                roomId={room.id}
+                userId={currentUser?.id || ''}
               />
               <Input
                 value={newMessage}
