@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { getRandomVerse, getSpecificVerse, searchVersesByTopic } from "@/utils/bibleApi";
 
 export interface BotAction {
   type: "select_song";
@@ -229,15 +228,6 @@ export class ArcanaBot {
       case "cumpleanos":
         return await this.handleBirthdayQuery(cleanMessage);
 
-      case "biblico_diario":
-        return await this.getBibleDailyVerse();
-
-      case "biblico_especifico":
-        return await this.getBibleSpecificVerse(cleanMessage);
-
-      case "biblico_buscar":
-        return await this.getBibleSearchByTopic(cleanMessage);
-
       case "ayuda":
         return this.getHelpResponse();
 
@@ -267,19 +257,6 @@ export class ArcanaBot {
       canciones_buscar: [/buscar/, /canci[óo]n/, /canciones/, /repertorio/, /m[úu]sica/, /song/],
       canciones_seleccionar: [/seleccionar/, /elegir/, /a[ñn]adir/, /agregar/, /para\s+servicio/],
       cumpleanos: [/cumplea[ñn]os/, /cumple/, /fiesta/, /natalicio/],
-      biblico_diario: [/vers[ií]culo\s+del\s+d[ií]a/, /palabra\s+del\s+d[ií]a/, /lectura\s+diaria/, /devocional/],
-      biblico_especifico: [
-        /vers[ií]culo\s+[a-z0-9]/,
-        /(?:juan|salmo|genesis|mateo|romanos)\s+\d/,
-        /cita\s+b[ií]blica/,
-        /lee\s+[a-z]+\s+\d/,
-      ],
-      biblico_buscar: [
-        /vers[ií]culo\s+(?:sobre|de|del)\s+/,
-        /busca(?:r)?\s+vers[ií]culo/,
-        /(?:amor|fe|esperanza|paz|gracia)\s+en\s+la\s+biblia/,
-        /palabra\s+sobre/,
-      ],
       ayuda: [/ayuda/, /help/, /qu[eé]\s+puedes/, /opciones/, /comandos/],
     };
 
@@ -1221,228 +1198,6 @@ export class ArcanaBot {
     }
   }
 
-  // NUEVO: Versículo del día desde API Bíblica Externa
-  private static async getBibleDailyVerse(): Promise<BotResponse> {
-    try {
-      const verse = await getRandomVerse();
-
-      if (!verse) {
-        throw new Error("No se pudo obtener versículo");
-      }
-
-      const message =
-        `📖 **Versículo del Día** 🙏\n\n` +
-        `*${verse.reference}*\n\n` +
-        `"${verse.text}"\n\n` +
-        `✨ *${verse.translation_name}*`;
-
-      return {
-        type: "general",
-        message,
-        expression: "happy",
-      };
-    } catch (error) {
-      console.error("Error obteniendo versículo del día:", error);
-      return {
-        type: "general",
-        message: `📖 **Versículo del Día** 🙏\n\n*Juan 3:16*\n\n"Porque de tal manera amó Dios al mundo, que ha dado a su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna."\n\n✨ *Reina Valera 1960*`,
-        expression: "happy",
-      };
-    }
-  }
-
-  // NUEVO: Versículo específico desde API Bíblica Externa
-  // NUEVO: Versículo específico desde API Bíblica Externa - CORREGIDO
-  private static async getBibleSpecificVerse(query: string): Promise<BotResponse> {
-    try {
-      // Extraer referencia del mensaje - PATRÓN MEJORADO
-      const referenceMatch = query.match(
-        /(?:juan|salmo|salmos|genesis|mateo|romanos|filipenses|proverbios|isaías|hebreos|efesios|corintios|santiago|hechos|jeremías|josué|pedro|timoteo|tito)\s+\d+(?::\d+)?(?:\s*-\s*\d+)?/i,
-      );
-
-      if (!referenceMatch) {
-        return {
-          type: "general",
-          message:
-            "📖 Por favor especifica la referencia bíblica correctamente. Ejemplos:\n\n" +
-            "• **Juan 3:16**\n" +
-            "• **Salmo 23:1**\n" +
-            "• **Romanos 8:28**\n" +
-            "• **Filipenses 4:13**\n" +
-            "• **Proverbios 3:5-6**",
-          expression: "thinking",
-        };
-      }
-
-      const reference = referenceMatch[0].trim();
-      console.log("🔍 [ArcanaBot] Buscando versículo específico:", reference);
-
-      const verse = await getSpecificVerse(reference);
-
-      if (!verse) {
-        throw new Error("No se pudo obtener versículo");
-      }
-
-      // VERIFICAR que no sea el fallback de Juan 3:16
-      if (verse.reference.toLowerCase().includes("juan 3:16") && !reference.toLowerCase().includes("juan 3:16")) {
-        console.log("⚠️ [ArcanaBot] Se recibió versículo fallback, buscando alternativa...");
-        throw new Error("Fallback detected, trying alternative");
-      }
-
-      const message = `📖 **${verse.reference}** 🙏\n\n` + `"${verse.text}"\n\n` + `✨ *${verse.translation_name}*`;
-
-      return {
-        type: "general",
-        message,
-        expression: "happy",
-      };
-    } catch (error) {
-      console.error("❌ [ArcanaBot] Error obteniendo versículo específico:", error);
-
-      // INTENTAR ALTERNATIVA en lugar de dar error inmediato
-      try {
-        const referenceMatch = query.match(
-          /(?:juan|salmo|salmos|genesis|mateo|romanos|filipenses|proverbios|isaías|hebreos|efesios|corintios|santiago|hechos|jeremías|josué|pedro|timoteo|tito)\s+\d+(?::\d+)?/i,
-        );
-        if (referenceMatch) {
-          const reference = referenceMatch[0];
-          console.log("🔄 [ArcanaBot] Intentando referencia alternativa:", reference);
-
-          // Forzar un nuevo intento con la API
-          const verse = await getSpecificVerse(reference);
-          if (verse && !verse.reference.toLowerCase().includes("juan 3:16")) {
-            const message =
-              `📖 **${verse.reference}** 🙏\n\n` + `"${verse.text}"\n\n` + `✨ *${verse.translation_name}*`;
-
-            return {
-              type: "general",
-              message,
-              expression: "happy",
-            };
-          }
-        }
-      } catch (secondError) {
-        console.error("❌ [ArcanaBot] Segundo intento fallido:", secondError);
-      }
-
-      // SOLO SI TODO FALLA, mostrar error útil
-      return {
-        type: "general",
-        message: `📖 No pude encontrar el versículo solicitado. \n\n**Posibles soluciones:**\n• Verifica que la referencia sea correcta\n• Intenta con formato: **Libro Capítulo:Versículo**\n• Ejemplo: "Juan 3:16" o "Salmo 23:1"\n\n❌ Error: ${error instanceof Error ? error.message : "Intenta nuevamente"}`,
-        expression: "worried",
-      };
-    }
-  }
-
-  // NUEVO: Versículo del día desde API Bíblica Externa - CORREGIDO
-  private static async getBibleDailyVerse(): Promise<BotResponse> {
-    try {
-      console.log("📖 [ArcanaBot] Solicitando versículo del día...");
-      const verse = await getRandomVerse();
-
-      if (!verse) {
-        throw new Error("No se pudo obtener versículo del día");
-      }
-
-      // VERIFICAR que no sea siempre el mismo versículo
-      console.log("✅ [ArcanaBot] Versículo del día recibido:", verse.reference);
-
-      const message =
-        `📖 **Versículo del Día** 🙏\n\n` +
-        `*${verse.reference}*\n\n` +
-        `"${verse.text}"\n\n` +
-        `✨ *${verse.translation_name}*`;
-
-      return {
-        type: "general",
-        message,
-        expression: "happy",
-      };
-    } catch (error) {
-      console.error("❌ [ArcanaBot] Error obteniendo versículo del día:", error);
-
-      // INTENTAR una segunda vez antes de dar fallback
-      try {
-        console.log("🔄 [ArcanaBot] Segundo intento para versículo del día...");
-        const verse = await getRandomVerse();
-        if (verse) {
-          const message =
-            `📖 **Versículo del Día** 🙏\n\n` +
-            `*${verse.reference}*\n\n` +
-            `"${verse.text}"\n\n` +
-            `✨ *${verse.translation_name}*`;
-
-          return {
-            type: "general",
-            message,
-            expression: "happy",
-          };
-        }
-      } catch (secondError) {
-        console.error("❌ [ArcanaBot] Segundo intento fallido:", secondError);
-      }
-
-      // SOLO como último recurso usar Juan 3:16
-      return {
-        type: "general",
-        message: `📖 **Versículo del Día** 🙏\n\n*Juan 3:16*\n\n"Porque de tal manera amó Dios al mundo, que ha dado a su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna."\n\n✨ *Reina Valera 1960*`,
-        expression: "happy",
-      };
-    }
-  }
-
-  // NUEVO: Buscar versículos por tema desde API Bíblica Externa - CORREGIDO
-  private static async getBibleSearchByTopic(query: string): Promise<BotResponse> {
-    try {
-      // Extraer tema del mensaje - PATRÓN MEJORADO
-      const topicMatch = query.match(/(?:sobre|de|del|acerca de)\s+([a-záéíóúñü\s]+)/i);
-
-      if (!topicMatch) {
-        return {
-          type: "general",
-          message:
-            "📖 ¿Sobre qué tema quieres versículos?\n\n" +
-            "**Temas disponibles:**\n" +
-            "• Amor\n• Fe\n• Esperanza\n• Paz\n• Fortaleza\n" +
-            "• Salvación\n• Gracia\n• Alabanza\n• Gozo\n• Perdón\n\n" +
-            '**Ejemplo:** "ARCANA versículo sobre amor"',
-          expression: "thinking",
-        };
-      }
-
-      const topic = topicMatch[1].trim();
-      console.log("🔍 [ArcanaBot] Buscando versículos sobre tema:", topic);
-
-      const verses = await searchVersesByTopic(topic);
-
-      if (verses.length === 0) {
-        throw new Error("No se encontraron versículos");
-      }
-
-      let message = `📖 **Versículos sobre: ${topic.charAt(0).toUpperCase() + topic.slice(1)}** 🙏\n\n`;
-
-      verses.forEach((verse, index) => {
-        message += `${index + 1}. **${verse.reference}**\n`;
-        message += `"${verse.text}"\n\n`;
-      });
-
-      message += `✨ *${verses[0].translation_name}*`;
-
-      return {
-        type: "general",
-        message,
-        expression: "happy",
-      };
-    } catch (error) {
-      console.error("❌ [ArcanaBot] Error buscando versículos por tema:", error);
-      return {
-        type: "general",
-        message: `📖 No pude encontrar versículos sobre ese tema.\n\n**Temas disponibles:** amor, fe, esperanza, paz, fortaleza, salvación, gracia, alabanza, gozo, perdón.\n\n💡 Ejemplo: "ARCANA versículo sobre fe"`,
-        expression: "worried",
-      };
-    }
-  }
-
   private static getHelpResponse(): BotResponse {
     const ayuda = `🤖 **¡Hola! Soy ARCANA, tu asistente del ministerio ADN Arca de Noé.** ✨
 
@@ -1469,11 +1224,6 @@ export class ArcanaBot {
 • "Cumpleaños del mes"
 • "Cumpleaños de [mes]"
 
-📖 **BIBLIA Y ESPIRITUAL**
-• "Versículo del día" - Palabra inspiradora diaria
-• "Juan 3:16" o "Salmo 23" - Versículo específico
-• "Versículo sobre amor" - Buscar por tema (fe, paz, esperanza, etc.)
-
 💡 **EJEMPLOS PRÁCTICOS:**
 • "ARCANA cuándo me toca cantar"
 • "ARCANA buscar Como Lluvia"
@@ -1481,9 +1231,6 @@ export class ArcanaBot {
 • "ARCANA próximo ensayo"
 • "ARCANA cumpleaños de hoy"
 • "ARCANA cumpleaños de noviembre"
-• "ARCANA versículo del día"
-• "ARCANA versículo sobre fe"
-• "ARCANA lee Juan 3:16"
 
 📱 **TIPS:**
 • Puedes simplemente mencionar "ARCANA" o "@ARCANA"
