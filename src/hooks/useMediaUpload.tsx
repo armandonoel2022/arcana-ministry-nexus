@@ -38,9 +38,9 @@ export const useMediaUpload = () => {
       const fileName = `${userId}/${Date.now()}.${fileExt}`;
       const filePath = `${roomId}/${fileName}`;
 
-      // Subir a Supabase Storage en el bucket rehearsal-media (que ya existe)
+      // Subir a Supabase Storage en el bucket chat-media
       const { data, error } = await supabase.storage
-        .from('rehearsal-media')
+        .from('chat-media')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false,
@@ -50,7 +50,7 @@ export const useMediaUpload = () => {
 
       // Obtener URL pública
       const { data: { publicUrl } } = supabase.storage
-        .from('rehearsal-media')
+        .from('chat-media')
         .getPublicUrl(filePath);
 
       const mediaFile: MediaFile = {
@@ -75,7 +75,7 @@ export const useMediaUpload = () => {
   const deleteMedia = useCallback(async (filePath: string): Promise<void> => {
     try {
       const { error } = await supabase.storage
-        .from('rehearsal-media')
+        .from('chat-media')
         .remove([filePath]);
 
       if (error) throw error;
