@@ -54,6 +54,8 @@ export type Database = {
           id: string
           is_bot: boolean | null
           is_deleted: boolean | null
+          media_type: string | null
+          media_url: string | null
           message: string
           message_type: string | null
           room_id: string
@@ -66,6 +68,8 @@ export type Database = {
           id?: string
           is_bot?: boolean | null
           is_deleted?: boolean | null
+          media_type?: string | null
+          media_url?: string | null
           message: string
           message_type?: string | null
           room_id: string
@@ -78,6 +82,8 @@ export type Database = {
           id?: string
           is_bot?: boolean | null
           is_deleted?: boolean | null
+          media_type?: string | null
+          media_url?: string | null
           message?: string
           message_type?: string | null
           room_id?: string

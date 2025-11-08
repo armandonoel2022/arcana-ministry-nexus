@@ -8,7 +8,6 @@ import { Send, Users, Bot, Smile, Paperclip, AtSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ArcanaBot, BotAction } from "./ArcanaBot";
 import { ArcanaAvatar } from "./ArcanaAvatar";
-import { VoiceRecognition } from "./VoiceRecognition";
 import { VoiceNoteRecorder } from "./VoiceNoteRecorder";
 import { SongLimitOverlay } from "./SongLimitOverlay";
 import { EmoticonPicker } from "./EmoticonPicker";
@@ -423,11 +422,6 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
       return getBotDisplayName();
     }
     return message.profiles?.full_name || 'Usuario';
-  };
-
-  const handleVoiceCommand = (command: string) => {
-    console.log('Comando de voz recibido:', command);
-    sendMessage(`ARCANA ${command}`);
   };
 
   const handleVoiceNote = async (audioUrl: string) => {
@@ -981,10 +975,6 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
             )}
 
             <div className="flex gap-2 items-end">
-              <VoiceRecognition 
-                onCommand={handleVoiceCommand}
-                isEnabled={true}
-              />
               <VoiceNoteRecorder 
                 onVoiceNote={handleVoiceNote}
                 roomId={room.id}

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, Send, X } from 'lucide-react';
+import { Mic, Send, X, Square, Play } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -15,10 +15,12 @@ export const VoiceNoteRecorder = ({ onVoiceNote, roomId, userId }: VoiceNoteReco
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
   const startRecording = async () => {
@@ -93,7 +95,14 @@ export const VoiceNoteRecorder = ({ onVoiceNote, roomId, userId }: VoiceNoteReco
     stopRecording();
     setAudioBlob(null);
     setRecordingTime(0);
+    setIsPlaying(false);
     audioChunksRef.current = [];
+    
+    // Limpiar audio reference
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
   };
 
   const sendAudio = async () => {
@@ -154,6 +163,18 @@ export const VoiceNoteRecorder = ({ onVoiceNote, roomId, userId }: VoiceNoteReco
     }
   };
 
+  const togglePlayback = () => {
+    if (!audioBlob || !audioRef.current) return;
+
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -170,14 +191,29 @@ export const VoiceNoteRecorder = ({ onVoiceNote, roomId, userId }: VoiceNoteReco
     );
   }
 
-  // Mostrar controles de envío después de grabar
+  // Mostrar controles de preview después de grabar
   if (audioBlob && !isRecording) {
+    // Crear URL del audio para reproducción
+    if (!audioRef.current) {
+      audioRef.current = new Audio(URL.createObjectURL(audioBlob));
+      audioRef.current.onended = () => setIsPlaying(false);
+    }
+
     return (
       <div className="flex items-center gap-2 bg-primary/10 px-3 py-2 rounded-lg">
+        <Button
+          onClick={togglePlayback}
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          title={isPlaying ? "Pausar" : "Reproducir audio"}
+        >
+          <Play className={`w-4 h-4 ${isPlaying ? 'text-primary' : ''}`} />
+        </Button>
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-primary rounded-full" />
           <span className="text-sm font-medium">
-            Audio {formatTime(recordingTime)}
+            {formatTime(recordingTime)}
           </span>
         </div>
         <Button
@@ -202,7 +238,7 @@ export const VoiceNoteRecorder = ({ onVoiceNote, roomId, userId }: VoiceNoteReco
     );
   }
 
-  // Mostrar controles de grabación
+  // Mostrar controles de grabación con botón STOP
   if (isRecording) {
     return (
       <div className="flex items-center gap-2">
@@ -216,10 +252,10 @@ export const VoiceNoteRecorder = ({ onVoiceNote, roomId, userId }: VoiceNoteReco
           onClick={stopRecording}
           variant="default"
           size="icon"
-          className="bg-red-500 hover:bg-red-600"
+          className="h-8 w-8 bg-red-500 hover:bg-red-600"
           title="Detener grabación"
         >
-          <Send className="w-4 h-4" />
+          <Square className="w-3.5 h-3.5" />
         </Button>
       </div>
     );
