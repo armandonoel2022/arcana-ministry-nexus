@@ -501,10 +501,11 @@ export class ArcanaBot {
   }
 
   private static formatTurnosResponse(userName: string, memberInfo: any, services: any[]): BotResponse {
-    let mensaje = `🎵 **Información de turnos para ${userName}**\n\n`;
-
     // Información del miembro
+    let mensaje = '';
+    
     if (memberInfo) {
+      mensaje += `🎵 **¡Hola ${userName}!**\n\n`;
       mensaje += `🎤 **Cargo:** ${memberInfo.cargo || "No especificado"}\n`;
       if (memberInfo.voz_instrumento) {
         mensaje += `🎵 **Voz/Instrumento:** ${memberInfo.voz_instrumento}\n`;
@@ -514,8 +515,6 @@ export class ArcanaBot {
 
     // Filtrar servicios duplicados y limitar a 5
     const uniqueServices = this.filterUniqueServices(services).slice(0, 5);
-
-    mensaje += `🎯 **TU PRÓXIMO TURNO:**\n\n`;
 
     const proximoService = uniqueServices[0];
 
@@ -528,9 +527,11 @@ export class ArcanaBot {
       day: "numeric",
     });
 
-    mensaje += `📅 ${serviceTime}\n`;
-    mensaje += `🗓️ ${formattedDate}\n`;
-    mensaje += `📍 ${proximoService.location || "Templo Principal"}\n`;
+    // Formato mejorado con nombre destacado  
+    mensaje += `Tu próximo turno es:\n\n`;
+    mensaje += `⏰ **Hora:** ${serviceTime}\n`;
+    mensaje += `📅 **Día:** ${formattedDate}\n`;
+    mensaje += `📍 **Lugar:** ${proximoService.location || "Templo Principal"}\n`;
 
     if (proximoService.leader) {
       mensaje += `👤 **Director:** ${proximoService.leader}\n`;
@@ -726,10 +727,11 @@ export class ArcanaBot {
       mensaje += `\n`;
     }
 
-    mensaje += `🎯 **PRÓXIMO TURNO:**\n\n`;
-    mensaje += `📅 ${serviceTime}\n`;
-    mensaje += `🗓️ ${fecha}\n`;
-    mensaje += `📍 ${proximoEvento.location || "Templo Principal"}\n`;
+    // Formato mejorado con nombre destacado
+    mensaje += `De acuerdo con nuestra base de datos el siguiente turno de **<span style="color: #ef4444">${fullName}</span>** es:\n\n`;
+    mensaje += `⏰ **Hora:** ${serviceTime}\n`;
+    mensaje += `📅 **Día:** ${fecha}\n`;
+    mensaje += `📍 **Lugar:** ${proximoEvento.location || "Templo Principal"}\n`;
 
     if (proximoEvento.leader) {
       mensaje += `👤 **Director:** ${proximoEvento.leader}\n`;
