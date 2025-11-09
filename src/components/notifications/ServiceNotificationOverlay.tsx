@@ -80,50 +80,6 @@ let aleidaRotationCounter = 0;
 let massyRotationCounter = 0;
 
 // Suplentes disponibles
-const SUPLENTS = {
-  "Armando Noel": {
-    id: "d6602109-ad3e-4db6-ab4a-2984dadfc569",
-    name: "Armando Noel",
-    voice: "Tenor",
-    photo_url:
-      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/d6602109-ad3e-4db6-ab4a-2984dadfc569.JPG",
-  },
-  "Nicolas Peralta": {
-    id: "f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f",
-    name: "Felix Nicolas Peralta Hernandez",
-    voice: "Tenor",
-    photo_url:
-      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG",
-  },
-  "Abraham Valera": {
-    id: "7a1645d8-75fe-498c-a2e9-f1057ff3521f",
-    name: "Fredderid Abrahan Valera Montoya",
-    voice: "Tenor",
-    photo_url:
-      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/7a1645d8-75fe-498c-a2e9-f1057ff3521f.JPG",
-  },
-  "Denny Santana": {
-    id: "6a5bfaa9-fdf0-4b0e-aad3-79266444604f",
-    name: "Denny Alberto Santana",
-    voice: "Tenor",
-    photo_url:
-      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/6a5bfaa9-fdf0-4b0e-aad3-79266444604f.JPG",
-  },
-  "Guarionex Garcia": {
-    id: "a71697a2-bf8e-4967-8190-2e3e2d01f150",
-    name: "Guarionex Garcia",
-    voice: "Tenor",
-    photo_url:
-      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/a71697a2-bf8e-4967-8190-2e3e2d01f150.JPG",
-  },
-  "Maria Santana": {
-    id: "1d5866c9-cdc1-439e-976a-2d2e6a5aef80",
-    name: "Maria Del A. Perez Santana",
-    voice: "Soprano",
-    photo_url:
-      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/1d5866c9-cdc1-439e-976a-2d2e6a5aef80.jpeg",
-  },
-};
 
 // CORRECCIÓN COMPLETA: Configuración de grupos basada en los datos reales de la base de datos
 const GROUP_CONFIG = {
@@ -654,7 +610,7 @@ const ServiceNotificationOverlay = ({
             if (service.worship_groups) {
               if (Array.isArray(service.worship_groups) && service.worship_groups.length > 0) {
                 groupName = (service.worship_groups[0]?.name as string) || groupName;
-              } else if (typeof service.worship_groups === 'object' && 'name' in service.worship_groups) {
+              } else if (typeof service.worship_groups === "object" && "name" in service.worship_groups) {
                 groupName = (service.worship_groups.name as string) || groupName;
               }
             }
