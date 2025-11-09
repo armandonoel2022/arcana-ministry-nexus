@@ -75,10 +75,11 @@ interface ServiceNotificationOverlayProps {
   onNavigate?: (path: string) => void;
 }
 
-// Configuración de grupos basada en los datos reales
+// Configuración SIMPLIFICADA - Solo Grupo de Aleida
 const GROUP_CONFIG = {
   "Grupo de Aleida": {
     color_theme: "#3B82F6",
+    director_rotation: ["Félix Nicolás Peralta Hernández", "Armando Noel Charle"],
     members: [
       {
         id: "00a916a8-ab94-4cc0-81ae-668dd6071416",
@@ -99,15 +100,6 @@ const GROUP_CONFIG = {
           "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG",
       },
       {
-        id: "f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f",
-        name: "Felix Nicolas Peralta Hernandez",
-        voice: "Tenor",
-        role: "Corista",
-        mic: "Micrófono #3",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG",
-      },
-      {
         id: "8cebc294-ea61-40d0-9b04-08d7d474332c",
         name: "Fior Daliza Paniagua",
         voice: "Contralto",
@@ -126,113 +118,94 @@ const GROUP_CONFIG = {
           "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/619c1a4e-42db-4549-8890-16392cfa2a87.JPG",
       },
     ],
-  },
-  "Grupo de Keyla": {
-    color_theme: "#8B5CF6",
-    members: [
-      {
-        id: "c24659e9-b473-4ecd-97e7-a90526d23502",
-        name: "Keyla Yanira Medrano Medrano",
-        voice: "Soprano",
-        role: "Directora de Alabanza",
-        mic: "Micrófono #2",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c24659e9-b473-4ecd-97e7-a90526d23502.JPG",
-      },
-      {
-        id: "11328db1-559f-4dcf-9024-9aef18435700",
-        name: "Yindhia Carolina Santana Castillo",
-        voice: "Soprano",
-        role: "Corista",
-        mic: "Micrófono #1",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/11328db1-559f-4dcf-9024-9aef18435700.JPG",
-      },
-      {
-        id: "4eed809d-9437-48d5-935e-cf8b4aa8024a",
-        name: "Arizoni Liriano medina",
-        voice: "Bajo",
-        role: "Corista",
-        mic: "Micrófono #3",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/4eed809d-9437-48d5-935e-cf8b4aa8024a.png",
-      },
-      {
-        id: "82b62449-5046-455f-af7b-da8e5dbc6327",
-        name: "Aida Lorena Pacheco De Santana",
-        voice: "Contralto",
-        role: "Corista",
-        mic: "Micrófono #4",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/82b62449-5046-455f-af7b-da8e5dbc6327.JPG",
-      },
-      {
-        id: "be61d066-5707-4763-8d8c-16d19597dc3a",
-        name: "Sugey A. Gonzalez Garo",
-        voice: "Contralto",
-        role: "Corista",
-        mic: "Micrófono #5",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/be61d066-5707-4763-8d8c-16d19597dc3a.JPG",
-      },
-    ],
-  },
-  "Grupo de Massy": {
-    color_theme: "#EC4899",
-    members: [
-      {
-        id: "cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38",
-        name: "Damaris Castillo Jimenez",
-        voice: "Soprano",
-        role: "Directora de Alabanza",
-        mic: "Micrófono #2",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38.JPG",
-      },
-      {
-        id: "b5719097-187d-4804-8b7f-e84cc1ec9ad5",
-        name: "Jisell Amada Mauricio Paniagua",
-        voice: "Soprano",
-        role: "Directora de Alabanza",
-        mic: "Micrófono #1",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/b5719097-187d-4804-8b7f-e84cc1ec9ad5.JPG",
-      },
-      {
-        id: "7a1645d8-75fe-498c-a2e9-f1057ff3521f",
-        name: "Fredderid Abrahan Valera Montoya",
-        voice: "Tenor",
-        role: "Corista",
-        mic: "Micrófono #3",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/7a1645d8-75fe-498c-a2e9-f1057ff3521f.JPG",
-      },
-      {
-        id: "2a2fa0cd-d301-46ec-9965-2e4ea3692181",
-        name: "Rosely Montero",
-        voice: "Contralto",
-        role: "Corista",
-        mic: "Micrófono #4",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/2a2fa0cd-d301-46ec-9965-2e4ea3692181.jpeg",
-      },
-      {
-        id: "bdcc27cd-40ae-456e-a340-633ce7da08c0",
-        name: "Rodes Esther Santana Cuesta",
-        voice: "Contralto",
-        role: "Corista",
-        mic: "Micrófono #5",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/bdcc27cd-40ae-456e-a340-633ce7da08c0.JPG",
-      },
-    ],
-  },
+  }
 };
 
-// Función para obtener miembros del grupo
-const getGroupMembers = (groupName: string) => {
+// Director pool para rotación
+const DIRECTOR_POOL = {
+  "Armando Noel Charle": {
+    id: "d6602109-ad3e-4db6-ab4a-2984dadfc569",
+    name: "Armando Noel Charle",
+    voice: "Tenor",
+    role: "Director de Alabanza",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/d6602109-ad3e-4db6-ab4a-2984dadfc569.JPG"
+  },
+  "Félix Nicolás Peralta Hernández": {
+    id: "f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f",
+    name: "Félix Nicolás Peralta Hernández",
+    voice: "Tenor",
+    role: "Director de Alabanza",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG"
+  }
+};
+
+// Función para determinar la asignación semanal - LÓGICA CORREGIDA
+const getWeeklyAssignment = (serviceDate: string, groupName: string) => {
+  const date = new Date(serviceDate);
+  const weekNumber = Math.floor(date.getDate() / 7);
+  
+  const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG];
+  
+  // Lógica simple de rotación
+  const directorIndex = weekNumber % groupConfig.director_rotation.length;
+  const director = groupConfig.director_rotation[directorIndex];
+  
+  // REGLA PRINCIPAL: Cuando Nicolás dirige, Armando hace coros
+  let maleSinger = "Armando Noel Charle"; // Por defecto, Armando hace coros
+  
+  // Si Armando es el director, entonces necesitamos otro cantante masculino
+  if (director === "Armando Noel Charle") {
+    maleSinger = "Félix Nicolás Peralta Hernández";
+  }
+  
+  return {
+    director: director,
+    maleSinger: maleSinger,
+    note: director === "Félix Nicolás Peralta Hernández" 
+      ? "Nicolás dirige - Armando en coros" 
+      : "Armando dirige - Nicolás en coros"
+  };
+};
+
+// Función para obtener miembros del grupo con lógica de asignación CORREGIDA
+const getGroupMembers = (groupName: string, serviceDate: string = new Date().toISOString()) => {
   const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG] || GROUP_CONFIG["Grupo de Aleida"];
-  return [...groupConfig.members];
+  const assignment = getWeeklyAssignment(serviceDate, groupName);
+  
+  console.log(`Asignación para ${groupName}:`, assignment);
+  
+  // Filtrar miembros regulares (excluyendo al director actual)
+  const regularMembers = groupConfig.members.filter(member => 
+    member.name !== assignment.director
+  );
+  
+  // Agregar el cantante masculino asignado (NUNCA el director actual)
+  const maleSingerMember = {
+    ...DIRECTOR_POOL[assignment.maleSinger as keyof typeof DIRECTOR_POOL],
+    mic: "Micrófono #3",
+    role: "Corista"
+  };
+  
+  // Combinar miembros
+  const members = [...regularMembers, maleSingerMember];
+  
+  console.log(`Miembros finales:`, members.map(m => ({ name: m.name, role: m.role })));
+  
+  return members;
+};
+
+// Función para obtener el director asignado
+const getAssignedDirector = (groupName: string, serviceDate: string = new Date().toISOString()) => {
+  const assignment = getWeeklyAssignment(serviceDate, groupName);
+  const directorInfo = DIRECTOR_POOL[assignment.director as keyof typeof DIRECTOR_POOL];
+  
+  return directorInfo || {
+    id: "default-director",
+    name: assignment.director,
+    voice: "Director",
+    role: "Director de Alabanza",
+    photo_url: ""
+  };
 };
 
 // Función para separar nombres y apellidos
@@ -343,14 +316,17 @@ const ServiceNotificationOverlay = ({
         const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG] || GROUP_CONFIG["Grupo de Aleida"];
         const serviceTime = getServiceTime(service.time || service.title);
 
-        // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS
-        const members = getGroupMembers(groupName);
+        // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS CON ASIGNACIÓN
+        const members = getGroupMembers(groupName, metadata.service_date);
+        const assignedDirector = getAssignedDirector(groupName, metadata.service_date);
+
+        console.log(`Miembros finales para ${groupName}:`, members.map((m) => m.name));
 
         return {
           id: service.id || Date.now().toString(),
           service_date: metadata.service_date,
           title: `${service.time === "8:00 a.m." ? "Primer Servicio - 8:00 AM" : "Segundo Servicio - 10:45 AM"}`,
-          leader: service.director?.name || service.director || "Por asignar",
+          leader: assignedDirector.name,
           service_type: "regular",
           location: "Templo Principal",
           special_activity: metadata.special_event || null,
@@ -360,21 +336,17 @@ const ServiceNotificationOverlay = ({
             color_theme: groupConfig.color_theme,
           },
           group_members: [
-            ...(service.director
-              ? [
-                  {
-                    id: "director-" + service.time,
-                    user_id: "director",
-                    instrument: "Director",
-                    is_leader: true,
-                    profiles: {
-                      id: "director",
-                      full_name: service.director?.name || service.director,
-                      photo_url: service.director?.photo,
-                    },
-                  },
-                ]
-              : []),
+            {
+              id: "director-" + service.time,
+              user_id: assignedDirector.id,
+              instrument: "Director",
+              is_leader: true,
+              profiles: {
+                id: assignedDirector.id,
+                full_name: assignedDirector.name,
+                photo_url: assignedDirector.photo_url,
+              },
+            },
             ...members.map((member, index) => ({
               id: `member-${service.time}-${index}`,
               user_id: member.id,
@@ -470,51 +442,7 @@ const ServiceNotificationOverlay = ({
       if (data && data.length > 0) {
         const servicesWithMembers = await Promise.all(
           data.map(async (service) => {
-            let members: any[] = [];
-            let directorProfile: any = null;
-
-            // Buscar director por nombre en la tabla members
-            if (service.leader) {
-              const { data: exactMatch } = await supabase
-                .from("members")
-                .select("id, nombres, apellidos, photo_url")
-                .eq("is_active", true);
-
-              if (exactMatch && exactMatch.length > 0) {
-                const leaderName = service.leader.trim().toLowerCase();
-                const matchedMember = exactMatch.find((m) => {
-                  const fullName = `${m.nombres || ""} ${m.apellidos || ""}`.trim().toLowerCase();
-                  return fullName === leaderName || fullName.includes(leaderName) || leaderName.includes(fullName);
-                });
-
-                if (matchedMember) {
-                  directorProfile = {
-                    id: matchedMember.id,
-                    full_name: `${matchedMember.nombres || ""} ${matchedMember.apellidos || ""}`.trim(),
-                    photo_url: matchedMember.photo_url,
-                  };
-                } else {
-                  const parts = service.leader.trim().split(/\s+/);
-                  const firstWord = parts[0].toLowerCase();
-
-                  const partialMatch = exactMatch.find((m) => {
-                    const nombres = (m.nombres || "").toLowerCase();
-                    const apellidos = (m.apellidos || "").toLowerCase();
-                    return nombres.includes(firstWord) || apellidos.includes(firstWord);
-                  });
-
-                  if (partialMatch) {
-                    directorProfile = {
-                      id: partialMatch.id,
-                      full_name: `${partialMatch.nombres || ""} ${partialMatch.apellidos || ""}`.trim(),
-                      photo_url: partialMatch.photo_url,
-                    };
-                  }
-                }
-              }
-            }
-
-            // Obtener miembros del grupo usando la nueva función
+            // Obtener nombre del grupo
             let groupName = "Grupo de Aleida";
             if (service.worship_groups) {
               if (Array.isArray(service.worship_groups) && service.worship_groups.length > 0) {
@@ -524,22 +452,16 @@ const ServiceNotificationOverlay = ({
               }
             }
 
-            // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS
-            members = getGroupMembers(groupName);
+            // USAR LA NUEVA FUNCIÓN PARA OBTENER DIRECTOR ASIGNADO
+            const assignedDirector = getAssignedDirector(groupName, service.service_date);
+            
+            // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS CON ASIGNACIÓN
+            const members = getGroupMembers(groupName, service.service_date);
 
             console.log(
               `Miembros finales para ${groupName}:`,
               members.map((m) => m.name),
             );
-
-            // Si no hay director encontrado, usar el primer miembro como líder
-            if (!directorProfile && members.length > 0) {
-              directorProfile = {
-                id: members[0].id,
-                full_name: members[0].name,
-                photo_url: members[0].photo_url,
-              };
-            }
 
             let selectedSongs: any[] = [];
             const { data: songsData, error: songsError } = await supabase
@@ -585,19 +507,37 @@ const ServiceNotificationOverlay = ({
 
             return {
               ...service,
-              group_members: members.map((member, index) => ({
-                id: `member-${service.id}-${index}`,
-                user_id: member.id,
-                instrument: `${member.voice} - ${member.mic}`,
-                is_leader: false,
-                profiles: {
-                  id: member.id,
-                  full_name: member.name,
-                  photo_url: member.photo_url,
+              leader: assignedDirector.name, // Sobrescribir con el director asignado
+              group_members: [
+                {
+                  id: `director-${service.id}`,
+                  user_id: assignedDirector.id,
+                  instrument: "Director",
+                  is_leader: true,
+                  profiles: {
+                    id: assignedDirector.id,
+                    full_name: assignedDirector.name,
+                    photo_url: assignedDirector.photo_url,
+                  },
                 },
-              })),
+                ...members.map((member, index) => ({
+                  id: `member-${service.id}-${index}`,
+                  user_id: member.id,
+                  instrument: `${member.voice} - ${member.mic}`,
+                  is_leader: false,
+                  profiles: {
+                    id: member.id,
+                    full_name: member.name,
+                    photo_url: member.photo_url,
+                  },
+                })),
+              ],
               selected_songs: selectedSongs,
-              director_profile: directorProfile,
+              director_profile: {
+                id: assignedDirector.id,
+                full_name: assignedDirector.name,
+                photo_url: assignedDirector.photo_url,
+              },
               worship_groups:
                 Array.isArray(service.worship_groups) && service.worship_groups.length > 0
                   ? {
