@@ -779,104 +779,115 @@ const ServiceNotificationOverlay = ({
         return;
       }
 
-      // Crear un contenedor específico para la descarga con el mismo diseño que la app
+      // Crear un contenedor específico para la descarga
       const container = document.createElement("div");
       container.style.width = "600px";
       container.style.backgroundColor = "#ffffff";
-      container.style.padding = "24px";
+      container.style.padding = "32px";
       container.style.fontFamily = "system-ui, -apple-system, sans-serif";
       container.style.color = "#1f2937";
+      container.style.lineHeight = "1.5";
 
-      // Header
+      // Header con mejor espaciado
       const header = document.createElement("div");
-      header.style.marginBottom = "24px";
-      header.style.borderBottom = "1px solid #e5e7eb";
-      header.style.paddingBottom = "16px";
+      header.style.marginBottom = "32px";
+      header.style.textAlign = "center";
 
       const title = document.createElement("h1");
       title.textContent = "Programa de Servicios";
-      title.style.fontSize = "24px";
+      title.style.fontSize = "28px";
       title.style.fontWeight = "bold";
       title.style.color = "#111827";
-      title.style.marginBottom = "4px";
+      title.style.marginBottom = "8px";
+      title.style.letterSpacing = "-0.025em";
 
       const dateTime = document.createElement("p");
       const serviceDate = format(new Date(service.service_date), "EEEE, dd 'de' MMMM", { locale: es });
       dateTime.textContent = serviceDate;
-      dateTime.style.fontSize = "16px";
+      dateTime.style.fontSize = "18px";
       dateTime.style.color = "#6b7280";
       dateTime.style.textTransform = "capitalize";
+      dateTime.style.fontWeight = "500";
 
       header.appendChild(title);
       header.appendChild(dateTime);
 
-      // Service Info
+      // Línea separadora
+      const separator = document.createElement("hr");
+      separator.style.border = "none";
+      separator.style.borderTop = "2px solid #e5e7eb";
+      separator.style.margin = "24px 0";
+      separator.style.width = "100%";
+
+      header.appendChild(separator);
+
+      // Service Info con mejor estructura
       const serviceInfo = document.createElement("div");
-      serviceInfo.style.marginBottom = "24px";
+      serviceInfo.style.marginBottom = "32px";
+      serviceInfo.style.textAlign = "center";
 
       const time = document.createElement("h2");
       time.textContent = getServiceTime(service.title);
-      time.style.fontSize = "20px";
+      time.style.fontSize = "24px";
       time.style.fontWeight = "bold";
       time.style.color = "#1f2937";
-      time.style.marginBottom = "8px";
+      time.style.marginBottom = "12px";
 
       const groupInfo = document.createElement("div");
       groupInfo.style.display = "flex";
       groupInfo.style.alignItems = "center";
-      groupInfo.style.gap = "8px";
-      groupInfo.style.marginBottom = "16px";
+      groupInfo.style.justifyContent = "center";
+      groupInfo.style.gap = "12px";
+      groupInfo.style.marginBottom = "8px";
+      groupInfo.style.flexWrap = "wrap";
 
       const groupName = document.createElement("span");
       groupName.textContent = service.worship_groups?.name || "Grupo de Alabanza";
       groupName.style.backgroundColor = service.worship_groups?.color_theme || "#3B82F6";
       groupName.style.color = "white";
-      groupName.style.padding = "4px 12px";
+      groupName.style.padding = "6px 16px";
       groupName.style.borderRadius = "9999px";
-      groupName.style.fontSize = "14px";
-      groupName.style.fontWeight = "500";
-
-      const separator = document.createElement("span");
-      separator.textContent = "•";
-      separator.style.color = "#9ca3af";
+      groupName.style.fontSize = "16px";
+      groupName.style.fontWeight = "600";
+      groupName.style.letterSpacing = "-0.025em";
 
       const activity = document.createElement("span");
       activity.textContent = service.special_activity || "Servicio Dominical";
       activity.style.color = "#6b7280";
-      activity.style.fontSize = "14px";
+      activity.style.fontSize = "16px";
+      activity.style.fontWeight = "500";
 
       groupInfo.appendChild(groupName);
-      groupInfo.appendChild(separator);
       groupInfo.appendChild(activity);
 
       serviceInfo.appendChild(time);
       serviceInfo.appendChild(groupInfo);
 
-      // Director Section
+      // Director Section con mejor espaciado
       const directorSection = document.createElement("div");
-      directorSection.style.backgroundColor = "#dbeafe";
-      directorSection.style.padding = "20px";
-      directorSection.style.borderRadius = "12px";
-      directorSection.style.marginBottom = "20px";
+      directorSection.style.marginBottom = "32px";
+      directorSection.style.textAlign = "center";
 
       const directorTitle = document.createElement("h3");
       directorTitle.textContent = "Director/a de Alabanza";
-      directorTitle.style.fontSize = "16px";
-      directorTitle.style.fontWeight = "600";
+      directorTitle.style.fontSize = "20px";
+      directorTitle.style.fontWeight = "bold";
       directorTitle.style.color = "#1e40af";
-      directorTitle.style.marginBottom = "12px";
+      directorTitle.style.marginBottom = "20px";
+      directorTitle.style.textDecoration = "underline";
 
       const directorContent = document.createElement("div");
       directorContent.style.display = "flex";
+      directorContent.style.flexDirection = "column";
       directorContent.style.alignItems = "center";
       directorContent.style.gap = "16px";
 
       // Director Avatar
       const directorAvatar = document.createElement("div");
-      directorAvatar.style.width = "64px";
-      directorAvatar.style.height = "64px";
+      directorAvatar.style.width = "80px";
+      directorAvatar.style.height = "80px";
       directorAvatar.style.borderRadius = "50%";
-      directorAvatar.style.border = "3px solid #93c5fd";
+      directorAvatar.style.border = "4px solid #93c5fd";
       directorAvatar.style.overflow = "hidden";
       directorAvatar.style.background = "linear-gradient(to right, #3b82f6, #2563eb)";
       directorAvatar.style.display = "flex";
@@ -884,7 +895,7 @@ const ServiceNotificationOverlay = ({
       directorAvatar.style.justifyContent = "center";
       directorAvatar.style.color = "white";
       directorAvatar.style.fontWeight = "bold";
-      directorAvatar.style.fontSize = "18px";
+      directorAvatar.style.fontSize = "24px";
 
       const directorImg = document.createElement("img");
       directorImg.src = service.director_profile?.photo_url || "";
@@ -907,16 +918,20 @@ const ServiceNotificationOverlay = ({
 
       // Director Info
       const directorInfo = document.createElement("div");
+      directorInfo.style.textAlign = "center";
+
       const directorName = document.createElement("div");
       directorName.textContent = service.leader;
-      directorName.style.fontWeight = "600";
+      directorName.style.fontWeight = "bold";
       directorName.style.color = "#1f2937";
-      directorName.style.fontSize = "18px";
+      directorName.style.fontSize = "20px";
+      directorName.style.marginBottom = "4px";
 
       const directorRole = document.createElement("div");
       directorRole.textContent = "Líder del Servicio";
       directorRole.style.color = "#3b82f6";
-      directorRole.style.fontSize = "14px";
+      directorRole.style.fontSize = "16px";
+      directorRole.style.fontWeight = "600";
 
       directorInfo.appendChild(directorName);
       directorInfo.appendChild(directorRole);
@@ -927,31 +942,29 @@ const ServiceNotificationOverlay = ({
       directorSection.appendChild(directorTitle);
       directorSection.appendChild(directorContent);
 
-      // Songs Section
+      // Songs Section con mejor estructura
       const songsSection = document.createElement("div");
-      songsSection.style.marginTop = "20px";
-      songsSection.style.paddingTop = "20px";
-      songsSection.style.borderTop = "1px solid #93c5fd";
+      songsSection.style.marginBottom = "32px";
 
       const songsTitle = document.createElement("h3");
       songsTitle.textContent = "Canciones Seleccionadas";
-      songsTitle.style.fontSize = "16px";
-      songsTitle.style.fontWeight = "600";
+      songsTitle.style.fontSize = "20px";
+      songsTitle.style.fontWeight = "bold";
       songsTitle.style.color = "#15803d";
-      songsTitle.style.marginBottom = "12px";
-      songsTitle.style.display = "flex";
-      songsTitle.style.alignItems = "center";
-      songsTitle.style.gap = "8px";
-
-      const musicIcon = document.createElement("span");
-      musicIcon.textContent = "🎵";
-      songsTitle.prepend(musicIcon);
+      songsTitle.style.marginBottom = "20px";
+      songsTitle.style.textAlign = "center";
+      songsTitle.style.textDecoration = "underline";
 
       songsSection.appendChild(songsTitle);
 
       const worshipSongs = service.selected_songs?.filter((s) => s.song_order >= 1 && s.song_order <= 4) || [];
 
       if (worshipSongs.length > 0) {
+        const songsList = document.createElement("div");
+        songsList.style.display = "flex";
+        songsList.style.flexDirection = "column";
+        songsList.style.gap = "16px";
+
         worshipSongs.forEach((song, index) => {
           const { firstLine, secondLine } = splitSongTitle(song.title);
           const { firstName: artistFirstName, lastName: artistLastName } = splitName(song.artist || "");
@@ -959,20 +972,23 @@ const ServiceNotificationOverlay = ({
           const songItem = document.createElement("div");
           songItem.style.display = "flex";
           songItem.style.alignItems = "flex-start";
-          songItem.style.gap = "12px";
-          songItem.style.marginBottom = "12px";
+          songItem.style.gap = "16px";
+          songItem.style.padding = "12px";
+          songItem.style.backgroundColor = "#f0fdf4";
+          songItem.style.borderRadius = "12px";
+          songItem.style.border = "1px solid #dcfce7";
 
           const number = document.createElement("div");
           number.textContent = (index + 1).toString();
-          number.style.width = "24px";
-          number.style.height = "24px";
-          number.style.backgroundColor = "#dcfce7";
-          number.style.color = "#166534";
+          number.style.width = "32px";
+          number.style.height = "32px";
+          number.style.backgroundColor = "#22c55e";
+          number.style.color = "white";
           number.style.borderRadius = "50%";
           number.style.display = "flex";
           number.style.alignItems = "center";
           number.style.justifyContent = "center";
-          number.style.fontSize = "12px";
+          number.style.fontSize = "16px";
           number.style.fontWeight = "bold";
           number.style.flexShrink = "0";
           number.style.marginTop = "2px";
@@ -982,9 +998,10 @@ const ServiceNotificationOverlay = ({
 
           const songFirstLine = document.createElement("div");
           songFirstLine.textContent = firstLine;
-          songFirstLine.style.fontWeight = "600";
+          songFirstLine.style.fontWeight = "bold";
           songFirstLine.style.color = "#1f2937";
-          songFirstLine.style.fontSize = "16px";
+          songFirstLine.style.fontSize = "18px";
+          songFirstLine.style.marginBottom = "4px";
 
           songContent.appendChild(songFirstLine);
 
@@ -992,7 +1009,8 @@ const ServiceNotificationOverlay = ({
             const songSecondLine = document.createElement("div");
             songSecondLine.textContent = secondLine;
             songSecondLine.style.color = "#1f2937";
-            songSecondLine.style.fontSize = "16px";
+            songSecondLine.style.fontSize = "18px";
+            songSecondLine.style.marginBottom = "8px";
             songContent.appendChild(songSecondLine);
           }
 
@@ -1003,7 +1021,8 @@ const ServiceNotificationOverlay = ({
             const artistFirst = document.createElement("div");
             artistFirst.textContent = artistFirstName;
             artistFirst.style.color = "#6b7280";
-            artistFirst.style.fontSize = "14px";
+            artistFirst.style.fontSize = "16px";
+            artistFirst.style.fontWeight = "500";
 
             artistContainer.appendChild(artistFirst);
 
@@ -1011,7 +1030,7 @@ const ServiceNotificationOverlay = ({
               const artistLast = document.createElement("div");
               artistLast.textContent = artistLastName;
               artistLast.style.color = "#9ca3af";
-              artistLast.style.fontSize = "13px";
+              artistLast.style.fontSize = "14px";
               artistContainer.appendChild(artistLast);
             }
 
@@ -1020,111 +1039,125 @@ const ServiceNotificationOverlay = ({
 
           songItem.appendChild(number);
           songItem.appendChild(songContent);
-          songsSection.appendChild(songItem);
+          songsList.appendChild(songItem);
         });
+
+        songsSection.appendChild(songsList);
       }
 
-      directorSection.appendChild(songsSection);
-
-      // Voices Section
+      // Voices Section con mejor estructura
       const voicesSection = document.createElement("div");
-      voicesSection.style.backgroundColor = "#dbeafe";
-      voicesSection.style.padding = "20px";
-      voicesSection.style.borderRadius = "12px";
 
       const voicesTitle = document.createElement("h3");
       voicesTitle.textContent = "Responsables de Voces";
-      voicesTitle.style.fontSize = "16px";
-      voicesTitle.style.fontWeight = "600";
+      voicesTitle.style.fontSize = "20px";
+      voicesTitle.style.fontWeight = "bold";
       voicesTitle.style.color = "#1e40af";
-      voicesTitle.style.marginBottom = "16px";
+      voicesTitle.style.marginBottom = "20px";
+      voicesTitle.style.textAlign = "center";
+      voicesTitle.style.textDecoration = "underline";
 
       voicesSection.appendChild(voicesTitle);
 
       const responsibleVoices = getResponsibleVoices(service.group_members).slice(0, 6);
 
-      responsibleVoices.forEach((member) => {
-        const { firstName, lastName } = splitName(member.profiles?.full_name || "");
+      if (responsibleVoices.length > 0) {
+        const voicesList = document.createElement("div");
+        voicesList.style.display = "flex";
+        voicesList.style.flexDirection = "column";
+        voicesList.style.gap = "16px";
 
-        const voiceItem = document.createElement("div");
-        voiceItem.style.display = "flex";
-        voiceItem.style.alignItems = "center";
-        voiceItem.style.gap = "16px";
-        voiceItem.style.marginBottom = "16px";
+        responsibleVoices.forEach((member) => {
+          const { firstName, lastName } = splitName(member.profiles?.full_name || "");
 
-        // Voice Avatar
-        const voiceAvatar = document.createElement("div");
-        voiceAvatar.style.width = "48px";
-        voiceAvatar.style.height = "48px";
-        voiceAvatar.style.borderRadius = "50%";
-        voiceAvatar.style.border = "2px solid #93c5fd";
-        voiceAvatar.style.overflow = "hidden";
-        voiceAvatar.style.background = "linear-gradient(to right, #3b82f6, #2563eb)";
-        voiceAvatar.style.display = "flex";
-        voiceAvatar.style.alignItems = "center";
-        voiceAvatar.style.justifyContent = "center";
-        voiceAvatar.style.color = "white";
-        voiceAvatar.style.fontWeight = "bold";
-        voiceAvatar.style.fontSize = "14px";
-        voiceAvatar.style.flexShrink = "0";
+          const voiceItem = document.createElement("div");
+          voiceItem.style.display = "flex";
+          voiceItem.style.alignItems = "center";
+          voiceItem.style.gap = "16px";
+          voiceItem.style.padding = "12px";
+          voiceItem.style.backgroundColor = "#dbeafe";
+          voiceItem.style.borderRadius = "12px";
+          voiceItem.style.border = "1px solid #93c5fd";
 
-        const voiceImg = document.createElement("img");
-        voiceImg.src = member.profiles?.photo_url || "";
-        voiceImg.style.width = "100%";
-        voiceImg.style.height = "100%";
-        voiceImg.style.objectFit = "cover";
-        voiceImg.onerror = () => {
-          voiceImg.style.display = "none";
-          const initials = document.createElement("div");
-          initials.textContent = getInitials(member.profiles?.full_name || "NN");
-          initials.style.display = "flex";
-          initials.style.alignItems = "center";
-          initials.style.justifyContent = "center";
-          initials.style.width = "100%";
-          initials.style.height = "100%";
-          voiceAvatar.appendChild(initials);
-        };
+          // Voice Avatar
+          const voiceAvatar = document.createElement("div");
+          voiceAvatar.style.width = "60px";
+          voiceAvatar.style.height = "60px";
+          voiceAvatar.style.borderRadius = "50%";
+          voiceAvatar.style.border = "3px solid #93c5fd";
+          voiceAvatar.style.overflow = "hidden";
+          voiceAvatar.style.background = "linear-gradient(to right, #3b82f6, #2563eb)";
+          voiceAvatar.style.display = "flex";
+          voiceAvatar.style.alignItems = "center";
+          voiceAvatar.style.justifyContent = "center";
+          voiceAvatar.style.color = "white";
+          voiceAvatar.style.fontWeight = "bold";
+          voiceAvatar.style.fontSize = "18px";
+          voiceAvatar.style.flexShrink = "0";
 
-        voiceAvatar.appendChild(voiceImg);
+          const voiceImg = document.createElement("img");
+          voiceImg.src = member.profiles?.photo_url || "";
+          voiceImg.style.width = "100%";
+          voiceImg.style.height = "100%";
+          voiceImg.style.objectFit = "cover";
+          voiceImg.onerror = () => {
+            voiceImg.style.display = "none";
+            const initials = document.createElement("div");
+            initials.textContent = getInitials(member.profiles?.full_name || "NN");
+            initials.style.display = "flex";
+            initials.style.alignItems = "center";
+            initials.style.justifyContent = "center";
+            initials.style.width = "100%";
+            initials.style.height = "100%";
+            voiceAvatar.appendChild(initials);
+          };
 
-        // Voice Info
-        const voiceInfo = document.createElement("div");
-        voiceInfo.style.flex = "1";
-        voiceInfo.style.minWidth = "0";
+          voiceAvatar.appendChild(voiceImg);
 
-        const voiceName = document.createElement("div");
-        voiceName.textContent = firstName;
-        voiceName.style.fontWeight = "600";
-        voiceName.style.color = "#1f2937";
-        voiceName.style.fontSize = "16px";
+          // Voice Info
+          const voiceInfo = document.createElement("div");
+          voiceInfo.style.flex = "1";
+          voiceInfo.style.minWidth = "0";
 
-        voiceInfo.appendChild(voiceName);
+          const voiceName = document.createElement("div");
+          voiceName.textContent = firstName;
+          voiceName.style.fontWeight = "bold";
+          voiceName.style.color = "#1f2937";
+          voiceName.style.fontSize = "18px";
+          voiceName.style.marginBottom = "2px";
 
-        if (lastName) {
-          const voiceLastName = document.createElement("div");
-          voiceLastName.textContent = lastName;
-          voiceLastName.style.color = "#6b7280";
-          voiceLastName.style.fontSize = "14px";
-          voiceInfo.appendChild(voiceLastName);
-        }
+          voiceInfo.appendChild(voiceName);
 
-        const voiceInstrument = document.createElement("div");
-        voiceInstrument.textContent = member.instrument;
-        voiceInstrument.style.color = "#3b82f6";
-        voiceInstrument.style.fontSize = "14px";
-        voiceInstrument.style.marginTop = "2px";
+          if (lastName) {
+            const voiceLastName = document.createElement("div");
+            voiceLastName.textContent = lastName;
+            voiceLastName.style.color = "#6b7280";
+            voiceLastName.style.fontSize = "16px";
+            voiceLastName.style.marginBottom = "4px";
+            voiceInfo.appendChild(voiceLastName);
+          }
 
-        voiceInfo.appendChild(voiceInstrument);
+          const voiceInstrument = document.createElement("div");
+          voiceInstrument.textContent = member.instrument;
+          voiceInstrument.style.color = "#3b82f6";
+          voiceInstrument.style.fontSize = "16px";
+          voiceInstrument.style.fontWeight = "600";
 
-        voiceItem.appendChild(voiceAvatar);
-        voiceItem.appendChild(voiceInfo);
-        voicesSection.appendChild(voiceItem);
-      });
+          voiceInfo.appendChild(voiceInstrument);
 
-      // Assemble container
+          voiceItem.appendChild(voiceAvatar);
+          voiceItem.appendChild(voiceInfo);
+          voicesList.appendChild(voiceItem);
+        });
+
+        voicesSection.appendChild(voicesList);
+      }
+
+      // Assemble container con mejor espaciado
       container.appendChild(header);
       container.appendChild(serviceInfo);
       container.appendChild(directorSection);
+      container.appendChild(songsSection);
       container.appendChild(voicesSection);
 
       // Add to document for rendering
