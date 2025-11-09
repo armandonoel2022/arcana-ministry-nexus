@@ -75,22 +75,16 @@ interface ServiceNotificationOverlayProps {
   onNavigate?: (path: string) => void;
 }
 
-// Contadores de rotación por grupo
-let aleidaRotationCounter = 0;
-let massyRotationCounter = 0;
-
-// Suplentes disponibles
-
-// CORRECCIÓN COMPLETA: Configuración de grupos basada en los datos reales de la base de datos
+// Configuración de grupos basada en los datos reales
 const GROUP_CONFIG = {
   "Grupo de Aleida": {
     color_theme: "#3B82F6",
     members: [
-      // Miembros base del grupo de Aleida
       {
         id: "00a916a8-ab94-4cc0-81ae-668dd6071416",
         name: "Aleida Geomar Batista Ventura",
         voice: "Soprano",
+        role: "Corista",
         mic: "Micrófono #2",
         photo_url:
           "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/00a916a8-ab94-4cc0-81ae-668dd6071416.JPG",
@@ -99,15 +93,16 @@ const GROUP_CONFIG = {
         id: "c4089748-7168-4472-8e7c-bf44b4355906",
         name: "Eliabi Joana Sierra Castillo",
         voice: "Soprano",
+        role: "Directora de Alabanza",
         mic: "Micrófono #1",
         photo_url:
           "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG",
       },
-      // Agregar miembros adicionales del grupo de Aleida
       {
         id: "f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f",
         name: "Felix Nicolas Peralta Hernandez",
         voice: "Tenor",
+        role: "Corista",
         mic: "Micrófono #3",
         photo_url:
           "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG",
@@ -116,6 +111,7 @@ const GROUP_CONFIG = {
         id: "8cebc294-ea61-40d0-9b04-08d7d474332c",
         name: "Fior Daliza Paniagua",
         voice: "Contralto",
+        role: "Corista",
         mic: "Micrófono #4",
         photo_url:
           "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/8cebc294-ea61-40d0-9b04-08d7d474332c.JPG",
@@ -124,12 +120,12 @@ const GROUP_CONFIG = {
         id: "619c1a4e-42db-4549-8890-16392cfa2a87",
         name: "Ruth Esmailin Ramirez",
         voice: "Contralto",
+        role: "Corista",
         mic: "Micrófono #5",
         photo_url:
           "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/619c1a4e-42db-4549-8890-16392cfa2a87.JPG",
       },
     ],
-    maleSingers: ["Armando Noel", "Nicolas Peralta"],
   },
   "Grupo de Keyla": {
     color_theme: "#8B5CF6",
@@ -138,15 +134,17 @@ const GROUP_CONFIG = {
         id: "c24659e9-b473-4ecd-97e7-a90526d23502",
         name: "Keyla Yanira Medrano Medrano",
         voice: "Soprano",
-        mic: "Micrófono #1",
+        role: "Directora de Alabanza",
+        mic: "Micrófono #2",
         photo_url:
           "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c24659e9-b473-4ecd-97e7-a90526d23502.JPG",
       },
       {
         id: "11328db1-559f-4dcf-9024-9aef18435700",
-        name: "Yindia Carolina Santana Castillo",
+        name: "Yindhia Carolina Santana Castillo",
         voice: "Soprano",
-        mic: "Micrófono #2",
+        role: "Corista",
+        mic: "Micrófono #1",
         photo_url:
           "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/11328db1-559f-4dcf-9024-9aef18435700.JPG",
       },
@@ -154,6 +152,7 @@ const GROUP_CONFIG = {
         id: "4eed809d-9437-48d5-935e-cf8b4aa8024a",
         name: "Arizoni Liriano medina",
         voice: "Bajo",
+        role: "Corista",
         mic: "Micrófono #3",
         photo_url:
           "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/4eed809d-9437-48d5-935e-cf8b4aa8024a.png",
@@ -162,6 +161,7 @@ const GROUP_CONFIG = {
         id: "82b62449-5046-455f-af7b-da8e5dbc6327",
         name: "Aida Lorena Pacheco De Santana",
         voice: "Contralto",
+        role: "Corista",
         mic: "Micrófono #4",
         photo_url:
           "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/82b62449-5046-455f-af7b-da8e5dbc6327.JPG",
@@ -170,6 +170,7 @@ const GROUP_CONFIG = {
         id: "be61d066-5707-4763-8d8c-16d19597dc3a",
         name: "Sugey A. Gonzalez Garo",
         voice: "Contralto",
+        role: "Corista",
         mic: "Micrófono #5",
         photo_url:
           "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/be61d066-5707-4763-8d8c-16d19597dc3a.JPG",
@@ -180,187 +181,75 @@ const GROUP_CONFIG = {
     color_theme: "#EC4899",
     members: [
       {
-        id: "2a2fa0cd-d301-46ec-9965-2e4ea3692181",
-        name: "Rosely Montero",
-        voice: "Contralto",
-        mic: "Micrófono #1",
+        id: "cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38",
+        name: "Damaris Castillo Jimenez",
+        voice: "Soprano",
+        role: "Directora de Alabanza",
+        mic: "Micrófono #2",
         photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/2a2fa0cd-d301-46ec-9965-2e4ea3692181.jpeg",
+          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38.JPG",
       },
       {
         id: "b5719097-187d-4804-8b7f-e84cc1ec9ad5",
         name: "Jisell Amada Mauricio Paniagua",
         voice: "Soprano",
-        mic: "Micrófono #2",
+        role: "Directora de Alabanza",
+        mic: "Micrófono #1",
         photo_url:
           "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/b5719097-187d-4804-8b7f-e84cc1ec9ad5.JPG",
-      },
-      {
-        id: "bdcc27cd-40ae-456e-a340-633ce7da08c0",
-        name: "Rodes Esther Santana Cuesta",
-        voice: "Contralto",
-        mic: "Micrófono #4",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/bdcc27cd-40ae-456e-a340-633ce7da08c0.JPG",
       },
       {
         id: "7a1645d8-75fe-498c-a2e9-f1057ff3521f",
         name: "Fredderid Abrahan Valera Montoya",
         voice: "Tenor",
+        role: "Corista",
         mic: "Micrófono #3",
         photo_url:
           "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/7a1645d8-75fe-498c-a2e9-f1057ff3521f.JPG",
       },
       {
-        id: "cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38",
-        name: "Damaris Castillo Jimenez",
-        voice: "Soprano",
+        id: "2a2fa0cd-d301-46ec-9965-2e4ea3692181",
+        name: "Rosely Montero",
+        voice: "Contralto",
+        role: "Corista",
+        mic: "Micrófono #4",
+        photo_url:
+          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/2a2fa0cd-d301-46ec-9965-2e4ea3692181.jpeg",
+      },
+      {
+        id: "bdcc27cd-40ae-456e-a340-633ce7da08c0",
+        name: "Rodes Esther Santana Cuesta",
+        voice: "Contralto",
+        role: "Corista",
         mic: "Micrófono #5",
         photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38.JPG",
+          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/bdcc27cd-40ae-456e-a340-633ce7da08c0.JPG",
       },
     ],
-    maleSingers: ["Abraham Valera", "Denny Santana"],
   },
 };
 
-// MEJORA: Función de rotación simplificada
-const getNextMaleSinger = (groupName: string, serviceTime: string, currentDirector: string) => {
-  // Si el director actual es uno de los suplentes, no puede hacer coros
-  const directorsWhoCannotSing = [
-    "Armando Noel",
-    "Nicolas Peralta",
-    "Guarionex Garcia",
-    "Maria Del A. Perez Santana",
-    "Mariam Santana",
-    "Denny Alberto Santana",
-  ];
-
-  if (directorsWhoCannotSing.some((name) => currentDirector.includes(name))) {
-    return null;
-  }
-
-  // Maria Santana solo puede hacer coros en servicios de 8:00 AM
-  if (currentDirector.includes("Maria") && serviceTime !== "8:00 AM") {
-    return null;
-  }
-
-  // Lógica específica para cada grupo
-  if (groupName === "Grupo de Aleida") {
-    const groupConfig = GROUP_CONFIG["Grupo de Aleida"];
-    const singerName = groupConfig.maleSingers[aleidaRotationCounter % groupConfig.maleSingers.length];
-    aleidaRotationCounter++;
-    return SUPLENTS[singerName as keyof typeof SUPLENTS];
-  } else if (groupName === "Grupo de Massy") {
-    const groupConfig = GROUP_CONFIG["Grupo de Massy"];
-    const singerName = groupConfig.maleSingers[massyRotationCounter % groupConfig.maleSingers.length];
-    massyRotationCounter++;
-    return SUPLENTS[singerName as keyof typeof SUPLENTS];
-  }
-
-  return null;
+// Función para obtener miembros del grupo
+const getGroupMembers = (groupName: string) => {
+  const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG] || GROUP_CONFIG["Grupo de Aleida"];
+  return [...groupConfig.members];
 };
 
-// MEJORA: Función mejorada para obtener miembros del grupo basada en datos reales
-const getGroupMembers = (groupName: string, serviceTime: string, currentDirector: string) => {
-  console.log(`Obteniendo miembros para: ${groupName}, Horario: ${serviceTime}, Director: ${currentDirector}`);
-
-  const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG] || GROUP_CONFIG["Grupo de Aleida"];
-
-  // Si es Grupo de Aleida, aplicar rotación de coristas varones
-  if (groupName === "Grupo de Aleida") {
-    const members = [...groupConfig.members];
-
-    // Verificar si el director actual es un corista varón que no puede cantar
-    const directorsWhoCannotSing = [
-      "Armando Noel",
-      "Nicolas Peralta",
-      "Guarionex Garcia",
-      "Maria Del A. Perez Santana",
-      "Mariam Santana",
-      "Denny Alberto Santana",
-    ];
-
-    if (!directorsWhoCannotSing.some((name) => currentDirector.includes(name))) {
-      // Aplicar rotación para corista varón adicional
-      const maleSinger = getNextMaleSinger(groupName, serviceTime, currentDirector);
-      if (maleSinger) {
-        console.log(`Agregando corista varón rotativo: ${maleSinger.name}`);
-        // Reemplazar el corista varón existente con el de la rotación
-        const existingMaleIndex = members.findIndex(
-          (m) => m.name.includes("Armando") || m.name.includes("Nicolas") || m.name.includes("Felix"),
-        );
-
-        if (existingMaleIndex !== -1) {
-          members[existingMaleIndex] = {
-            ...maleSinger,
-            mic: "Micrófono #3",
-            voice: maleSinger.voice || "Tenor",
-          };
-        } else {
-          members.push({
-            ...maleSinger,
-            mic: "Micrófono #3",
-            voice: maleSinger.voice || "Tenor",
-          });
-        }
-      }
-    }
-
-    return members;
+// Función para separar nombres y apellidos
+const splitName = (fullName: string) => {
+  const parts = fullName.split(" ");
+  if (parts.length <= 2) {
+    return {
+      firstName: parts[0] || "",
+      lastName: parts[1] || "",
+    };
   }
 
-  // Si es Grupo de Massy, aplicar rotación y lógica especial
-  if (groupName === "Grupo de Massy") {
-    const members = [...groupConfig.members];
+  // Para nombres con más de 2 partes, asumimos que el último es el apellido
+  const firstName = parts.slice(0, -1).join(" ");
+  const lastName = parts[parts.length - 1];
 
-    // Aplicar rotación para corista varón
-    const directorsWhoCannotSing = [
-      "Armando Noel",
-      "Nicolas Peralta",
-      "Guarionex Garcia",
-      "Maria Del A. Perez Santana",
-      "Mariam Santana",
-      "Denny Alberto Santana",
-    ];
-
-    if (!directorsWhoCannotSing.some((name) => currentDirector.includes(name))) {
-      const maleSinger = getNextMaleSinger(groupName, serviceTime, currentDirector);
-      if (maleSinger) {
-        console.log(`Agregando corista varón rotativo: ${maleSinger.name}`);
-        // Reemplazar el corista varón existente
-        const existingMaleIndex = members.findIndex((m) => m.name.includes("Abraham") || m.name.includes("Fredderid"));
-
-        if (existingMaleIndex !== -1) {
-          members[existingMaleIndex] = {
-            ...maleSinger,
-            mic: "Micrófono #3",
-            voice: maleSinger.voice || "Tenor",
-          };
-        }
-      }
-    }
-
-    // Lógica especial para Guarionex en servicios de 8:00 AM
-    if (serviceTime === "8:00 AM") {
-      const guarionex = SUPLENTS["Guarionex Garcia"];
-      if (guarionex && !currentDirector.includes("Guarionex")) {
-        console.log("Agregando Guarionex Garcia para servicio de 8:00 AM");
-        // Verificar si ya existe un miembro con micrófono #5 y reemplazarlo
-        const existingMemberIndex = members.findIndex((m) => m.mic === "Micrófono #5" && !m.name.includes("Damaris"));
-        if (existingMemberIndex !== -1) {
-          members[existingMemberIndex] = { ...guarionex, mic: "Micrófono #5", voice: "Tenor" };
-        } else {
-          members.push({ ...guarionex, mic: "Micrófono #5", voice: "Tenor" });
-        }
-      }
-    }
-
-    return members;
-  }
-
-  // Para otros grupos, retornar miembros base
-  return [...groupConfig.members];
+  return { firstName, lastName };
 };
 
 const ServiceNotificationOverlay = ({
@@ -430,12 +319,12 @@ const ServiceNotificationOverlay = ({
   const showServiceProgramOverlay = (metadata: ServiceProgramNotification) => {
     if (metadata.services && Array.isArray(metadata.services)) {
       const formattedServices = metadata.services.map((service: any) => {
-        const groupName = service.group || "Grupo de Alabanza";
+        const groupName = service.group || "Grupo de Aleida";
         const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG] || GROUP_CONFIG["Grupo de Aleida"];
         const serviceTime = getServiceTime(service.time || service.title);
 
         // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS
-        const members = getGroupMembers(groupName, serviceTime, service.director?.name || service.director);
+        const members = getGroupMembers(groupName);
 
         return {
           id: service.id || Date.now().toString(),
@@ -606,7 +495,7 @@ const ServiceNotificationOverlay = ({
             }
 
             // Obtener miembros del grupo usando la nueva función
-            let groupName = "Grupo de Alabanza";
+            let groupName = "Grupo de Aleida";
             if (service.worship_groups) {
               if (Array.isArray(service.worship_groups) && service.worship_groups.length > 0) {
                 groupName = (service.worship_groups[0]?.name as string) || groupName;
@@ -614,10 +503,9 @@ const ServiceNotificationOverlay = ({
                 groupName = (service.worship_groups.name as string) || groupName;
               }
             }
-            const serviceTime = getServiceTime(service.title);
 
             // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS
-            members = getGroupMembers(groupName, serviceTime, service.leader);
+            members = getGroupMembers(groupName);
 
             console.log(
               `Miembros finales para ${groupName}:`,
@@ -1039,17 +927,21 @@ const ServiceNotificationOverlay = ({
                     <div className="text-sm font-semibold text-green-800">Canciones Seleccionadas</div>
                   </div>
                   <div className="space-y-2">
-                    {worshipSongs.map((song, index) => (
-                      <div key={song.id} className="flex items-center gap-2 text-sm">
-                        <span className="w-5 h-5 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold">
-                          {index + 1}
-                        </span>
-                        <div>
-                          <div className="font-medium text-gray-900">{song.title}</div>
-                          {song.artist && <div className="text-xs text-gray-600">{song.artist}</div>}
+                    {worshipSongs.map((song, index) => {
+                      const { firstName, lastName } = splitName(song.title);
+                      return (
+                        <div key={song.id} className="flex items-center gap-2 text-sm">
+                          <span className="w-5 h-5 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold">
+                            {index + 1}
+                          </span>
+                          <div>
+                            <div className="font-medium text-gray-900">{firstName}</div>
+                            {lastName && <div className="text-xs text-gray-600">{lastName}</div>}
+                            {song.artist && <div className="text-xs text-gray-500 mt-1">{song.artist}</div>}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               ) : (
@@ -1103,10 +995,18 @@ const ServiceNotificationOverlay = ({
                     $
                   </span>
                   <div>
-                    <div className="font-medium text-gray-900">{offeringsSongs[0].title}</div>
-                    {offeringsSongs[0].artist && (
-                      <div className="text-xs text-gray-600">{offeringsSongs[0].artist}</div>
-                    )}
+                    {(() => {
+                      const { firstName, lastName } = splitName(offeringsSongs[0].title);
+                      return (
+                        <>
+                          <div className="font-medium text-gray-900">{firstName}</div>
+                          {lastName && <div className="text-xs text-gray-600">{lastName}</div>}
+                          {offeringsSongs[0].artist && (
+                            <div className="text-xs text-gray-500 mt-1">{offeringsSongs[0].artist}</div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
@@ -1124,10 +1024,18 @@ const ServiceNotificationOverlay = ({
                     ✝️
                   </span>
                   <div>
-                    <div className="font-medium text-gray-900">{communionSongs[0].title}</div>
-                    {communionSongs[0].artist && (
-                      <div className="text-xs text-gray-600">{communionSongs[0].artist}</div>
-                    )}
+                    {(() => {
+                      const { firstName, lastName } = splitName(communionSongs[0].title);
+                      return (
+                        <>
+                          <div className="font-medium text-gray-900">{firstName}</div>
+                          {lastName && <div className="text-xs text-gray-600">{lastName}</div>}
+                          {communionSongs[0].artist && (
+                            <div className="text-xs text-gray-500 mt-1">{communionSongs[0].artist}</div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
@@ -1140,30 +1048,34 @@ const ServiceNotificationOverlay = ({
               <div className="bg-blue-50 rounded-lg p-4 h-full">
                 <div className="text-sm font-semibold text-blue-800 mb-3">Responsables de Voces</div>
                 <div className="grid grid-cols-1 gap-3">
-                  {responsibleVoices.map((member) => (
-                    <div key={member.id} className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full border-2 border-blue-200 overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600">
-                        <img
-                          src={member.profiles?.photo_url}
-                          alt={member.profiles?.full_name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = "none";
-                            const fallback = target.nextElementSibling as HTMLElement;
-                            if (fallback) fallback.style.display = "flex";
-                          }}
-                        />
-                        <div className="w-full h-full hidden items-center justify-center text-white text-sm font-bold">
-                          {getInitials(member.profiles?.full_name || "NN")}
+                  {responsibleVoices.map((member) => {
+                    const { firstName, lastName } = splitName(member.profiles?.full_name || "");
+                    return (
+                      <div key={member.id} className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full border-2 border-blue-200 overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600">
+                          <img
+                            src={member.profiles?.photo_url}
+                            alt={member.profiles?.full_name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = "none";
+                              const fallback = target.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = "flex";
+                            }}
+                          />
+                          <div className="w-full h-full hidden items-center justify-center text-white text-sm font-bold">
+                            {getInitials(member.profiles?.full_name || "NN")}
+                          </div>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium text-gray-900">{firstName}</div>
+                          {lastName && <div className="text-xs text-gray-600">{lastName}</div>}
+                          <div className="text-xs text-blue-600">{member.instrument}</div>
                         </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium text-gray-900">{member.profiles?.full_name}</div>
-                        <div className="text-xs text-blue-600">{member.instrument}</div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
