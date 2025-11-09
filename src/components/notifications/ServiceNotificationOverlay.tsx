@@ -773,63 +773,369 @@ const ServiceNotificationOverlay = ({
 
   const downloadServiceImage = async (serviceId: string, serviceTitle: string) => {
     try {
-      const element = serviceCardRefs.current[serviceId];
-      if (!element) {
-        toast.error("No se pudo encontrar el servicio para descargar");
-        return;
-      }
-
       const service = services.find((s) => s.id === serviceId);
       if (!service) {
         toast.error("No se pudo encontrar la información del servicio");
         return;
       }
 
+      // Crear un contenedor específico para la descarga con el mismo diseño que la app
       const container = document.createElement("div");
-      container.style.position = "fixed";
-      container.style.left = "-9999px";
-      container.style.top = "0";
       container.style.width = "600px";
       container.style.backgroundColor = "#ffffff";
-      container.style.padding = "0";
+      container.style.padding = "24px";
+      container.style.fontFamily = "system-ui, -apple-system, sans-serif";
+      container.style.color = "#1f2937";
 
+      // Header
       const header = document.createElement("div");
-      header.style.backgroundColor = "#ffffff";
-      header.style.padding = "20px 24px";
+      header.style.marginBottom = "24px";
       header.style.borderBottom = "1px solid #e5e7eb";
-      header.style.marginBottom = "0";
+      header.style.paddingBottom = "16px";
 
       const title = document.createElement("h1");
       title.textContent = "Programa de Servicios";
-      title.style.fontSize = "20px";
-      title.style.fontWeight = "600";
-      title.style.marginBottom = "4px";
+      title.style.fontSize = "24px";
+      title.style.fontWeight = "bold";
       title.style.color = "#111827";
+      title.style.marginBottom = "4px";
 
       const dateTime = document.createElement("p");
       const serviceDate = format(new Date(service.service_date), "EEEE, dd 'de' MMMM", { locale: es });
-      const serviceTime = getServiceTime(service.title);
-      dateTime.textContent = `${serviceDate}`;
-      dateTime.style.fontSize = "14px";
-      dateTime.style.fontWeight = "400";
+      dateTime.textContent = serviceDate;
+      dateTime.style.fontSize = "16px";
       dateTime.style.color = "#6b7280";
       dateTime.style.textTransform = "capitalize";
 
       header.appendChild(title);
       header.appendChild(dateTime);
 
-      const contentClone = element.cloneNode(true) as HTMLElement;
-      contentClone.style.backgroundColor = "#ffffff";
-      contentClone.style.width = "600px";
-      contentClone.style.maxWidth = "600px";
+      // Service Info
+      const serviceInfo = document.createElement("div");
+      serviceInfo.style.marginBottom = "24px";
 
-      const actionButtons = contentClone.querySelectorAll(".service-action-buttons");
-      actionButtons.forEach((btn) => btn.remove());
+      const time = document.createElement("h2");
+      time.textContent = getServiceTime(service.title);
+      time.style.fontSize = "20px";
+      time.style.fontWeight = "bold";
+      time.style.color = "#1f2937";
+      time.style.marginBottom = "8px";
 
+      const groupInfo = document.createElement("div");
+      groupInfo.style.display = "flex";
+      groupInfo.style.alignItems = "center";
+      groupInfo.style.gap = "8px";
+      groupInfo.style.marginBottom = "16px";
+
+      const groupName = document.createElement("span");
+      groupName.textContent = service.worship_groups?.name || "Grupo de Alabanza";
+      groupName.style.backgroundColor = service.worship_groups?.color_theme || "#3B82F6";
+      groupName.style.color = "white";
+      groupName.style.padding = "4px 12px";
+      groupName.style.borderRadius = "9999px";
+      groupName.style.fontSize = "14px";
+      groupName.style.fontWeight = "500";
+
+      const separator = document.createElement("span");
+      separator.textContent = "•";
+      separator.style.color = "#9ca3af";
+
+      const activity = document.createElement("span");
+      activity.textContent = service.special_activity || "Servicio Dominical";
+      activity.style.color = "#6b7280";
+      activity.style.fontSize = "14px";
+
+      groupInfo.appendChild(groupName);
+      groupInfo.appendChild(separator);
+      groupInfo.appendChild(activity);
+
+      serviceInfo.appendChild(time);
+      serviceInfo.appendChild(groupInfo);
+
+      // Director Section
+      const directorSection = document.createElement("div");
+      directorSection.style.backgroundColor = "#dbeafe";
+      directorSection.style.padding = "20px";
+      directorSection.style.borderRadius = "12px";
+      directorSection.style.marginBottom = "20px";
+
+      const directorTitle = document.createElement("h3");
+      directorTitle.textContent = "Director/a de Alabanza";
+      directorTitle.style.fontSize = "16px";
+      directorTitle.style.fontWeight = "600";
+      directorTitle.style.color = "#1e40af";
+      directorTitle.style.marginBottom = "12px";
+
+      const directorContent = document.createElement("div");
+      directorContent.style.display = "flex";
+      directorContent.style.alignItems = "center";
+      directorContent.style.gap = "16px";
+
+      // Director Avatar
+      const directorAvatar = document.createElement("div");
+      directorAvatar.style.width = "64px";
+      directorAvatar.style.height = "64px";
+      directorAvatar.style.borderRadius = "50%";
+      directorAvatar.style.border = "3px solid #93c5fd";
+      directorAvatar.style.overflow = "hidden";
+      directorAvatar.style.background = "linear-gradient(to right, #3b82f6, #2563eb)";
+      directorAvatar.style.display = "flex";
+      directorAvatar.style.alignItems = "center";
+      directorAvatar.style.justifyContent = "center";
+      directorAvatar.style.color = "white";
+      directorAvatar.style.fontWeight = "bold";
+      directorAvatar.style.fontSize = "18px";
+
+      const directorImg = document.createElement("img");
+      directorImg.src = service.director_profile?.photo_url || "";
+      directorImg.style.width = "100%";
+      directorImg.style.height = "100%";
+      directorImg.style.objectFit = "cover";
+      directorImg.onerror = () => {
+        directorImg.style.display = "none";
+        const initials = document.createElement("div");
+        initials.textContent = getInitials(service.leader);
+        initials.style.display = "flex";
+        initials.style.alignItems = "center";
+        initials.style.justifyContent = "center";
+        initials.style.width = "100%";
+        initials.style.height = "100%";
+        directorAvatar.appendChild(initials);
+      };
+
+      directorAvatar.appendChild(directorImg);
+
+      // Director Info
+      const directorInfo = document.createElement("div");
+      const directorName = document.createElement("div");
+      directorName.textContent = service.leader;
+      directorName.style.fontWeight = "600";
+      directorName.style.color = "#1f2937";
+      directorName.style.fontSize = "18px";
+
+      const directorRole = document.createElement("div");
+      directorRole.textContent = "Líder del Servicio";
+      directorRole.style.color = "#3b82f6";
+      directorRole.style.fontSize = "14px";
+
+      directorInfo.appendChild(directorName);
+      directorInfo.appendChild(directorRole);
+
+      directorContent.appendChild(directorAvatar);
+      directorContent.appendChild(directorInfo);
+
+      directorSection.appendChild(directorTitle);
+      directorSection.appendChild(directorContent);
+
+      // Songs Section
+      const songsSection = document.createElement("div");
+      songsSection.style.marginTop = "20px";
+      songsSection.style.paddingTop = "20px";
+      songsSection.style.borderTop = "1px solid #93c5fd";
+
+      const songsTitle = document.createElement("h3");
+      songsTitle.textContent = "Canciones Seleccionadas";
+      songsTitle.style.fontSize = "16px";
+      songsTitle.style.fontWeight = "600";
+      songsTitle.style.color = "#15803d";
+      songsTitle.style.marginBottom = "12px";
+      songsTitle.style.display = "flex";
+      songsTitle.style.alignItems = "center";
+      songsTitle.style.gap = "8px";
+
+      const musicIcon = document.createElement("span");
+      musicIcon.textContent = "🎵";
+      songsTitle.prepend(musicIcon);
+
+      songsSection.appendChild(songsTitle);
+
+      const worshipSongs = service.selected_songs?.filter((s) => s.song_order >= 1 && s.song_order <= 4) || [];
+
+      if (worshipSongs.length > 0) {
+        worshipSongs.forEach((song, index) => {
+          const { firstLine, secondLine } = splitSongTitle(song.title);
+          const { firstName: artistFirstName, lastName: artistLastName } = splitName(song.artist || "");
+
+          const songItem = document.createElement("div");
+          songItem.style.display = "flex";
+          songItem.style.alignItems = "flex-start";
+          songItem.style.gap = "12px";
+          songItem.style.marginBottom = "12px";
+
+          const number = document.createElement("div");
+          number.textContent = (index + 1).toString();
+          number.style.width = "24px";
+          number.style.height = "24px";
+          number.style.backgroundColor = "#dcfce7";
+          number.style.color = "#166534";
+          number.style.borderRadius = "50%";
+          number.style.display = "flex";
+          number.style.alignItems = "center";
+          number.style.justifyContent = "center";
+          number.style.fontSize = "12px";
+          number.style.fontWeight = "bold";
+          number.style.flexShrink = "0";
+          number.style.marginTop = "2px";
+
+          const songContent = document.createElement("div");
+          songContent.style.flex = "1";
+
+          const songFirstLine = document.createElement("div");
+          songFirstLine.textContent = firstLine;
+          songFirstLine.style.fontWeight = "600";
+          songFirstLine.style.color = "#1f2937";
+          songFirstLine.style.fontSize = "16px";
+
+          songContent.appendChild(songFirstLine);
+
+          if (secondLine) {
+            const songSecondLine = document.createElement("div");
+            songSecondLine.textContent = secondLine;
+            songSecondLine.style.color = "#1f2937";
+            songSecondLine.style.fontSize = "16px";
+            songContent.appendChild(songSecondLine);
+          }
+
+          if (song.artist) {
+            const artistContainer = document.createElement("div");
+            artistContainer.style.marginTop = "4px";
+
+            const artistFirst = document.createElement("div");
+            artistFirst.textContent = artistFirstName;
+            artistFirst.style.color = "#6b7280";
+            artistFirst.style.fontSize = "14px";
+
+            artistContainer.appendChild(artistFirst);
+
+            if (artistLastName) {
+              const artistLast = document.createElement("div");
+              artistLast.textContent = artistLastName;
+              artistLast.style.color = "#9ca3af";
+              artistLast.style.fontSize = "13px";
+              artistContainer.appendChild(artistLast);
+            }
+
+            songContent.appendChild(artistContainer);
+          }
+
+          songItem.appendChild(number);
+          songItem.appendChild(songContent);
+          songsSection.appendChild(songItem);
+        });
+      }
+
+      directorSection.appendChild(songsSection);
+
+      // Voices Section
+      const voicesSection = document.createElement("div");
+      voicesSection.style.backgroundColor = "#dbeafe";
+      voicesSection.style.padding = "20px";
+      voicesSection.style.borderRadius = "12px";
+
+      const voicesTitle = document.createElement("h3");
+      voicesTitle.textContent = "Responsables de Voces";
+      voicesTitle.style.fontSize = "16px";
+      voicesTitle.style.fontWeight = "600";
+      voicesTitle.style.color = "#1e40af";
+      voicesTitle.style.marginBottom = "16px";
+
+      voicesSection.appendChild(voicesTitle);
+
+      const responsibleVoices = getResponsibleVoices(service.group_members).slice(0, 6);
+
+      responsibleVoices.forEach((member) => {
+        const { firstName, lastName } = splitName(member.profiles?.full_name || "");
+
+        const voiceItem = document.createElement("div");
+        voiceItem.style.display = "flex";
+        voiceItem.style.alignItems = "center";
+        voiceItem.style.gap = "16px";
+        voiceItem.style.marginBottom = "16px";
+
+        // Voice Avatar
+        const voiceAvatar = document.createElement("div");
+        voiceAvatar.style.width = "48px";
+        voiceAvatar.style.height = "48px";
+        voiceAvatar.style.borderRadius = "50%";
+        voiceAvatar.style.border = "2px solid #93c5fd";
+        voiceAvatar.style.overflow = "hidden";
+        voiceAvatar.style.background = "linear-gradient(to right, #3b82f6, #2563eb)";
+        voiceAvatar.style.display = "flex";
+        voiceAvatar.style.alignItems = "center";
+        voiceAvatar.style.justifyContent = "center";
+        voiceAvatar.style.color = "white";
+        voiceAvatar.style.fontWeight = "bold";
+        voiceAvatar.style.fontSize = "14px";
+        voiceAvatar.style.flexShrink = "0";
+
+        const voiceImg = document.createElement("img");
+        voiceImg.src = member.profiles?.photo_url || "";
+        voiceImg.style.width = "100%";
+        voiceImg.style.height = "100%";
+        voiceImg.style.objectFit = "cover";
+        voiceImg.onerror = () => {
+          voiceImg.style.display = "none";
+          const initials = document.createElement("div");
+          initials.textContent = getInitials(member.profiles?.full_name || "NN");
+          initials.style.display = "flex";
+          initials.style.alignItems = "center";
+          initials.style.justifyContent = "center";
+          initials.style.width = "100%";
+          initials.style.height = "100%";
+          voiceAvatar.appendChild(initials);
+        };
+
+        voiceAvatar.appendChild(voiceImg);
+
+        // Voice Info
+        const voiceInfo = document.createElement("div");
+        voiceInfo.style.flex = "1";
+        voiceInfo.style.minWidth = "0";
+
+        const voiceName = document.createElement("div");
+        voiceName.textContent = firstName;
+        voiceName.style.fontWeight = "600";
+        voiceName.style.color = "#1f2937";
+        voiceName.style.fontSize = "16px";
+
+        voiceInfo.appendChild(voiceName);
+
+        if (lastName) {
+          const voiceLastName = document.createElement("div");
+          voiceLastName.textContent = lastName;
+          voiceLastName.style.color = "#6b7280";
+          voiceLastName.style.fontSize = "14px";
+          voiceInfo.appendChild(voiceLastName);
+        }
+
+        const voiceInstrument = document.createElement("div");
+        voiceInstrument.textContent = member.instrument;
+        voiceInstrument.style.color = "#3b82f6";
+        voiceInstrument.style.fontSize = "14px";
+        voiceInstrument.style.marginTop = "2px";
+
+        voiceInfo.appendChild(voiceInstrument);
+
+        voiceItem.appendChild(voiceAvatar);
+        voiceItem.appendChild(voiceInfo);
+        voicesSection.appendChild(voiceItem);
+      });
+
+      // Assemble container
       container.appendChild(header);
-      container.appendChild(contentClone);
-      document.body.appendChild(container);
+      container.appendChild(serviceInfo);
+      container.appendChild(directorSection);
+      container.appendChild(voicesSection);
 
+      // Add to document for rendering
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "fixed";
+      wrapper.style.left = "-9999px";
+      wrapper.style.top = "0";
+      wrapper.appendChild(container);
+      document.body.appendChild(wrapper);
+
+      // Wait for images to load
       const images = container.getElementsByTagName("img");
       const imagePromises = Array.from(images).map((img) => {
         if (img.complete) {
@@ -846,9 +1152,9 @@ const ServiceNotificationOverlay = ({
       });
 
       await Promise.all(imagePromises);
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
+      // Capture as image
       const canvas = await html2canvas(container, {
         backgroundColor: "#ffffff",
         scale: 2,
@@ -857,8 +1163,10 @@ const ServiceNotificationOverlay = ({
         logging: false,
       });
 
-      document.body.removeChild(container);
+      // Clean up
+      document.body.removeChild(wrapper);
 
+      // Download
       const link = document.createElement("a");
       link.download = `${serviceTitle.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_${new Date().getTime()}.png`;
       link.href = canvas.toDataURL("image/png");
