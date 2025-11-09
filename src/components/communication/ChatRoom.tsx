@@ -12,6 +12,7 @@ import { VoiceNoteRecorder } from "./VoiceNoteRecorder";
 import { SongLimitOverlay } from "./SongLimitOverlay";
 import { EmoticonPicker } from "./EmoticonPicker";
 import { VoiceMessagePlayer } from "./VoiceMessagePlayer";
+import { BuzzButton } from "./BuzzButton";
 import { useEmoticons } from "@/hooks/useEmoticons";
 import { useSounds } from "@/hooks/useSounds";
 import { useMediaUpload } from "@/hooks/useMediaUpload";
@@ -932,6 +933,8 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
               >
                 <AtSign className="w-4 h-4" />
               </Button>
+
+              <BuzzButton currentUserId={currentUser?.id || ''} />
 
               <input
                 ref={inputRef}
