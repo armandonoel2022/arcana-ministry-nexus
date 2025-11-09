@@ -252,6 +252,26 @@ const splitName = (fullName: string) => {
   return { firstName, lastName };
 };
 
+// Función mejorada para separar títulos de canciones largos
+const splitSongTitle = (title: string) => {
+  // Si el título es muy largo, dividirlo en partes más manejables
+  const words = title.split(" ");
+
+  if (words.length <= 3) {
+    return {
+      firstLine: title,
+      secondLine: "",
+    };
+  }
+
+  // Buscar un punto natural para dividir (después de 2-4 palabras)
+  const splitIndex = Math.min(4, Math.ceil(words.length / 2));
+  const firstLine = words.slice(0, splitIndex).join(" ");
+  const secondLine = words.slice(splitIndex).join(" ");
+
+  return { firstLine, secondLine };
+};
+
 const ServiceNotificationOverlay = ({
   forceShow = false,
   onClose,
@@ -926,18 +946,25 @@ const ServiceNotificationOverlay = ({
                     <Music className="w-4 h-4 text-green-600" />
                     <div className="text-sm font-semibold text-green-800">Canciones Seleccionadas</div>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {worshipSongs.map((song, index) => {
-                      const { firstName, lastName } = splitName(song.title);
+                      const { firstLine, secondLine } = splitSongTitle(song.title);
+                      const { firstName: artistFirstName, lastName: artistLastName } = splitName(song.artist || "");
+
                       return (
-                        <div key={song.id} className="flex items-center gap-2 text-sm">
-                          <span className="w-5 h-5 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold">
+                        <div key={song.id} className="flex items-start gap-2 text-sm">
+                          <span className="w-5 h-5 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 flex-shrink-0">
                             {index + 1}
                           </span>
-                          <div>
-                            <div className="font-medium text-gray-900">{firstName}</div>
-                            {lastName && <div className="text-xs text-gray-600">{lastName}</div>}
-                            {song.artist && <div className="text-xs text-gray-500 mt-1">{song.artist}</div>}
+                          <div className="min-w-0 flex-1">
+                            <div className="font-medium text-gray-900">{firstLine}</div>
+                            {secondLine && <div className="text-gray-900">{secondLine}</div>}
+                            {song.artist && (
+                              <div className="text-xs text-gray-600 mt-1">
+                                {artistFirstName}
+                                {artistLastName && <div className="text-gray-500">{artistLastName}</div>}
+                              </div>
+                            )}
                           </div>
                         </div>
                       );
@@ -990,19 +1017,26 @@ const ServiceNotificationOverlay = ({
                   <div className="w-4 h-4 text-amber-600">🎵</div>
                   <div className="text-sm font-semibold text-amber-800">Canción de Ofrendas</div>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="w-5 h-5 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">
+                <div className="flex items-start gap-2 text-sm">
+                  <span className="w-5 h-5 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 flex-shrink-0">
                     $
                   </span>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     {(() => {
-                      const { firstName, lastName } = splitName(offeringsSongs[0].title);
+                      const { firstLine, secondLine } = splitSongTitle(offeringsSongs[0].title);
+                      const { firstName: artistFirstName, lastName: artistLastName } = splitName(
+                        offeringsSongs[0].artist || "",
+                      );
+
                       return (
                         <>
-                          <div className="font-medium text-gray-900">{firstName}</div>
-                          {lastName && <div className="text-xs text-gray-600">{lastName}</div>}
+                          <div className="font-medium text-gray-900">{firstLine}</div>
+                          {secondLine && <div className="text-gray-900">{secondLine}</div>}
                           {offeringsSongs[0].artist && (
-                            <div className="text-xs text-gray-500 mt-1">{offeringsSongs[0].artist}</div>
+                            <div className="text-xs text-gray-600 mt-1">
+                              {artistFirstName}
+                              {artistLastName && <div className="text-gray-500">{artistLastName}</div>}
+                            </div>
                           )}
                         </>
                       );
@@ -1019,19 +1053,26 @@ const ServiceNotificationOverlay = ({
                   <div className="w-4 h-4 text-purple-600">🎵</div>
                   <div className="text-sm font-semibold text-purple-800">Canción de Comunión</div>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="w-5 h-5 bg-purple-200 text-purple-800 rounded-full flex items-center justify-center text-xs font-bold">
+                <div className="flex items-start gap-2 text-sm">
+                  <span className="w-5 h-5 bg-purple-200 text-purple-800 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 flex-shrink-0">
                     ✝️
                   </span>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     {(() => {
-                      const { firstName, lastName } = splitName(communionSongs[0].title);
+                      const { firstLine, secondLine } = splitSongTitle(communionSongs[0].title);
+                      const { firstName: artistFirstName, lastName: artistLastName } = splitName(
+                        communionSongs[0].artist || "",
+                      );
+
                       return (
                         <>
-                          <div className="font-medium text-gray-900">{firstName}</div>
-                          {lastName && <div className="text-xs text-gray-600">{lastName}</div>}
+                          <div className="font-medium text-gray-900">{firstLine}</div>
+                          {secondLine && <div className="text-gray-900">{secondLine}</div>}
                           {communionSongs[0].artist && (
-                            <div className="text-xs text-gray-500 mt-1">{communionSongs[0].artist}</div>
+                            <div className="text-xs text-gray-600 mt-1">
+                              {artistFirstName}
+                              {artistLastName && <div className="text-gray-500">{artistLastName}</div>}
+                            </div>
                           )}
                         </>
                       );
