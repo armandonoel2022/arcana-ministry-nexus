@@ -13,13 +13,11 @@ import {
   CheckCircle,
   TrendingUp,
   Star,
-  Bell,
-  Headphones
+  Bell
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import BirthdayNotificationBanner from "@/components/notifications/BirthdayNotificationBanner";
-import { BiometricSetup } from "@/components/BiometricSetup";
 import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
@@ -47,14 +45,6 @@ const Index = () => {
       description: "Catálogo de canciones",
       icon: Music,
       url: "/repertorio",
-      gradient: "service-card-blue-light"
-    },
-    {
-      id: "rehearsals",
-      title: "Ensayos Colaborativos",
-      description: "Graba y mezcla pistas",
-      icon: Headphones,
-      url: "/rehearsals",
       gradient: "service-card-blue-light"
     },
     {
@@ -227,11 +217,6 @@ const Index = () => {
               );
             })}
           </div>
-        </div>
-
-        {/* Biometric Setup Section */}
-        <div className="max-w-2xl mx-auto mt-8">
-          <BiometricSetup />
         </div>
 
         {/* Statistics */}

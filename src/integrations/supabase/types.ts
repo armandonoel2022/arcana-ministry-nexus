@@ -1601,6 +1601,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_buzzes: {
+        Row: {
+          buzz_type: string
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string | null
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          buzz_type?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          recipient_id: string
+          sender_id: string
+        }
+        Update: {
+          buzz_type?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
       user_musical_training: {
         Row: {
           created_at: string

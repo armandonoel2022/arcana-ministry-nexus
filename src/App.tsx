@@ -31,6 +31,7 @@ import DanceTraining from "./pages/DanceTraining";
 import PersonalAssistant from "./pages/PersonalAssistant";
 import NotificationTesting from "./pages/NotificationTesting";
 import ScheduledNotifications from "./pages/ScheduledNotifications";
+import Settings from "./pages/Settings";
 import GroupRehearsal from "./pages/GroupRehearsal";
 import RehearsalSession from "./pages/RehearsalSession";
 import Auth from "./pages/Auth";
@@ -120,6 +121,7 @@ function App() {
                             <Route path="/personal-assistant" element={<PersonalAssistant />} />
                             <Route path="/notification-testing" element={<NotificationTesting />} />
                             <Route path="/scheduled-notifications" element={<ScheduledNotifications />} />
+                            <Route path="/settings" element={<Settings />} />
                             <Route path="/about" element={<AboutMinistry />} />
                             <Route path="/statutes" element={<Statutes />} />
                             <Route path="*" element={<NotFound />} />

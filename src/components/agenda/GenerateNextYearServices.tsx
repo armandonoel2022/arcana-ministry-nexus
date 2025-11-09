@@ -18,12 +18,14 @@ import {
 const GenerateNextYearServices = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [nextYear, setNextYear] = useState<number | null>(null);
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
 
   useEffect(() => {
-    detectNextYear();
+    detectNextYearAndAvailable();
   }, []);
 
-  const detectNextYear = async () => {
+  const detectNextYearAndAvailable = async () => {
     try {
       const { data, error } = await supabase
         .from('services')
@@ -35,13 +37,34 @@ const GenerateNextYearServices = () => {
 
       if (data && data.length > 0) {
         const lastYear = new Date(data[0].service_date).getFullYear();
-        setNextYear(lastYear + 1);
+        const next = lastYear + 1;
+        setNextYear(next);
+        setSelectedYear(next);
+        
+        // Generar lista de años disponibles (último año + próximos 5 años)
+        const years = [];
+        for (let i = 0; i <= 5; i++) {
+          years.push(next + i);
+        }
+        setAvailableYears(years);
       } else {
-        setNextYear(new Date().getFullYear());
+        const currentYear = new Date().getFullYear();
+        setNextYear(currentYear);
+        setSelectedYear(currentYear);
+        
+        // Generar lista desde el año actual
+        const years = [];
+        for (let i = 0; i <= 5; i++) {
+          years.push(currentYear + i);
+        }
+        setAvailableYears(years);
       }
     } catch (error) {
       console.error('Error detecting next year:', error);
-      setNextYear(new Date().getFullYear());
+      const currentYear = new Date().getFullYear();
+      setNextYear(currentYear);
+      setSelectedYear(currentYear);
+      setAvailableYears([currentYear, currentYear + 1, currentYear + 2]);
     }
   };
 
@@ -173,15 +196,15 @@ const GenerateNextYearServices = () => {
   };
 
   const generateServices = async () => {
-    if (!nextYear) {
-      toast.error('No se pudo determinar el próximo año');
+    if (!selectedYear) {
+      toast.error('No se pudo determinar el año a generar');
       return;
     }
 
     setIsGenerating(true);
     
     try {
-      const sundays = getAllSundaysOfYear(nextYear);
+      const sundays = getAllSundaysOfYear(selectedYear);
       const services = [];
       const directorIndex = { value: 0 };
 
@@ -238,12 +261,12 @@ const GenerateNextYearServices = () => {
 
       if (error) throw error;
 
-      toast.success(`Se generaron ${services.length} servicios para el año ${nextYear}`, {
+      toast.success(`Se generaron ${services.length} servicios para el año ${selectedYear}`, {
         description: `${sundays.length} domingos con 2 servicios cada uno`
       });
 
-      // Actualizar el próximo año
-      await detectNextYear();
+      // Actualizar los años disponibles
+      await detectNextYearAndAvailable();
 
     } catch (error: any) {
       console.error('Error generando servicios:', error);
@@ -261,30 +284,47 @@ const GenerateNextYearServices = () => {
         <Button 
           variant="default" 
           className="gap-2"
-          disabled={isGenerating || !nextYear}
+          disabled={isGenerating || !selectedYear}
         >
           {isGenerating ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <Calendar className="h-4 w-4" />
           )}
-          {nextYear ? `Generar Año ${nextYear}` : 'Cargando...'}
+          Generar Año
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Generar Servicios del {nextYear}</AlertDialogTitle>
-          <AlertDialogDescription className="space-y-2">
-            <p>Esta acción generará automáticamente todos los domingos del {nextYear} con:</p>
-            <ul className="list-disc list-inside space-y-1 text-sm">
-              <li>Dos servicios por domingo (8:00 AM y 10:45 AM)</li>
-              <li>Rotación de grupos: Aleida → Keyla → Massy</li>
-              <li>Rotación de directores con restricciones de horario</li>
-              <li>Coordinación de directores con sus grupos</li>
-            </ul>
-            <p className="text-amber-600 font-medium mt-4">
-              Se crearán aproximadamente 104 servicios. ¿Desea continuar?
-            </p>
+          <AlertDialogTitle>Generar Servicios</AlertDialogTitle>
+          <AlertDialogDescription className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Selecciona el año a generar:
+              </label>
+              <select
+                value={selectedYear || ''}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              >
+                {availableYears.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="space-y-2">
+              <p>Esta acción generará automáticamente todos los domingos del {selectedYear} con:</p>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                <li>Dos servicios por domingo (8:00 AM y 10:45 AM)</li>
+                <li>Rotación de grupos: Aleida → Keyla → Massy</li>
+                <li>Rotación de directores con restricciones de horario</li>
+                <li>Coordinación de directores con sus grupos</li>
+              </ul>
+              <p className="text-amber-600 font-medium mt-4">
+                Se crearán aproximadamente 104 servicios. ¿Desea continuar?
+              </p>
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

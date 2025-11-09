@@ -138,6 +138,11 @@ const menuCategories = [
   label: "Configuración",  
   items: [  
     {  
+      title: "Configuración",  
+      url: "/settings",  
+      icon: Settings,  
+    },
+    {  
       title: "Administración",  
       url: "/admin",  
       icon: Settings,  
