@@ -1,21 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { 
-  Users, 
-  UserPlus, 
-  UserMinus, 
-  ArrowUp, 
-  ArrowDown, 
-  Edit, 
-  Mic,
-  X,
-  Check
-} from "lucide-react";
+import { Users, UserPlus, UserMinus, ArrowUp, ArrowDown, Edit, Mic, X, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -49,55 +39,62 @@ interface EditGroupMembersProps {
 }
 
 const voiceOptions = [
-  'Voz Soprano',
-  'Voz Contralto', 
-  'Voz Tenor',
-  'Voz Bajo',
-  'Piano',
-  'Guitarra',
-  'Bajo',
-  'Batería',
-  'Teclado',
-  'Otro'
+  "Voz Soprano",
+  "Voz Contralto",
+  "Voz Tenor",
+  "Voz Bajo",
+  "Piano",
+  "Guitarra",
+  "Bajo",
+  "Batería",
+  "Teclado",
+  "Otro",
 ];
 
 // Map Spanish voice/instrument options to database enum values
 const voiceToEnumMap: Record<string, string> = {
-  'Voz Soprano': 'vocals',
-  'Voz Contralto': 'vocals',
-  'Voz Tenor': 'vocals',
-  'Voz Bajo': 'vocals',
-  'Piano': 'piano',
-  'Guitarra': 'guitar',
-  'Bajo': 'bass',
-  'Batería': 'drums',
-  'Teclado': 'piano',
-  'Otro': 'other'
+  "Voz Soprano": "vocals",
+  "Voz Contralto": "vocals",
+  "Voz Tenor": "vocals",
+  "Voz Bajo": "vocals",
+  Piano: "piano",
+  Guitarra: "guitar",
+  Bajo: "bass",
+  Batería: "drums",
+  Teclado: "piano",
+  Otro: "other",
 };
 
-const EditGroupMembers: React.FC<EditGroupMembersProps> = ({ 
-  groupId, 
-  groupName, 
-  isOpen, 
-  onClose, 
-  onUpdate 
-}) => {
+// Map enum values back to Spanish for display
+const enumToVoiceMap: Record<string, string> = {
+  vocals: "Voz",
+  piano: "Piano",
+  guitar: "Guitarra",
+  bass: "Bajo",
+  drums: "Batería",
+  other: "Otro",
+};
+
+const EditGroupMembers: React.FC<EditGroupMembersProps> = ({ groupId, groupName, isOpen, onClose, onUpdate }) => {
   const [groupMembers, setGroupMembers] = useState<GroupMemberWithDetails[]>([]);
   const [availableMembers, setAvailableMembers] = useState<Member[]>([]);
-  const [selectedMember, setSelectedMember] = useState<string>('');
-  const [selectedVoice, setSelectedVoice] = useState<string>('');
+  const [selectedMember, setSelectedMember] = useState<string>("");
+  const [selectedVoice, setSelectedVoice] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [editingMember, setEditingMember] = useState<string | null>(null);
-  const [editVoice, setEditVoice] = useState<string>('');
+  const [editVoice, setEditVoice] = useState<string>("");
   const [editingMicOrder, setEditingMicOrder] = useState<string | null>(null);
-  const [editMicNumber, setEditMicNumber] = useState<string>('');
+  const [editMicNumber, setEditMicNumber] = useState<string>("");
   const { toast } = useToast();
 
   const fetchGroupMembers = async () => {
     try {
+      console.log("=== DEBUG: Fetching group members for ===", groupId);
+
       const { data, error } = await supabase
-        .from('group_members')
-        .select(`
+        .from("group_members")
+        .select(
+          `
           id,
           group_id,
           user_id,
@@ -114,25 +111,53 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
             cargo,
             photo_url
           )
-        `)
-        .eq('group_id', groupId)
-        .eq('is_active', true)
-        .order('mic_order', { ascending: true, nullsFirst: false })
-        .order('is_leader', { ascending: false })
-        .order('created_at');
+        `,
+        )
+        .eq("group_id", groupId)
+        .eq("is_active", true)
+        .order("mic_order", { ascending: true, nullsFirst: false })
+        .order("is_leader", { ascending: false })
+        .order("created_at");
 
       if (error) throw error;
 
+      console.log("=== DEBUG: Raw group members data ===", data);
+
+      // Mejorar el filtrado de miembros
       const membersWithDetails = (data || [])
-        .filter(item => item.members)
-        .map(item => ({
+        .filter((item) => {
+          if (!item.members) {
+            console.log("Member data missing for group member:", item.id);
+            return false;
+          }
+
+          // Si members es un array, verificar que tenga elementos válidos
+          if (Array.isArray(item.members)) {
+            const isValid = item.members.length > 0 && item.members[0] !== null;
+            if (!isValid) {
+              console.log("Invalid array member data for:", item.id);
+            }
+            return isValid;
+          }
+
+          // Si es un objeto, verificar que tenga datos esenciales
+          const isValid = item.members.id !== null && item.members.id !== undefined;
+          if (!isValid) {
+            console.log("Invalid object member data for:", item.id);
+          }
+          return isValid;
+        })
+        .map((item) => ({
           ...item,
-          member: Array.isArray(item.members) ? item.members[0] : item.members
+          member: Array.isArray(item.members) ? item.members[0] : item.members,
         }));
+
+      console.log("=== DEBUG: Processed group members ===", membersWithDetails);
+      console.log("=== DEBUG: Group members count ===", membersWithDetails.length);
 
       setGroupMembers(membersWithDetails as GroupMemberWithDetails[]);
     } catch (error) {
-      console.error('Error fetching group members:', error);
+      console.error("Error fetching group members:", error);
       toast({
         title: "Error",
         description: "No se pudieron cargar los miembros del grupo",
@@ -144,29 +169,58 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
   const fetchAvailableMembers = async () => {
     try {
       const { data, error } = await supabase
-        .from('members')
-        .select('id, nombres, apellidos, voz_instrumento, cargo, photo_url')
-        .eq('is_active', true)
-        .order('nombres');
+        .from("members")
+        .select("id, nombres, apellidos, voz_instrumento, cargo, photo_url")
+        .eq("is_active", true)
+        .order("nombres");
 
       if (error) throw error;
 
       // Filter out members already in the group
-      const currentMemberIds = groupMembers.map(gm => gm.user_id);
-      const available = (data || []).filter(member => !currentMemberIds.includes(member.id));
-      
-      console.log('Available members:', available);
-      console.log('Current member IDs:', currentMemberIds);
-      
+      const currentMemberIds = groupMembers.map((gm) => gm.user_id);
+      const available = (data || []).filter((member) => !currentMemberIds.includes(member.id));
+
+      console.log("=== DEBUG: Available members count ===", available.length);
+      console.log("=== DEBUG: Current member IDs ===", currentMemberIds);
+      console.log("=== DEBUG: Available members ===", available);
+
       setAvailableMembers(available);
     } catch (error) {
-      console.error('Error fetching available members:', error);
+      console.error("Error fetching available members:", error);
       toast({
         title: "Error",
         description: "No se pudieron cargar los miembros disponibles",
         variant: "destructive",
       });
     }
+  };
+
+  // Función para convertir el valor enum a texto legible
+  const getDisplayInstrument = (instrument: string): string => {
+    // Si ya es un texto en español, devolverlo tal cual
+    if (voiceOptions.includes(instrument)) {
+      return instrument;
+    }
+    // Si es un valor enum, convertirlo
+    return enumToVoiceMap[instrument] || instrument || "Sin especificar";
+  };
+
+  // Función para obtener el valor español desde el enum
+  const getVoiceFromInstrument = (instrument: string): string => {
+    // Si el instrumento ya está en las opciones, usarlo directamente
+    if (voiceOptions.includes(instrument)) {
+      return instrument;
+    }
+
+    // Buscar una opción que coincida con el enum
+    for (const [spanishOption, enumValue] of Object.entries(voiceToEnumMap)) {
+      if (enumValue === instrument) {
+        return spanishOption;
+      }
+    }
+
+    // Si no encuentra coincidencia, usar "Otro"
+    return "Otro";
   };
 
   const handleAddMember = async () => {
@@ -181,21 +235,21 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
 
     try {
       setLoading(true);
-      
+
       // Check if member is already in the group
-      const existingMember = groupMembers.find(gm => gm.user_id === selectedMember);
-      
+      const existingMember = groupMembers.find((gm) => gm.user_id === selectedMember);
+
       if (existingMember) {
         // Reactivate the member instead of creating a new one
-        const instrumentEnumValue = voiceToEnumMap[selectedVoice] || 'other';
-        
+        const instrumentEnumValue = voiceToEnumMap[selectedVoice] || "other";
+
         const { error: updateError } = await supabase
-          .from('group_members')
+          .from("group_members")
           .update({
             is_active: true,
-            instrument: instrumentEnumValue
+            instrument: instrumentEnumValue,
           })
-          .eq('id', existingMember.id);
+          .eq("id", existingMember.id);
 
         if (updateError) throw updateError;
 
@@ -205,25 +259,24 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
         });
       } else {
         // Convert Spanish voice option to database enum value
-        const instrumentEnumValue = voiceToEnumMap[selectedVoice] || 'other';
-        
+        const instrumentEnumValue = voiceToEnumMap[selectedVoice] || "other";
+
         // Get next mic order number
-        const maxMicOrder = groupMembers.reduce((max, gm) => 
-          gm.mic_order && gm.mic_order > max ? gm.mic_order : max, 0
+        const maxMicOrder = groupMembers.reduce(
+          (max, gm) => (gm.mic_order && gm.mic_order > max ? gm.mic_order : max),
+          0,
         );
-        
-        const { error } = await supabase
-          .from('group_members')
-          .insert([
-            {
-              group_id: groupId,
-              user_id: selectedMember,
-              instrument: instrumentEnumValue,
-              is_leader: false,
-              is_active: true,
-              mic_order: maxMicOrder + 1
-            }
-          ]);
+
+        const { error } = await supabase.from("group_members").insert([
+          {
+            group_id: groupId,
+            user_id: selectedMember,
+            instrument: instrumentEnumValue,
+            is_leader: false,
+            is_active: true,
+            mic_order: maxMicOrder + 1,
+          },
+        ]);
 
         if (error) throw error;
 
@@ -234,18 +287,15 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
       }
 
       // Update the member's voice in the members table (keep Spanish label)
-      await supabase
-        .from('members')
-        .update({ voz_instrumento: selectedVoice })
-        .eq('id', selectedMember);
+      await supabase.from("members").update({ voz_instrumento: selectedVoice }).eq("id", selectedMember);
 
-      setSelectedMember('');
-      setSelectedVoice('');
+      setSelectedMember("");
+      setSelectedVoice("");
       await fetchGroupMembers();
       await fetchAvailableMembers();
       onUpdate();
     } catch (error) {
-      console.error('Error adding member:', error);
+      console.error("Error adding member:", error);
       toast({
         title: "Error",
         description: "No se pudo agregar el miembro",
@@ -259,11 +309,8 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
   const handleRemoveMember = async (memberId: string) => {
     try {
       setLoading(true);
-      
-      const { error } = await supabase
-        .from('group_members')
-        .update({ is_active: false })
-        .eq('id', memberId);
+
+      const { error } = await supabase.from("group_members").update({ is_active: false }).eq("id", memberId);
 
       if (error) throw error;
 
@@ -276,7 +323,7 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
       await fetchAvailableMembers();
       onUpdate();
     } catch (error) {
-      console.error('Error removing member:', error);
+      console.error("Error removing member:", error);
       toast({
         title: "Error",
         description: "No se pudo remover el miembro",
@@ -290,26 +337,26 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
   const handleUpdateVoice = async (memberId: string, newVoice: string) => {
     try {
       setLoading(true);
-      
-      const member = groupMembers.find(gm => gm.id === memberId);
+
+      const member = groupMembers.find((gm) => gm.id === memberId);
       if (!member) return;
 
       // Convert Spanish voice option to database enum value
-      const instrumentEnumValue = voiceToEnumMap[newVoice] || 'other';
+      const instrumentEnumValue = voiceToEnumMap[newVoice] || "other";
 
       // Update group_members table with enum value
       const { error: groupError } = await supabase
-        .from('group_members')
+        .from("group_members")
         .update({ instrument: instrumentEnumValue })
-        .eq('id', memberId);
+        .eq("id", memberId);
 
       if (groupError) throw groupError;
 
       // Update members table with Spanish label
       const { error: memberError } = await supabase
-        .from('members')
+        .from("members")
         .update({ voz_instrumento: newVoice })
-        .eq('id', member.user_id);
+        .eq("id", member.user_id);
 
       if (memberError) throw memberError;
 
@@ -322,7 +369,7 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
       await fetchGroupMembers();
       onUpdate();
     } catch (error) {
-      console.error('Error updating voice:', error);
+      console.error("Error updating voice:", error);
       toast({
         title: "Error",
         description: "No se pudo actualizar la voz/instrumento",
@@ -335,35 +382,29 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
 
   const handleMoveUp = async (index: number) => {
     if (index === 0) return;
-    
+
     try {
       setLoading(true);
       const currentMember = groupMembers[index];
       const previousMember = groupMembers[index - 1];
-      
+
       // Swap mic_order values
       const currentOrder = currentMember.mic_order || index + 1;
       const previousOrder = previousMember.mic_order || index;
-      
-      await supabase
-        .from('group_members')
-        .update({ mic_order: previousOrder })
-        .eq('id', currentMember.id);
-        
-      await supabase
-        .from('group_members')
-        .update({ mic_order: currentOrder })
-        .eq('id', previousMember.id);
-      
+
+      await supabase.from("group_members").update({ mic_order: previousOrder }).eq("id", currentMember.id);
+
+      await supabase.from("group_members").update({ mic_order: currentOrder }).eq("id", previousMember.id);
+
       toast({
         title: "Éxito",
         description: "Orden de micrófono actualizado",
       });
-      
+
       await fetchGroupMembers();
       onUpdate();
     } catch (error) {
-      console.error('Error moving member up:', error);
+      console.error("Error moving member up:", error);
       toast({
         title: "Error",
         description: "No se pudo reordenar el miembro",
@@ -376,35 +417,29 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
 
   const handleMoveDown = async (index: number) => {
     if (index === groupMembers.length - 1) return;
-    
+
     try {
       setLoading(true);
       const currentMember = groupMembers[index];
       const nextMember = groupMembers[index + 1];
-      
+
       // Swap mic_order values
       const currentOrder = currentMember.mic_order || index + 1;
       const nextOrder = nextMember.mic_order || index + 2;
-      
-      await supabase
-        .from('group_members')
-        .update({ mic_order: nextOrder })
-        .eq('id', currentMember.id);
-        
-      await supabase
-        .from('group_members')
-        .update({ mic_order: currentOrder })
-        .eq('id', nextMember.id);
-      
+
+      await supabase.from("group_members").update({ mic_order: nextOrder }).eq("id", currentMember.id);
+
+      await supabase.from("group_members").update({ mic_order: currentOrder }).eq("id", nextMember.id);
+
       toast({
         title: "Éxito",
         description: "Orden de micrófono actualizado",
       });
-      
+
       await fetchGroupMembers();
       onUpdate();
     } catch (error) {
-      console.error('Error moving member down:', error);
+      console.error("Error moving member down:", error);
       toast({
         title: "Error",
         description: "No se pudo reordenar el miembro",
@@ -428,11 +463,8 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
 
     try {
       setLoading(true);
-      
-      const { error } = await supabase
-        .from('group_members')
-        .update({ mic_order: orderNum })
-        .eq('id', memberId);
+
+      const { error } = await supabase.from("group_members").update({ mic_order: orderNum }).eq("id", memberId);
 
       if (error) throw error;
 
@@ -442,11 +474,11 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
       });
 
       setEditingMicOrder(null);
-      setEditMicNumber('');
+      setEditMicNumber("");
       await fetchGroupMembers();
       onUpdate();
     } catch (error) {
-      console.error('Error updating mic order:', error);
+      console.error("Error updating mic order:", error);
       toast({
         title: "Error",
         description: "No se pudo actualizar el número de micrófono",
@@ -472,10 +504,10 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
   }, [isOpen, groupId]);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && groupId) {
       fetchAvailableMembers();
     }
-  }, [groupMembers, isOpen]);
+  }, [groupMembers, isOpen, groupId]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -517,17 +549,20 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
                           <SelectItem key={member.id} value={member.id}>
                             <div className="flex items-center gap-3 py-2">
                               <Avatar className="w-8 h-8">
-                                <AvatarImage src={member.photo_url || undefined} alt={`${member.nombres} ${member.apellidos}`} />
+                                <AvatarImage
+                                  src={member.photo_url || undefined}
+                                  alt={`${member.nombres} ${member.apellidos}`}
+                                />
                                 <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">
                                   {getInitials(member.nombres, member.apellidos)}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex flex-col">
-                                <span className="font-medium">{member.nombres} {member.apellidos}</span>
+                                <span className="font-medium">
+                                  {member.nombres} {member.apellidos}
+                                </span>
                                 {member.voz_instrumento && (
-                                  <span className="text-xs text-muted-foreground">
-                                    {member.voz_instrumento}
-                                  </span>
+                                  <span className="text-xs text-muted-foreground">{member.voz_instrumento}</span>
                                 )}
                               </div>
                             </div>
@@ -555,13 +590,13 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
                 </div>
               </div>
 
-              <Button 
+              <Button
                 onClick={handleAddMember}
                 disabled={loading || !selectedMember || !selectedVoice}
                 className="w-full"
               >
                 <UserPlus className="w-4 h-4 mr-2" />
-                {loading ? 'Agregando...' : 'Agregar Miembro'}
+                {loading ? "Agregando..." : "Agregar Miembro"}
               </Button>
             </CardContent>
           </Card>
@@ -576,13 +611,14 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
             </CardHeader>
             <CardContent>
               {groupMembers.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">
-                  No hay miembros en este grupo
-                </p>
+                <p className="text-gray-500 text-center py-8">No hay miembros en este grupo</p>
               ) : (
                 <div className="space-y-3">
                   {groupMembers.map((groupMember, index) => (
-                    <div key={groupMember.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                    <div
+                      key={groupMember.id}
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                    >
                       <div className="flex items-center gap-4">
                         <div className="flex flex-col items-center gap-1">
                           <div className="flex gap-1">
@@ -629,7 +665,7 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
                                 variant="ghost"
                                 onClick={() => {
                                   setEditingMicOrder(null);
-                                  setEditMicNumber('');
+                                  setEditMicNumber("");
                                 }}
                                 className="h-6 w-6 p-0"
                               >
@@ -637,23 +673,22 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
                               </Button>
                             </div>
                           ) : (
-                            <Badge 
-                              variant="outline" 
+                            <Badge
+                              variant="outline"
                               className="text-xs cursor-pointer hover:bg-gray-100"
                               onClick={() => {
                                 setEditingMicOrder(groupMember.id);
                                 setEditMicNumber(String(groupMember.mic_order || index + 1));
                               }}
                             >
-                              <Mic className="w-3 h-3 mr-1" />
-                              #{groupMember.mic_order || index + 1}
+                              <Mic className="w-3 h-3 mr-1" />#{groupMember.mic_order || index + 1}
                             </Badge>
                           )}
                         </div>
 
                         <Avatar className="w-12 h-12">
-                          <AvatarImage 
-                            src={groupMember.member.photo_url || undefined} 
+                          <AvatarImage
+                            src={groupMember.member.photo_url || undefined}
                             alt={`${groupMember.member.nombres} ${groupMember.member.apellidos}`}
                           />
                           <AvatarFallback>
@@ -665,7 +700,7 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
                           <span className="font-medium">
                             {groupMember.member.nombres} {groupMember.member.apellidos}
                           </span>
-                          
+
                           {editingMember === groupMember.id ? (
                             <div className="flex items-center gap-2 mt-1">
                               <Select value={editVoice} onValueChange={setEditVoice}>
@@ -699,15 +734,16 @@ const EditGroupMembers: React.FC<EditGroupMembersProps> = ({
                             </div>
                           ) : (
                             <div className="flex items-center gap-2 mt-1">
-                              <Badge 
-                                variant="secondary" 
+                              <Badge
+                                variant="secondary"
                                 className="text-xs cursor-pointer hover:bg-gray-200"
                                 onClick={() => {
                                   setEditingMember(groupMember.id);
-                                  setEditVoice(groupMember.instrument);
+                                  // Convertir el valor enum a español para edición
+                                  setEditVoice(getVoiceFromInstrument(groupMember.instrument));
                                 }}
                               >
-                                {groupMember.instrument}
+                                {getDisplayInstrument(groupMember.instrument)}
                                 <Edit className="w-3 h-3 ml-1" />
                               </Badge>
                               {groupMember.is_leader && (
