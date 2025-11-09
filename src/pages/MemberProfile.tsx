@@ -1,13 +1,12 @@
-
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Printer, Phone, Mail, MapPin, Calendar, Heart, User, Users } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Printer, Phone, Mail, MapPin, Calendar, Heart, User, Users } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface Member {
   id: string;
@@ -45,17 +44,12 @@ const MemberProfile = () => {
 
   const fetchMember = async () => {
     try {
-      const { data, error } = await supabase
-        .from('members')
-        .select('*')
-        .eq('id', id)
-        .eq('is_active', true)
-        .single();
+      const { data, error } = await supabase.from("members").select("*").eq("id", id).eq("is_active", true).single();
 
       if (error) throw error;
       setMember(data);
     } catch (error) {
-      console.error('Error fetching member:', error);
+      console.error("Error fetching member:", error);
       toast({
         title: "Error",
         description: "No se pudo cargar la información del integrante",
@@ -68,48 +62,48 @@ const MemberProfile = () => {
 
   const getRoleLabel = (role: string) => {
     const roleLabels: { [key: string]: string } = {
-      'pastor': 'Pastor',
-      'pastora': 'Pastora',
-      'director_alabanza': 'Director de Alabanza',
-      'directora_alabanza': 'Directora de Alabanza',
-      'corista': 'Corista',
-      'directora_danza': 'Directora de Danza',
-      'danzarina': 'Danzarina',
-      'director_multimedia': 'Director Multimedia',
-      'camarografo': 'Camarógrafo',
-      'camarógrafa': 'Camarógrafa',
-      'encargado_piso': 'Encargado de Piso',
-      'encargada_piso': 'Encargada de Piso',
-      'musico': 'Músico',
-      'sonidista': 'Sonidista',
-      'encargado_luces': 'Encargado de Luces',
-      'encargado_proyeccion': 'Encargado de Proyección',
-      'encargado_streaming': 'Encargado de Streaming'
+      pastor: "Pastor",
+      pastora: "Pastora",
+      director_alabanza: "Director de Alabanza",
+      directora_alabanza: "Directora de Alabanza",
+      corista: "Corista",
+      directora_danza: "Directora de Danza",
+      danzarina: "Danzarina",
+      director_multimedia: "Director Multimedia",
+      camarografo: "Camarógrafo",
+      camarógrafa: "Camarógrafa",
+      encargado_piso: "Encargado de Piso",
+      encargada_piso: "Encargada de Piso",
+      musico: "Músico",
+      sonidista: "Sonidista",
+      encargado_luces: "Encargado de Luces",
+      encargado_proyeccion: "Encargado de Proyección",
+      encargado_streaming: "Encargado de Streaming",
     };
     return roleLabels[role] || role;
   };
 
   const getGroupLabel = (group: string) => {
     const groupLabels: { [key: string]: string } = {
-      'directiva': 'Directiva',
-      'directores_alabanza': 'Directores de Alabanza',
-      'coristas': 'Coristas',
-      'multimedia': 'Multimedia',
-      'danza': 'Danza',
-      'teatro': 'Teatro',
-      'piso': 'Piso'
+      directiva: "Directiva",
+      directores_alabanza: "Directores de Alabanza",
+      coristas: "Coristas",
+      multimedia: "Multimedia",
+      danza: "Danza",
+      teatro: "Teatro",
+      piso: "Piso",
     };
     return groupLabels[group] || group;
   };
 
   const formatBirthDate = (dateStr?: string) => {
-    if (!dateStr) return '';
-    const parts = dateStr.split('-').map(Number);
+    if (!dateStr) return "";
+    const parts = dateStr.split("-").map(Number);
     if (parts.length !== 3) return dateStr;
     const [y, m, d] = parts;
     if (!y || !m || !d) return dateStr;
     const date = new Date(y, m - 1, d);
-    return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+    return date.toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" });
   };
 
   const handlePrint = () => {
@@ -133,7 +127,7 @@ const MemberProfile = () => {
         <div className="text-center py-8">
           <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600">Integrante no encontrado</p>
-          <Button onClick={() => navigate('/integrantes')} className="mt-4">
+          <Button onClick={() => navigate("/integrantes")} className="mt-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Volver a Integrantes
           </Button>
@@ -146,11 +140,7 @@ const MemberProfile = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="print:hidden bg-white border-b border-gray-200 p-4">
         <div className="container mx-auto flex items-center justify-between">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/integrantes')}
-            className="flex items-center gap-2"
-          >
+          <Button variant="ghost" onClick={() => navigate("/integrantes")} className="flex items-center gap-2">
             <ArrowLeft className="w-4 h-4" />
             Volver a Integrantes
           </Button>
@@ -169,21 +159,17 @@ const MemberProfile = () => {
               <div className="flex items-start justify-between mb-6 print:mb-4">
                 <div className="flex items-center gap-6">
                   <Avatar className="w-24 h-24 border-4 border-arcana-blue-200">
-                    <AvatarImage
-                      src={member.photo_url || undefined}
-                      alt={`${member.nombres} ${member.apellidos}`}
-                    />
+                    <AvatarImage src={member.photo_url || undefined} alt={`${member.nombres} ${member.apellidos}`} />
                     <AvatarFallback className="bg-arcana-blue-gradient text-white text-2xl">
-                      {member.nombres.charAt(0)}{member.apellidos.charAt(0)}
+                      {member.nombres.charAt(0)}
+                      {member.apellidos.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <h1 className="text-4xl print:text-2xl font-bold text-arcana-blue-600 mb-2 print:mb-1">
                       {member.nombres} {member.apellidos}
                     </h1>
-                    <p className="text-2xl print:text-lg text-gray-700 mb-3 print:mb-2">
-                      {getRoleLabel(member.cargo)}
-                    </p>
+                    <p className="text-2xl print:text-lg text-gray-700 mb-3 print:mb-2">{getRoleLabel(member.cargo)}</p>
                     {member.grupo && (
                       <Badge variant="outline" className="text-sm">
                         {getGroupLabel(member.grupo)}
@@ -191,12 +177,12 @@ const MemberProfile = () => {
                     )}
                   </div>
                 </div>
-                
+
                 {/* ADN Logo */}
                 <div className="text-right">
-                  <img 
-                    src="/lovable-uploads/74634c97-a2ef-403b-9fa0-89d9207b7b00.png" 
-                    alt="ADN Ministerio Logo" 
+                  <img
+                    src="/lovable-uploads/74634c97-a2ef-403b-9fa0-89d9207b7b00.png"
+                    alt="ADN Ministerio Logo"
                     className="w-24 h-auto mb-2"
                   />
                   <p className="text-sm text-gray-600">Ministerio ADN</p>
@@ -216,22 +202,21 @@ const MemberProfile = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {(member.celular || member.telefono) && (
                     <div className="flex items-center gap-3 mb-3">
                       <Phone className="w-5 h-5 text-gray-500" />
                       <div>
                         <span className="font-medium">Contacto: </span>
                         <span>
-                          {member.celular && member.telefono 
+                          {member.celular && member.telefono
                             ? `${member.celular} / ${member.telefono}`
-                            : member.celular || member.telefono
-                          }
+                            : member.celular || member.telefono}
                         </span>
                       </div>
                     </div>
                   )}
-                  
+
                   {member.email && (
                     <div className="flex items-center gap-3 mb-3">
                       <Mail className="w-5 h-5 text-gray-500" />
@@ -241,7 +226,7 @@ const MemberProfile = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {member.direccion && (
                     <div className="flex items-start gap-3 mb-3">
                       <MapPin className="w-5 h-5 text-gray-500 mt-0.5" />
@@ -263,7 +248,7 @@ const MemberProfile = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {member.tipo_sangre && (
                     <div className="flex items-center gap-3 mb-3">
                       <Heart className="w-5 h-5 text-gray-500" />
@@ -273,7 +258,7 @@ const MemberProfile = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {member.persona_reporte && (
                     <div className="flex items-center gap-3 mb-3">
                       <User className="w-5 h-5 text-gray-500" />
@@ -283,7 +268,7 @@ const MemberProfile = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {member.contacto_emergencia && (
                     <div className="flex items-center gap-3 mb-3">
                       <Phone className="w-5 h-5 text-red-500" />
@@ -307,45 +292,49 @@ const MemberProfile = () => {
               )}
 
               {/* Additional Information Table - Only show on screen, not print */}
-              {(member.grupo || member.persona_reporte || member.voz_instrumento || member.tipo_sangre || member.contacto_emergencia) && (
+              {(member.grupo ||
+                member.persona_reporte ||
+                member.voz_instrumento ||
+                member.tipo_sangre ||
+                member.contacto_emergencia) && (
                 <div className="mt-8 border-t pt-6 print:hidden">
                   <div className="overflow-x-auto">
                     <div className="min-w-full border border-gray-300 rounded-lg overflow-hidden">
                       {/* Headers */}
                       <div className="grid grid-cols-1 md:grid-cols-5 gap-0">
-                        <div className="bg-arcana-blue-600 text-white p-3 text-center font-bold text-xs md:text-sm">
+                        <div className="bg-blue-600 text-white p-3 text-center font-bold text-xs md:text-sm">
                           GRUPO AL QUE PERTENECE
                         </div>
-                        <div className="bg-arcana-blue-600 text-white p-3 text-center font-bold text-xs md:text-sm">
+                        <div className="bg-blue-600 text-white p-3 text-center font-bold text-xs md:text-sm">
                           PERSONA A QUIEN SE REPORTA
                         </div>
-                        <div className="bg-arcana-blue-600 text-white p-3 text-center font-bold text-xs md:text-sm">
+                        <div className="bg-blue-600 text-white p-3 text-center font-bold text-xs md:text-sm">
                           VOZ / INSTRUMENTO
                         </div>
-                        <div className="bg-arcana-blue-600 text-white p-3 text-center font-bold text-xs md:text-sm">
+                        <div className="bg-blue-600 text-white p-3 text-center font-bold text-xs md:text-sm">
                           TIPO DE SANGRE
                         </div>
-                        <div className="bg-arcana-blue-600 text-white p-3 text-center font-bold text-xs md:text-sm">
+                        <div className="bg-blue-600 text-white p-3 text-center font-bold text-xs md:text-sm">
                           CONTACTO DE EMERGENCIA
                         </div>
                       </div>
-                      
+
                       {/* Content */}
                       <div className="grid grid-cols-1 md:grid-cols-5 gap-0">
                         <div className="p-3 text-center border-r border-gray-300 bg-white text-sm break-words">
-                          {member.grupo ? getGroupLabel(member.grupo) : '-'}
+                          {member.grupo ? getGroupLabel(member.grupo) : "-"}
                         </div>
                         <div className="p-3 text-center border-r border-gray-300 bg-white text-sm break-words">
-                          {member.persona_reporte || '-'}
+                          {member.persona_reporte || "-"}
                         </div>
                         <div className="p-3 text-center border-r border-gray-300 bg-white text-sm break-words">
-                          {member.voz_instrumento || '-'}
+                          {member.voz_instrumento || "-"}
                         </div>
                         <div className="p-3 text-center border-r border-gray-300 bg-white text-sm break-words">
-                          {member.tipo_sangre || '-'}
+                          {member.tipo_sangre || "-"}
                         </div>
                         <div className="p-3 text-center bg-white text-sm break-words">
-                          {member.contacto_emergencia || '-'}
+                          {member.contacto_emergencia || "-"}
                         </div>
                       </div>
                     </div>
