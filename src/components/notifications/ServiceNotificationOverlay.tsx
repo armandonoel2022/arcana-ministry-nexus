@@ -99,13 +99,13 @@ const GROUP_CONFIG = {
           "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG",
       },
       {
-        id: "f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f",
-        name: "Félix Nicolás Peralta Hernández",
+        id: "d6602109-ad3e-4db6-ab4a-2984dadfc569", // ID de Armando Noel Charle
+        name: "Armando Noel Charle",
         voice: "Tenor",
         role: "Director de Alabanza",
         mic: "Micrófono #3",
         photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG",
+          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/d6602109-ad3e-4db6-ab4a-2984dadfc569.JPG",
       },
       {
         id: "8cebc294-ea61-40d0-9b04-08d7d474332c",
