@@ -90,7 +90,8 @@ const GroupMembersDisplay: React.FC<GroupMembersDisplayProps> = ({ groupId, grou
           }
 
           // Si es un objeto, verificar que tenga datos esenciales
-          const isValid = item.members.id !== null && item.members.id !== undefined;
+          const memberObj = item.members as any;
+          const isValid = memberObj?.id !== null && memberObj?.id !== undefined;
           if (!isValid) {
             console.log("Invalid object member data for:", item.id);
           }

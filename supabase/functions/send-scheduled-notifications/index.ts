@@ -18,21 +18,6 @@ interface ScheduledNotification {
   metadata?: any;
 }
 
-interface WeekendService {
-  id: string;
-  service_date: string;
-  title: string;
-  leader: string;
-  service_type: string;
-  location: string;
-  special_activity: string | null;
-  worship_groups?: {
-    id: string;
-    name: string;
-    color_theme: string;
-  };
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -89,12 +74,23 @@ serve(async (req) => {
 
     // Process each scheduled notification
     for (const notification of scheduledNotifications) {
-      console.log(`Processing notification: ${notification.name}`);
+      console.log(`Processing notification: ${notification.name} - Type: ${notification.notification_type}`);
       
-      if (notification.notification_type === 'service_overlay') {
-        await processServiceOverlayNotification(supabase, notification);
-      } else {
-        await processGeneralNotification(supabase, notification);
+      switch (notification.notification_type) {
+        case 'service_overlay':
+          await processServiceOverlayNotification(supabase, notification);
+          break;
+        case 'daily_verse':
+          await processDailyVerseNotification(supabase, notification);
+          break;
+        case 'daily_advice':
+          await processDailyAdviceNotification(supabase, notification);
+          break;
+        case 'special_event':
+          await processSpecialEventNotification(supabase, notification);
+          break;
+        default:
+          await processGeneralNotification(supabase, notification);
       }
       
       processedNotifications++;
@@ -103,7 +99,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         message: `Successfully processed ${processedNotifications} scheduled notifications`,
-        notifications: scheduledNotifications.map(n => ({ id: n.id, name: n.name }))
+        notifications: scheduledNotifications.map(n => ({ id: n.id, name: n.name, type: n.notification_type }))
       }), 
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -154,29 +150,26 @@ async function processServiceOverlayNotification(supabase: any, notification: Sc
         time: getServiceTime(service.title),
         director: {
           name: service.leader,
-          photo: null // Will be populated from group members if available
+          photo: null
         },
-        voices: [], // Will be populated from group members if available
-        songs: [] // Will be populated from service songs if available
+        voices: [],
+        songs: []
       }))
     };
 
-    // Send notification to all users (global notification)
-    const { error: notificationError } = await supabase
-      .from('system_notifications')
-      .insert({
-        recipient_id: null, // Global notification
-        type: 'service_program',
-        title: 'Programa de Servicios - Fin de Semana',
-        message: `Servicios programados para el próximo fin de semana`,
-        notification_category: 'agenda',
-        metadata: servicesMetadata,
-        priority: 2
-      });
-
-    if (notificationError) {
-      console.error('Error creating service overlay notification:', notificationError);
-      throw notificationError;
+    // Send notification to all active users
+    for (const profile of profiles) {
+      await supabase
+        .from('system_notifications')
+        .insert({
+          recipient_id: profile.id,
+          type: 'service_program',
+          title: 'Programa de Servicios - Fin de Semana',
+          message: `Servicios programados para el próximo fin de semana`,
+          notification_category: 'agenda',
+          metadata: servicesMetadata,
+          priority: 2
+        });
     }
 
     console.log('Service overlay notification sent successfully');
@@ -187,11 +180,196 @@ async function processServiceOverlayNotification(supabase: any, notification: Sc
   }
 }
 
+async function processDailyVerseNotification(supabase: any, notification: ScheduledNotification) {
+  console.log('Processing daily verse notification...');
+  
+  try {
+    // Get today's verse or create one
+    const today = new Date().toISOString().split('T')[0];
+    
+    let { data: dailyVerse, error: verseError } = await supabase
+      .from('daily_verses')
+      .select('*, bible_verses (*)')
+      .eq('verse_date', today)
+      .single();
+
+    // If no verse for today, create one
+    if (!dailyVerse) {
+      // Get a random verse
+      const { data: randomVerse, error: randomError } = await supabase
+        .from('bible_verses')
+        .select('*')
+        .limit(1)
+        .order('id', { ascending: false });
+
+      if (randomError) throw randomError;
+      if (!randomVerse || randomVerse.length === 0) {
+        console.log('No verses available in database');
+        return;
+      }
+
+      // Create daily verse entry
+      const { data: newDailyVerse, error: insertError } = await supabase
+        .from('daily_verses')
+        .insert({
+          verse_date: today,
+          verse_id: randomVerse[0].id
+        })
+        .select('*, bible_verses (*)')
+        .single();
+
+      if (insertError) throw insertError;
+      dailyVerse = newDailyVerse;
+    }
+
+    // Get all active users
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('is_active', true);
+
+    if (profilesError) throw profilesError;
+
+    console.log(`Sending daily verse notification to ${profiles?.length || 0} users`);
+
+    // Send notification to all active users
+    for (const profile of profiles) {
+      await supabase
+        .from('system_notifications')
+        .insert({
+          recipient_id: profile.id,
+          type: 'daily_verse',
+          title: 'Versículo del Día',
+          message: dailyVerse.bible_verses.text,
+          notification_category: 'spiritual',
+          metadata: {
+            verse_reference: dailyVerse.bible_verses.reference,
+            verse_text: dailyVerse.bible_verses.text,
+            verse_date: today
+          },
+          priority: 1
+        });
+    }
+
+    console.log('Daily verse notification sent successfully');
+    
+  } catch (error) {
+    console.error('Error processing daily verse notification:', error);
+    throw error;
+  }
+}
+
+async function processDailyAdviceNotification(supabase: any, notification: ScheduledNotification) {
+  console.log('Processing daily advice notification...');
+  
+  try {
+    const adviceMessages = [
+      { title: 'Ensaya con Propósito', message: 'Dedica tiempo de calidad a cada ensayo. La excelencia viene de la práctica constante.' },
+      { title: 'Unidad en el Ministerio', message: 'Recuerda que somos un solo cuerpo. Apoya a tus hermanos en el ministerio.' },
+      { title: 'Preparación Espiritual', message: 'Antes de ministrar, prepara tu corazón. La adoración nace de una vida en comunión con Dios.' },
+      { title: 'Puntualidad es Respeto', message: 'Llegar a tiempo a los ensayos y servicios demuestra compromiso y respeto a tus hermanos.' },
+      { title: 'Cuida tu Voz', message: 'Tu voz es un instrumento. Mantente hidratado y descansa adecuadamente.' }
+    ];
+
+    const randomAdvice = adviceMessages[Math.floor(Math.random() * adviceMessages.length)];
+
+    // Get all active users
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('is_active', true);
+
+    if (profilesError) throw profilesError;
+
+    console.log(`Sending daily advice notification to ${profiles?.length || 0} users`);
+
+    // Send notification to all active users
+    for (const profile of profiles) {
+      await supabase
+        .from('system_notifications')
+        .insert({
+          recipient_id: profile.id,
+          type: 'daily_advice',
+          title: randomAdvice.title,
+          message: randomAdvice.message,
+          notification_category: 'general',
+          metadata: {
+            advice_type: 'daily',
+            date: new Date().toISOString().split('T')[0]
+          },
+          priority: 1
+        });
+    }
+
+    console.log('Daily advice notification sent successfully');
+    
+  } catch (error) {
+    console.error('Error processing daily advice notification:', error);
+    throw error;
+  }
+}
+
+async function processSpecialEventNotification(supabase: any, notification: ScheduledNotification) {
+  console.log('Processing special event notification...');
+  
+  try {
+    // Check if there are any events scheduled
+    const { data: events, error: eventsError } = await supabase
+      .from('events')
+      .select('*')
+      .gte('event_date', new Date().toISOString())
+      .order('event_date', { ascending: true })
+      .limit(1);
+
+    if (eventsError) throw eventsError;
+
+    if (!events || events.length === 0) {
+      console.log('No upcoming events found');
+      return;
+    }
+
+    const event = events[0];
+
+    // Get all active users
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('is_active', true);
+
+    if (profilesError) throw profilesError;
+
+    console.log(`Sending special event notification to ${profiles?.length || 0} users`);
+
+    // Send notification to all active users
+    for (const profile of profiles) {
+      await supabase
+        .from('system_notifications')
+        .insert({
+          recipient_id: profile.id,
+          type: 'special_event',
+          title: `Evento Especial: ${event.title}`,
+          message: event.description || 'Tenemos un evento especial próximamente',
+          notification_category: 'agenda',
+          metadata: {
+            event_id: event.id,
+            event_title: event.title,
+            event_date: event.event_date,
+            event_location: event.location
+          },
+          priority: 2
+        });
+    }
+
+    console.log('Special event notification sent successfully');
+    
+  } catch (error) {
+    console.error('Error processing special event notification:', error);
+    throw error;
+  }
+}
+
 async function processGeneralNotification(supabase: any, notification: ScheduledNotification) {
   console.log(`Processing general notification: ${notification.name}`);
-  
-  // For now, just log general notifications
-  // You can extend this to handle different types of general notifications
   console.log('General notification processed');
 }
 

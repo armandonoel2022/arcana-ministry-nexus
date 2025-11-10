@@ -3,6 +3,8 @@ import { X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import BirthdayNotificationBanner from './BirthdayNotificationBanner';
 import ServiceNotificationCard from './ServiceNotificationCard';
+import { DailyVerseOverlay } from './DailyVerseOverlay';
+import { DailyAdviceOverlay } from './DailyAdviceOverlay';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface Notification {
@@ -72,6 +74,22 @@ const NotificationOverlay = () => {
           <ServiceNotificationCard
             notification={notification}
             onDismiss={() => dismissNotification(notification.id)}
+          />
+        );
+      case 'daily_verse':
+        return (
+          <DailyVerseOverlay
+            verseText={notification.metadata?.verse_text || notification.message}
+            verseReference={notification.metadata?.verse_reference || ''}
+            onClose={() => dismissNotification(notification.id)}
+          />
+        );
+      case 'daily_advice':
+        return (
+          <DailyAdviceOverlay
+            title={notification.title}
+            message={notification.message}
+            onClose={() => dismissNotification(notification.id)}
           />
         );
       default:
