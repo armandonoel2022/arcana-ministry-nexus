@@ -457,7 +457,7 @@ const ServiceNotificationOverlay = ({
             ...members.map((member, index) => ({
               id: `member-${service.time}-${index}`,
               user_id: member.id,
-              instrument: `${member.voice} - ${member.mic}`,
+              instrument: `${member.voice} • ${member.role} • ${member.mic}`,
               is_leader: false,
               profiles: {
                 id: member.id,
@@ -934,7 +934,9 @@ const ServiceNotificationOverlay = ({
       groupName.style.letterSpacing = "-0.025em";
 
       const activity = document.createElement("span");
-      activity.textContent = service.special_activity || "Servicio Dominical";
+      activity.textContent = service.special_activity 
+        ? `Sección especial: ${service.special_activity}` 
+        : "Sección especial: Ninguna";
       activity.style.color = "#6b7280";
       activity.style.fontSize = "16px";
       activity.style.fontWeight = "500";
@@ -1328,7 +1330,9 @@ const ServiceNotificationOverlay = ({
                 {service.worship_groups?.name || "Grupo de Alabanza"}
               </span>
               <span className="text-sm text-gray-500">•</span>
-              <span className="text-sm text-gray-600">{service.special_activity || "Servicio Dominical"}</span>
+              <span className="text-sm text-gray-600">
+                {service.special_activity ? `Sección especial: ${service.special_activity}` : "Sección especial: Ninguna"}
+              </span>
             </div>
           </div>
         </div>
