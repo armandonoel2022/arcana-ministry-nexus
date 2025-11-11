@@ -968,10 +968,10 @@ const ServiceNotificationOverlay = ({
 
       // Director Avatar
       const directorAvatar = document.createElement("div");
-      directorAvatar.style.width = "100px";
-      directorAvatar.style.height = "120px";
-      directorAvatar.style.borderRadius = "24px";
-      directorAvatar.style.border = "4px solid #93c5fd";
+      directorAvatar.style.width = "96px";
+      directorAvatar.style.height = "96px";
+      directorAvatar.style.borderRadius = "50%";
+      directorAvatar.style.border = "4px solid #bfdbfe";
       directorAvatar.style.overflow = "hidden";
       directorAvatar.style.background = "linear-gradient(to right, #3b82f6, #2563eb)";
       directorAvatar.style.display = "flex";
@@ -1344,7 +1344,7 @@ const ServiceNotificationOverlay = ({
             <div className="bg-blue-50 rounded-lg p-4">
               <div className="text-sm font-semibold text-blue-800 mb-3">Director/a de Alabanza</div>
               <div className="flex items-center gap-3">
-                <div className="w-20 h-24 rounded-3xl border-3 border-blue-300 shadow-lg overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600">
+                <div className="w-24 h-24 rounded-full border-4 border-blue-200 shadow-lg overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600">
                   <img
                     src={service.director_profile?.photo_url || directorMember?.profiles?.photo_url}
                     alt={service.leader}
