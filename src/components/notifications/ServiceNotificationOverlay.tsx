@@ -82,7 +82,7 @@ const MEMBER_IDS = {
   ARMANDO_NOEL: "d6602109-ad3e-4db6-ab4a-2984dadfc569",
   GUARIONEX_GARCIA: "f2a3d1bb-5cd4-4d17-b1fb-75f4f6a1c847",
   FREDDERID_ABRAHAN: "7a1645d8-75fe-498c-a2e9-f1057ff3521f",
-  DENNY_ALBERTO: "4b33d0f5-be66-490c-b7ab-5a3ac90ca2b4",
+  DENNY_ALBERTO: "6a5bfaa9-fdf0-4b0e-aad3-79266444604f",
   ARIZONI_LIRIANO: "4eed809d-9437-48d5-935e-cf8b4aa8024a",
   
   // Solo disponibles a las 8:00 AM
@@ -153,7 +153,7 @@ const ALL_MEMBERS = {
   [MEMBER_IDS.DENNY_ALBERTO]: {
     name: "Denny Alberto Santana",
     voice: "Bajo",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/4b33d0f5-be66-490c-b7ab-5a3ac90ca2b4.JPG",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/6a5bfaa9-fdf0-4b0e-aad3-79266444604f.JPG",
   },
   [MEMBER_IDS.AIDA_LORENA]: {
     name: "Aida Lorena Pacheco De Santana",
