@@ -75,189 +75,382 @@ interface ServiceNotificationOverlayProps {
   onNavigate?: (path: string) => void;
 }
 
-// Configuración de grupos basada en los datos reales
-const GROUP_CONFIG = {
-  "Grupo de Aleida": {
-    color_theme: "#3B82F6",
-    members: [
-      {
-        id: "00a916a8-ab94-4cc0-81ae-668dd6071416",
-        name: "Aleida Geomar Batista Ventura",
-        voice: "Soprano",
-        role: "Corista",
-        mic: "Micrófono #2",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/00a916a8-ab94-4cc0-81ae-668dd6071416.JPG",
-      },
-      {
-        id: "c4089748-7168-4472-8e7c-bf44b4355906",
-        name: "Eliabi Joana Sierra Castillo",
-        voice: "Soprano",
-        role: "Directora de Alabanza",
-        mic: "Micrófono #1",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG",
-      },
-      {
-        id: "d6602109-ad3e-4db6-ab4a-2984dadfc569", // ID de Armando Noel Charle
-        name: "Armando Noel Charle",
-        voice: "Tenor",
-        role: "Director de Alabanza",
-        mic: "Micrófono #3",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/d6602109-ad3e-4db6-ab4a-2984dadfc569.JPG",
-      },
-      {
-        id: "8cebc294-ea61-40d0-9b04-08d7d474332c",
-        name: "Fior Daliza Paniagua",
-        voice: "Contralto",
-        role: "Corista",
-        mic: "Micrófono #4",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/8cebc294-ea61-40d0-9b04-08d7d474332c.JPG",
-      },
-      {
-        id: "619c1a4e-42db-4549-8890-16392cfa2a87",
-        name: "Ruth Esmailin Ramirez",
-        voice: "Contralto",
-        role: "Corista",
-        mic: "Micrófono #5",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/619c1a4e-42db-4549-8890-16392cfa2a87.JPG",
-      },
-    ],
+// IDs de miembros especiales
+const MEMBER_IDS = {
+  // Directores que pueden hacer coros intercalados
+  FELIX_NICOLAS: "3d75bc74-76bb-454a-b3e0-d6e4de45d577",
+  ARMANDO_NOEL: "d6602109-ad3e-4db6-ab4a-2984dadfc569",
+  GUARIONEX_GARCIA: "f2a3d1bb-5cd4-4d17-b1fb-75f4f6a1c847",
+  FREDDERID_ABRAHAN: "7a1645d8-75fe-498c-a2e9-f1057ff3521f",
+  DENNY_ALBERTO: "4b33d0f5-be66-490c-b7ab-5a3ac90ca2b4",
+  ARIZONI_LIRIANO: "4eed809d-9437-48d5-935e-cf8b4aa8024a",
+  
+  // Solo disponibles a las 8:00 AM
+  MARIA_SANTANA: "3cd33bff-39d7-4d1b-9af2-b09b0bc2df8f",
+  
+  // Miembros fijos
+  ROSELY_MONTERO: "2a2fa0cd-d301-46ec-9965-2e4ea3692181",
+  ALEIDA_BATISTA: "00a916a8-ab94-4cc0-81ae-668dd6071416",
+  ELIABI_JOANA: "c4089748-7168-4472-8e7c-bf44b4355906",
+  FIOR_DALIZA: "8cebc294-ea61-40d0-9b04-08d7d474332c",
+  RUTH_ESMAILIN: "619c1a4e-42db-4549-8890-16392cfa2a87",
+  KEYLA_YANIRA: "c24659e9-b473-4ecd-97e7-a90526d23502",
+  YINDHIA_CAROLINA: "11328db1-559f-4dcf-9024-9aef18435700",
+  AIDA_LORENA: "82b62449-5046-455f-af7b-da8e5dbc6327",
+  SUGEY_GONZALEZ: "be61d066-5707-4763-8d8c-16d19597dc3a",
+  DAMARIS_CASTILLO: "cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38",
+  JISELL_AMADA: "b5719097-187d-4804-8b7f-e84cc1ec9ad5",
+  RODES_ESTHER: "bdcc27cd-40ae-456e-a340-633ce7da08c0",
+};
+
+// Información completa de todos los miembros
+const ALL_MEMBERS = {
+  [MEMBER_IDS.ALEIDA_BATISTA]: {
+    name: "Aleida Geomar Batista Ventura",
+    voice: "Soprano",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/00a916a8-ab94-4cc0-81ae-668dd6071416.JPG",
   },
-  "Grupo de Keyla": {
-    color_theme: "#8B5CF6",
-    members: [
-      {
-        id: "c24659e9-b473-4ecd-97e7-a90526d23502",
-        name: "Keyla Yanira Medrano Medrano",
-        voice: "Soprano",
-        role: "Directora de Alabanza",
-        mic: "Micrófono #2",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c24659e9-b473-4ecd-97e7-a90526d23502.JPG",
-      },
-      {
-        id: "11328db1-559f-4dcf-9024-9aef18435700",
-        name: "Yindia Carolina Santana Castillo",
-        voice: "Soprano",
-        role: "Corista",
-        mic: "Micrófono #1",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/11328db1-559f-4dcf-9024-9aef18435700.JPG",
-      },
-      {
-        id: "4eed809d-9437-48d5-935e-cf8b4aa8024a",
-        name: "Arizoni Liriano Medina",
-        voice: "Bajo",
-        role: "Corista",
-        mic: "Micrófono #3",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/4eed809d-9437-48d5-935e-cf8b4aa8024a.png",
-      },
-      {
-        id: "82b62449-5046-455f-af7b-da8e5dbc6327",
-        name: "Aida Lorena Pacheco De Santana",
-        voice: "Contralto",
-        role: "Corista",
-        mic: "Micrófono #4",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/82b62449-5046-455f-af7b-da8e5dbc6327.JPG",
-      },
-      {
-        id: "be61d066-5707-4763-8d8c-16d19597dc3a",
-        name: "Sugey A. González Garó",
-        voice: "Contralto",
-        role: "Corista",
-        mic: "Micrófono #5",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/be61d066-5707-4763-8d8c-16d19597dc3a.JPG",
-      },
-    ],
+  [MEMBER_IDS.ELIABI_JOANA]: {
+    name: "Eliabi Joana Sierra Castillo",
+    voice: "Soprano",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG",
   },
-  "Grupo de Massy": {
-    color_theme: "#EC4899",
-    members: [
-      {
-        id: "cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38",
-        name: "Damaris Castillo Jimenez",
-        voice: "Soprano",
-        role: "Directora de Alabanza",
-        mic: "Micrófono #2",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38.JPG",
-      },
-      {
-        id: "b5719097-187d-4804-8b7f-e84cc1ec9ad5",
-        name: "Jisell Amada Mauricio Paniagua",
-        voice: "Soprano",
-        role: "Directora de Alabanza",
-        mic: "Micrófono #1",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/b5719097-187d-4804-8b7f-e84cc1ec9ad5.JPG",
-      },
-      {
-        id: "7a1645d8-75fe-498c-a2e9-f1057ff3521f",
-        name: "Fredderid Abrahan Valera Montoya",
-        voice: "Tenor",
-        role: "Corista",
-        mic: "Micrófono #3",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/7a1645d8-75fe-498c-a2e9-f1057ff3521f.JPG",
-      },
-      {
-        id: "2a2fa0cd-d301-46ec-9965-2e4ea3692181",
-        name: "Rosely Montero",
-        voice: "Contralto",
-        role: "Corista",
-        mic: "Micrófono #4",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/2a2fa0cd-d301-46ec-9965-2e4ea3692181.jpeg",
-      },
-      {
-        id: "bdcc27cd-40ae-456e-a340-633ce7da08c0",
-        name: "Rodes Esther Santana Cuesta",
-        voice: "Contralto",
-        role: "Corista",
-        mic: "Micrófono #5",
-        photo_url:
-          "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/bdcc27cd-40ae-456e-a340-633ce7da08c0.JPG",
-      },
-    ],
+  [MEMBER_IDS.FELIX_NICOLAS]: {
+    name: "Félix Nicolás Peralta Hernández",
+    voice: "Tenor",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/3d75bc74-76bb-454a-b3e0-d6e4de45d577.JPG",
+  },
+  [MEMBER_IDS.ARMANDO_NOEL]: {
+    name: "Armando Noel Charle",
+    voice: "Tenor",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/d6602109-ad3e-4db6-ab4a-2984dadfc569.JPG",
+  },
+  [MEMBER_IDS.FIOR_DALIZA]: {
+    name: "Fior Daliza Paniagua",
+    voice: "Contralto",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/8cebc294-ea61-40d0-9b04-08d7d474332c.JPG",
+  },
+  [MEMBER_IDS.RUTH_ESMAILIN]: {
+    name: "Ruth Esmailin Ramirez",
+    voice: "Contralto",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/619c1a4e-42db-4549-8890-16392cfa2a87.JPG",
+  },
+  [MEMBER_IDS.KEYLA_YANIRA]: {
+    name: "Keyla Yanira Medrano Medrano",
+    voice: "Soprano",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c24659e9-b473-4ecd-97e7-a90526d23502.JPG",
+  },
+  [MEMBER_IDS.YINDHIA_CAROLINA]: {
+    name: "Yindhia Carolina Santana Castillo",
+    voice: "Soprano",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/11328db1-559f-4dcf-9024-9aef18435700.JPG",
+  },
+  [MEMBER_IDS.ARIZONI_LIRIANO]: {
+    name: "Arizoni Liriano Medina",
+    voice: "Bajo",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/4eed809d-9437-48d5-935e-cf8b4aa8024a.png",
+  },
+  [MEMBER_IDS.DENNY_ALBERTO]: {
+    name: "Denny Alberto Santana",
+    voice: "Bajo",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/4b33d0f5-be66-490c-b7ab-5a3ac90ca2b4.JPG",
+  },
+  [MEMBER_IDS.AIDA_LORENA]: {
+    name: "Aida Lorena Pacheco De Santana",
+    voice: "Contralto",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/82b62449-5046-455f-af7b-da8e5dbc6327.JPG",
+  },
+  [MEMBER_IDS.SUGEY_GONZALEZ]: {
+    name: "Sugey A. González Garó",
+    voice: "Contralto",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/be61d066-5707-4763-8d8c-16d19597dc3a.JPG",
+  },
+  [MEMBER_IDS.DAMARIS_CASTILLO]: {
+    name: "Damaris Castillo Jimenez",
+    voice: "Soprano",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38.JPG",
+  },
+  [MEMBER_IDS.JISELL_AMADA]: {
+    name: "Jisell Amada Mauricio Paniagua",
+    voice: "Soprano",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/b5719097-187d-4804-8b7f-e84cc1ec9ad5.JPG",
+  },
+  [MEMBER_IDS.GUARIONEX_GARCIA]: {
+    name: "Guarionex Garcia",
+    voice: "Tenor",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f2a3d1bb-5cd4-4d17-b1fb-75f4f6a1c847.JPG",
+  },
+  [MEMBER_IDS.FREDDERID_ABRAHAN]: {
+    name: "Fredderid Abrahan Valera Montoya",
+    voice: "Tenor",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/7a1645d8-75fe-498c-a2e9-f1057ff3521f.JPG",
+  },
+  [MEMBER_IDS.MARIA_SANTANA]: {
+    name: "Maria del A. Santana",
+    voice: "Contralto",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/3cd33bff-39d7-4d1b-9af2-b09b0bc2df8f.JPG",
+  },
+  [MEMBER_IDS.ROSELY_MONTERO]: {
+    name: "Rosely Montero",
+    voice: "Contralto",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/2a2fa0cd-d301-46ec-9965-2e4ea3692181.jpeg",
+  },
+  [MEMBER_IDS.RODES_ESTHER]: {
+    name: "Rodes Esther Santana Cuesta",
+    voice: "Contralto",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/bdcc27cd-40ae-456e-a340-633ce7da08c0.JPG",
   },
 };
 
-// Función para obtener miembros del grupo
-const getGroupMembers = (groupName: string) => {
-  const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG] || GROUP_CONFIG["Grupo de Aleida"];
-  return [...groupConfig.members];
+// Configuración de grupos con lógica dinámica
+const GROUP_CONFIG = {
+  "Grupo de Aleida": {
+    color_theme: "#3B82F6",
+  },
+  "Grupo de Keyla": {
+    color_theme: "#8B5CF6",
+  },
+  "Grupo de Massy": {
+    color_theme: "#EC4899",
+  },
+};
+
+// Función COMPLEJA para determinar miembros del grupo basado en todas las reglas
+const getGroupMembers = (
+  groupName: string,
+  serviceTime: string,
+  director: string,
+  previousService?: { director: string; time: string },
+  nextService?: { director: string; time: string }
+) => {
+  const is8AM = serviceTime.includes("8:00") || serviceTime.includes("8 AM") || serviceTime.includes("primer");
+  const is1045AM = serviceTime.includes("10:45") || serviceTime.includes("segundo");
+
+  // Normalizar nombre del director para comparaciones
+  const normalizeDirectorName = (name: string) => {
+    return name.toLowerCase().trim();
+  };
+
+  const directorLower = normalizeDirectorName(director);
+  const prevDirectorLower = previousService ? normalizeDirectorName(previousService.director) : "";
+  const nextDirectorLower = nextService ? normalizeDirectorName(nextService.director) : "";
+
+  // Detectar quién es el director actual
+  const isFelix = directorLower.includes("félix") || directorLower.includes("felix") || directorLower.includes("nicolás") || directorLower.includes("nicolas");
+  const isArmando = directorLower.includes("armando") || directorLower.includes("noel");
+  const isGuarionex = directorLower.includes("guarionex") || directorLower.includes("garcia");
+  const isDenny = directorLower.includes("denny") || directorLower.includes("alberto");
+  
+  // Detectar quién dirigió en servicio anterior/siguiente
+  const felixInPrevOrNext = prevDirectorLower.includes("félix") || prevDirectorLower.includes("felix") || nextDirectorLower.includes("félix") || nextDirectorLower.includes("felix");
+  const armandoInPrevOrNext = prevDirectorLower.includes("armando") || nextDirectorLower.includes("armando");
+  const guarionexInPrevOrNext = prevDirectorLower.includes("guarionex") || nextDirectorLower.includes("guarionex");
+  const dennyInPrevOrNext = prevDirectorLower.includes("denny") || nextDirectorLower.includes("denny");
+
+  if (groupName === "Grupo de Aleida") {
+    // GRUPO DE ALEIDA: Felix Nicolas o Armando Noel intercalan
+    // Si uno es director, no hace coros. Y tampoco hace coros si dirigió antes/después
+    let mic3Member = MEMBER_IDS.ARMANDO_NOEL; // Default Armando
+
+    if (isFelix || felixInPrevOrNext) {
+      // Si Felix es director o dirigió antes/después, Armando hace coros
+      mic3Member = MEMBER_IDS.ARMANDO_NOEL;
+    } else if (isArmando || armandoInPrevOrNext) {
+      // Si Armando es director o dirigió antes/después, Felix hace coros
+      mic3Member = MEMBER_IDS.FELIX_NICOLAS;
+    } else {
+      // Si ninguno es director, alternar basado en hora
+      mic3Member = is8AM ? MEMBER_IDS.FELIX_NICOLAS : MEMBER_IDS.ARMANDO_NOEL;
+    }
+
+    return [
+      {
+        id: MEMBER_IDS.ALEIDA_BATISTA,
+        name: ALL_MEMBERS[MEMBER_IDS.ALEIDA_BATISTA].name,
+        voice: ALL_MEMBERS[MEMBER_IDS.ALEIDA_BATISTA].voice,
+        role: "Corista",
+        mic: "Micrófono #2",
+        photo_url: ALL_MEMBERS[MEMBER_IDS.ALEIDA_BATISTA].photo_url,
+      },
+      {
+        id: MEMBER_IDS.ELIABI_JOANA,
+        name: ALL_MEMBERS[MEMBER_IDS.ELIABI_JOANA].name,
+        voice: ALL_MEMBERS[MEMBER_IDS.ELIABI_JOANA].voice,
+        role: "Directora de Alabanza",
+        mic: "Micrófono #1",
+        photo_url: ALL_MEMBERS[MEMBER_IDS.ELIABI_JOANA].photo_url,
+      },
+      {
+        id: mic3Member,
+        name: ALL_MEMBERS[mic3Member].name,
+        voice: ALL_MEMBERS[mic3Member].voice,
+        role: "Director de Alabanza",
+        mic: "Micrófono #3",
+        photo_url: ALL_MEMBERS[mic3Member].photo_url,
+      },
+      {
+        id: MEMBER_IDS.FIOR_DALIZA,
+        name: ALL_MEMBERS[MEMBER_IDS.FIOR_DALIZA].name,
+        voice: ALL_MEMBERS[MEMBER_IDS.FIOR_DALIZA].voice,
+        role: "Corista",
+        mic: "Micrófono #4",
+        photo_url: ALL_MEMBERS[MEMBER_IDS.FIOR_DALIZA].photo_url,
+      },
+      {
+        id: MEMBER_IDS.RUTH_ESMAILIN,
+        name: ALL_MEMBERS[MEMBER_IDS.RUTH_ESMAILIN].name,
+        voice: ALL_MEMBERS[MEMBER_IDS.RUTH_ESMAILIN].voice,
+        role: "Corista",
+        mic: "Micrófono #5",
+        photo_url: ALL_MEMBERS[MEMBER_IDS.RUTH_ESMAILIN].photo_url,
+      },
+    ];
+  }
+
+  if (groupName === "Grupo de Keyla") {
+    // GRUPO DE KEYLA: Arizoni o Denny Alberto intercalan
+    let mic3Member = MEMBER_IDS.ARIZONI_LIRIANO; // Default Arizoni
+
+    if (isDenny || dennyInPrevOrNext) {
+      // Si Denny es director o dirigió antes/después, Arizoni hace coros
+      mic3Member = MEMBER_IDS.ARIZONI_LIRIANO;
+    } else {
+      // Si Denny no está dirigiendo, alternar
+      mic3Member = is8AM ? MEMBER_IDS.DENNY_ALBERTO : MEMBER_IDS.ARIZONI_LIRIANO;
+    }
+
+    return [
+      {
+        id: MEMBER_IDS.KEYLA_YANIRA,
+        name: ALL_MEMBERS[MEMBER_IDS.KEYLA_YANIRA].name,
+        voice: ALL_MEMBERS[MEMBER_IDS.KEYLA_YANIRA].voice,
+        role: "Directora de Alabanza",
+        mic: "Micrófono #2",
+        photo_url: ALL_MEMBERS[MEMBER_IDS.KEYLA_YANIRA].photo_url,
+      },
+      {
+        id: MEMBER_IDS.YINDHIA_CAROLINA,
+        name: ALL_MEMBERS[MEMBER_IDS.YINDHIA_CAROLINA].name,
+        voice: ALL_MEMBERS[MEMBER_IDS.YINDHIA_CAROLINA].voice,
+        role: "Corista",
+        mic: "Micrófono #1",
+        photo_url: ALL_MEMBERS[MEMBER_IDS.YINDHIA_CAROLINA].photo_url,
+      },
+      {
+        id: mic3Member,
+        name: ALL_MEMBERS[mic3Member].name,
+        voice: ALL_MEMBERS[mic3Member].voice,
+        role: isDenny && mic3Member === MEMBER_IDS.DENNY_ALBERTO ? "Director de Alabanza" : "Corista",
+        mic: "Micrófono #3",
+        photo_url: ALL_MEMBERS[mic3Member].photo_url,
+      },
+      {
+        id: MEMBER_IDS.AIDA_LORENA,
+        name: ALL_MEMBERS[MEMBER_IDS.AIDA_LORENA].name,
+        voice: ALL_MEMBERS[MEMBER_IDS.AIDA_LORENA].voice,
+        role: "Corista",
+        mic: "Micrófono #4",
+        photo_url: ALL_MEMBERS[MEMBER_IDS.AIDA_LORENA].photo_url,
+      },
+      {
+        id: MEMBER_IDS.SUGEY_GONZALEZ,
+        name: ALL_MEMBERS[MEMBER_IDS.SUGEY_GONZALEZ].name,
+        voice: ALL_MEMBERS[MEMBER_IDS.SUGEY_GONZALEZ].voice,
+        role: "Corista",
+        mic: "Micrófono #5",
+        photo_url: ALL_MEMBERS[MEMBER_IDS.SUGEY_GONZALEZ].photo_url,
+      },
+    ];
+  }
+
+  if (groupName === "Grupo de Massy") {
+    // GRUPO DE MASSY: Lógica compleja para 8:00 AM vs 10:45 AM
+    let mic3Member = MEMBER_IDS.FREDDERID_ABRAHAN;
+    let mic4Member = MEMBER_IDS.ROSELY_MONTERO;
+
+    if (is8AM) {
+      // A las 8:00 AM: Maria del A. Santana (mic #4) y Guarionex Garcia (mic #3)
+      mic4Member = MEMBER_IDS.MARIA_SANTANA;
+      
+      if (isGuarionex || guarionexInPrevOrNext) {
+        // Si Guarionex es director o dirigió antes/después, Fredderid hace coros
+        mic3Member = MEMBER_IDS.FREDDERID_ABRAHAN;
+      } else {
+        // Si Guarionex no es director, él hace coros a las 8 AM
+        mic3Member = MEMBER_IDS.GUARIONEX_GARCIA;
+      }
+    } else if (is1045AM) {
+      // A las 10:45 AM: Rosely Montero (mic #4) y Fredderid Abrahan (mic #3)
+      mic4Member = MEMBER_IDS.ROSELY_MONTERO;
+      mic3Member = MEMBER_IDS.FREDDERID_ABRAHAN;
+    }
+
+    return [
+      {
+        id: MEMBER_IDS.DAMARIS_CASTILLO,
+        name: ALL_MEMBERS[MEMBER_IDS.DAMARIS_CASTILLO].name,
+        voice: ALL_MEMBERS[MEMBER_IDS.DAMARIS_CASTILLO].voice,
+        role: "Directora de Alabanza",
+        mic: "Micrófono #2",
+        photo_url: ALL_MEMBERS[MEMBER_IDS.DAMARIS_CASTILLO].photo_url,
+      },
+      {
+        id: MEMBER_IDS.JISELL_AMADA,
+        name: ALL_MEMBERS[MEMBER_IDS.JISELL_AMADA].name,
+        voice: ALL_MEMBERS[MEMBER_IDS.JISELL_AMADA].voice,
+        role: "Corista",
+        mic: "Micrófono #1",
+        photo_url: ALL_MEMBERS[MEMBER_IDS.JISELL_AMADA].photo_url,
+      },
+      {
+        id: mic3Member,
+        name: ALL_MEMBERS[mic3Member].name,
+        voice: ALL_MEMBERS[mic3Member].voice,
+        role: "Corista",
+        mic: "Micrófono #3",
+        photo_url: ALL_MEMBERS[mic3Member].photo_url,
+      },
+      {
+        id: mic4Member,
+        name: ALL_MEMBERS[mic4Member].name,
+        voice: ALL_MEMBERS[mic4Member].voice,
+        role: "Corista",
+        mic: "Micrófono #4",
+        photo_url: ALL_MEMBERS[mic4Member].photo_url,
+      },
+      {
+        id: MEMBER_IDS.RODES_ESTHER,
+        name: ALL_MEMBERS[MEMBER_IDS.RODES_ESTHER].name,
+        voice: ALL_MEMBERS[MEMBER_IDS.RODES_ESTHER].voice,
+        role: "Corista",
+        mic: "Micrófono #5",
+        photo_url: ALL_MEMBERS[MEMBER_IDS.RODES_ESTHER].photo_url,
+      },
+    ];
+  }
+
+  // Fallback para grupos desconocidos
+  return [];
 };
 
 // Función MEJORADA para separar nombres y apellidos usando datos reales
 const splitName = (fullName: string) => {
   if (!fullName) return { firstName: "", lastName: "" };
 
-  // Buscar en los datos reales de la base de datos
-  const memberIds = Object.values(GROUP_CONFIG).flatMap((group) =>
-    group.members.map((member) => ({
-      fullName: member.name,
-      id: member.id,
-    })),
-  );
-
-  const exactMatch = memberIds.find((m) => m.fullName === fullName);
-  if (exactMatch) {
-    // Si encontramos una coincidencia exacta, usar la lógica basada en la estructura conocida
+  // Buscar en ALL_MEMBERS
+  const memberEntry = Object.entries(ALL_MEMBERS).find(([_, member]) => member.name === fullName);
+  
+  if (memberEntry) {
+    const [_, member] = memberEntry;
+    const fullName = member.name;
     const parts = fullName.split(" ");
 
     // Casos especiales conocidos
     if (fullName.includes("Aleida Geomar")) {
       return { firstName: "Aleida Geomar", lastName: "Batista Ventura" };
     }
-    if (fullName.includes("Yindia Carolina")) {
-      return { firstName: "Yindia Carolina", lastName: "Santana Castillo" };
+    if (fullName.includes("Yindhia Carolina") || fullName.includes("Yindia Carolina")) {
+      return { firstName: "Yindhia Carolina", lastName: "Santana Castillo" };
     }
     if (fullName.includes("Félix Nicolás")) {
       return { firstName: "Félix Nicolás", lastName: "Peralta Hernández" };
@@ -289,6 +482,27 @@ const splitName = (fullName: string) => {
     if (fullName.includes("Rodes Esther")) {
       return { firstName: "Rodes Esther", lastName: "Santana Cuesta" };
     }
+    if (fullName.includes("Armando") && fullName.includes("Noel")) {
+      return { firstName: "Armando", lastName: "Noel Charle" };
+    }
+    if (fullName.includes("Guarionex")) {
+      return { firstName: "Guarionex", lastName: "Garcia" };
+    }
+    if (fullName.includes("Maria del A.") || fullName.includes("María del A.")) {
+      return { firstName: "Maria del A.", lastName: "Santana" };
+    }
+    if (fullName.includes("Rosely")) {
+      return { firstName: "Rosely", lastName: "Montero" };
+    }
+    if (fullName.includes("Denny")) {
+      return { firstName: "Denny Alberto", lastName: "Santana" };
+    }
+    if (fullName.includes("Fior")) {
+      return { firstName: "Fior", lastName: "Daliza Paniagua" };
+    }
+    if (fullName.includes("Ruth")) {
+      return { firstName: "Ruth", lastName: "Esmailin Ramirez" };
+    }
 
     // Lógica general para otros nombres
     if (parts.length === 2) {
@@ -298,7 +512,6 @@ const splitName = (fullName: string) => {
       return { firstName: parts[0], lastName: `${parts[1]} ${parts[2]}` };
     }
     if (parts.length >= 4) {
-      // Para nombres con 4+ partes, tomar las primeras 2 como nombre y el resto como apellido
       return {
         firstName: `${parts[0]} ${parts[1]}`,
         lastName: parts.slice(2).join(" "),
@@ -421,9 +634,10 @@ const ServiceNotificationOverlay = ({
         const groupName = service.group || "Grupo de Aleida";
         const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG] || GROUP_CONFIG["Grupo de Aleida"];
         const serviceTime = getServiceTime(service.time || service.title);
+        const directorName = service.director?.name || service.director || "Por asignar";
 
         // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS
-        const members = getGroupMembers(groupName);
+        const members = getGroupMembers(groupName, serviceTime, directorName);
 
         return {
           id: service.id || Date.now().toString(),
@@ -607,8 +821,11 @@ const ServiceNotificationOverlay = ({
               }
             }
 
+            const serviceTime = getServiceTime(service.title);
+            const directorName = service.leader || "Por asignar";
+
             // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS
-            members = getGroupMembers(groupName);
+            members = getGroupMembers(groupName, serviceTime, directorName);
 
             console.log(
               `Miembros finales para ${groupName}:`,
@@ -1042,6 +1259,8 @@ const ServiceNotificationOverlay = ({
       songsSection.appendChild(songsTitle);
 
       const worshipSongs = service.selected_songs?.filter((s) => s.song_order >= 1 && s.song_order <= 4) || [];
+      const offeringsSongs = service.selected_songs?.filter((s) => s.song_order === 5) || [];
+      const communionSongs = service.selected_songs?.filter((s) => s.song_order === 6) || [];
 
       if (worshipSongs.length > 0) {
         const songsList = document.createElement("div");
@@ -1127,6 +1346,126 @@ const ServiceNotificationOverlay = ({
         });
 
         songsSection.appendChild(songsList);
+      }
+
+      // Offering Song
+      if (offeringsSongs.length > 0) {
+        const offeringSection = document.createElement("div");
+        offeringSection.style.marginTop = "16px";
+        offeringSection.style.padding = "12px";
+        offeringSection.style.backgroundColor = "#fefce8";
+        offeringSection.style.borderRadius = "12px";
+        offeringSection.style.border = "1px solid #fde047";
+
+        const offeringTitle = document.createElement("div");
+        offeringTitle.textContent = "Canción de Ofrendas";
+        offeringTitle.style.fontSize = "16px";
+        offeringTitle.style.fontWeight = "bold";
+        offeringTitle.style.color = "#92400e";
+        offeringTitle.style.marginBottom = "8px";
+
+        const { firstLine, secondLine } = splitSongTitle(offeringsSongs[0].title);
+        const { firstName: artistFirstName, lastName: artistLastName } = splitName(offeringsSongs[0].artist || "");
+
+        const offeringContent = document.createElement("div");
+        offeringContent.style.paddingLeft = "8px";
+
+        const offeringFirstLine = document.createElement("div");
+        offeringFirstLine.textContent = firstLine;
+        offeringFirstLine.style.fontWeight = "bold";
+        offeringFirstLine.style.color = "#1f2937";
+        offeringFirstLine.style.fontSize = "16px";
+
+        offeringContent.appendChild(offeringFirstLine);
+
+        if (secondLine) {
+          const offeringSecondLine = document.createElement("div");
+          offeringSecondLine.textContent = secondLine;
+          offeringSecondLine.style.color = "#1f2937";
+          offeringSecondLine.style.fontSize = "16px";
+          offeringContent.appendChild(offeringSecondLine);
+        }
+
+        if (offeringsSongs[0].artist) {
+          const artistDiv = document.createElement("div");
+          artistDiv.textContent = artistFirstName;
+          artistDiv.style.color = "#6b7280";
+          artistDiv.style.fontSize = "14px";
+          artistDiv.style.marginTop = "4px";
+          offeringContent.appendChild(artistDiv);
+
+          if (artistLastName) {
+            const artistLast = document.createElement("div");
+            artistLast.textContent = artistLastName;
+            artistLast.style.color = "#9ca3af";
+            artistLast.style.fontSize = "12px";
+            offeringContent.appendChild(artistLast);
+          }
+        }
+
+        offeringSection.appendChild(offeringTitle);
+        offeringSection.appendChild(offeringContent);
+        songsSection.appendChild(offeringSection);
+      }
+
+      // Communion Song
+      if (communionSongs.length > 0) {
+        const communionSection = document.createElement("div");
+        communionSection.style.marginTop = "16px";
+        communionSection.style.padding = "12px";
+        communionSection.style.backgroundColor = "#fae8ff";
+        communionSection.style.borderRadius = "12px";
+        communionSection.style.border = "1px solid #e9d5ff";
+
+        const communionTitle = document.createElement("div");
+        communionTitle.textContent = "Canción de Comunión";
+        communionTitle.style.fontSize = "16px";
+        communionTitle.style.fontWeight = "bold";
+        communionTitle.style.color = "#6b21a8";
+        communionTitle.style.marginBottom = "8px";
+
+        const { firstLine, secondLine } = splitSongTitle(communionSongs[0].title);
+        const { firstName: artistFirstName, lastName: artistLastName } = splitName(communionSongs[0].artist || "");
+
+        const communionContent = document.createElement("div");
+        communionContent.style.paddingLeft = "8px";
+
+        const communionFirstLine = document.createElement("div");
+        communionFirstLine.textContent = firstLine;
+        communionFirstLine.style.fontWeight = "bold";
+        communionFirstLine.style.color = "#1f2937";
+        communionFirstLine.style.fontSize = "16px";
+
+        communionContent.appendChild(communionFirstLine);
+
+        if (secondLine) {
+          const communionSecondLine = document.createElement("div");
+          communionSecondLine.textContent = secondLine;
+          communionSecondLine.style.color = "#1f2937";
+          communionSecondLine.style.fontSize = "16px";
+          communionContent.appendChild(communionSecondLine);
+        }
+
+        if (communionSongs[0].artist) {
+          const artistDiv = document.createElement("div");
+          artistDiv.textContent = artistFirstName;
+          artistDiv.style.color = "#6b7280";
+          artistDiv.style.fontSize = "14px";
+          artistDiv.style.marginTop = "4px";
+          communionContent.appendChild(artistDiv);
+
+          if (artistLastName) {
+            const artistLast = document.createElement("div");
+            artistLast.textContent = artistLastName;
+            artistLast.style.color = "#9ca3af";
+            artistLast.style.fontSize = "12px";
+            communionContent.appendChild(artistLast);
+          }
+        }
+
+        communionSection.appendChild(communionTitle);
+        communionSection.appendChild(communionContent);
+        songsSection.appendChild(communionSection);
       }
 
       // Voices Section con mejor estructura
