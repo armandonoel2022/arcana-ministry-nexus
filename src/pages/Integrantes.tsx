@@ -20,14 +20,14 @@ const Integrantes = () => {
     <div className="min-h-screen bg-modern-gradient">
       <div className="container mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* Header Section */}
-        <div className="modern-glass rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-8">
-          <div className="flex items-center gap-2 sm:gap-4 mb-0 sm:mb-4">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
-              <Users className="w-6 h-6 sm:w-8 sm:h-8 text-modern-blue-600" />
+        <div className="modern-glass rounded-xl sm:rounded-2xl p-3 sm:p-6 mb-3 sm:mb-8">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="w-10 h-10 sm:w-16 sm:h-16 bg-white rounded-lg sm:rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
+              <Users className="w-5 h-5 sm:w-8 sm:h-8 text-modern-blue-600" />
             </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-3xl md:text-4xl font-bold text-white mb-0 sm:mb-2 drop-shadow-lg truncate">Integrantes del Ministerio</h1>
-              <p className="text-white/90 text-xs sm:text-base md:text-lg drop-shadow-md truncate">Gestión de miembros y roles del ministerio</p>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-base sm:text-3xl md:text-4xl font-bold text-white mb-0 sm:mb-1 drop-shadow-lg truncate">Integrantes del Ministerio</h1>
+              <p className="text-white/90 text-[10px] sm:text-base md:text-lg drop-shadow-md truncate hidden sm:block">Gestión de miembros y roles del ministerio</p>
             </div>
           </div>
         </div>

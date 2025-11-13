@@ -151,87 +151,87 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onSelect, showSongs 
   return (
     <Card className="hover:shadow-lg transition-all duration-300 border-l-4" 
           style={{ borderLeftColor: groupData?.color_theme || '#3B82F6' }}>
-      <CardHeader className="pb-4">
-        <div className="flex items-start justify-between">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <CalendarDays className="w-5 h-5 text-primary" />
-              <span className="text-sm font-medium text-muted-foreground">
-                {format(new Date(service.service_date), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
+      <CardHeader className="pb-3 sm:pb-4 p-3 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-0">
+          <div className="space-y-1 sm:space-y-2 flex-1 min-w-0">
+            <div className="flex items-center gap-1 sm:gap-2">
+              <CalendarDays className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+              <span className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
+                {format(new Date(service.service_date), "EEE, d MMM yyyy", { locale: es })}
               </span>
             </div>
-            <CardTitle className="text-xl">{service.title}</CardTitle>
+            <CardTitle className="text-base sm:text-xl">{service.title}</CardTitle>
             {service.description && (
-              <p className="text-sm text-muted-foreground">{service.description}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{service.description}</p>
             )}
           </div>
-          <div className="flex flex-col items-end gap-2">
-            <Badge variant={service.is_confirmed ? "default" : "secondary"}>
+          <div className="flex flex-row sm:flex-col items-start gap-2 self-start">
+            <Badge variant={service.is_confirmed ? "default" : "secondary"} className="text-xs">
               {service.is_confirmed ? "Confirmado" : "Pendiente"}
             </Badge>
             {service.service_type !== 'regular' && (
-              <Badge variant="outline">{service.service_type}</Badge>
+              <Badge variant="outline" className="text-xs">{service.service_type}</Badge>
             )}
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 sm:space-y-6 p-3 sm:p-6">
         {/* Service Details */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
           {service.location && (
             <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-muted-foreground" />
-              <span>{service.location}</span>
+              <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground flex-shrink-0" />
+              <span className="truncate">{service.location}</span>
             </div>
           )}
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-muted-foreground" />
+            <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground flex-shrink-0" />
             <span>{format(new Date(service.service_date), "HH:mm")}</span>
           </div>
         </div>
 
         {/* Special Activity */}
         {service.special_activity && (
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
+          <div className="p-2 sm:p-3 bg-amber-50 border border-amber-200 rounded-md">
             <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-amber-600" />
-              <span className="text-sm font-medium text-amber-800">Actividad Especial:</span>
+              <FileText className="w-3 h-3 sm:w-4 sm:h-4 text-amber-600 flex-shrink-0" />
+              <span className="text-xs sm:text-sm font-medium text-amber-800">Actividad Especial:</span>
             </div>
-            <p className="text-sm text-amber-700 mt-1">{service.special_activity}</p>
+            <p className="text-xs sm:text-sm text-amber-700 mt-1">{service.special_activity}</p>
           </div>
         )}
 
         {/* Director and Group */}
         {groupData && (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {/* Director Section */}
             {leader && (
-              <div className="space-y-3">
-                <h3 className="font-semibold flex items-center gap-2">
+              <div className="space-y-2 sm:space-y-3">
+                <h3 className="font-semibold flex items-center gap-2 text-sm sm:text-base">
                   <div 
-                    className="w-3 h-3 rounded-full" 
+                    className="w-2 h-2 sm:w-3 sm:h-3 rounded-full flex-shrink-0" 
                     style={{ backgroundColor: groupData.color_theme }}
                   ></div>
-                  Dirige {leader.member.nombres} {leader.member.apellidos}
+                  <span className="truncate">Dirige {leader.member.nombres} {leader.member.apellidos}</span>
                 </h3>
-                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-primary/5 to-transparent rounded-lg border">
-                  <Avatar className="w-16 h-16 ring-2 ring-primary/20">
+                <div className="flex items-center gap-2 sm:gap-4 p-2 sm:p-4 bg-gradient-to-r from-primary/5 to-transparent rounded-lg border">
+                  <Avatar className="w-12 h-12 sm:w-16 sm:h-16 ring-2 ring-primary/20 flex-shrink-0">
                     <AvatarImage 
                       src={leader.member.photo_url || undefined} 
                       alt={`${leader.member.nombres} ${leader.member.apellidos}`}
                     />
-                    <AvatarFallback className="text-lg font-semibold bg-primary/10 text-primary">
+                    <AvatarFallback className="text-sm sm:text-lg font-semibold bg-primary/10 text-primary">
                       {getInitials(leader.member.nombres, leader.member.apellidos)}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="space-y-1">
-                    <h4 className="font-semibold text-lg">
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <h4 className="font-semibold text-sm sm:text-lg truncate">
                       {leader.member.nombres} {leader.member.apellidos}
                     </h4>
-                    <p className="text-sm text-muted-foreground">Director de Alabanza</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Director de Alabanza</p>
                     {leader.instrument && (
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge variant="secondary" className="text-[10px] sm:text-xs">
                         {leader.instrument}
                       </Badge>
                     )}
@@ -242,33 +242,33 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service, onSelect, showSongs 
 
             {/* Group Members */}
             {otherMembers.length > 0 && (
-              <div className="space-y-3">
-                <h4 className="font-medium flex items-center gap-2">
-                  <Users className="w-4 h-4" />
+              <div className="space-y-2 sm:space-y-3">
+                <h4 className="font-medium flex items-center gap-2 text-sm sm:text-base">
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                   Grupo {groupData.name} ({otherMembers.length} integrantes)
                 </h4>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
                   {otherMembers.map((member, index) => (
-                    <div key={member.id} className="flex flex-col items-center p-3 bg-muted/30 rounded-lg">
-                      <Avatar className="w-12 h-12 mb-2">
+                    <div key={member.id} className="flex flex-col items-center p-2 sm:p-3 bg-muted/30 rounded-lg">
+                      <Avatar className="w-10 h-10 sm:w-12 sm:h-12 mb-1 sm:mb-2">
                         <AvatarImage 
                           src={member.member.photo_url || undefined} 
                           alt={`${member.member.nombres} ${member.member.apellidos}`}
                         />
-                        <AvatarFallback className="text-sm font-medium">
+                        <AvatarFallback className="text-xs sm:text-sm font-medium">
                           {getInitials(member.member.nombres, member.member.apellidos)}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="text-center space-y-1">
-                        <p className="text-sm font-medium leading-tight">
+                      <div className="text-center space-y-1 w-full">
+                        <p className="text-xs sm:text-sm font-medium leading-tight line-clamp-2">
                           {member.member.nombres} {member.member.apellidos}
                         </p>
                         {member.instrument && (
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
                             {member.instrument}
                           </p>
                         )}
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-[10px] sm:text-xs">
                           Mic #{index + 2}
                         </Badge>
                       </div>

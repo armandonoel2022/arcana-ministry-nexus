@@ -319,29 +319,31 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
     <div className="space-y-4">
       {/* Filter Buttons */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
+        <CardHeader className="p-3 sm:p-6">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
             Filtros de Vista
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-xs sm:text-sm">
             Seleccione el período de servicios que desea visualizar
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 sm:p-6">
           <div className="space-y-3">
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
               <Button
                 variant={filter === 'current_weekend' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setFilter('current_weekend')}
+                className="text-xs sm:text-sm"
               >
-                Fin de Semana Actual
+                Fin de Semana
               </Button>
               <Button
                 variant={filter === 'month' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setFilter('month')}
+                className="text-xs sm:text-sm"
               >
                 Este Mes
               </Button>
@@ -349,26 +351,29 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                 variant={filter === 'my_agenda' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setFilter('my_agenda')}
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 text-xs sm:text-sm"
               >
-                <User className="w-4 h-4" />
-                Ver Mi Agenda
+                <User className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Ver Mi Agenda</span>
+                <span className="sm:hidden">Mi Agenda</span>
               </Button>
               <Button
                 variant={filter === 'all' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setFilter('all')}
+                className="text-xs sm:text-sm"
               >
-                Todos los Servicios
+                Todos
               </Button>
             </div>
             
             <div className="flex flex-wrap gap-2 pt-2 border-t">
-              <span className="text-sm text-gray-600 font-medium self-center mr-2">Por Año:</span>
+              <span className="text-xs sm:text-sm text-gray-600 font-medium self-center mr-1 sm:mr-2">Por Año:</span>
               <Button
                 variant={filter === 'year_2025' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setFilter('year_2025')}
+                className="text-xs sm:text-sm"
               >
                 2025
               </Button>
@@ -376,6 +381,7 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                 variant={filter === 'year_2026' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setFilter('year_2026')}
+                className="text-xs sm:text-sm"
               >
                 2026
               </Button>
@@ -386,14 +392,14 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
 
       {/* Services Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>
+        <CardHeader className="p-3 sm:p-6">
+          <CardTitle className="text-base sm:text-lg">
             {getFilterLabel(filter)} ({filteredServices.length} servicios)
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-2 sm:p-6">
           {filteredServices.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
+            <div className="text-center text-gray-500 py-6 sm:py-8 text-sm sm:text-base">
               {filter === 'my_agenda' 
                 ? "🎉 ¡Estás libre este fin de semana!" 
                 : filter === 'month'
@@ -401,36 +407,43 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                 : "No hay servicios programados para este período."}
             </div>
           ) : (
-            <div className="rounded-md border">
+            <div className="rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Mes</TableHead>
-                    <TableHead>Orden</TableHead>
-                    <TableHead>Dirige</TableHead>
-                    <TableHead>Servicio</TableHead>
-                    <TableHead>Grupo</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Canciones</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Acciones</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Fecha</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden sm:table-cell">Mes</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden md:table-cell">Orden</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Dirige</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Servicio</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden lg:table-cell">Grupo</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden md:table-cell">Tipo</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden lg:table-cell">Canciones</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Estado</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredServices.map((service) => (
                     <TableRow key={service.id}>
-                      <TableCell>
-                        {format(new Date(service.service_date), 'dd/MM/yyyy', { locale: es })}
+                      <TableCell className="text-xs sm:text-sm">
+                        <div className="font-medium">
+                          {format(new Date(service.service_date), 'dd/MM', { locale: es })}
+                        </div>
+                        <div className="text-[10px] sm:text-xs text-gray-500 sm:hidden">
+                          {format(new Date(service.service_date), 'HH:mm')}
+                        </div>
                       </TableCell>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium text-xs sm:text-sm hidden sm:table-cell">
                         {service.month_name}
                       </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{service.month_order}°</Badge>
+                      <TableCell className="text-xs sm:text-sm hidden md:table-cell">
+                        <Badge variant="outline" className="text-xs">{service.month_order}°</Badge>
                       </TableCell>
-                      <TableCell className="font-medium">
-                        {service.leader}
+                      <TableCell className="font-medium text-xs sm:text-sm">
+                        <div className="max-w-[80px] sm:max-w-none truncate">
+                          {service.leader}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div>
@@ -442,9 +455,10 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         {service.worship_groups ? (
                           <Badge 
+                            className="text-xs"
                             style={{ 
                               backgroundColor: service.worship_groups.color_theme + '20',
                               color: service.worship_groups.color_theme,
@@ -454,11 +468,11 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                             {service.worship_groups.name}
                           </Badge>
                         ) : (
-                          <span className="text-gray-400">Sin asignar</span>
+                          <span className="text-gray-400 text-xs">Sin asignar</span>
                         )}
                       </TableCell>
-                      <TableCell>
-                        <Badge className={getServiceTypeColor(service.service_type)}>
+                      <TableCell className="hidden md:table-cell">
+                        <Badge className={`${getServiceTypeColor(service.service_type)} text-xs`}>
                           {service.service_type}
                         </Badge>
                       </TableCell>
