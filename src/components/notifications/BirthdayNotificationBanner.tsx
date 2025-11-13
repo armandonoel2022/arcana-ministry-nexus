@@ -29,52 +29,6 @@ const BirthdayNotificationBanner: React.FC<BirthdayNotificationBannerProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  // Reproducir sonido de cumpleaños al montar el componente
-  useEffect(() => {
-    playBirthdaySound();
-  }, []);
-
-  const playBirthdaySound = () => {
-    try {
-      // Crear un audio con una melodía de cumpleaños simple usando Web Audio API
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      
-      // Melodía de "Happy Birthday" simplificada
-      const notes = [
-        { freq: 261.63, duration: 0.3 }, // C
-        { freq: 261.63, duration: 0.2 }, // C
-        { freq: 293.66, duration: 0.4 }, // D
-        { freq: 261.63, duration: 0.4 }, // C
-        { freq: 349.23, duration: 0.4 }, // F
-        { freq: 329.63, duration: 0.8 }, // E
-      ];
-
-      let currentTime = audioContext.currentTime;
-      
-      notes.forEach((note) => {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.frequency.setValueAtTime(note.freq, currentTime);
-        oscillator.type = 'sine';
-        
-        gainNode.gain.setValueAtTime(0, currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.1, currentTime + 0.05);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, currentTime + note.duration);
-        
-        oscillator.start(currentTime);
-        oscillator.stop(currentTime + note.duration);
-        
-        currentTime += note.duration + 0.1;
-      });
-    } catch (error) {
-      console.log('No se pudo reproducir el sonido de cumpleaños:', error);
-    }
-  };
-
   const goToChatRoom = () => {
     navigate('/communication');
     onDismiss();

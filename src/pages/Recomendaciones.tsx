@@ -232,45 +232,47 @@ const Recomendaciones = () => {
   ];
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-arcana-gradient rounded-full flex items-center justify-center">
-            <Settings className="w-5 h-5 text-white" />
+    <div className="container mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-arcana-gradient rounded-full flex items-center justify-center flex-shrink-0">
+            <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
           </div>
-          <div>
-            <h1 className="text-3xl font-bold arcana-gradient-text">Recomendaciones</h1>
-            <p className="text-gray-600">Ejercicios y consejos para mejorar tu servicio</p>
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold arcana-gradient-text truncate">Recomendaciones</h1>
+            <p className="text-xs sm:text-sm text-gray-600 truncate">Ejercicios y consejos para mejorar tu servicio</p>
           </div>
         </div>
         
         <Button 
           onClick={handleTestNotification}
-          className="flex items-center gap-2 bg-arcana-gradient hover:opacity-90"
+          className="flex items-center justify-center gap-2 bg-arcana-gradient hover:opacity-90 w-full sm:w-auto text-xs sm:text-sm"
+          size="sm"
         >
-          <Bell className="w-4 h-4" />
-          Probar Notificación
+          <Bell className="w-3 h-3 sm:w-4 sm:h-4" />
+          <span className="hidden sm:inline">Probar Notificación</span>
+          <span className="sm:hidden">Probar</span>
         </Button>
       </div>
 
       <Tabs defaultValue="voice" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="voice" className="flex items-center gap-2">
-            <Mic className="w-4 h-4" />
+        <TabsList className="grid w-full grid-cols-3 h-auto p-1">
+          <TabsTrigger value="voice" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-2.5">
+            <Mic className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
             VOZ
           </TabsTrigger>
-          <TabsTrigger value="music" className="flex items-center gap-2">
-            <Music className="w-4 h-4" />
+          <TabsTrigger value="music" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-2.5">
+            <Music className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
             MÚSICA
           </TabsTrigger>
-          <TabsTrigger value="dance" className="flex items-center gap-2">
-            <Heart className="w-4 h-4" />
+          <TabsTrigger value="dance" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm py-2 sm:py-2.5">
+            <Heart className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
             DANZA
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="voice" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <TabsContent value="voice" className="space-y-3 sm:space-y-4 mt-3 sm:mt-4">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {voiceTips.map((tip) => (
               <RecommendationCard
                 key={tip.id}
@@ -284,8 +286,8 @@ const Recomendaciones = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="music" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <TabsContent value="music" className="space-y-3 sm:space-y-4 mt-3 sm:mt-4">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {musicTips.map((tip) => (
               <RecommendationCard
                 key={tip.id}
@@ -300,8 +302,8 @@ const Recomendaciones = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="dance" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <TabsContent value="dance" className="space-y-3 sm:space-y-4 mt-3 sm:mt-4">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {danceTips.map((tip) => (
               <RecommendationCard
                 key={tip.id}
