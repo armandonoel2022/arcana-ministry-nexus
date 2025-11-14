@@ -62,6 +62,9 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
   const [selectedServiceForSongs, setSelectedServiceForSongs] = useState<Service | null>(null);
   const [selectedServiceForEdit, setSelectedServiceForEdit] = useState<Service | null>(null);
   const [currentUserName, setCurrentUserName] = useState<string>('');
+  const [editingSongsServiceId, setEditingSongsServiceId] = useState<string | null>(null);
+  const [editingSongsServiceTitle, setEditingSongsServiceTitle] = useState<string>('');
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
 
   useEffect(() => {
     fetchServices();
@@ -278,6 +281,11 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
     if (service) {
       setSelectedServiceForReplacement(service);
     }
+  };
+
+  const handleEditSongs = (serviceId: string, serviceTitle: string) => {
+    setEditingSongsServiceId(serviceId);
+    setEditingSongsServiceTitle(serviceTitle);
   };
 
   const getServiceTypeColor = (type: string) => {
@@ -555,6 +563,7 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                             onToggleConfirmation={toggleConfirmation}
                             onDelete={deleteService}
                             onRequestDirectorChange={handleRequestDirectorChange}
+                            onEditSongs={handleEditSongs}
                           />
                         </div>
                       </TableCell>
@@ -620,6 +629,16 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
       </Dialog>
 
       {/* Selected Songs Dialog with Edit Functionality */}
+      {editingSongsServiceId && (
+        <EditSelectedSongsDialog
+          serviceId={editingSongsServiceId}
+          serviceTitle={editingSongsServiceTitle}
+          open={!!editingSongsServiceId}
+          onOpenChange={(open) => !open && setEditingSongsServiceId(null)}
+          onSongsUpdated={fetchServices}
+        />
+      )}
+
       {selectedServiceForSongs && (
         <EditSelectedSongsDialog
           serviceId={selectedServiceForSongs.id}
