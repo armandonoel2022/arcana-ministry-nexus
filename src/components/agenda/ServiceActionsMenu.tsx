@@ -7,18 +7,20 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Edit, Trash2, UserCheck, CheckCircle, XCircle } from "lucide-react";
+import { MoreHorizontal, Edit, Trash2, UserCheck, CheckCircle, XCircle, Music } from "lucide-react";
 
 interface ServiceActionsMenuProps {
   service: {
     id: string;
     is_confirmed: boolean;
     leader: string;
+    title?: string;
   };
   currentUser?: string;
   onToggleConfirmation: (id: string, currentStatus: boolean) => void;
   onDelete: (id: string) => void;
   onRequestDirectorChange: (id: string) => void;
+  onEditSongs: (id: string, title: string) => void;
 }
 
 const ServiceActionsMenu: React.FC<ServiceActionsMenuProps> = ({
@@ -26,7 +28,8 @@ const ServiceActionsMenu: React.FC<ServiceActionsMenuProps> = ({
   currentUser,
   onToggleConfirmation,
   onDelete,
-  onRequestDirectorChange
+  onRequestDirectorChange,
+  onEditSongs
 }) => {
   // Normalize strings to ignore accents
   const normalizeString = (str: string) => {
@@ -44,6 +47,13 @@ const ServiceActionsMenu: React.FC<ServiceActionsMenuProps> = ({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => onEditSongs(service.id, service.title || '')}>
+          <Music className="h-4 w-4 mr-2" />
+          Ver/Editar Canciones
+        </DropdownMenuItem>
+        
+        <DropdownMenuSeparator />
+        
         <DropdownMenuItem onClick={() => onToggleConfirmation(service.id, service.is_confirmed)}>
           {service.is_confirmed ? (
             <>
