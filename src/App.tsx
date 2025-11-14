@@ -44,6 +44,8 @@ import ServiceNotificationOverlay from "./components/notifications/ServiceNotifi
 import { BirthdayOverlay } from "./components/birthday/BirthdayOverlay";
 import DirectorReplacementRequestOverlay from "./components/agenda/DirectorReplacementRequestOverlay";
 import DirectorReplacementNotificationOverlay from "./components/agenda/DirectorReplacementNotificationOverlay";
+import SongChangeOverlay from "./components/songs/SongChangeOverlay";
+import { PendingSongNotifications } from "./components/songs/PendingSongNotifications";
 import "./App.css";
 
 const queryClient = new QueryClient();
@@ -81,6 +83,8 @@ function App() {
             <BirthdayOverlay />
             <DirectorReplacementRequestOverlay />
             <DirectorReplacementNotificationOverlay />
+            <SongChangeOverlay />
+            <PendingSongNotifications />
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/*" element={

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Music, Calendar, User, MapPin, Star } from "lucide-react";
+import { Music, Calendar, User, MapPin, Star, Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -124,7 +124,7 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
     }
   };
 
-  const handleSelectSong = async () => {
+  const handleSelectSong = async (notifyNow: boolean = false) => {
     if (!selectedService) {
       toast.error('Por favor selecciona un servicio');
       return;
@@ -134,6 +134,13 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
+
+      // Get user profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
 
       // Create song selection
       const { error: selectionError } = await supabase
@@ -147,36 +154,59 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
 
       if (selectionError) throw selectionError;
 
-      // Get service details for notification  
       const selectedServiceData = services.find(s => s.id === selectedService);
       
-      // Create notification for the service leader and group members
-      if (selectedServiceData) {
-        const { error: notificationError } = await supabase
-          .from('system_notifications')
-          .insert({
+      if (notifyNow && selectedServiceData) {
+        // Send notification immediately
+        const { data: allMembers } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('is_active', true);
+
+        if (allMembers && allMembers.length > 0) {
+          const notifications = allMembers.map(member => ({
+            recipient_id: member.id,
             type: 'song_selection',
-            title: 'Nueva Selección de Canción',
-            message: `Se ha seleccionado "${song.title}" para el servicio "${selectedServiceData.title}" del ${format(new Date(selectedServiceData.service_date), 'dd/MM/yyyy', { locale: es })}.`,
+            title: '🎵 Nueva Canción Seleccionada',
+            message: `${profile?.full_name || 'Un director'} ha seleccionado "${song.title}" para el servicio "${selectedServiceData.title}"`,
             notification_category: 'repertory',
-            priority: 2,
             metadata: {
-              song_id: song.id,
-              song_title: song.title,
               service_id: selectedService,
               service_title: selectedServiceData.title,
               service_date: selectedServiceData.service_date,
-              reason: reason || 'Seleccionada para el servicio',
-              selected_by_name: user.user_metadata?.full_name || user.email
+              song_id: song.id,
+              song_title: song.title,
+              selected_by: profile?.full_name,
+              reason: reason || 'Seleccionada para el servicio'
             }
-          });
+          }));
 
-        if (notificationError) {
-          console.error('Error creating notification:', notificationError);
+          await supabase
+            .from('system_notifications')
+            .insert(notifications);
         }
+        
+        toast.success('Canción seleccionada y notificada');
+      } else if (selectedServiceData) {
+        // Add to pending notifications
+        if ((window as any).addPendingSongNotification) {
+          (window as any).addPendingSongNotification({
+            songId: song.id,
+            songTitle: song.title,
+            serviceId: selectedService,
+            serviceTitle: selectedServiceData.title,
+            serviceDate: selectedServiceData.service_date,
+            selectedBy: user.id,
+            selectedByName: profile?.full_name || user.email,
+            reason: reason || 'Seleccionada para el servicio'
+          });
+        }
+        
+        toast.success('Canción agregada - Se notificará en 5 minutos', {
+          description: 'Puedes agregar más canciones o notificar ahora'
+        });
       }
 
-      toast.success('Canción seleccionada exitosamente');
       setOpen(false);
       setSelectedService('');
       setReason('');
@@ -337,14 +367,20 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
 
           <div className="flex gap-2 pt-4">
             <Button 
-              onClick={handleSelectSong} 
-              disabled={isLoading || !selectedService || services.length === 0}
+              onClick={() => handleSelectSong(false)}
+              disabled={isLoading || !selectedService}
+              variant="outline"
               className="flex-1"
             >
-              {isLoading ? 'Seleccionando...' : 'Seleccionar Canción'}
+              {isLoading ? 'Agregando...' : 'Agregar Más'}
             </Button>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancelar
+            <Button
+              onClick={() => handleSelectSong(true)}
+              disabled={isLoading || !selectedService}
+              className="flex-1"
+            >
+              <Bell className="w-4 h-4 mr-2" />
+              {isLoading ? 'Notificando...' : 'Notificar Ahora'}
             </Button>
           </div>
         </div>
