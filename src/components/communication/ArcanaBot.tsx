@@ -172,8 +172,8 @@ export class ArcanaBot {
   }
 
   static async processMessage(message: string, roomId: string, userId: string): Promise<BotResponse | null> {
-    // Detección más flexible de menciones
-    const mentionsBot = /arcana|@arcana|bot|asistente/i.test(message);
+    // Detección más flexible de menciones - AHORA INCLUYE "ARCA"
+    const mentionsBot = /arcana|arca|@arcana|@arca|bot|asistente/i.test(message);
 
     if (!mentionsBot) {
       console.log("ARCANA: Mensaje no contiene mención");
@@ -183,7 +183,9 @@ export class ArcanaBot {
     // Limpiar mensaje más efectivamente
     const cleanMessage = message
       .replace(/@arcana\s*:?\s*/gi, "")
+      .replace(/@arca\s*:?\s*/gi, "")
       .replace(/arcana\s*:?\s*/gi, "")
+      .replace(/arca\s*:?\s*/gi, "")
       .replace(/^(?:bot|asistente)\s*/gi, "")
       .replace(/^\s*[:,-]\s*/, "")
       .trim()

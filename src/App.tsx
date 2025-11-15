@@ -5,9 +5,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Menu } from "lucide-react";
-import { SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
+import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { AnimatedLogoTrigger } from "@/components/AnimatedLogoTrigger";
 import SplashScreen from "@/components/SplashScreen";
 import Index from "./pages/Index";
 import RepertoirioMusical from "./pages/RepertoirioMusical";
@@ -51,13 +51,7 @@ import "./App.css";
 const queryClient = new QueryClient();
 
 function HeaderTrigger() {
-  const { open } = useSidebar();
-  
-  return (
-    <SidebarTrigger className="group p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 hover:scale-105 md:hidden">
-      <Menu className={`w-5 h-5 transition-transform duration-300 ${open ? 'rotate-90' : 'rotate-0'} group-hover:text-blue-600`} />
-    </SidebarTrigger>
-  );
+  return <AnimatedLogoTrigger />;
 }
 
 function App() {
