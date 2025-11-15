@@ -88,11 +88,8 @@ function App() {
                       <AppSidebar />
                       <div className="flex-1 flex flex-col">
                         {/* Global Header with Sidebar Toggle - Only on Mobile */}
-                        <header className="h-12 bg-white border-b border-gray-200 flex items-center px-4 shadow-sm md:hidden">
+                        <header className="absolute top-2 left-2 z-50 md:hidden">
                           <HeaderTrigger />
-                          <div className="flex-1 flex items-center justify-center">
-                            <h1 className="text-lg font-bold text-gray-900">ARCANA</h1>
-                          </div>
                         </header>
                         
                         <main className="flex-1 overflow-auto bg-gray-50">

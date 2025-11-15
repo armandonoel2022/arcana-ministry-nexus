@@ -131,8 +131,8 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-600 via-blue-500 to-blue-400">
-      <div className="container mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12 max-w-6xl">
+    <div className="min-h-screen w-full bg-gradient-to-b from-blue-600 via-blue-500 to-blue-400">
+      <div className="w-full px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12 max-w-6xl mx-auto md:container">
         
         {/* Birthday Notification Banner */}
         {birthdayNotification && (
