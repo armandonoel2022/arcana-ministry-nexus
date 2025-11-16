@@ -32,7 +32,9 @@ export const BuzzButton = ({ currentUserId }: BuzzButtonProps) => {
   }, [open]);
 
   useEffect(() => {
-    // Escuchar zumbidos entrantes
+    if (!currentUserId) return;
+
+    // Escuchar zumbidos entrantes en tiempo real
     const channel = supabase
       .channel(`buzzes-${currentUserId}`)
       .on(
@@ -44,25 +46,31 @@ export const BuzzButton = ({ currentUserId }: BuzzButtonProps) => {
           filter: `recipient_id=eq.${currentUserId}`,
         },
         async (payload) => {
-          console.log("Zumbido recibido:", payload);
+          console.log("⚡ Zumbido recibido:", payload);
           
-          // Obtener información del remitente
-          const { data: sender } = await supabase
-            .from("profiles")
-            .select("full_name")
-            .eq("id", payload.new.sender_id)
-            .single();
+          try {
+            // Obtener info del remitente
+            const { data: sender } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("id", payload.new.sender_id)
+              .maybeSingle();
 
-          // Reproducir sonido y vibrar
-          playSound('alert', 1.0);
-          vibrate([200, 100, 200, 100, 200]);
+            // Reproducir sonido con volumen alto
+            playSound('alert', 1.0);
+            
+            // Vibración intensa
+            vibrate([200, 100, 200, 100, 200]);
 
-          // Mostrar notificación
-          toast({
-            title: "⚡ ¡ZUMBIDO!",
-            description: `${sender?.full_name || 'Alguien'} te ha enviado un zumbido`,
-            duration: 5000,
-          });
+            // Mostrar toast visual
+            toast({
+              title: "⚡ ¡ZUMBIDO RECIBIDO!",
+              description: `${sender?.full_name || 'Alguien'} te ha enviado un zumbido`,
+              duration: 5000,
+            });
+          } catch (error) {
+            console.error('Error procesando zumbido:', error);
+          }
         }
       )
       .subscribe();
@@ -70,7 +78,7 @@ export const BuzzButton = ({ currentUserId }: BuzzButtonProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUserId]);
+  }, [currentUserId, playSound, vibrate, toast]);
 
   const fetchUsers = async () => {
     const { data, error } = await supabase

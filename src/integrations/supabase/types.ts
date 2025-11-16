@@ -1986,6 +1986,10 @@ export type Database = {
       get_current_user_role: { Args: never; Returns: string }
       get_spanish_month_name: { Args: { date_input: string }; Returns: string }
       is_administrator: { Args: { _user_id: string }; Returns: boolean }
+      is_member_of_room: {
+        Args: { _room_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_participant_in_session: {
         Args: { _session_id: string; _user_id: string }
         Returns: boolean

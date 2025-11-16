@@ -41,6 +41,7 @@ import { ThemeProvider } from "./hooks/useTheme";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import NotificationOverlay from "./components/notifications/NotificationOverlay";
 import ServiceNotificationOverlay from "./components/notifications/ServiceNotificationOverlay";
+import { useSwipeGesture } from "./hooks/useSwipeGesture";
 import { BirthdayOverlay } from "./components/birthday/BirthdayOverlay";
 import DirectorReplacementRequestOverlay from "./components/agenda/DirectorReplacementRequestOverlay";
 import DirectorReplacementNotificationOverlay from "./components/agenda/DirectorReplacementNotificationOverlay";
@@ -52,6 +53,21 @@ const queryClient = new QueryClient();
 
 function HeaderTrigger() {
   return <AnimatedLogoTrigger />;
+}
+
+function SidebarLayout() {
+  const { setOpenMobile, isMobile } = useSidebar();
+  
+  // Gesto de deslizamiento para abrir el sidebar en móvil
+  useSwipeGesture({
+    onSwipeRight: () => {
+      if (isMobile) {
+        setOpenMobile(true);
+      }
+    },
+  });
+
+  return null;
 }
 
 function App() {
@@ -84,13 +100,10 @@ function App() {
               <Route path="/*" element={
                 <ProtectedRoute>
                   <SidebarProvider>
+                    <SidebarLayout />
                     <div className="flex h-screen w-full bg-gray-50">
                       <AppSidebar />
                       <div className="flex-1 flex flex-col">
-                        {/* Global Header with Sidebar Toggle - Only on Mobile */}
-                        <header className="absolute top-2 left-2 z-50 md:hidden">
-                          <HeaderTrigger />
-                        </header>
                         
                         <main className="flex-1 overflow-auto bg-gray-50">
                           <Routes>
