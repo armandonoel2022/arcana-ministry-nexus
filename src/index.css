@@ -61,6 +61,7 @@
     --sidebar-accent-foreground: 220 13% 15%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217 91% 60%;
+    --sidebar-muted-foreground: 220 13% 54%;
   }
 
   .dark {
@@ -92,14 +93,17 @@
     --border: 215 25% 18%;
     --input: 215 25% 18%;
     --ring: 212 100% 63%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    
+    /* Sidebar mejorado para dark mode - mejor contraste */
+    --sidebar-background: 215 28% 12%;
+    --sidebar-foreground: 210 40% 95%;
+    --sidebar-primary: 212 100% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 215 25% 20%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 215 25% 22%;
+    --sidebar-ring: 212 100% 63%;
+    --sidebar-muted-foreground: 215 20% 60%;
   }
 }
 

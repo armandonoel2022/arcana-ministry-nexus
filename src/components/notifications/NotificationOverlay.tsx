@@ -23,6 +23,26 @@ const NotificationOverlay = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
+    // Fetch inicial de notificaciones no leídas
+    const fetchInitialNotifications = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('system_notifications')
+        .select('*')
+        .eq('is_read', false)
+        .or(`recipient_id.eq.${user.id},recipient_id.is.null`)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (data) {
+        setNotifications(data);
+      }
+    };
+
+    fetchInitialNotifications();
+
     // Suscribirse a nuevas notificaciones
     const channel = supabase
       .channel('overlay-notifications')
@@ -35,7 +55,6 @@ const NotificationOverlay = () => {
         },
         (payload) => {
           const newNotification = payload.new as Notification;
-          // Solo mostrar notificaciones no leídas y que no sean para el usuario específico o sean globales
           if (!newNotification.is_read) {
             setNotifications(prev => [...prev, newNotification]);
           }

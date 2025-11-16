@@ -10,7 +10,7 @@ export const ChatRoomAutoAdd = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const addAllMembersToGeneralRoom = async () => {
+    const addAllApprovedUsersToGeneral = async () => {
       try {
         // 1. Buscar la sala "General"
         const { data: generalRoom, error: roomError } = await supabase
@@ -24,95 +24,63 @@ export const ChatRoomAutoAdd = () => {
           return;
         }
 
-        console.log('Sala General encontrada:', generalRoom.id);
-
-        // 2. Obtener todos los miembros activos
-        const { data: activeMembers, error: membersError } = await supabase
-          .from('members')
-          .select('id, nombres, apellidos')
-          .eq('is_active', true);
-
-        if (membersError || !activeMembers) {
-          console.error('Error obteniendo miembros:', membersError);
-          return;
-        }
-
-        console.log(`Encontrados ${activeMembers.length} miembros activos`);
-
-        // 3. Obtener todos los profiles para hacer match con members
-        const { data: profiles, error: profilesError } = await supabase
+        // 2. Obtener todos los usuarios aprobados con email
+        const { data: approvedProfiles, error: profilesError } = await supabase
           .from('profiles')
-          .select('id, full_name');
+          .select('id, full_name, email')
+          .eq('is_approved', true)
+          .eq('is_active', true)
+          .not('email', 'is', null);
 
-        if (profilesError || !profiles) {
-          console.error('Error obteniendo profiles:', profilesError);
+        if (profilesError || !approvedProfiles) {
+          console.error('Error obteniendo perfiles aprobados:', profilesError);
           return;
         }
 
-        // 4. Hacer match entre members y profiles
-        const memberProfileMatches: { memberId: string; profileId: string }[] = [];
-        
-        activeMembers.forEach(member => {
-          const fullName = `${member.nombres} ${member.apellidos}`.toLowerCase();
-          const matchingProfile = profiles.find(profile => 
-            profile.full_name.toLowerCase().includes(member.nombres.toLowerCase()) ||
-            fullName.includes(profile.full_name.toLowerCase())
-          );
+        console.log(`Encontrados ${approvedProfiles.length} usuarios aprobados`);
 
-          if (matchingProfile) {
-            memberProfileMatches.push({
-              memberId: member.id,
-              profileId: matchingProfile.id
-            });
-          }
-        });
-
-        console.log(`Matches encontrados: ${memberProfileMatches.length}`);
-
-        // 5. Obtener participantes actuales de la sala
-        const { data: existingParticipants } = await supabase
-          .from('chat_participants')
+        // 3. Obtener miembros actuales de la sala General
+        const { data: existingMembers } = await supabase
+          .from('chat_room_members')
           .select('user_id')
           .eq('room_id', generalRoom.id);
 
-        const existingUserIds = new Set(existingParticipants?.map(p => p.user_id) || []);
+        const existingUserIds = new Set(existingMembers?.map(m => m.user_id) || []);
 
-        // 6. Agregar solo los que no están ya en la sala
-        const newParticipants = memberProfileMatches
-          .filter(match => !existingUserIds.has(match.profileId))
-          .map(match => ({
+        // 4. Agregar solo los que no están ya en la sala
+        const newMembers = approvedProfiles
+          .filter(profile => !existingUserIds.has(profile.id))
+          .map(profile => ({
             room_id: generalRoom.id,
-            user_id: match.profileId
+            user_id: profile.id,
+            role: 'member',
+            can_leave: false // No pueden salir de General
           }));
 
-        if (newParticipants.length > 0) {
+        if (newMembers.length > 0) {
           const { error: insertError } = await supabase
-            .from('chat_participants')
-            .insert(newParticipants);
+            .from('chat_room_members')
+            .insert(newMembers);
 
           if (insertError) {
-            console.error('Error agregando participantes:', insertError);
+            console.error('Error agregando miembros:', insertError);
           } else {
-            console.log(`✅ ${newParticipants.length} nuevos miembros agregados a la sala General`);
-            toast({
-              title: "Sala General actualizada",
-              description: `${newParticipants.length} miembros agregados automáticamente`,
-            });
+            console.log(`✅ ${newMembers.length} usuarios agregados a General`);
           }
         } else {
-          console.log('✅ Todos los miembros activos ya están en la sala General');
+          console.log('✅ Todos los usuarios aprobados ya están en General');
         }
 
       } catch (error) {
-        console.error('Error en auto-add a sala General:', error);
+        console.error('Error en auto-add a General:', error);
       }
     };
 
-    // Ejecutar al montar el componente
-    addAllMembersToGeneralRoom();
+    // Ejecutar al montar
+    addAllApprovedUsersToGeneral();
 
-    // También ejecutar cada 5 minutos para mantener actualizado
-    const interval = setInterval(addAllMembersToGeneralRoom, 5 * 60 * 1000);
+    // Ejecutar cada 5 minutos
+    const interval = setInterval(addAllApprovedUsersToGeneral, 5 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, [toast]);

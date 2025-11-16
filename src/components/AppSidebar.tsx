@@ -178,22 +178,24 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar className="border-r-0 bg-white shadow-xl" collapsible="icon">
-      <SidebarContent className="bg-white">
+    <Sidebar className="border-r-0 shadow-xl" collapsible="icon">
+      <SidebarContent className="bg-sidebar">
         {/* Header */}
-        <div className="p-6 border-b border-gray-100">
+        <div className="p-6 border-b border-sidebar-border">
           <div className="flex items-center gap-3">
-            <SidebarTrigger className="w-10 h-10 bg-white rounded-xl flex items-center justify-center hover:bg-gray-50 transition-all duration-200 hover:scale-105 group hidden md:flex shadow-md">
-              <Menu className="w-6 h-6 text-blue-600 transition-transform duration-300 group-hover:rotate-90" />
+            <SidebarTrigger className="w-10 h-10 bg-sidebar-accent/50 rounded-xl flex items-center justify-center hover:bg-sidebar-accent transition-all duration-200 hover:scale-105 group hidden md:flex shadow-sm">
+              <Menu className="w-6 h-6 text-sidebar-primary transition-transform duration-300 group-hover:rotate-90" />
             </SidebarTrigger>
-            <img 
-              src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" 
-              alt="ARCANA Logo" 
-              className="w-10 h-10 object-cover rounded-xl shadow-sm border border-gray-100 md:hidden"
-            />
+            <div className="md:hidden flex-shrink-0">
+              <img 
+                src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" 
+                alt="ARCANA Logo" 
+                className="w-10 h-10 object-cover rounded-xl shadow-sm"
+              />
+            </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">ARCANA</h1>
-              <p className="text-sm text-gray-500">{userProfile?.full_name?.split(' ')[0] || 'Usuario'}</p>
+              <h1 className="text-xl font-bold text-sidebar-foreground">ARCANA</h1>
+              <p className="text-sm text-sidebar-muted-foreground">{userProfile?.full_name?.split(' ')[0] || 'Usuario'}</p>
             </div>
           </div>
         </div>
@@ -201,7 +203,7 @@ export function AppSidebar() {
         {/* Navigation Categories */}
         {menuCategories.map((category) => (
           <SidebarGroup key={category.label} className="px-3 py-2">
-            <SidebarGroupLabel className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-2">
+            <SidebarGroupLabel className="text-xs uppercase tracking-wider text-sidebar-muted-foreground font-semibold mb-2">
               {category.label}
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -210,7 +212,7 @@ export function AppSidebar() {
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton 
                       asChild 
-                      className="h-10 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 data-[active=true]:bg-blue-500 data-[active=true]:text-white data-[active=true]:shadow-lg"
+                      className="h-10 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200 data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:shadow-lg"
                       data-active={location.pathname === item.url}
                     >
                       <Link 
@@ -236,8 +238,8 @@ export function AppSidebar() {
 
         {/* Admin-only section for Scheduled Notifications */}
         {userProfile?.role === 'administrator' && (
-          <SidebarGroup className="px-3 py-2 border-t border-gray-200">
-            <SidebarGroupLabel className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-2">
+          <SidebarGroup className="px-3 py-2 border-t border-sidebar-border">
+            <SidebarGroupLabel className="text-xs uppercase tracking-wider text-sidebar-muted-foreground font-semibold mb-2">
               Administración Avanzada
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -245,7 +247,7 @@ export function AppSidebar() {
                 <SidebarMenuItem>
                   <SidebarMenuButton 
                     asChild 
-                    className="h-10 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition-all duration-200 data-[active=true]:bg-orange-500 data-[active=true]:text-white data-[active=true]:shadow-lg"
+                    className="h-10 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200 data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:shadow-lg"
                     data-active={location.pathname === '/scheduled-notifications'}
                   >
                     <Link 
@@ -264,13 +266,13 @@ export function AppSidebar() {
         )}
         
         {/* Theme Selector, Push Notifications and Logout Button */}
-        <div className="mt-auto p-4 border-t border-gray-100 space-y-2">
+        <div className="mt-auto p-4 border-t border-sidebar-border space-y-2">
           <PushNotificationPermission />
           <ThemeSelector />
           <Button
             onClick={signOut}
             variant="ghost"
-            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+            className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
           >
             <LogOut className="w-4 h-4 mr-3" />
             Cerrar Sesión
