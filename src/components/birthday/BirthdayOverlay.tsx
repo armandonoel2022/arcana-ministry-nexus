@@ -139,88 +139,87 @@ export const BirthdayOverlay = () => {
     <>
       <ConfettiEffect trigger={activeBirthdays.length > 0} />
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto space-y-4">
           {activeBirthdays.map((member) => (
             <Card 
               key={member.id} 
-              className="bg-gradient-to-br from-blue-50 via-white to-blue-100 border-4 border-blue-200 shadow-2xl mb-4 relative"
+              className="bg-gradient-to-br from-blue-50 via-white to-blue-100 border-4 border-blue-200 shadow-2xl relative overflow-hidden"
             >
               <button
                 onClick={() => handleDismiss(member.id)}
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors z-10"
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 transition-colors z-10 bg-white/80 rounded-full p-1.5 hover:bg-white"
                 aria-label="Cerrar"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
 
-              <div className="p-6 sm:p-8 text-center space-y-6">
+              <div className="p-8 text-center space-y-6">
                 {/* Logo ADN */}
                 <div className="flex justify-center">
                   <img 
                     src="/lovable-uploads/74634c97-a2ef-403b-9fa0-89d9207b7b00.png" 
                     alt="ADN Ministerio Logo" 
-                    className="w-16 h-auto"
+                    className="w-20 h-auto"
                   />
                 </div>
 
                 {/* Title */}
                 <div>
-                  <h2 className="text-3xl sm:text-4xl font-bold text-orange-500 mb-2">
+                  <h2 className="text-4xl font-bold text-orange-500 mb-3">
                     ¡Feliz Cumpleaños!
                   </h2>
-                  <div className="text-4xl sm:text-5xl">🎉🎂🎈</div>
+                  <div className="text-5xl mb-2">🎉🎂🎈</div>
                 </div>
 
                 {/* Member Info */}
-                <div className="flex flex-col items-center space-y-4">
+                <div className="flex flex-col items-center space-y-5">
                   <div className="relative inline-block">
-                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500 rounded-full blur-sm opacity-60"></div>
-                    <Avatar className="relative w-24 h-24 sm:w-32 sm:h-32 border-4 border-white shadow-lg">
+                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-pink-500 to-red-500 rounded-full blur-lg opacity-50 animate-pulse"></div>
+                    <Avatar className="relative w-32 h-32 border-4 border-white shadow-2xl">
                       <AvatarImage
                         src={member.photo_url || undefined}
                         alt={`${member.nombres} ${member.apellidos}`}
                       />
-                      <AvatarFallback className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-3xl">
+                      <AvatarFallback className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-4xl">
                         {member.nombres.charAt(0)}{member.apellidos.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                   </div>
 
-                  <div>
-                    <h3 className="text-2xl sm:text-3xl font-bold text-blue-600">
+                  <div className="space-y-1">
+                    <h3 className="text-3xl font-bold text-blue-600">
                       {member.nombres} {member.apellidos}
                     </h3>
-                    <p className="text-lg text-blue-500 mt-1">
+                    <p className="text-xl text-blue-500">
                       {getRoleLabel(member.cargo)}
                     </p>
                   </div>
                 </div>
 
                 {/* Message */}
-                <div className="bg-white/90 backdrop-blur rounded-lg p-4 border border-gray-100">
-                  <p className="text-lg text-gray-700 font-medium">
-                    ¡Hoy es un día especial! 🎊
-                  </p>
-                  <p className="text-gray-600 mt-2">
-                    Celebremos juntos este día maravilloso
+                <div className="bg-gradient-to-r from-yellow-50 via-orange-50 to-pink-50 rounded-2xl p-8 border-2 border-orange-200 shadow-inner">
+                  <p className="text-xl text-gray-700 leading-relaxed">
+                    En tu día especial, toda la familia de{" "}
+                    <span className="font-bold text-orange-600">ADN Ministerio</span>{" "}
+                    te desea un feliz cumpleaños lleno de bendiciones y alegría. ✨
                   </p>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
                   <Button
                     onClick={() => handleGoToCelebrate(member.id)}
-                    className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-6 text-lg shadow-lg"
+                    className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-3"
                   >
-                    <MessageCircle className="w-5 h-5 mr-2" />
-                    Ir a Felicitarlo
+                    <MessageCircle className="w-5 h-5" />
+                    Ir a Celebrar
                   </Button>
                   <Button
                     onClick={() => handleDismiss(member.id)}
                     variant="outline"
-                    className="flex-1 border-2 border-blue-400 text-blue-700 hover:bg-blue-50 py-6 text-lg font-semibold"
+                    className="border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 px-10 py-6 text-lg font-semibold transition-all duration-200"
                   >
-                    Después
+                    Cerrar
                   </Button>
                 </div>
               </div>
