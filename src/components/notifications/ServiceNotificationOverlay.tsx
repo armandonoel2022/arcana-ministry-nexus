@@ -80,13 +80,13 @@ const MEMBER_IDS = {
   // Directores que pueden hacer coros intercalados
   FELIX_NICOLAS: "3d75bc74-76bb-454a-b3e0-d6e4de45d577",
   ARMANDO_NOEL: "d6602109-ad3e-4db6-ab4a-2984dadfc569",
-  GUARIONEX_GARCIA: "f2a3d1bb-5cd4-4d17-b1fb-75f4f6a1c847",
+  GUARIONEX_GARCIA: "a71697a2-bf8e-4967-8190-2e3e2d01f150",
   FREDDERID_ABRAHAN: "7a1645d8-75fe-498c-a2e9-f1057ff3521f",
   DENNY_ALBERTO: "6a5bfaa9-fdf0-4b0e-aad3-79266444604f",
   ARIZONI_LIRIANO: "4eed809d-9437-48d5-935e-cf8b4aa8024a",
   
   // Solo disponibles a las 8:00 AM
-  MARIA_SANTANA: "3cd33bff-39d7-4d1b-9af2-b09b0bc2df8f",
+  MARIA_SANTANA: "1d5866c9-cdc1-439e-976a-2d2e6a5aef80",
   
   // Miembros fijos
   ROSELY_MONTERO: "2a2fa0cd-d301-46ec-9965-2e4ea3692181",
@@ -178,7 +178,7 @@ const ALL_MEMBERS = {
   [MEMBER_IDS.GUARIONEX_GARCIA]: {
     name: "Guarionex Garcia",
     voice: "Tenor",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f2a3d1bb-5cd4-4d17-b1fb-75f4f6a1c847.JPG",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/a71697a2-bf8e-4967-8190-2e3e2d01f150.JPG",
   },
   [MEMBER_IDS.FREDDERID_ABRAHAN]: {
     name: "Fredderid Abrahan Valera Montoya",
@@ -188,7 +188,7 @@ const ALL_MEMBERS = {
   [MEMBER_IDS.MARIA_SANTANA]: {
     name: "Maria del A. Santana",
     voice: "Contralto",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/3cd33bff-39d7-4d1b-9af2-b09b0bc2df8f.JPG",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/1d5866c9-cdc1-439e-976a-2d2e6a5aef80.jpeg",
   },
   [MEMBER_IDS.ROSELY_MONTERO]: {
     name: "Rosely Montero",
