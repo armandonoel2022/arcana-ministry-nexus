@@ -45,6 +45,7 @@ import { useSwipeGesture } from "./hooks/useSwipeGesture";
 import { BirthdayOverlay } from "./components/birthday/BirthdayOverlay";
 import DirectorReplacementRequestOverlay from "./components/agenda/DirectorReplacementRequestOverlay";
 import DirectorReplacementNotificationOverlay from "./components/agenda/DirectorReplacementNotificationOverlay";
+import { useScheduledNotificationsInvoker } from "./hooks/useScheduledNotificationsInvoker";
 import SongChangeOverlay from "./components/songs/SongChangeOverlay";
 import { PendingSongNotifications } from "./components/songs/PendingSongNotifications";
 import "./App.css";
@@ -72,6 +73,9 @@ function SidebarLayout() {
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
+  
+  // Invoca notificaciones programadas cada minuto (fallback a pg_cron)
+  useScheduledNotificationsInvoker();
 
   const handleSplashComplete = () => {
     setShowSplash(false);
