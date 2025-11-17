@@ -1985,9 +1985,18 @@ const ServiceNotificationOverlay = ({
           <div className="bg-white rounded-b-xl">
             {activeTab === "services" ? (
               <div className="p-6 space-y-6">
-                {services.map((service) => (
-                  <ServiceCard key={service.id} service={service} />
-                ))}
+                {services
+                  .sort((a, b) => {
+                    const timeA = getServiceTime(a.title);
+                    const timeB = getServiceTime(b.title);
+                    // 8:00 AM debería aparecer antes que 10:45 AM
+                    if (timeA === "8:00 AM" && timeB === "10:45 AM") return -1;
+                    if (timeA === "10:45 AM" && timeB === "8:00 AM") return 1;
+                    return 0;
+                  })
+                  .map((service) => (
+                    <ServiceCard key={service.id} service={service} />
+                  ))}
               </div>
             ) : (
               <div className="p-6">
