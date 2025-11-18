@@ -40,7 +40,7 @@ serve(async (req) => {
     // Get current day and time in Dominican Republic timezone
     const rdNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
     const currentDay = rdNow.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const currentTime = `${String(rdNow.getHours()).padStart(2,'0')}:${String(rdNow.getMinutes()).padStart(2,'0')}`; // HH:MM format
+    const currentTime = `${String(rdNow.getHours()).padStart(2,'0')}:${String(rdNow.getMinutes()).padStart(2,'0')}:00`; // HH:MM:SS format to match DB
     
     console.log(`Current day: ${currentDay}, current time: ${currentTime}`);
 
