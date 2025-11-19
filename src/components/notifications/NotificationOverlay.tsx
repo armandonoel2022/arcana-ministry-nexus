@@ -89,12 +89,8 @@ const NotificationOverlay = () => {
         );
       case 'service_program':
       case 'weekend_service':
-        return (
-          <ServiceNotificationCard
-            notification={notification}
-            onDismiss={() => dismissNotification(notification.id)}
-          />
-        );
+        // Estos se manejan en ServiceNotificationOverlay separado
+        return null;
       case 'daily_verse':
         return (
           <DailyVerseOverlay
