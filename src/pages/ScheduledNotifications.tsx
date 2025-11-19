@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import ServiceNotificationOverlay from "@/components/notifications/ServiceNotificationOverlay";
+import NotificationTestDemoMenu from "@/components/notifications/NotificationTestDemoMenu";
 import {
   Dialog,
   DialogContent,
@@ -252,6 +253,9 @@ const ScheduledNotifications = () => {
           </Button>
         </div>
       </div>
+
+      {/* Test Demo Menu */}
+      <NotificationTestDemoMenu />
 
       <div className="grid gap-6">
         {notifications.map((notification) => (
