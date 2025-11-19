@@ -101,45 +101,7 @@ const NotificationTestDemoMenu = () => {
         category: 'agenda',
         priority: 2,
         metadata: {
-          service_date: new Date().toISOString().split('T')[0],
-          month_order: 'Demo - Fin de Semana',
-          special_event: 'Demostración Automática',
-          services: [
-            {
-              time: '8:00 a.m.',
-              director: {
-                name: 'Armando Noel Charle',
-                photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/d6602109-ad3e-4db6-ab4a-2984dadfc569.JPG'
-              },
-              group: 'Grupo de Aleida',
-              voices: [
-                { name: 'Aleida Geomar Batista Ventura', photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/00a916a8-ab94-4cc0-81ae-668dd6071416.JPG' },
-                { name: 'Ruth Esmailin Ramirez Perez', photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/619c1a4e-42db-4549-8890-16392cfa2a87.JPG' },
-                { name: 'Eliabi Joana Sierra Castillo', photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG' }
-              ],
-              songs: [
-                { id: '1', title: 'Grande es Tu Fidelidad', artist: 'Tradicional', song_order: 1 },
-                { id: '2', title: 'Cuán Grande es Él', artist: 'Tradicional', song_order: 2 }
-              ]
-            },
-            {
-              time: '10:45 a.m.',
-              director: {
-                name: 'Félix Nicolás Peralta Hernández',
-                photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/3d75bc74-76bb-454a-b3e0-d6e4de45d577.JPG'
-              },
-              group: 'Grupo de Aleida',
-              voices: [
-                { name: 'Aleida Geomar Batista Ventura', photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/00a916a8-ab94-4cc0-81ae-668dd6071416.JPG' },
-                { name: 'Fior Daliza Paniagua Lebron', photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/8cebc294-ea61-40d0-9b04-08d7d474332c.JPG' },
-                { name: 'Armando Noel Charle', photo: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/d6602109-ad3e-4db6-ab4a-2984dadfc569.JPG' }
-              ],
-              songs: [
-                { id: '3', title: 'Al mundo paz', artist: 'Isaac Watts', song_order: 1 },
-                { id: '4', title: 'Ven a mi corazón', artist: 'Contemporáneo', song_order: 2 }
-              ]
-            }
-          ]
+          trigger_fetch: true
         }
       });
 

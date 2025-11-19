@@ -586,45 +586,65 @@ const ServiceNotificationOverlay = ({
       return;
     }
 
-    localStorage.removeItem("serviceNotificationDismissed");
-    localStorage.removeItem("serviceNotificationLastShown");
+    // Escuchar notificaciones de tipo service_program desde system_notifications
+    const checkForServiceNotifications = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    const hasInteracted = localStorage.getItem("serviceNotificationDismissed");
-    const lastShownDate = localStorage.getItem("serviceNotificationLastShown");
-    const today = new Date().toDateString();
+      const { data: notifications } = await supabase
+        .from('system_notifications')
+        .select('*')
+        .eq('is_read', false)
+        .in('type', ['service_program', 'weekend_service'])
+        .or(`recipient_id.eq.${user.id},recipient_id.is.null`)
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-    if (!hasInteracted || lastShownDate !== today) {
-      fetchWeekendServices();
-    } else {
-      setIsLoading(false);
-    }
-
-    const handleNotifications = (payload: any) => {
-      if (
-        payload.eventType === "INSERT" &&
-        payload.new.type === "service_program" &&
-        payload.new.notification_category === "agenda" &&
-        payload.new.metadata?.service_date
-      ) {
-        showServiceProgramOverlay(payload.new.metadata);
+      if (notifications && notifications.length > 0) {
+        setIsVisible(true);
+        setIsAnimating(true);
+        fetchWeekendServices();
+        
+        // Marcar como leída
+        await supabase
+          .from('system_notifications')
+          .update({ is_read: true })
+          .eq('id', notifications[0].id);
       }
     };
 
-    const channel = supabase
-      .channel("service-notifications")
+    checkForServiceNotifications();
+
+    // Suscribirse a nuevas notificaciones
+    const notificationChannel = supabase
+      .channel('service-notifications-listener')
       .on(
-        "postgres_changes",
+        'postgres_changes',
         {
-          event: "INSERT",
-          schema: "public",
-          table: "system_notifications",
+          event: 'INSERT',
+          schema: 'public',
+          table: 'system_notifications',
+          filter: 'type=in.(service_program,weekend_service)'
         },
-        handleNotifications,
+        async (payload) => {
+          const notification = payload.new as any;
+          if (!notification.is_read) {
+            setIsVisible(true);
+            setIsAnimating(true);
+            fetchWeekendServices();
+            
+            // Marcar como leída
+            await supabase
+              .from('system_notifications')
+              .update({ is_read: true })
+              .eq('id', notification.id);
+          }
+        }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(notificationChannel);
     };
   }, []);
 
