@@ -2057,6 +2057,9 @@ export type Database = {
         | "director_replacement_request"
         | "director_replacement_response"
         | "director_change"
+        | "daily_advice"
+        | "service_program"
+        | "special_event"
       song_knowledge: "unknown" | "learning" | "known" | "expert"
       user_role:
         | "admin"
@@ -2251,6 +2254,9 @@ export const Constants = {
         "director_replacement_request",
         "director_replacement_response",
         "director_change",
+        "daily_advice",
+        "service_program",
+        "special_event",
       ],
       song_knowledge: ["unknown", "learning", "known", "expert"],
       user_role: [
