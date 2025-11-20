@@ -595,7 +595,7 @@ const ServiceNotificationOverlay = ({
         .from('system_notifications')
         .select('*')
         .eq('is_read', false)
-        .in('type', ['service_program', 'weekend_service'])
+        .in('type', ['service_program', 'service_overlay'])
         .or(`recipient_id.eq.${user.id},recipient_id.is.null`)
         .order('created_at', { ascending: false })
         .limit(1);
@@ -624,7 +624,7 @@ const ServiceNotificationOverlay = ({
           event: 'INSERT',
           schema: 'public',
           table: 'system_notifications',
-          filter: 'type=in.(service_program,weekend_service)'
+          filter: 'type=in.(service_program,service_overlay)'
         },
         async (payload) => {
           const notification = payload.new as any;
