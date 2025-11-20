@@ -1999,6 +1999,7 @@ export type Database = {
         Returns: boolean
       }
       process_scheduled_notifications: { Args: never; Returns: undefined }
+      process_service_notifications: { Args: never; Returns: undefined }
     }
     Enums: {
       blood_type: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-"
