@@ -88,7 +88,7 @@ const NotificationOverlay = () => {
           />
         );
       case 'service_program':
-      case 'weekend_service':
+      case 'service_overlay':
         // Estos se manejan en ServiceNotificationOverlay separado
         return null;
       case 'daily_verse':

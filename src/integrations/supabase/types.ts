@@ -2061,6 +2061,7 @@ export type Database = {
         | "daily_advice"
         | "service_program"
         | "special_event"
+        | "service_overlay"
       song_knowledge: "unknown" | "learning" | "known" | "expert"
       user_role:
         | "admin"
@@ -2258,6 +2259,7 @@ export const Constants = {
         "daily_advice",
         "service_program",
         "special_event",
+        "service_overlay",
       ],
       song_knowledge: ["unknown", "learning", "known", "expert"],
       user_role: [

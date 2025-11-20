@@ -95,7 +95,7 @@ const NotificationTestDemoMenu = () => {
 
       // 4. Overlay de servicios del fin de semana
       await insertNotificationNow('servicios', {
-        type: 'service_program',
+        type: 'service_overlay',
         title: '🎼 Programa de Servicios',
         message: 'Se ha publicado el programa de servicios para este fin de semana.',
         category: 'agenda',
