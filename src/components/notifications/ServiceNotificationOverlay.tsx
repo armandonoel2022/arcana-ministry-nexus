@@ -595,7 +595,7 @@ const ServiceNotificationOverlay = ({
         .from('system_notifications')
         .select('*')
         .eq('is_read', false)
-        .in('type', ['service_program', 'service_overlay'])
+        .eq('type', 'service_overlay')
         .or(`recipient_id.eq.${user.id},recipient_id.is.null`)
         .order('created_at', { ascending: false })
         .limit(1);
@@ -624,10 +624,11 @@ const ServiceNotificationOverlay = ({
           event: 'INSERT',
           schema: 'public',
           table: 'system_notifications',
-          filter: 'type=in.(service_program,service_overlay)'
+          filter: 'type=eq.service_overlay'
         },
         async (payload) => {
           const notification = payload.new as any;
+          console.log('🔔 Service overlay notification received:', notification);
           if (!notification.is_read) {
             setIsVisible(true);
             setIsAnimating(true);
@@ -641,7 +642,9 @@ const ServiceNotificationOverlay = ({
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('🎯 Service notification channel status:', status);
+      });
 
     return () => {
       supabase.removeChannel(notificationChannel);
