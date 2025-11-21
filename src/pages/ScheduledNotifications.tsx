@@ -3,15 +3,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Clock, Calendar, Plus, Edit, Trash2, Bell, Save, X, Play } from "lucide-react";
+import { Clock, Calendar, Plus, Edit, Trash2, Bell, Save, X, Eye, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import ServiceNotificationOverlay from "@/components/notifications/ServiceNotificationOverlay";
+import { DailyVerseOverlay } from "@/components/notifications/DailyVerseOverlay";
+import { DailyAdviceOverlay } from "@/components/notifications/DailyAdviceOverlay";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 interface ScheduledNotification {
   id: string;
@@ -37,7 +42,9 @@ const daysOfWeek = [
 ];
 
 const notificationTypes = [
-  { value: "weekend_service", label: "Programa de Servicios" },
+  { value: "service_overlay", label: "Overlay de Servicios" },
+  { value: "daily_verse", label: "Versículo del Día" },
+  { value: "daily_advice", label: "Consejo del Día" },
   { value: "general", label: "Notificación General" },
   { value: "reminder", label: "Recordatorio" },
 ];
@@ -47,20 +54,24 @@ const ScheduledNotifications = () => {
   const [notifications, setNotifications] = useState<ScheduledNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showServicePreview, setShowServicePreview] = useState(false);
+  const [showVersePreview, setShowVersePreview] = useState(false);
+  const [showAdvicePreview, setShowAdvicePreview] = useState(false);
   const [editingNotification, setEditingNotification] = useState<ScheduledNotification | null>(null);
+  const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    notification_type: "weekend_service", // Cambiado a weekend_service
-    day_of_week: 5, // Viernes por defecto (para servicios de fin de semana)
+    notification_type: "service_overlay",
+    day_of_week: 1,
     time: "07:30",
     target_audience: "all",
     is_active: true,
     metadata: {
-      service_date: "",
-      month_order: "",
-      special_event: "",
-      services: [],
+      verse_text: "",
+      verse_reference: "",
+      advice_title: "",
+      advice_message: "",
     },
   });
 
@@ -82,107 +93,6 @@ const ScheduledNotifications = () => {
       toast.error("Error al cargar las notificaciones programadas");
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Función para crear notificaciones de servicio usando el sistema global
-  const createWeekendServiceNotification = async (serviceData: any) => {
-    try {
-      const { error } = await supabase.from("system_notifications").insert({
-        type: "weekend_service",
-        title: `🎼 Programa de Servicios - ${serviceData.month_order}`,
-        message:
-          "Se ha publicado el programa de servicios para este fin de semana. Revisa tu participación y prepárate para un tiempo de bendición.",
-        recipient_id: null, // null = notificación global para todos
-        notification_category: "agenda",
-        priority: 2,
-        metadata: serviceData,
-      });
-
-      if (error) throw error;
-
-      console.log("✅ Service notification created successfully");
-      toast.success("Notificación de servicios creada exitosamente");
-    } catch (error) {
-      console.error("Error creating service notification:", error);
-      toast.error("Error al crear la notificación de servicios");
-    }
-  };
-
-  // Función para probar la notificación inmediatamente
-  const testNotification = async (notification: ScheduledNotification) => {
-    try {
-      if (notification.notification_type === "weekend_service") {
-        // Crear datos de ejemplo para servicios de fin de semana
-        const serviceData = {
-          service_date: new Date().toISOString().split("T")[0],
-          month_order: "Primera Semana de Diciembre",
-          special_event: "Bautismo Especial",
-          services: [
-            {
-              time: "8:00 AM",
-              director: {
-                name: "Félix Nicolás Peralta Hernández",
-                photo:
-                  "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/3d75bc74-76bb-454a-b3e0-d6e4de45d577.JPG",
-              },
-              group: "Grupo de Aleida",
-              voices: [
-                {
-                  name: "Aleida Geomar Batista Ventura",
-                  photo:
-                    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/00a916a8-ab94-4cc0-81ae-668dd6071416.JPG",
-                },
-                {
-                  name: "Eliabi Joana Sierra Castillo",
-                  photo:
-                    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG",
-                },
-              ],
-            },
-            {
-              time: "10:45 AM",
-              director: {
-                name: "Armando Noel Charle",
-                photo:
-                  "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/d6602109-ad3e-4db6-ab4a-2984dadfc569.JPG",
-              },
-              group: "Grupo de Keyla",
-              voices: [
-                {
-                  name: "Keyla Yanira Medrano Medrano",
-                  photo:
-                    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c24659e9-b473-4ecd-97e7-a90526d23502.JPG",
-                },
-                {
-                  name: "Yindhia Carolina Santana Castillo",
-                  photo:
-                    "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/11328db1-559f-4dcf-9024-9aef18435700.JPG",
-                },
-              ],
-            },
-          ],
-        };
-
-        await createWeekendServiceNotification(serviceData);
-      } else {
-        // Para otros tipos de notificaciones
-        const { error } = await supabase.from("system_notifications").insert({
-          type: notification.notification_type,
-          title: `Prueba: ${notification.name}`,
-          message: notification.description || "Esta es una notificación de prueba programada.",
-          recipient_id: null,
-          notification_category: "system",
-          priority: 1,
-          metadata: notification.metadata || {},
-        });
-
-        if (error) throw error;
-        toast.success("Notificación de prueba enviada");
-      }
-    } catch (error) {
-      console.error("Error testing notification:", error);
-      toast.error("Error al enviar notificación de prueba");
     }
   };
 
@@ -267,10 +177,10 @@ const ScheduledNotifications = () => {
       target_audience: notification.target_audience,
       is_active: notification.is_active,
       metadata: notification.metadata || {
-        service_date: "",
-        month_order: "",
-        special_event: "",
-        services: [],
+        verse_text: "",
+        verse_reference: "",
+        advice_title: "",
+        advice_message: "",
       },
     });
     setIsDialogOpen(true);
@@ -280,18 +190,19 @@ const ScheduledNotifications = () => {
     setFormData({
       name: "",
       description: "",
-      notification_type: "weekend_service",
-      day_of_week: 5, // Viernes por defecto
+      notification_type: "service_overlay",
+      day_of_week: 1,
       time: "07:30",
       target_audience: "all",
       is_active: true,
       metadata: {
-        service_date: "",
-        month_order: "",
-        special_event: "",
-        services: [],
+        verse_text: "",
+        verse_reference: "",
+        advice_title: "",
+        advice_message: "",
       },
     });
+    setSelectedDays([]);
   };
 
   const openCreateDialog = () => {
@@ -306,6 +217,58 @@ const ScheduledNotifications = () => {
 
   const getTypeLabel = (type: string) => {
     return notificationTypes.find((t) => t.value === type)?.label || type;
+  };
+
+  const getTypeColor = (type: string) => {
+    const colors = {
+      service_overlay: "bg-blue-100 text-blue-800 border-blue-200",
+      daily_verse: "bg-green-100 text-green-800 border-green-200",
+      daily_advice: "bg-yellow-100 text-yellow-800 border-yellow-200",
+      general: "bg-gray-100 text-gray-800 border-gray-200",
+      reminder: "bg-purple-100 text-purple-800 border-purple-200",
+    };
+    return colors[type as keyof typeof colors] || "bg-gray-100 text-gray-800";
+  };
+
+  const handlePreview = (notification: ScheduledNotification) => {
+    switch (notification.notification_type) {
+      case "service_overlay":
+        setShowServicePreview(true);
+        break;
+      case "daily_verse":
+        setShowVersePreview(true);
+        break;
+      case "daily_advice":
+        setShowAdvicePreview(true);
+        break;
+      default:
+        toast.info("Vista previa no disponible para este tipo de notificación");
+    }
+  };
+
+  const handleTestNotification = async (notification: ScheduledNotification) => {
+    try {
+      // Crear notificación de prueba en system_notifications
+      const { error } = await supabase.from("system_notifications").insert({
+        type: notification.notification_type,
+        title: `Prueba: ${notification.name}`,
+        message: notification.description || "Esta es una notificación de prueba programada.",
+        recipient_id: null,
+        notification_category: "system",
+        priority: 1,
+        metadata: notification.metadata || {},
+      });
+
+      if (error) throw error;
+      toast.success("Notificación de prueba enviada al sistema");
+    } catch (error) {
+      console.error("Error testing notification:", error);
+      toast.error("Error al enviar notificación de prueba");
+    }
+  };
+
+  const toggleDaySelection = (day: number) => {
+    setSelectedDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
   };
 
   if (loading) {
@@ -333,22 +296,6 @@ const ScheduledNotifications = () => {
         </Button>
       </div>
 
-      {/* Información del Sistema */}
-      <Card className="bg-blue-50 border-blue-200">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
-            <Bell className="w-5 h-5 text-blue-600 mt-0.5" />
-            <div>
-              <h3 className="font-semibold text-blue-900">Sistema de Notificaciones Global</h3>
-              <p className="text-blue-700 text-sm mt-1">
-                Las notificaciones de tipo "Programa de Servicios" se mostrarán automáticamente en el overlay global de
-                la aplicación. No es necesario un preview manual.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       <div className="grid gap-6">
         {notifications.map((notification) => (
           <Card key={notification.id} className="border-l-4 border-l-blue-500">
@@ -360,7 +307,7 @@ const ScheduledNotifications = () => {
                   <Badge variant={notification.is_active ? "default" : "secondary"}>
                     {notification.is_active ? "Activa" : "Inactiva"}
                   </Badge>
-                  <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                  <Badge variant="outline" className={getTypeColor(notification.notification_type)}>
                     {getTypeLabel(notification.notification_type)}
                   </Badge>
                 </div>
@@ -368,7 +315,16 @@ const ScheduledNotifications = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => testNotification(notification)}
+                    onClick={() => handlePreview(notification)}
+                    className="flex items-center gap-1"
+                  >
+                    <Eye className="w-3 h-3" />
+                    Preview
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleTestNotification(notification)}
                     className="flex items-center gap-1"
                   >
                     <Play className="w-3 h-3" />
@@ -421,6 +377,32 @@ const ScheduledNotifications = () => {
                   </div>
                 )}
               </div>
+
+              {/* Metadata específica para cada tipo */}
+              {notification.metadata && (
+                <Collapsible className="mt-4">
+                  <CollapsibleTrigger className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700">
+                    Ver detalles específicos
+                    <ChevronDown className="w-4 h-4" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-2 p-3 bg-gray-50 rounded-lg">
+                    {notification.notification_type === "daily_verse" && (
+                      <div className="text-sm">
+                        <strong>Versículo:</strong> {notification.metadata.verse_text}
+                        <br />
+                        <strong>Referencia:</strong> {notification.metadata.verse_reference}
+                      </div>
+                    )}
+                    {notification.notification_type === "daily_advice" && (
+                      <div className="text-sm">
+                        <strong>Consejo:</strong> {notification.metadata.advice_title}
+                        <br />
+                        <strong>Mensaje:</strong> {notification.metadata.advice_message}
+                      </div>
+                    )}
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -432,7 +414,7 @@ const ScheduledNotifications = () => {
             <Bell className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay notificaciones programadas</h3>
             <p className="text-gray-600 mb-4">
-              Crea tu primera notificación programada para enviar recordatorios automáticos.
+              Crea tu primera notificación programada para mostrar overlays automáticamente.
             </p>
             <Button onClick={openCreateDialog} className="flex items-center gap-2 mx-auto">
               <Plus className="w-4 h-4" />
@@ -444,7 +426,7 @@ const ScheduledNotifications = () => {
 
       {/* Dialog for Create/Edit */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingNotification ? "Editar Notificación Programada" : "Nueva Notificación Programada"}
@@ -493,6 +475,77 @@ const ScheduledNotifications = () => {
               </Select>
             </div>
 
+            {/* Campos específicos según el tipo */}
+            {formData.notification_type === "daily_verse" && (
+              <div className="space-y-4 p-4 bg-blue-50 rounded-lg">
+                <h4 className="font-semibold text-blue-900">Configuración del Versículo</h4>
+                <div className="space-y-2">
+                  <Label htmlFor="verse_text">Texto del Versículo</Label>
+                  <Textarea
+                    id="verse_text"
+                    value={formData.metadata.verse_text}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        metadata: { ...formData.metadata, verse_text: e.target.value },
+                      })
+                    }
+                    placeholder="Porque de tal manera amó Dios al mundo..."
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="verse_reference">Referencia</Label>
+                  <Input
+                    id="verse_reference"
+                    value={formData.metadata.verse_reference}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        metadata: { ...formData.metadata, verse_reference: e.target.value },
+                      })
+                    }
+                    placeholder="Juan 3:16"
+                  />
+                </div>
+              </div>
+            )}
+
+            {formData.notification_type === "daily_advice" && (
+              <div className="space-y-4 p-4 bg-yellow-50 rounded-lg">
+                <h4 className="font-semibold text-yellow-900">Configuración del Consejo</h4>
+                <div className="space-y-2">
+                  <Label htmlFor="advice_title">Título del Consejo</Label>
+                  <Input
+                    id="advice_title"
+                    value={formData.metadata.advice_title}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        metadata: { ...formData.metadata, advice_title: e.target.value },
+                      })
+                    }
+                    placeholder="La importancia de la oración"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="advice_message">Mensaje del Consejo</Label>
+                  <Textarea
+                    id="advice_message"
+                    value={formData.metadata.advice_message}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        metadata: { ...formData.metadata, advice_message: e.target.value },
+                      })
+                    }
+                    placeholder="La oración es nuestra línea directa con Dios..."
+                    rows={4}
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="day_of_week">Día de la Semana</Label>
               <Select
@@ -532,7 +585,7 @@ const ScheduledNotifications = () => {
               <Label htmlFor="is_active">Activa</Label>
             </div>
 
-            <div className="flex justify-end space-x-2">
+            <div className="flex justify-end space-x-2 pt-4">
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                 <X className="w-4 h-4 mr-2" />
                 Cancelar
@@ -545,6 +598,34 @@ const ScheduledNotifications = () => {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Overlays de Preview */}
+      {showServicePreview && (
+        <ServiceNotificationOverlay
+          forceShow={true}
+          onClose={() => setShowServicePreview(false)}
+          onNavigate={(path) => {
+            setShowServicePreview(false);
+            navigate(path);
+          }}
+        />
+      )}
+
+      {showVersePreview && formData.metadata.verse_text && (
+        <DailyVerseOverlay
+          verseText={formData.metadata.verse_text}
+          verseReference={formData.metadata.verse_reference}
+          onClose={() => setShowVersePreview(false)}
+        />
+      )}
+
+      {showAdvicePreview && formData.metadata.advice_title && (
+        <DailyAdviceOverlay
+          title={formData.metadata.advice_title}
+          message={formData.metadata.advice_message}
+          onClose={() => setShowAdvicePreview(false)}
+        />
+      )}
     </div>
   );
 };
