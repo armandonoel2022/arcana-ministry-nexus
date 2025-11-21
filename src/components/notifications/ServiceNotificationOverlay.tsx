@@ -84,10 +84,10 @@ const MEMBER_IDS = {
   FREDDERID_ABRAHAN: "7a1645d8-75fe-498c-a2e9-f1057ff3521f",
   DENNY_ALBERTO: "6a5bfaa9-fdf0-4b0e-aad3-79266444604f",
   ARIZONI_LIRIANO: "4eed809d-9437-48d5-935e-cf8b4aa8024a",
-  
+
   // Solo disponibles a las 8:00 AM
   MARIA_SANTANA: "1d5866c9-cdc1-439e-976a-2d2e6a5aef80",
-  
+
   // Miembros fijos
   ROSELY_MONTERO: "2a2fa0cd-d301-46ec-9965-2e4ea3692181",
   ALEIDA_BATISTA: "00a916a8-ab94-4cc0-81ae-668dd6071416",
@@ -108,97 +108,116 @@ const ALL_MEMBERS = {
   [MEMBER_IDS.ALEIDA_BATISTA]: {
     name: "Aleida Geomar Batista Ventura",
     voice: "Soprano",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/00a916a8-ab94-4cc0-81ae-668dd6071416.JPG",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/00a916a8-ab94-4cc0-81ae-668dd6071416.JPG",
   },
   [MEMBER_IDS.ELIABI_JOANA]: {
     name: "Eliabi Joana Sierra Castillo",
     voice: "Soprano",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c4089748-7168-4472-8e7c-bf44b4355906.JPG",
   },
   [MEMBER_IDS.FELIX_NICOLAS]: {
     name: "Félix Nicolás Peralta Hernández",
     voice: "Tenor",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/3d75bc74-76bb-454a-b3e0-d6e4de45d577.JPG",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/3d75bc74-76bb-454a-b3e0-d6e4de45d577.JPG",
   },
   [MEMBER_IDS.ARMANDO_NOEL]: {
     name: "Armando Noel Charle",
     voice: "Tenor",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/d6602109-ad3e-4db6-ab4a-2984dadfc569.JPG",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/d6602109-ad3e-4db6-ab4a-2984dadfc569.JPG",
   },
   [MEMBER_IDS.FIOR_DALIZA]: {
     name: "Fior Daliza Paniagua",
     voice: "Contralto",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/8cebc294-ea61-40d0-9b04-08d7d474332c.JPG",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/8cebc294-ea61-40d0-9b04-08d7d474332c.JPG",
   },
   [MEMBER_IDS.RUTH_ESMAILIN]: {
     name: "Ruth Esmailin Ramirez",
     voice: "Contralto",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/619c1a4e-42db-4549-8890-16392cfa2a87.JPG",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/619c1a4e-42db-4549-8890-16392cfa2a87.JPG",
   },
   [MEMBER_IDS.KEYLA_YANIRA]: {
     name: "Keyla Yanira Medrano Medrano",
     voice: "Soprano",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c24659e9-b473-4ecd-97e7-a90526d23502.JPG",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/c24659e9-b473-4ecd-97e7-a90526d23502.JPG",
   },
   [MEMBER_IDS.YINDHIA_CAROLINA]: {
     name: "Yindhia Carolina Santana Castillo",
     voice: "Soprano",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/11328db1-559f-4dcf-9024-9aef18435700.JPG",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/11328db1-559f-4dcf-9024-9aef18435700.JPG",
   },
   [MEMBER_IDS.ARIZONI_LIRIANO]: {
     name: "Arizoni Liriano Medina",
     voice: "Bajo",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/4eed809d-9437-48d5-935e-cf8b4aa8024a.png",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/4eed809d-9437-48d5-935e-cf8b4aa8024a.png",
   },
   [MEMBER_IDS.DENNY_ALBERTO]: {
     name: "Denny Alberto Santana",
     voice: "Bajo",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/6a5bfaa9-fdf0-4b0e-aad3-79266444604f.JPG",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/6a5bfaa9-fdf0-4b0e-aad3-79266444604f.JPG",
   },
   [MEMBER_IDS.AIDA_LORENA]: {
     name: "Aida Lorena Pacheco De Santana",
     voice: "Contralto",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/82b62449-5046-455f-af7b-da8e5dbc6327.JPG",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/82b62449-5046-455f-af7b-da8e5dbc6327.JPG",
   },
   [MEMBER_IDS.SUGEY_GONZALEZ]: {
     name: "Sugey A. González Garó",
     voice: "Contralto",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/be61d066-5707-4763-8d8c-16d19597dc3a.JPG",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/be61d066-5707-4763-8d8c-16d19597dc3a.JPG",
   },
   [MEMBER_IDS.DAMARIS_CASTILLO]: {
     name: "Damaris Castillo Jimenez",
     voice: "Soprano",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38.JPG",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/cfca6d0e-d02e-479f-8fdf-8d1c3cd37d38.JPG",
   },
   [MEMBER_IDS.JISELL_AMADA]: {
     name: "Jisell Amada Mauricio Paniagua",
     voice: "Soprano",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/b5719097-187d-4804-8b7f-e84cc1ec9ad5.JPG",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/b5719097-187d-4804-8b7f-e84cc1ec9ad5.JPG",
   },
   [MEMBER_IDS.GUARIONEX_GARCIA]: {
     name: "Guarionex Garcia",
     voice: "Tenor",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/a71697a2-bf8e-4967-8190-2e3e2d01f150.JPG",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/a71697a2-bf8e-4967-8190-2e3e2d01f150.JPG",
   },
   [MEMBER_IDS.FREDDERID_ABRAHAN]: {
     name: "Fredderid Abrahan Valera Montoya",
     voice: "Tenor",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/7a1645d8-75fe-498c-a2e9-f1057ff3521f.JPG",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/7a1645d8-75fe-498c-a2e9-f1057ff3521f.JPG",
   },
   [MEMBER_IDS.MARIA_SANTANA]: {
     name: "Maria del A. Santana",
     voice: "Contralto",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/1d5866c9-cdc1-439e-976a-2d2e6a5aef80.jpeg",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/1d5866c9-cdc1-439e-976a-2d2e6a5aef80.jpeg",
   },
   [MEMBER_IDS.ROSELY_MONTERO]: {
     name: "Rosely Montero",
     voice: "Contralto",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/2a2fa0cd-d301-46ec-9965-2e4ea3692181.jpeg",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/2a2fa0cd-d301-46ec-9965-2e4ea3692181.jpeg",
   },
   [MEMBER_IDS.RODES_ESTHER]: {
     name: "Rodes Esther Santana Cuesta",
     voice: "Contralto",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/bdcc27cd-40ae-456e-a340-633ce7da08c0.JPG",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/bdcc27cd-40ae-456e-a340-633ce7da08c0.JPG",
   },
 };
 
@@ -221,7 +240,7 @@ const getGroupMembers = (
   serviceTime: string,
   director: string,
   previousService?: { director: string; time: string },
-  nextService?: { director: string; time: string }
+  nextService?: { director: string; time: string },
 ) => {
   const is8AM = serviceTime.includes("8:00") || serviceTime.includes("8 AM") || serviceTime.includes("primer");
   const is1045AM = serviceTime.includes("10:45") || serviceTime.includes("segundo");
@@ -236,13 +255,21 @@ const getGroupMembers = (
   const nextDirectorLower = nextService ? normalizeDirectorName(nextService.director) : "";
 
   // Detectar quién es el director actual
-  const isFelix = directorLower.includes("félix") || directorLower.includes("felix") || directorLower.includes("nicolás") || directorLower.includes("nicolas");
+  const isFelix =
+    directorLower.includes("félix") ||
+    directorLower.includes("felix") ||
+    directorLower.includes("nicolás") ||
+    directorLower.includes("nicolas");
   const isArmando = directorLower.includes("armando") || directorLower.includes("noel");
   const isGuarionex = directorLower.includes("guarionex") || directorLower.includes("garcia");
   const isDenny = directorLower.includes("denny") || directorLower.includes("alberto");
-  
+
   // Detectar quién dirigió en servicio anterior/siguiente
-  const felixInPrevOrNext = prevDirectorLower.includes("félix") || prevDirectorLower.includes("felix") || nextDirectorLower.includes("félix") || nextDirectorLower.includes("felix");
+  const felixInPrevOrNext =
+    prevDirectorLower.includes("félix") ||
+    prevDirectorLower.includes("felix") ||
+    nextDirectorLower.includes("félix") ||
+    nextDirectorLower.includes("felix");
   const armandoInPrevOrNext = prevDirectorLower.includes("armando") || nextDirectorLower.includes("armando");
   const guarionexInPrevOrNext = prevDirectorLower.includes("guarionex") || nextDirectorLower.includes("guarionex");
   const dennyInPrevOrNext = prevDirectorLower.includes("denny") || nextDirectorLower.includes("denny");
@@ -371,7 +398,7 @@ const getGroupMembers = (
     if (is8AM) {
       // A las 8:00 AM: Maria del A. Santana (mic #4) y Guarionex Garcia (mic #3)
       mic4Member = MEMBER_IDS.MARIA_SANTANA;
-      
+
       if (isGuarionex || guarionexInPrevOrNext) {
         // Si Guarionex es director o dirigió antes/después, Fredderid hace coros
         mic3Member = MEMBER_IDS.FREDDERID_ABRAHAN;
@@ -439,7 +466,7 @@ const splitName = (fullName: string) => {
 
   // Buscar en ALL_MEMBERS
   const memberEntry = Object.entries(ALL_MEMBERS).find(([_, member]) => member.name === fullName);
-  
+
   if (memberEntry) {
     const [_, member] = memberEntry;
     const fullName = member.name;
@@ -579,73 +606,50 @@ const ServiceNotificationOverlay = ({
   const serviceCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   useEffect(() => {
-    if (forceShow) {
-      setIsVisible(true);
-      setIsAnimating(true);
-      fetchWeekendServices();
-      return;
-    }
-
-    // Escuchar notificaciones de tipo service_program desde system_notifications
-    const checkForServiceNotifications = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: notifications } = await supabase
-        .from('system_notifications')
-        .select('*')
-        .eq('is_read', false)
-        .eq('type', 'service_overlay')
-        .or(`recipient_id.eq.${user.id},recipient_id.is.null`)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (notifications && notifications.length > 0) {
-        setIsVisible(true);
-        setIsAnimating(true);
-        fetchWeekendServices();
-        
-        // Marcar como leída
-        await supabase
-          .from('system_notifications')
-          .update({ is_read: true })
-          .eq('id', notifications[0].id);
-      }
-    };
-
-    checkForServiceNotifications();
-
-    // Suscribirse a nuevas notificaciones
     const notificationChannel = supabase
-      .channel('service-notifications-listener')
+      .channel("service-notifications-listener")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'system_notifications',
-          filter: 'type=eq.service_overlay'
+          event: "INSERT",
+          schema: "public",
+          table: "system_notifications",
+          filter: "type=eq.weekend_service", // Tipo correcto
         },
         async (payload) => {
           const notification = payload.new as any;
-          console.log('🔔 Service overlay notification received:', notification);
-          if (!notification.is_read) {
-            // Simular el comportamiento del botón "Preview Semanal"
-            setIsLoading(false); // CRÍTICO: Permitir renderizado inmediato
-            setIsVisible(true);
-            setIsAnimating(true);
-            fetchWeekendServices();
-            
-            // Marcar como leída
-            await supabase
-              .from('system_notifications')
-              .update({ is_read: true })
-              .eq('id', notification.id);
+          console.log("🔔 Service overlay notification received:", notification);
+
+          // Validar que tenga metadata de servicios
+          if (!notification.is_read && notification.metadata?.services) {
+            try {
+              setIsLoading(false);
+              setIsVisible(true);
+              setIsAnimating(true);
+              await fetchWeekendServices();
+
+              // Marcar como leída
+              const { error } = await supabase
+                .from("system_notifications")
+                .update({ is_read: true })
+                .eq("id", notification.id);
+
+              if (error) {
+                console.error("Error marking notification as read:", error);
+              }
+            } catch (error) {
+              console.error("Error handling service notification:", error);
+            }
           }
-        }
+        },
       )
       .subscribe((status) => {
-        console.log('🎯 Service notification channel status:', status);
+        console.log("🎯 Service notification channel status:", status);
+        if (status === "SUBSCRIBED") {
+          console.log("✅ Successfully subscribed to service notifications");
+        } else if (status === "CHANNEL_ERROR") {
+          console.error("❌ Error subscribing to service notifications");
+        }
       });
 
     return () => {
@@ -1176,8 +1180,8 @@ const ServiceNotificationOverlay = ({
       groupName.style.letterSpacing = "-0.025em";
 
       const activity = document.createElement("span");
-      activity.textContent = service.special_activity 
-        ? `Sección especial: ${service.special_activity}` 
+      activity.textContent = service.special_activity
+        ? `Sección especial: ${service.special_activity}`
         : "Sección especial: Ninguna";
       activity.style.color = "#6b7280";
       activity.style.fontSize = "16px";
@@ -1695,7 +1699,9 @@ const ServiceNotificationOverlay = ({
               </span>
               <span className="text-sm text-gray-500">•</span>
               <span className="text-sm text-gray-600">
-                {service.special_activity ? `Sección especial: ${service.special_activity}` : "Sección especial: Ninguna"}
+                {service.special_activity
+                  ? `Sección especial: ${service.special_activity}`
+                  : "Sección especial: Ninguna"}
               </span>
             </div>
           </div>
