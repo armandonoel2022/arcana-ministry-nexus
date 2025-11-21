@@ -58,6 +58,7 @@ const ScheduledNotifications = () => {
   const [showVersePreview, setShowVersePreview] = useState(false);
   const [showAdvicePreview, setShowAdvicePreview] = useState(false);
   const [editingNotification, setEditingNotification] = useState<ScheduledNotification | null>(null);
+  const [testingNotification, setTestingNotification] = useState<ScheduledNotification | null>(null);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [formData, setFormData] = useState({
     name: "",
@@ -231,6 +232,7 @@ const ScheduledNotifications = () => {
   };
 
   const handlePreview = (notification: ScheduledNotification) => {
+    setTestingNotification(notification);
     switch (notification.notification_type) {
       case "service_overlay":
         setShowServicePreview(true);
@@ -248,7 +250,26 @@ const ScheduledNotifications = () => {
 
   const handleTestNotification = async (notification: ScheduledNotification) => {
     try {
-      // Crear notificación de prueba en system_notifications
+      // Guardar la notificación que se está probando
+      setTestingNotification(notification);
+
+      // Mostrar el overlay directamente (igual que preview)
+      switch (notification.notification_type) {
+        case "service_overlay":
+          setShowServicePreview(true);
+          break;
+        case "daily_verse":
+          setShowVersePreview(true);
+          break;
+        case "daily_advice":
+          setShowAdvicePreview(true);
+          break;
+        default:
+          toast.info("Vista previa no disponible para este tipo de notificación");
+          return;
+      }
+
+      // También crear la notificación en system_notifications para registro
       const { error } = await supabase.from("system_notifications").insert({
         type: notification.notification_type,
         title: `Prueba: ${notification.name}`,
@@ -599,31 +620,41 @@ const ScheduledNotifications = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Overlays de Preview */}
+      {/* Overlays de Preview y Test */}
       {showServicePreview && (
         <ServiceNotificationOverlay
           forceShow={true}
-          onClose={() => setShowServicePreview(false)}
+          onClose={() => {
+            setShowServicePreview(false);
+            setTestingNotification(null);
+          }}
           onNavigate={(path) => {
             setShowServicePreview(false);
+            setTestingNotification(null);
             navigate(path);
           }}
         />
       )}
 
-      {showVersePreview && formData.metadata.verse_text && (
+      {showVersePreview && testingNotification && (
         <DailyVerseOverlay
-          verseText={formData.metadata.verse_text}
-          verseReference={formData.metadata.verse_reference}
-          onClose={() => setShowVersePreview(false)}
+          verseText={testingNotification.metadata?.verse_text || ""}
+          verseReference={testingNotification.metadata?.verse_reference || ""}
+          onClose={() => {
+            setShowVersePreview(false);
+            setTestingNotification(null);
+          }}
         />
       )}
 
-      {showAdvicePreview && formData.metadata.advice_title && (
+      {showAdvicePreview && testingNotification && (
         <DailyAdviceOverlay
-          title={formData.metadata.advice_title}
-          message={formData.metadata.advice_message}
-          onClose={() => setShowAdvicePreview(false)}
+          title={testingNotification.metadata?.advice_title || ""}
+          message={testingNotification.metadata?.advice_message || ""}
+          onClose={() => {
+            setShowAdvicePreview(false);
+            setTestingNotification(null);
+          }}
         />
       )}
     </div>
