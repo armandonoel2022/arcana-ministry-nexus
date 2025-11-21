@@ -606,6 +606,18 @@ const ServiceNotificationOverlay = ({
   const serviceCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   useEffect(() => {
+    // Si forceShow es true, mostrar inmediatamente
+    if (forceShow) {
+      setIsLoading(false);
+      setIsVisible(true);
+      setIsAnimating(true);
+      fetchWeekendServices();
+      return;
+    }
+
+    console.log("🎯 Setting up service notification listener...");
+
+    // Suscribirse a nuevas notificaciones
     const notificationChannel = supabase
       .channel("service-notifications-listener")
       .on(
@@ -614,7 +626,7 @@ const ServiceNotificationOverlay = ({
           event: "INSERT",
           schema: "public",
           table: "system_notifications",
-          filter: "type=eq.weekend_service", // Tipo correcto
+          filter: "type=eq.weekend_service", // CORREGIDO: usar el tipo correcto
         },
         async (payload) => {
           const notification = payload.new as any;
@@ -623,10 +635,20 @@ const ServiceNotificationOverlay = ({
           // Validar que tenga metadata de servicios
           if (!notification.is_read && notification.metadata?.services) {
             try {
+              console.log("🚀 Activating overlay from notification...");
+
+              // CRÍTICO: Resetear estados primero
               setIsLoading(false);
               setIsVisible(true);
-              setIsAnimating(true);
+
+              // Cargar datos actualizados
               await fetchWeekendServices();
+
+              // Activar animación después de un pequeño delay
+              setTimeout(() => {
+                setIsAnimating(true);
+                console.log("✅ Overlay activated successfully");
+              }, 100);
 
               // Marcar como leída
               const { error } = await supabase
@@ -640,6 +662,8 @@ const ServiceNotificationOverlay = ({
             } catch (error) {
               console.error("Error handling service notification:", error);
             }
+          } else {
+            console.log("📭 Notification skipped - already read or no services metadata");
           }
         },
       )
@@ -653,9 +677,10 @@ const ServiceNotificationOverlay = ({
       });
 
     return () => {
+      console.log("🧹 Cleaning up service notification listener");
       supabase.removeChannel(notificationChannel);
     };
-  }, []);
+  }, [forceShow]); // Añadir forceShow como dependencia
 
   const showServiceProgramOverlay = (metadata: ServiceProgramNotification) => {
     if (metadata.services && Array.isArray(metadata.services)) {
