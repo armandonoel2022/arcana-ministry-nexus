@@ -163,7 +163,7 @@ async function processServiceOverlayNotification(supabase: any, notification: Sc
         .from('system_notifications')
         .insert({
           recipient_id: profile.id,
-          type: 'service_program',
+          type: 'service_overlay',
           title: 'Programa de Servicios - Fin de Semana',
           message: `Servicios programados para el próximo fin de semana`,
           notification_category: 'agenda',
