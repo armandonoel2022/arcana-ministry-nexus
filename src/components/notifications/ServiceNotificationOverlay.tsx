@@ -938,7 +938,7 @@ const ServiceNotificationOverlay = ({
         );
 
         setServices(servicesWithMembers as WeekendService[]);
-
+        setIsLoading(false); // CRITICAL: Allow overlay to render
         setIsVisible(true);
         setTimeout(() => setIsAnimating(true), 100);
       } else {
