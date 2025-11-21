@@ -630,6 +630,8 @@ const ServiceNotificationOverlay = ({
           const notification = payload.new as any;
           console.log('🔔 Service overlay notification received:', notification);
           if (!notification.is_read) {
+            // Simular el comportamiento del botón "Preview Semanal"
+            setIsLoading(false); // CRÍTICO: Permitir renderizado inmediato
             setIsVisible(true);
             setIsAnimating(true);
             fetchWeekendServices();
