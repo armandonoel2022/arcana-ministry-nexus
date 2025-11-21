@@ -626,7 +626,7 @@ const ServiceNotificationOverlay = ({
           event: "INSERT",
           schema: "public",
           table: "system_notifications",
-          filter: "type=eq.weekend_service", // CORREGIDO: usar el tipo correcto
+          filter: "type=eq.weekend_service",
         },
         async (payload) => {
           const notification = payload.new as any;
@@ -680,7 +680,17 @@ const ServiceNotificationOverlay = ({
       console.log("🧹 Cleaning up service notification listener");
       supabase.removeChannel(notificationChannel);
     };
-  }, [forceShow]); // Añadir forceShow como dependencia
+  }, [forceShow]);
+
+  // Debugging adicional: monitorear cambios de estado
+  useEffect(() => {
+    console.log("🔍 Overlay state:", {
+      isVisible,
+      isLoading,
+      isAnimating,
+      forceShow,
+    });
+  }, [isVisible, isLoading, isAnimating, forceShow]);
 
   const showServiceProgramOverlay = (metadata: ServiceProgramNotification) => {
     if (metadata.services && Array.isArray(metadata.services)) {
