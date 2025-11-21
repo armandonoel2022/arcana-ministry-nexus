@@ -60,7 +60,6 @@ function HeaderTrigger() {
 function SidebarLayout() {
   const { setOpenMobile, isMobile } = useSidebar();
 
-  // Gesto de deslizamiento para abrir el sidebar en móvil
   useSwipeGesture({
     onSwipeRight: () => {
       if (isMobile) {
@@ -80,7 +79,8 @@ function useSystemNotifications() {
   const [showAdviceOverlay, setShowAdviceOverlay] = useState(false);
 
   useEffect(() => {
-    // Configurar el listener de Supabase para notificaciones del sistema
+    console.log("🔔 Configurando listener de notificaciones del sistema...");
+
     const channel = supabase
       .channel("system_notifications")
       .on(
@@ -91,51 +91,58 @@ function useSystemNotifications() {
           table: "system_notifications",
         },
         (payload) => {
-          console.log("Nueva notificación del sistema recibida:", payload.new);
+          console.log("🎯 Nueva notificación del sistema recibida:", payload.new);
           const notification = payload.new;
 
-          // Guardar la notificación actual
           setCurrentNotification(notification);
 
           // Mostrar el overlay correspondiente según el tipo
           switch (notification.type) {
             case "service_overlay":
+              console.log("📢 Mostrando overlay de servicios");
               setShowServiceOverlay(true);
               break;
             case "daily_verse":
+              console.log("📖 Mostrando overlay de versículo");
               setShowVerseOverlay(true);
               break;
             case "daily_advice":
+              console.log("💡 Mostrando overlay de consejo");
               setShowAdviceOverlay(true);
               break;
             case "general":
             case "reminder":
-              // Para notificaciones generales, podrías mostrar un toast o notificación estándar
-              console.log("Notificación general:", notification);
+              console.log("ℹ️ Notificación general:", notification);
               break;
             default:
-              console.log("Tipo de notificación no manejado:", notification.type);
+              console.log("❌ Tipo de notificación no manejado:", notification.type);
           }
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("📡 Estado de suscripción a notificaciones:", status);
+      });
 
     return () => {
+      console.log("🧹 Limpiando listener de notificaciones");
       supabase.removeChannel(channel);
     };
   }, []);
 
   const closeServiceOverlay = () => {
+    console.log("🔒 Cerrando overlay de servicios");
     setShowServiceOverlay(false);
     setCurrentNotification(null);
   };
 
   const closeVerseOverlay = () => {
+    console.log("🔒 Cerrando overlay de versículo");
     setShowVerseOverlay(false);
     setCurrentNotification(null);
   };
 
   const closeAdviceOverlay = () => {
+    console.log("🔒 Cerrando overlay de consejo");
     setShowAdviceOverlay(false);
     setCurrentNotification(null);
   };
@@ -162,16 +169,23 @@ function AppContent() {
     closeAdviceOverlay,
   } = useSystemNotifications();
 
+  console.log("🔄 Renderizando AppContent:", {
+    showServiceOverlay,
+    showVerseOverlay,
+    showAdviceOverlay,
+    hasNotification: !!currentNotification,
+  });
+
   return (
     <BrowserRouter>
-      {/* Overlays de notificaciones del sistema */}
+      {/* Overlays de notificaciones del sistema - SOLO UNO de cada tipo */}
       {showServiceOverlay && (
         <ServiceNotificationOverlay
           forceShow={true}
           onClose={closeServiceOverlay}
           onNavigate={(path) => {
             closeServiceOverlay();
-            // Navegación se manejaría en el componente ServiceNotificationOverlay
+            // La navegación se maneja dentro del componente
           }}
         />
       )}
@@ -192,8 +206,7 @@ function AppContent() {
         />
       )}
 
-      {/* Overlays existentes */}
-      <ServiceNotificationOverlay />
+      {/* Overlays existentes - SIN DUPLICADOS */}
       <BirthdayOverlay />
       <DirectorReplacementRequestOverlay />
       <DirectorReplacementNotificationOverlay />
