@@ -128,33 +128,38 @@ const Index = () => {
         }}
       />
 
-      <div className="w-full min-h-screen py-4 px-3 safe-area-padding">
-        {/* Birthday Notification Banner */}
-        {birthdayNotification && (
-          <div className="mb-4">
-            <BirthdayNotificationBanner notification={birthdayNotification} onDismiss={dismissBirthdayNotification} />
-          </div>
-        )}
+      {/* Birthday Notification Banner - Fuera del contenedor principal */}
+      {birthdayNotification && (
+        <div className="absolute top-4 left-4 right-4 z-50 safe-area-padding">
+          <BirthdayNotificationBanner notification={birthdayNotification} onDismiss={dismissBirthdayNotification} />
+        </div>
+      )}
 
-        {/* Hero Section - Optimizado para mobile */}
-        <div className="text-center mb-6 px-2">
-          <div className="mb-6">
+      {/* Contenedor principal con diseño responsive */}
+      <div className="w-full min-h-screen flex flex-col md:flex-row md:items-center md:justify-center safe-area-padding">
+        {/* Lado Izquierdo - Hero Section */}
+        <div className="w-full md:w-1/2 lg:w-2/5 flex flex-col justify-center p-6 md:p-8 lg:p-12">
+          <div className="text-center md:text-left">
             {/* Logo */}
-            <div className="flex items-center justify-center mb-4">
+            <div className="flex items-center justify-center md:justify-start mb-6">
               <img
                 src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png"
                 alt="ARCANA Logo"
-                className="w-16 h-16 object-cover rounded-2xl shadow-xl border-2 border-white/20"
+                className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-2xl shadow-xl border-2 border-white/20"
               />
             </div>
 
             {/* Title */}
-            <h1 className="text-4xl font-bold text-white mb-2 px-2 leading-tight">ARCANA</h1>
-            <p className="text-blue-100 text-base mb-4 px-2 leading-relaxed">Transformando nuestra adoración</p>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3 leading-tight">¡Bienvenido!</h1>
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-medium text-blue-100 mb-6 leading-tight">ARCANA</h2>
+            
+            <p className="text-blue-100 text-base md:text-lg mb-6 leading-relaxed">
+              Selecciona una opción para acceder a las funcionalidades del sistema
+            </p>
 
-            {/* Welcome Message */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-white/20">
-              <h2 className="text-xl font-semibold mb-1 text-white">¡Hola, {firstName}!</h2>
+            {/* Welcome Message en mobile */}
+            <div className="md:hidden bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-4 border border-white/20">
+              <h3 className="text-xl font-semibold mb-1 text-white">¡Hola, {firstName}!</h3>
               <p className="text-blue-100 text-sm">Tu participación hace la diferencia</p>
 
               <Link to="/agenda" className="block mt-3">
@@ -166,47 +171,68 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Services Section */}
-        <div className="bg-white rounded-2xl p-4 shadow-xl mx-1 mb-4">
-          <h2 className="text-xl font-bold text-gray-800 text-center mb-4 px-2">SERVICIOS PRINCIPALES</h2>
+        {/* Lado Derecho - Services Grid */}
+        <div className="w-full md:w-1/2 lg:w-3/5 p-4 md:p-8 lg:p-12">
+          <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 max-w-2xl mx-auto">
+            {/* Services Grid - 2x2 en tablet+, 1 columna en mobile */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {mainServices.map((service, index) => {
+                const IconComponent = service.icon;
+                const colors = [
+                  "from-blue-500 to-blue-600",
+                  "from-blue-600 to-blue-700",
+                  "from-blue-400 to-blue-500",
+                  "from-blue-500 to-blue-600",
+                ];
+                const currentColor = colors[index % colors.length];
 
-          <div className="grid grid-cols-1 gap-3">
-            {mainServices.map((service, index) => {
-              const IconComponent = service.icon;
-              const colors = [
-                "bg-gradient-to-r from-blue-500 to-blue-600",
-                "bg-gradient-to-r from-blue-600 to-blue-700",
-                "bg-gradient-to-r from-blue-400 to-blue-500",
-                "bg-gradient-to-r from-blue-500 to-blue-600",
-              ];
-              const currentColor = colors[index % colors.length];
-
-              return (
-                <Link key={service.id} to={service.url} className="block">
-                  <div
-                    className={`${currentColor} rounded-xl p-4 text-white hover:scale-105 transition-all duration-300 cursor-pointer shadow-lg active:scale-95`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <IconComponent className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-semibold mb-0.5 truncate">{service.title}</h3>
-                        <p className="text-white/80 text-xs line-clamp-1">{service.description}</p>
-                      </div>
-                      <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-white text-base">→</span>
+                return (
+                  <Link key={service.id} to={service.url} className="block">
+                    <div
+                      className={`bg-gradient-to-br ${currentColor} rounded-2xl p-6 text-white hover:scale-105 transition-all duration-300 cursor-pointer shadow-lg active:scale-95 border-2 border-blue-300/20 h-full`}
+                    >
+                      <div className="flex flex-col items-center text-center gap-3">
+                        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                          <IconComponent className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold mb-1">{service.title}</h3>
+                          <p className="text-white/80 text-sm">{service.description}</p>
+                        </div>
                       </div>
                     </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Statistics - Solo visible en tablet+ */}
+            <div className="hidden md:grid grid-cols-2 gap-4 mt-6">
+              <Link to="/integrantes" className="block">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 text-center hover:shadow-lg transition-all duration-300 cursor-pointer border border-blue-200">
+                  <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center mx-auto mb-2">
+                    <Users className="w-5 h-5 text-white" />
                   </div>
-                </Link>
-              );
-            })}
+                  <h3 className="text-2xl font-bold mb-1 text-blue-900">{loading ? "..." : memberCount}</h3>
+                  <p className="text-blue-700 text-xs font-medium">Miembros Activos</p>
+                </div>
+              </Link>
+
+              <Link to="/worship-groups" className="block">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 text-center hover:shadow-lg transition-all duration-300 cursor-pointer border border-blue-200">
+                  <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center mx-auto mb-2">
+                    <Music className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold mb-1 text-blue-900">{loading ? "..." : groupCount}</h3>
+                  <p className="text-blue-700 text-xs font-medium">Grupos de Alabanza</p>
+                </div>
+              </Link>
+            </div>
           </div>
         </div>
 
-        {/* Statistics */}
-        <div className="grid grid-cols-2 gap-3 px-2 mb-4">
+        {/* Statistics Mobile - Solo visible en mobile */}
+        <div className="w-full md:hidden grid grid-cols-2 gap-3 px-6 pb-6">
           <Link to="/integrantes" className="block">
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center text-white hover:bg-white/20 transition-all duration-300 cursor-pointer border border-white/20 active:scale-95">
               <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-2">
@@ -230,7 +256,7 @@ const Index = () => {
       </div>
 
       {/* Safe area spacer para iPhone */}
-      <div className="h-8 safe-area-bottom"></div>
+      <div className="h-8 safe-area-bottom md:hidden"></div>
     </div>
   );
 };
