@@ -626,14 +626,14 @@ const ServiceNotificationOverlay = ({
           event: "INSERT",
           schema: "public",
           table: "system_notifications",
-          filter: "type=eq.weekend_service",
+          filter: "type=eq.service_overlay",
         },
         async (payload) => {
           const notification = payload.new as any;
           console.log("🔔 Service overlay notification received:", notification);
 
-          // Validar que tenga metadata de servicios
-          if (!notification.is_read && notification.metadata?.services) {
+          // Mostrar overlay automáticamente cuando llega notificación programada
+          if (!notification.is_read) {
             try {
               console.log("🚀 Activating overlay from notification...");
 

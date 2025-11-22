@@ -132,7 +132,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-blue-600 via-blue-500 to-blue-400">
-      <div className="w-full px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12 max-w-6xl mx-auto md:container">
+      <div className="w-full py-6 sm:py-8 md:py-12 max-w-6xl mx-auto md:container px-0">
         
         {/* Birthday Notification Banner */}
         {birthdayNotification && (
@@ -144,7 +144,7 @@ const Index = () => {
           </div>
         )}
         {/* Hero Section - Clean and Institutional */}
-        <div className="text-center mb-8 sm:mb-12 md:mb-16">
+        <div className="text-center mb-8 sm:mb-12 md:mb-16 px-3 sm:px-4 md:px-6">
           <div className="mb-6 sm:mb-8 md:mb-12">
             {/* Logo */}
             <div className="flex items-center justify-center mb-4 sm:mb-6 md:mb-8">
@@ -178,7 +178,7 @@ const Index = () => {
         </div>
 
         {/* Services Section */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xl">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-xl mx-3 sm:mx-4 md:mx-6">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-800 text-center mb-4 sm:mb-6 md:mb-8 px-2">
             SERVICIOS PRINCIPALES
           </h2>
@@ -220,7 +220,7 @@ const Index = () => {
         </div>
 
         {/* Statistics */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-2xl mx-auto mt-6 sm:mt-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-2xl mx-auto mt-6 sm:mt-8 px-3 sm:px-4 md:px-6">
           <Link to="/integrantes">
             <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 text-center text-white hover:bg-white/20 transition-all duration-300 cursor-pointer border border-white/20">
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
