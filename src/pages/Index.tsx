@@ -132,7 +132,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-blue-600 via-blue-500 to-blue-400">
-      <div className="w-full py-6 sm:py-8 md:py-12 max-w-6xl mx-auto md:container px-0">
+      <div className="w-full py-6 sm:py-8 md:py-12 px-0">
         
         {/* Birthday Notification Banner */}
         {birthdayNotification && (
