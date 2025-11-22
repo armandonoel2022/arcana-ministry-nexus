@@ -159,12 +159,12 @@ const Index = () => {
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 sm:mb-3 md:mb-4 px-2">
               ARCANA
             </h1>
-            <p className="text-blue-100 text-sm sm:text-base md:text-lg mb-4 sm:mb-6 md:mb-8 max-w-2xl mx-auto px-4">
+            <p className="text-blue-100 text-sm sm:text-base md:text-lg mb-4 sm:mb-6 md:mb-8 px-4">
               Transformando nuestra adoración
             </p>
             
             {/* Welcome Message */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 md:mb-8 max-w-2xl mx-auto border border-white/20">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 md:mb-8 border border-white/20">
               <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-1 sm:mb-2 text-white">¡Hola, {firstName}!</h2>
               <p className="text-blue-100 text-xs sm:text-sm md:text-base">Tu participación hace la diferencia</p>
               
@@ -183,7 +183,7 @@ const Index = () => {
             SERVICIOS PRINCIPALES
           </h2>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
             {mainServices.map((service, index) => {
               const IconComponent = service.icon;
               const colors = [
@@ -220,7 +220,7 @@ const Index = () => {
         </div>
 
         {/* Statistics */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-2xl mx-auto mt-6 sm:mt-8 px-3 sm:px-4 md:px-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-6 sm:mt-8 px-3 sm:px-4 md:px-6">
           <Link to="/integrantes">
             <div className="bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 text-center text-white hover:bg-white/20 transition-all duration-300 cursor-pointer border border-white/20">
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4">
