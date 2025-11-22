@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Music, Users, MessageCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Music, Users, MessageCircle, Mic, Heart, CheckCircle, TrendingUp, Star, Bell } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import BirthdayNotificationBanner from "@/components/notifications/BirthdayNotificationBanner";
@@ -99,115 +101,144 @@ const Index = () => {
 
   return (
     <div
-      className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-blue-50 fixed inset-0 overflow-y-auto"
+      className="min-h-screen w-full bg-gradient-to-br from-blue-600 via-blue-500 to-blue-700 fixed inset-0 overflow-y-auto"
       style={{
         height: "100vh",
         height: "-webkit-fill-available",
       }}
     >
+      {/* Gradient overlay que cubre TODA la pantalla */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-500 to-blue-700 -z-10" />
+
+      {/* Birthday Notification Banner */}
+      {birthdayNotification && (
+        <div className="absolute top-0 left-0 right-0 z-50 safe-area-padding pt-4">
+          <BirthdayNotificationBanner notification={birthdayNotification} onDismiss={dismissBirthdayNotification} />
+        </div>
+      )}
+
       {/* Contenedor principal */}
       <div
-        className="w-full h-full safe-area-padding"
+        className="w-full h-full flex flex-col md:flex-row md:items-center md:justify-center safe-area-padding"
         style={{
           minHeight: "100vh",
           minHeight: "-webkit-fill-available",
         }}
       >
-        {/* Header minimalista */}
-        <div className="pt-8 pb-6 px-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img
-                src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png"
-                alt="ARCANA Logo"
-                className="w-10 h-10 object-cover rounded-lg"
-              />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">ARCANA</h1>
-                <p className="text-gray-600 text-sm">Ministerio de alabanza</p>
+        {/* Lado Izquierdo - Hero Section más limpio */}
+        <div className="w-full md:w-2/5 flex flex-col justify-center p-6 md:p-8 lg:p-12">
+          <div className="text-center md:text-left">
+            {/* Logo y título unificados */}
+            <div className="flex flex-col items-center md:items-start mb-8">
+              <div className="flex items-center justify-center md:justify-start gap-4 mb-4">
+                <img
+                  src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png"
+                  alt="ARCANA Logo"
+                  className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-2xl shadow-xl border-2 border-white/20"
+                />
+                <h1 className="text-4xl md:text-5xl font-bold text-white">ARCANA</h1>
               </div>
+              <p className="text-blue-100 text-lg md:text-xl font-light">Transformando nuestra adoración</p>
             </div>
-            <div className="text-right">
-              <p className="text-gray-600 text-sm">Bienvenido</p>
-              <p className="text-gray-900 font-medium">{firstName}</p>
-            </div>
-          </div>
-        </div>
 
-        {/* Birthday Notification */}
-        {birthdayNotification && (
-          <div className="px-6 mb-6">
-            <BirthdayNotificationBanner notification={birthdayNotification} onDismiss={dismissBirthdayNotification} />
-          </div>
-        )}
-
-        {/* Stats Cards - Minimalistas */}
-        <div className="grid grid-cols-2 gap-4 px-6 mb-8">
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                <Users className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{loading ? "..." : memberCount}</p>
-                <p className="text-gray-600 text-sm">Miembros</p>
+            {/* Mensaje de bienvenida personalizado */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+              <div className="text-center md:text-left">
+                <h2 className="text-2xl md:text-3xl font-semibold text-white mb-2">¡Hola, {firstName}!</h2>
+                <p className="text-blue-100 text-base md:text-lg mb-6">
+                  Tu participación hace la diferencia en nuestro ministerio
+                </p>
+                <Link to="/agenda" className="block">
+                  <Button className="bg-white text-blue-600 hover:bg-blue-50 rounded-full w-full md:w-auto px-8 py-3 text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl active:scale-95">
+                    Comenzar
+                  </Button>
+                </Link>
               </div>
             </div>
-          </div>
-          <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                <Music className="w-5 h-5 text-green-600" />
+
+            {/* Stats en desktop */}
+            <div className="hidden md:grid grid-cols-2 gap-4 mt-8">
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 text-center border border-white/10">
+                <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mx-auto mb-2">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-1">{loading ? "..." : memberCount}</h3>
+                <p className="text-blue-100 text-sm">Miembros</p>
               </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">{loading ? "..." : groupCount}</p>
-                <p className="text-gray-600 text-sm">Grupos</p>
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 text-center border border-white/10">
+                <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center mx-auto mb-2">
+                  <Music className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-1">{loading ? "..." : groupCount}</h3>
+                <p className="text-blue-100 text-sm">Grupos</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Main Actions Grid */}
-        <div className="px-6">
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Servicios Principales</h2>
-            <p className="text-gray-600">Accede a las herramientas del ministerio</p>
-          </div>
+        {/* Lado Derecho - Services Grid */}
+        <div className="w-full md:w-3/5 p-6 md:p-8 lg:p-12">
+          <div className="max-w-2xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Servicios Principales</h2>
+              <p className="text-blue-100 text-lg">Accede a las herramientas del ministerio</p>
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {mainServices.map((service) => {
-              const IconComponent = service.icon;
-              return (
-                <Link key={service.id} to={service.url} className="block">
-                  <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 hover:border-blue-300 active:scale-95">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <IconComponent className="w-6 h-6 text-blue-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1 truncate">{service.title}</h3>
-                        <p className="text-gray-600 text-sm line-clamp-1">{service.description}</p>
+            {/* Services Grid mejorado */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {mainServices.map((service, index) => {
+                const IconComponent = service.icon;
+                const colors = [
+                  "from-blue-500 to-blue-600",
+                  "from-blue-600 to-blue-700",
+                  "from-blue-400 to-blue-500",
+                  "from-blue-500 to-blue-600",
+                ];
+                const currentColor = colors[index % colors.length];
+
+                return (
+                  <Link key={service.id} to={service.url} className="block group">
+                    <div
+                      className={`bg-gradient-to-br ${currentColor} rounded-2xl p-6 text-white hover:scale-105 transition-all duration-300 cursor-pointer shadow-lg group-hover:shadow-xl border-2 border-white/10 h-full`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <IconComponent className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="text-left">
+                          <h3 className="text-xl font-bold mb-2">{service.title}</h3>
+                          <p className="text-white/80 text-sm leading-relaxed">{service.description}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
+                  </Link>
+                );
+              })}
+            </div>
 
-        {/* Quick Action Button */}
-        <div className="fixed bottom-6 left-6 right-6 safe-area-padding">
-          <Link to="/agenda">
-            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
-              Comenzar
-            </Button>
-          </Link>
+            {/* Stats Mobile */}
+            <div className="md:hidden grid grid-cols-2 gap-4 mt-6">
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/20">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-2">
+                  <Users className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-1">{loading ? "..." : memberCount}</h3>
+                <p className="text-blue-100 text-xs">Miembros</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/20">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-2">
+                  <Music className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-1">{loading ? "..." : groupCount}</h3>
+                <p className="text-blue-100 text-xs">Grupos</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Safe area spacer */}
-      <div className="h-20 safe-area-bottom"></div>
+      {/* Safe area spacer para iPhone */}
+      <div className="h-4 safe-area-bottom md:hidden"></div>
     </div>
   );
 };
