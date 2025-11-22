@@ -154,30 +154,35 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Ahora son clicables */}
         <div className="grid grid-cols-2 gap-4 px-6 mb-8 max-w-2xl mx-auto">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{loading ? "..." : memberCount}</p>
-                <p className="text-blue-100 text-sm">Miembros</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-4 text-white shadow-lg">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <Music className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{loading ? "..." : groupCount}</p>
-                <p className="text-blue-100 text-sm">Grupos</p>
+          <Link to="/integrantes" className="block">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer hover:shadow-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{loading ? "..." : memberCount}</p>
+                  <p className="text-blue-100 text-sm">Miembros</p>
+                </div>
               </div>
             </div>
-          </div>
+          </Link>
+
+          <Link to="/worship-groups" className="block">
+            <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-4 text-white shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer hover:shadow-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Music className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{loading ? "..." : groupCount}</p>
+                  <p className="text-blue-100 text-sm">Grupos</p>
+                </div>
+              </div>
+            </div>
+          </Link>
         </div>
 
         {/* Services Grid */}
