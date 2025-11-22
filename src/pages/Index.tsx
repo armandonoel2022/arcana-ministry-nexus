@@ -22,6 +22,7 @@ const Index = () => {
       description: "Servicios y eventos",
       icon: Calendar,
       url: "/agenda",
+      color: "from-blue-500 to-blue-600",
     },
     {
       id: "repertorio",
@@ -29,6 +30,7 @@ const Index = () => {
       description: "Catálogo de canciones",
       icon: Music,
       url: "/repertorio",
+      color: "from-blue-600 to-blue-700",
     },
     {
       id: "integrantes",
@@ -36,6 +38,7 @@ const Index = () => {
       description: "Miembros del ministerio",
       icon: Users,
       url: "/integrantes",
+      color: "from-blue-400 to-blue-500",
     },
     {
       id: "comunicacion",
@@ -43,6 +46,7 @@ const Index = () => {
       description: "Chat del equipo",
       icon: MessageCircle,
       url: "/communication",
+      color: "from-blue-500 to-blue-600",
     },
   ];
 
@@ -99,187 +103,122 @@ const Index = () => {
 
   return (
     <div
-      className="min-h-screen w-full bg-white lg:bg-gradient-to-br lg:from-slate-50 lg:to-blue-50 fixed inset-0 overflow-y-auto"
+      className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-blue-50 fixed inset-0 overflow-y-auto"
       style={{
         height: "100vh",
         height: "-webkit-fill-available",
       }}
     >
-      {/* Contenedor principal con layout dividido */}
+      {/* Contenedor principal */}
       <div
-        className="w-full h-full lg:flex"
+        className="w-full h-full max-w-6xl mx-auto safe-area-padding"
         style={{
           minHeight: "100vh",
           minHeight: "-webkit-fill-available",
         }}
       >
-        {/* LADO IZQUIERDO - Solo visible en tablet/desktop */}
-        <div className="hidden lg:flex lg:w-2/5 xl:w-2/5 bg-gradient-to-br from-blue-600 via-blue-500 to-blue-700 flex-col justify-between safe-area-padding">
-          {/* Birthday Notification */}
-          {birthdayNotification && (
-            <div className="mb-6">
-              <BirthdayNotificationBanner notification={birthdayNotification} onDismiss={dismissBirthdayNotification} />
+        {/* Header */}
+        <div className="pt-8 pb-8 px-6 text-center">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <img
+              src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png"
+              alt="ARCANA Logo"
+              className="w-16 h-16 object-cover rounded-2xl shadow-lg"
+            />
+            <div className="text-left">
+              <h1 className="text-3xl font-bold text-gray-900">ARCANA</h1>
+              <p className="text-gray-600 text-lg">Transformando nuestra adoración</p>
             </div>
-          )}
+          </div>
+        </div>
 
-          {/* Contenido principal izquierdo */}
-          <div className="flex-1 flex flex-col justify-center px-8 xl:px-12">
-            {/* Logo y título */}
-            <div className="mb-8">
-              <div className="flex items-center gap-4 mb-6">
-                <img
-                  src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png"
-                  alt="ARCANA Logo"
-                  className="w-16 h-16 object-cover rounded-2xl shadow-lg border-2 border-white/20"
-                />
-                <div>
-                  <h1 className="text-4xl xl:text-5xl font-bold text-white">ARCANA</h1>
-                  <p className="text-blue-100 text-lg xl:text-xl mt-1">Transformando nuestra adoración</p>
-                </div>
-              </div>
-            </div>
+        {/* Birthday Notification */}
+        {birthdayNotification && (
+          <div className="px-6 mb-6">
+            <BirthdayNotificationBanner notification={birthdayNotification} onDismiss={dismissBirthdayNotification} />
+          </div>
+        )}
 
-            {/* Saludo personalizado */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-              <h2 className="text-2xl xl:text-3xl font-semibold text-white mb-3">¡Hola, {firstName}!</h2>
-              <p className="text-blue-100 text-lg mb-6">Tu participación hace la diferencia en nuestro ministerio</p>
+        {/* Welcome Card */}
+        <div className="px-6 mb-8">
+          <div className="bg-white rounded-2xl p-6 shadow-lg border border-blue-200 max-w-2xl mx-auto">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Hola, {firstName}!</h2>
+              <p className="text-gray-600 mb-6">Tu participación hace la diferencia en nuestro ministerio</p>
               <Link to="/agenda">
-                <Button className="bg-white text-blue-600 hover:bg-blue-50 rounded-xl w-full py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
+                <Button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
                   Comenzar
                 </Button>
               </Link>
             </div>
           </div>
-
-          {/* Stats en la parte inferior izquierda */}
-          <div className="grid grid-cols-2 gap-4 px-8 xl:px-12 pb-8">
-            <Link to="/integrantes" className="block">
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center text-white hover:bg-white/20 transition-all duration-300 cursor-pointer border border-white/20">
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-2">
-                  <Users className="w-5 h-5 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold mb-1">{loading ? "..." : memberCount}</h3>
-                <p className="text-blue-100 text-sm">Miembros</p>
-              </div>
-            </Link>
-            <Link to="/worship-groups" className="block">
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center text-white hover:bg-white/20 transition-all duration-300 cursor-pointer border border-white/20">
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-2">
-                  <Music className="w-5 h-5 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold mb-1">{loading ? "..." : groupCount}</h3>
-                <p className="text-blue-100 text-sm">Grupos</p>
-              </div>
-            </Link>
-          </div>
         </div>
 
-        {/* LADO DERECHO - Services Grid (siempre visible) */}
-        <div className="w-full lg:w-3/5 xl:w-3/5 bg-white safe-area-padding lg:overflow-y-auto">
-          {/* Header móvil - Solo visible en mobile */}
-          <div className="lg:hidden pt-6 pb-4 px-6 text-center">
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <img
-                src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png"
-                alt="ARCANA Logo"
-                className="w-12 h-12 object-cover rounded-xl"
-              />
-              <div className="text-left">
-                <h1 className="text-2xl font-bold text-gray-900">ARCANA</h1>
-                <p className="text-gray-600 text-sm">Transformando nuestra adoración</p>
+        {/* Stats Cards - Ahora son clicables */}
+        <div className="grid grid-cols-2 gap-4 px-6 mb-8 max-w-2xl mx-auto">
+          <Link to="/integrantes" className="block">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer hover:shadow-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{loading ? "..." : memberCount}</p>
+                  <p className="text-blue-100 text-sm">Miembros</p>
+                </div>
               </div>
             </div>
-          </div>
+          </Link>
 
-          {/* Birthday Notification móvil */}
-          {birthdayNotification && (
-            <div className="lg:hidden px-6 mb-4">
-              <BirthdayNotificationBanner notification={birthdayNotification} onDismiss={dismissBirthdayNotification} />
-            </div>
-          )}
-
-          {/* Welcome Card móvil */}
-          <div className="lg:hidden px-6 mb-6">
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg">
-              <div className="text-center">
-                <h2 className="text-xl font-bold mb-2">¡Hola, {firstName}!</h2>
-                <p className="text-blue-100 text-sm mb-4">Tu participación hace la diferencia</p>
-                <Link to="/agenda">
-                  <Button className="bg-white text-blue-600 hover:bg-blue-50 rounded-xl w-full py-3 font-semibold shadow-lg">
-                    Comenzar
-                  </Button>
-                </Link>
+          <Link to="/worship-groups" className="block">
+            <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-4 text-white shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer hover:shadow-xl">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Music className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{loading ? "..." : groupCount}</p>
+                  <p className="text-blue-100 text-sm">Grupos</p>
+                </div>
               </div>
             </div>
+          </Link>
+        </div>
+
+        {/* Services Grid */}
+        <div className="px-6">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Servicios Principales</h2>
+            <p className="text-gray-600">Accede a las herramientas del ministerio</p>
           </div>
 
-          {/* Contenido principal derecho */}
-          <div className="h-full flex flex-col lg:justify-center px-6 lg:px-8 xl:px-12 py-6 lg:py-0">
-            {/* Título de servicios */}
-            <div className="text-center lg:text-left mb-6 lg:mb-8">
-              <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Servicios Principales</h2>
-              <p className="text-gray-600 text-lg">Accede a las herramientas del ministerio</p>
-            </div>
-
-            {/* Services Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6 max-w-4xl">
-              {mainServices.map((service, index) => {
-                const IconComponent = service.icon;
-                const colors = [
-                  "from-blue-500 to-blue-600",
-                  "from-blue-600 to-blue-700",
-                  "from-blue-400 to-blue-500",
-                  "from-blue-500 to-blue-600",
-                ];
-                const currentColor = colors[index % colors.length];
-
-                return (
-                  <Link key={service.id} to={service.url} className="block">
-                    <div
-                      className={`bg-gradient-to-br ${currentColor} rounded-2xl p-6 text-white hover:scale-105 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl border border-white/20 h-full`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                          <IconComponent className="w-6 h-6 text-white" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-lg lg:text-xl font-bold mb-2 truncate">{service.title}</h3>
-                          <p className="text-blue-100 text-sm line-clamp-1">{service.description}</p>
-                        </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+            {mainServices.map((service) => {
+              const IconComponent = service.icon;
+              return (
+                <Link key={service.id} to={service.url} className="block">
+                  <div
+                    className={`bg-gradient-to-br ${service.color} rounded-2xl p-6 text-white hover:scale-105 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl border border-white/20`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <IconComponent className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-xl font-bold mb-2 truncate">{service.title}</h3>
+                        <p className="text-blue-100 text-sm line-clamp-1">{service.description}</p>
                       </div>
                     </div>
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* Stats móviles - Solo en mobile */}
-            <div className="lg:hidden grid grid-cols-2 gap-4 mt-8">
-              <Link to="/integrantes" className="block">
-                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-center text-white shadow-lg hover:scale-105 transition-all duration-300">
-                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-2">
-                    <Users className="w-5 h-5 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold mb-1">{loading ? "..." : memberCount}</h3>
-                  <p className="text-blue-100 text-xs">Miembros</p>
-                </div>
-              </Link>
-              <Link to="/worship-groups" className="block">
-                <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-4 text-center text-white shadow-lg hover:scale-105 transition-all duration-300">
-                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-2">
-                    <Music className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-1">{loading ? "..." : groupCount}</h3>
-                  <p className="text-blue-100 text-xs">Grupos</p>
-                </div>
-              </Link>
-            </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
-      </div>
 
-      {/* Safe area spacer */}
-      <div className="h-4 safe-area-bottom lg:hidden"></div>
+        {/* Bottom spacing */}
+        <div className="h-20"></div>
+      </div>
     </div>
   );
 };
