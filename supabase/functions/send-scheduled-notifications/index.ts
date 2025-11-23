@@ -40,16 +40,22 @@ serve(async (req) => {
     // Get current day and time in Dominican Republic timezone
     const rdNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
     const currentDay = rdNow.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const currentTime = `${String(rdNow.getHours()).padStart(2,'0')}:${String(rdNow.getMinutes()).padStart(2,'0')}:00`; // HH:MM:SS format to match DB
+    const currentHour = rdNow.getHours();
+    const currentMinute = rdNow.getMinutes();
+    
+    // Create time range for the current minute (HH:MM:00)
+    const currentTime = `${String(currentHour).padStart(2,'0')}:${String(currentMinute).padStart(2,'0')}:00`;
     
     console.log(`Current day: ${currentDay}, current time: ${currentTime}`);
 
-    // Find scheduled notifications for current day and time (using contains operator for array)
+    // Find scheduled notifications for current day and time
+    // Using time range to catch notifications even if cron runs slightly off
     const { data: scheduledNotifications, error: scheduledError } = await supabase
       .from('scheduled_notifications')
       .select('*')
       .contains('days_of_week', [currentDay])
-      .eq('time', currentTime)
+      .gte('time', currentTime)
+      .lt('time', `${String(currentHour).padStart(2,'0')}:${String(currentMinute + 1).padStart(2,'0')}:00`)
       .eq('is_active', true);
 
     if (scheduledError) {
