@@ -105,7 +105,6 @@ const Index = () => {
     <div
       className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-blue-50 fixed inset-0 overflow-y-auto"
       style={{
-        height: "100vh",
         height: "-webkit-fill-available",
       }}
     >
@@ -113,7 +112,6 @@ const Index = () => {
       <div
         className="w-full h-full max-w-6xl mx-auto safe-area-padding"
         style={{
-          minHeight: "100vh",
           minHeight: "-webkit-fill-available",
         }}
       >

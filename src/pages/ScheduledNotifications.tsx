@@ -23,7 +23,7 @@ interface ScheduledNotification {
   name: string;
   description: string;
   notification_type: string;
-  day_of_week: number;
+  days_of_week: number[];
   time: string;
   is_active: boolean;
   target_audience: string;
@@ -64,7 +64,7 @@ const ScheduledNotifications = () => {
     name: "",
     description: "",
     notification_type: "service_overlay",
-    day_of_week: 1,
+    days_of_week: [1],
     time: "07:30",
     target_audience: "all",
     is_active: true,
@@ -85,7 +85,7 @@ const ScheduledNotifications = () => {
       const { data, error } = await supabase
         .from("scheduled_notifications")
         .select("*")
-        .order("day_of_week", { ascending: true });
+        .order("time", { ascending: true });
 
       if (error) throw error;
       setNotifications(data || []);
@@ -99,6 +99,11 @@ const ScheduledNotifications = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formData.days_of_week.length === 0) {
+      toast.error("Debes seleccionar al menos un día");
+      return;
+    }
 
     try {
       const {
@@ -173,7 +178,7 @@ const ScheduledNotifications = () => {
       name: notification.name,
       description: notification.description || "",
       notification_type: notification.notification_type,
-      day_of_week: notification.day_of_week,
+      days_of_week: notification.days_of_week || [1],
       time: notification.time,
       target_audience: notification.target_audience,
       is_active: notification.is_active,
@@ -184,6 +189,7 @@ const ScheduledNotifications = () => {
         advice_message: "",
       },
     });
+    setSelectedDays(notification.days_of_week || [1]);
     setIsDialogOpen(true);
   };
 
@@ -192,7 +198,7 @@ const ScheduledNotifications = () => {
       name: "",
       description: "",
       notification_type: "service_overlay",
-      day_of_week: 1,
+      days_of_week: [1],
       time: "07:30",
       target_audience: "all",
       is_active: true,
@@ -289,7 +295,12 @@ const ScheduledNotifications = () => {
   };
 
   const toggleDaySelection = (day: number) => {
-    setSelectedDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
+    const newDays = formData.days_of_week.includes(day) 
+      ? formData.days_of_week.filter((d) => d !== day) 
+      : [...formData.days_of_week, day].sort();
+    
+    setFormData({ ...formData, days_of_week: newDays });
+    setSelectedDays(newDays);
   };
 
   if (loading) {
@@ -372,11 +383,18 @@ const ScheduledNotifications = () => {
             <CardContent>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Calendar className="w-4 h-4" />
-                    <span>
-                      <strong>Día:</strong> {getDayLabel(notification.day_of_week)}
-                    </span>
+                  <div className="flex items-start gap-2 text-sm text-gray-600">
+                    <Calendar className="w-4 h-4 mt-0.5" />
+                    <div>
+                      <strong>Días:</strong>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {notification.days_of_week.sort((a, b) => a - b).map((day) => (
+                          <Badge key={day} variant="outline" className="text-xs">
+                            {getDayLabel(day)}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Clock className="w-4 h-4" />
@@ -568,22 +586,33 @@ const ScheduledNotifications = () => {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="day_of_week">Día de la Semana</Label>
-              <Select
-                value={formData.day_of_week.toString()}
-                onValueChange={(value) => setFormData({ ...formData, day_of_week: parseInt(value) })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona el día" />
-                </SelectTrigger>
-                <SelectContent>
-                  {daysOfWeek.map((day) => (
-                    <SelectItem key={day.value} value={day.value.toString()}>
-                      {day.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Días de la Semana</Label>
+              <p className="text-sm text-muted-foreground mb-3">
+                Selecciona los días en que se enviará esta notificación
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {daysOfWeek.map((day) => (
+                  <label
+                    key={day.value}
+                    className={`flex items-center gap-2 p-3 border rounded-lg cursor-pointer transition-all ${
+                      formData.days_of_week.includes(day.value)
+                        ? "bg-primary/10 border-primary"
+                        : "hover:bg-muted border-muted"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.days_of_week.includes(day.value)}
+                      onChange={() => toggleDaySelection(day.value)}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm font-medium">{day.label}</span>
+                  </label>
+                ))}
+              </div>
+              {formData.days_of_week.length === 0 && (
+                <p className="text-sm text-red-500 mt-2">Debes seleccionar al menos un día</p>
+              )}
             </div>
 
             <div className="space-y-2">
