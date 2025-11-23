@@ -11,7 +11,7 @@ interface ScheduledNotification {
   id: string;
   name: string;
   notification_type: string;
-  day_of_week: number;
+  days_of_week: number[];
   time: string;
   is_active: boolean;
   target_audience: string;
@@ -44,11 +44,11 @@ serve(async (req) => {
     
     console.log(`Current day: ${currentDay}, current time: ${currentTime}`);
 
-    // Find scheduled notifications for current day and time
+    // Find scheduled notifications for current day and time (using contains operator for array)
     const { data: scheduledNotifications, error: scheduledError } = await supabase
       .from('scheduled_notifications')
       .select('*')
-      .eq('day_of_week', currentDay)
+      .contains('days_of_week', [currentDay])
       .eq('time', currentTime)
       .eq('is_active', true);
 
@@ -190,7 +190,7 @@ async function processDailyVerseNotification(supabase: any, notification: Schedu
     let { data: dailyVerse, error: verseError } = await supabase
       .from('daily_verses')
       .select('*, bible_verses (*)')
-      .eq('verse_date', today)
+      .eq('date', today)
       .single();
 
     // If no verse for today, create one
@@ -212,7 +212,7 @@ async function processDailyVerseNotification(supabase: any, notification: Schedu
       const { data: newDailyVerse, error: insertError } = await supabase
         .from('daily_verses')
         .insert({
-          verse_date: today,
+          date: today,
           verse_id: randomVerse[0].id
         })
         .select('*, bible_verses (*)')
@@ -243,7 +243,7 @@ async function processDailyVerseNotification(supabase: any, notification: Schedu
           message: dailyVerse.bible_verses.text,
           notification_category: 'spiritual',
           metadata: {
-            verse_reference: dailyVerse.bible_verses.reference,
+            verse_reference: `${dailyVerse.bible_verses.book} ${dailyVerse.bible_verses.chapter}:${dailyVerse.bible_verses.verse}`,
             verse_text: dailyVerse.bible_verses.text,
             verse_date: today
           },
@@ -315,7 +315,7 @@ async function processSpecialEventNotification(supabase: any, notification: Sche
   try {
     // Check if there are any events scheduled
     const { data: events, error: eventsError } = await supabase
-      .from('events')
+      .from('special_events')
       .select('*')
       .gte('event_date', new Date().toISOString())
       .order('event_date', { ascending: true })

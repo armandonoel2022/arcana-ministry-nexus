@@ -1152,7 +1152,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
-          day_of_week: number
+          days_of_week: number[]
           description: string | null
           id: string
           is_active: boolean
@@ -1166,7 +1166,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
-          day_of_week: number
+          days_of_week?: number[]
           description?: string | null
           id?: string
           is_active?: boolean
@@ -1180,7 +1180,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
-          day_of_week?: number
+          days_of_week?: number[]
           description?: string | null
           id?: string
           is_active?: boolean
