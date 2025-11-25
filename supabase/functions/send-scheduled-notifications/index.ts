@@ -43,19 +43,19 @@ serve(async (req) => {
     const currentHour = rdNow.getHours();
     const currentMinute = rdNow.getMinutes();
     
-    // Create time range for the current minute (HH:MM:00)
+    // Format time as HH:MM:00 for exact comparison
+    // The database stores time in HH:MM:SS format, so we need to match exactly
     const currentTime = `${String(currentHour).padStart(2,'0')}:${String(currentMinute).padStart(2,'0')}:00`;
     
     console.log(`Current day: ${currentDay}, current time: ${currentTime}`);
 
     // Find scheduled notifications for current day and time
-    // Using time range to catch notifications even if cron runs slightly off
+    // Match exact time (HH:MM:00) to ensure reliable triggering
     const { data: scheduledNotifications, error: scheduledError } = await supabase
       .from('scheduled_notifications')
       .select('*')
       .contains('days_of_week', [currentDay])
-      .gte('time', currentTime)
-      .lt('time', `${String(currentHour).padStart(2,'0')}:${String(currentMinute + 1).padStart(2,'0')}:00`)
+      .eq('time', currentTime)
       .eq('is_active', true);
 
     if (scheduledError) {
@@ -300,6 +300,8 @@ async function processDailyAdviceNotification(supabase: any, notification: Sched
           message: randomAdvice.message,
           notification_category: 'general',
           metadata: {
+            advice_title: randomAdvice.title,
+            advice_message: randomAdvice.message,
             advice_type: 'daily',
             date: new Date().toISOString().split('T')[0]
           },

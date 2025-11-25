@@ -3,8 +3,6 @@ import { X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import BirthdayNotificationBanner from './BirthdayNotificationBanner';
 import ServiceNotificationCard from './ServiceNotificationCard';
-import { DailyVerseOverlay } from './DailyVerseOverlay';
-import { DailyAdviceOverlay } from './DailyAdviceOverlay';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface Notification {
@@ -89,24 +87,11 @@ const NotificationOverlay = () => {
         );
       case 'service_program':
       case 'service_overlay':
-        // Estos se manejan en ServiceNotificationOverlay separado
-        return null;
       case 'daily_verse':
-        return (
-          <DailyVerseOverlay
-            verseText={notification.metadata?.verse_text || notification.message}
-            verseReference={notification.metadata?.verse_reference || ''}
-            onClose={() => dismissNotification(notification.id)}
-          />
-        );
       case 'daily_advice':
-        return (
-          <DailyAdviceOverlay
-            title={notification.title}
-            message={notification.message}
-            onClose={() => dismissNotification(notification.id)}
-          />
-        );
+        // IMPORTANTE: Estos overlays de pantalla completa se manejan en App.tsx
+        // para evitar duplicidad y condiciones de carrera
+        return null;
       default:
         return (
           <Card className="border-l-4 border-l-blue-500 shadow-lg">
