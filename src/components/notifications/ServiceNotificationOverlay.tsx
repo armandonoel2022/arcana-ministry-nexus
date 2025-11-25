@@ -606,80 +606,27 @@ const ServiceNotificationOverlay = ({
   const serviceCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   useEffect(() => {
-    // Si forceShow es true, mostrar inmediatamente
+    console.log("🎯 ServiceNotificationOverlay mounted with forceShow:", forceShow);
+    
+    // Si forceShow es true, cargar servicios inmediatamente
     if (forceShow) {
-      setIsLoading(false);
+      console.log("⚡ ForceShow activado - cargando servicios del fin de semana");
+      setIsLoading(true);
       setIsVisible(true);
-      setIsAnimating(true);
-      fetchWeekendServices();
-      return;
-    }
-
-    console.log("🎯 Setting up service notification listener...");
-
-    // Suscribirse a nuevas notificaciones
-    const notificationChannel = supabase
-      .channel("service-notifications-listener")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "system_notifications",
-          filter: "type=eq.service_overlay",
-        },
-        async (payload) => {
-          const notification = payload.new as any;
-          console.log("🔔 Service overlay notification received:", notification);
-
-          // Mostrar overlay automáticamente cuando llega notificación programada
-          if (!notification.is_read) {
-            try {
-              console.log("🚀 Activating overlay from notification...");
-
-              // CRÍTICO: Resetear estados primero
-              setIsLoading(false);
-              setIsVisible(true);
-
-              // Cargar datos actualizados
-              await fetchWeekendServices();
-
-              // Activar animación después de un pequeño delay
-              setTimeout(() => {
-                setIsAnimating(true);
-                console.log("✅ Overlay activated successfully");
-              }, 100);
-
-              // Marcar como leída
-              const { error } = await supabase
-                .from("system_notifications")
-                .update({ is_read: true })
-                .eq("id", notification.id);
-
-              if (error) {
-                console.error("Error marking notification as read:", error);
-              }
-            } catch (error) {
-              console.error("Error handling service notification:", error);
-            }
-          } else {
-            console.log("📭 Notification skipped - already read or no services metadata");
-          }
-        },
-      )
-      .subscribe((status) => {
-        console.log("🎯 Service notification channel status:", status);
-        if (status === "SUBSCRIBED") {
-          console.log("✅ Successfully subscribed to service notifications");
-        } else if (status === "CHANNEL_ERROR") {
-          console.error("❌ Error subscribing to service notifications");
-        }
+      
+      // Cargar servicios
+      fetchWeekendServices().then(() => {
+        setIsLoading(false);
+        // Pequeño delay para la animación
+        setTimeout(() => {
+          setIsAnimating(true);
+          console.log("✅ Overlay activado y animado");
+        }, 100);
+      }).catch((error) => {
+        console.error("❌ Error cargando servicios:", error);
+        setIsLoading(false);
       });
-
-    return () => {
-      console.log("🧹 Cleaning up service notification listener");
-      supabase.removeChannel(notificationChannel);
-    };
+    }
   }, [forceShow]);
 
   // Debugging adicional: monitorear cambios de estado
