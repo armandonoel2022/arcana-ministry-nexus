@@ -81,52 +81,88 @@ function useSystemNotifications() {
   useEffect(() => {
     console.log("🔔 Configurando listener de notificaciones del sistema...");
 
-    const channel = supabase
-      .channel("system_notifications")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "system_notifications",
-        },
-        (payload) => {
-          console.log("🎯 Nueva notificación del sistema recibida:", payload.new);
-          const notification = payload.new;
+    // Obtener el usuario actual para filtrar solo sus notificaciones
+    const setupListener = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log("❌ No hay usuario autenticado, no se puede configurar listener");
+        return;
+      }
 
-          setCurrentNotification(notification);
+      console.log("👤 Usuario autenticado:", user.id);
 
-          // Mostrar el overlay correspondiente según el tipo
-          switch (notification.type) {
-            case "service_overlay":
-              console.log("📢 Mostrando overlay de servicios");
-              setShowServiceOverlay(true);
-              break;
-            case "daily_verse":
-              console.log("📖 Mostrando overlay de versículo");
-              setShowVerseOverlay(true);
-              break;
-            case "daily_advice":
-              console.log("💡 Mostrando overlay de consejo");
-              setShowAdviceOverlay(true);
-              break;
-            case "general":
-            case "reminder":
-              console.log("ℹ️ Notificación general:", notification);
-              break;
-            default:
-              console.log("❌ Tipo de notificación no manejado:", notification.type);
+      const channel = supabase
+        .channel(`user-notifications-${user.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "system_notifications",
+            filter: `recipient_id=eq.${user.id}`,
+          },
+          async (payload) => {
+            console.log("🎯 Nueva notificación del sistema recibida:", payload.new);
+            const notification = payload.new;
+
+            // Solo procesar notificaciones no leídas
+            if (notification.is_read) {
+              console.log("📭 Notificación ya leída, ignorando");
+              return;
+            }
+
+            setCurrentNotification(notification);
+
+            // Mostrar el overlay correspondiente según el tipo
+            switch (notification.type) {
+              case "service_overlay":
+                console.log("📢 Activando overlay de servicios");
+                setShowServiceOverlay(true);
+                
+                // Marcar como leída
+                try {
+                  await supabase
+                    .from("system_notifications")
+                    .update({ is_read: true })
+                    .eq("id", notification.id);
+                  console.log("✅ Notificación marcada como leída");
+                } catch (err) {
+                  console.error("❌ Error marcando notificación:", err);
+                }
+                break;
+              case "daily_verse":
+                console.log("📖 Mostrando overlay de versículo");
+                setShowVerseOverlay(true);
+                break;
+              case "daily_advice":
+                console.log("💡 Mostrando overlay de consejo");
+                setShowAdviceOverlay(true);
+                break;
+              case "general":
+              case "reminder":
+                console.log("ℹ️ Notificación general:", notification);
+                break;
+              default:
+                console.log("❌ Tipo de notificación no manejado:", notification.type);
+            }
+          },
+        )
+        .subscribe((status) => {
+          console.log("📡 Estado de suscripción a notificaciones:", status);
+          if (status === "SUBSCRIBED") {
+            console.log("✅ Suscripción exitosa a notificaciones del usuario");
+          } else if (status === "CHANNEL_ERROR") {
+            console.error("❌ Error en la suscripción a notificaciones");
           }
-        },
-      )
-      .subscribe((status) => {
-        console.log("📡 Estado de suscripción a notificaciones:", status);
-      });
+        });
 
-    return () => {
-      console.log("🧹 Limpiando listener de notificaciones");
-      supabase.removeChannel(channel);
+      return () => {
+        console.log("🧹 Limpiando listener de notificaciones");
+        supabase.removeChannel(channel);
+      };
     };
+
+    setupListener();
   }, []);
 
   const closeServiceOverlay = () => {
