@@ -94,6 +94,10 @@ export const EditSelectedSongsDialog: React.FC<EditSelectedSongsDialogProps> = (
   };
 
   const handleRemoveSong = async (songId: string, songTitle: string) => {
+    if (!confirm(`¿Eliminar "${songTitle}" del servicio?`)) {
+      return;
+    }
+
     try {
       // Eliminar de service_songs (programación real del servicio)
       const { error: svcError } = await supabase
@@ -102,7 +106,10 @@ export const EditSelectedSongsDialog: React.FC<EditSelectedSongsDialogProps> = (
         .eq('service_id', serviceId)
         .eq('song_id', songId);
 
-      if (svcError) throw svcError;
+      if (svcError) {
+        console.error('Error eliminando de service_songs:', svcError);
+        throw svcError;
+      }
 
       // Eliminar también de song_selections (fuente de la vista service_selected_songs)
       const { error: selError } = await supabase
@@ -121,7 +128,7 @@ export const EditSelectedSongsDialog: React.FC<EditSelectedSongsDialogProps> = (
       onSongsUpdated?.();
     } catch (error) {
       console.error('Error removing song:', error);
-      toast.error('Error al eliminar la canción');
+      toast.error('Error al eliminar la canción. Intenta nuevamente.');
     }
   };
 

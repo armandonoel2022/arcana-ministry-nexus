@@ -328,6 +328,119 @@ const ScheduledNotifications = () => {
         </Button>
       </div>
 
+      {/* Panel de Pruebas de Notificaciones */}
+      <Card className="border-2 border-dashed border-blue-300 bg-blue-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Play className="w-5 h-5" />
+            Panel de Prueba de Notificaciones
+          </CardTitle>
+          <p className="text-sm text-gray-600">
+            Prueba los diferentes tipos de overlays de notificaciones
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Cumpleaños */}
+            <div className="p-4 bg-pink-100 rounded-lg border-2 border-pink-200">
+              <h3 className="font-semibold mb-2 flex items-center gap-2">
+                🎁 Cumpleaños
+              </h3>
+              <p className="text-xs text-gray-600 mb-3">
+                Notificación de cumpleaños con confeti y sonido
+              </p>
+              <Button
+                size="sm"
+                className="w-full"
+                onClick={async () => {
+                  try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) return;
+
+                    const { error } = await supabase.from('system_notifications').insert({
+                      type: 'birthday_daily',
+                      title: '🎉 ¡Feliz Cumpleaños!',
+                      message: 'Hoy es el cumpleaños de un miembro especial',
+                      recipient_id: user.id,
+                      notification_category: 'birthday',
+                      priority: 3,
+                      metadata: {
+                        member_name: 'Miembro de Prueba',
+                        member_photo: null,
+                        sound: 'birthday',
+                        confetti: true
+                      }
+                    });
+                    
+                    if (error) throw error;
+                    toast.success('Notificación de cumpleaños enviada');
+                  } catch (error) {
+                    console.error(error);
+                    toast.error('Error al enviar notificación');
+                  }
+                }}
+              >
+                Probar Notificación
+              </Button>
+            </div>
+
+            {/* Versículo del Día */}
+            <div className="p-4 bg-blue-100 rounded-lg border-2 border-blue-200">
+              <h3 className="font-semibold mb-2 flex items-center gap-2">
+                📖 Versículo del Día
+              </h3>
+              <p className="text-xs text-gray-600 mb-3">
+                Versículo bíblico diario con reflexión
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full"
+                onClick={() => setShowVersePreview(true)}
+              >
+                Probar Notificación
+              </Button>
+            </div>
+
+            {/* Consejo del Día */}
+            <div className="p-4 bg-yellow-100 rounded-lg border-2 border-yellow-200">
+              <h3 className="font-semibold mb-2 flex items-center gap-2">
+                💡 Consejo del Día
+              </h3>
+              <p className="text-xs text-gray-600 mb-3">
+                Consejo diario para músicos
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full"
+                onClick={() => setShowAdvicePreview(true)}
+              >
+                Probar Notificación
+              </Button>
+            </div>
+
+            {/* Programa de Servicios */}
+            <div className="p-4 bg-green-100 rounded-lg border-2 border-green-200">
+              <h3 className="font-semibold mb-2 flex items-center gap-2">
+                🎵 Programa de Servicios
+              </h3>
+              <p className="text-xs text-gray-600 mb-3">
+                Overlay con detalles del próximo servicio
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full"
+                onClick={() => setShowServicePreview(true)}
+              >
+                Probar Notificación
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-6">
         {notifications.map((notification) => (
           <Card key={notification.id} className="border-l-4 border-l-blue-500">
@@ -665,10 +778,10 @@ const ScheduledNotifications = () => {
         />
       )}
 
-      {showVersePreview && testingNotification && (
+      {showVersePreview && (
         <DailyVerseOverlay
-          verseText={testingNotification.metadata?.verse_text || ""}
-          verseReference={testingNotification.metadata?.verse_reference || ""}
+          verseText={testingNotification?.metadata?.verse_text || "Porque de tal manera amó Dios al mundo, que ha dado a su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna."}
+          verseReference={testingNotification?.metadata?.verse_reference || "Juan 3:16"}
           onClose={() => {
             setShowVersePreview(false);
             setTestingNotification(null);
@@ -676,10 +789,10 @@ const ScheduledNotifications = () => {
         />
       )}
 
-      {showAdvicePreview && testingNotification && (
+      {showAdvicePreview && (
         <DailyAdviceOverlay
-          title={testingNotification.metadata?.advice_title || ""}
-          message={testingNotification.metadata?.advice_message || ""}
+          title={testingNotification?.metadata?.advice_title || "Practica con Propósito"}
+          message={testingNotification?.metadata?.advice_message || "La práctica deliberada es más efectiva que simplemente tocar por horas. Enfócate en tus debilidades y establece metas específicas para cada sesión de práctica."}
           onClose={() => {
             setShowAdvicePreview(false);
             setTestingNotification(null);
