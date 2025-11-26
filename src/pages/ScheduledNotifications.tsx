@@ -347,40 +347,74 @@ const ScheduledNotifications = () => {
                 🎁 Cumpleaños
               </h3>
               <p className="text-xs text-gray-600 mb-3">
-                Notificación de cumpleaños con confeti y sonido
+                Overlay del próximo cumpleaños real
               </p>
               <Button
                 size="sm"
                 className="w-full"
                 onClick={async () => {
                   try {
-                    const { data: { user } } = await supabase.auth.getUser();
-                    if (!user) return;
+                    // Obtener el próximo cumpleaños de la base de datos
+                    const { data: members, error } = await supabase
+                      .from('members')
+                      .select('id, nombres, apellidos, photo_url, cargo, fecha_nacimiento')
+                      .eq('is_active', true)
+                      .not('fecha_nacimiento', 'is', null);
 
-                    const { error } = await supabase.from('system_notifications').insert({
-                      type: 'birthday_daily',
-                      title: '🎉 ¡Feliz Cumpleaños!',
-                      message: 'Hoy es el cumpleaños de un miembro especial',
-                      recipient_id: user.id,
-                      notification_category: 'birthday',
-                      priority: 3,
-                      metadata: {
-                        member_name: 'Miembro de Prueba',
-                        member_photo: null,
-                        sound: 'birthday',
-                        confetti: true
-                      }
-                    });
-                    
                     if (error) throw error;
-                    toast.success('Notificación de cumpleaños enviada');
+
+                    if (!members || members.length === 0) {
+                      toast.error('No hay miembros con cumpleaños registrados');
+                      return;
+                    }
+
+                    // Encontrar el próximo cumpleaños
+                    const today = new Date();
+                    const currentYear = today.getFullYear();
+                    
+                    const membersWithNextBirthday = members.map(member => {
+                      const [year, month, day] = member.fecha_nacimiento.split('-').map(Number);
+                      let nextBirthday = new Date(currentYear, month - 1, day);
+                      
+                      // Si el cumpleaños ya pasó este año, usar el próximo año
+                      if (nextBirthday < today) {
+                        nextBirthday = new Date(currentYear + 1, month - 1, day);
+                      }
+                      
+                      const daysUntil = Math.ceil((nextBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                      
+                      return {
+                        ...member,
+                        nextBirthday,
+                        daysUntil
+                      };
+                    });
+
+                    // Ordenar por días hasta el cumpleaños
+                    membersWithNextBirthday.sort((a, b) => a.daysUntil - b.daysUntil);
+                    
+                    const nextBirthdayMember = membersWithNextBirthday[0];
+
+                    // Disparar el evento customizado para mostrar el overlay
+                    window.dispatchEvent(new CustomEvent('testBirthdayOverlay', { 
+                      detail: {
+                        id: nextBirthdayMember.id,
+                        nombres: nextBirthdayMember.nombres,
+                        apellidos: nextBirthdayMember.apellidos,
+                        photo_url: nextBirthdayMember.photo_url,
+                        cargo: nextBirthdayMember.cargo,
+                        fecha_nacimiento: nextBirthdayMember.fecha_nacimiento
+                      }
+                    }));
+
+                    toast.success(`Mostrando cumpleaños de ${nextBirthdayMember.nombres} (en ${nextBirthdayMember.daysUntil} días)`);
                   } catch (error) {
                     console.error(error);
-                    toast.error('Error al enviar notificación');
+                    toast.error('Error al cargar cumpleaños');
                   }
                 }}
               >
-                Probar Notificación
+                Probar Overlay
               </Button>
             </div>
 
@@ -396,9 +430,31 @@ const ScheduledNotifications = () => {
                 size="sm"
                 variant="outline"
                 className="w-full"
-                onClick={() => setShowVersePreview(true)}
+                onClick={async () => {
+                  try {
+                    // Buscar la primera notificación programada de versículo
+                    const { data: verseNotifications } = await supabase
+                      .from('scheduled_notifications')
+                      .select('*')
+                      .eq('notification_type', 'daily_verse')
+                      .eq('is_active', true)
+                      .limit(1)
+                      .single();
+
+                    if (verseNotifications && verseNotifications.metadata) {
+                      setTestingNotification(verseNotifications);
+                    } else {
+                      setTestingNotification(null);
+                    }
+                    setShowVersePreview(true);
+                  } catch (error) {
+                    // Si no hay notificación programada, usar datos de ejemplo
+                    setTestingNotification(null);
+                    setShowVersePreview(true);
+                  }
+                }}
               >
-                Probar Notificación
+                Probar Overlay
               </Button>
             </div>
 
@@ -414,9 +470,31 @@ const ScheduledNotifications = () => {
                 size="sm"
                 variant="outline"
                 className="w-full"
-                onClick={() => setShowAdvicePreview(true)}
+                onClick={async () => {
+                  try {
+                    // Buscar la primera notificación programada de consejo
+                    const { data: adviceNotifications } = await supabase
+                      .from('scheduled_notifications')
+                      .select('*')
+                      .eq('notification_type', 'daily_advice')
+                      .eq('is_active', true)
+                      .limit(1)
+                      .single();
+
+                    if (adviceNotifications && adviceNotifications.metadata) {
+                      setTestingNotification(adviceNotifications);
+                    } else {
+                      setTestingNotification(null);
+                    }
+                    setShowAdvicePreview(true);
+                  } catch (error) {
+                    // Si no hay notificación programada, usar datos de ejemplo
+                    setTestingNotification(null);
+                    setShowAdvicePreview(true);
+                  }
+                }}
               >
-                Probar Notificación
+                Probar Overlay
               </Button>
             </div>
 
