@@ -415,7 +415,8 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                 : "No hay servicios programados para este período."}
             </div>
           ) : (
-            <div className="rounded-md border overflow-x-auto">
+            <div className="w-full overflow-x-auto -mx-2 sm:mx-0">
+              <div className="min-w-[800px] rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -571,6 +572,7 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             </div>
           )}
         </CardContent>
