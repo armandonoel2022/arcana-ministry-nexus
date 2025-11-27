@@ -2,12 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { Music, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { BiometricAuthSection } from '@/components/BiometricAuthSection';
 
 const Auth = () => {
@@ -16,6 +13,9 @@ const Auth = () => {
   const [fullName, setFullName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isActive, setIsActive] = useState(false);
+  const [showSwipeMenu, setShowSwipeMenu] = useState(false);
+  const [startY, setStartY] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -64,11 +64,11 @@ const Auth = () => {
 
     try {
       const redirectUrl = `${window.location.origin}/`;
-      const genericPassword = 'ADN_2025'; // Contraseña genérica para todos los usuarios
+      const genericPassword = 'ADN_2025';
       
       const { error } = await supabase.auth.signUp({
         email,
-        password: genericPassword, // Usar contraseña genérica
+        password: genericPassword,
         options: {
           emailRedirectTo: redirectUrl,
           data: {
@@ -79,7 +79,7 @@ const Auth = () => {
 
       if (error) throw error;
       
-      toast.success('¡Registro exitoso! Usa la contraseña "ADN_2025" para iniciar sesión. Deberás cambiarla en tu primer inicio de sesión.');
+      toast.success('¡Registro exitoso! Usa la contraseña "ADN_2025" para iniciar sesión.');
     } catch (error: any) {
       toast.error(error.message || 'Error al crear cuenta');
     } finally {
@@ -94,7 +94,6 @@ const Auth = () => {
     }
 
     try {
-      // Create password reset request that notifies admin
       const { error } = await supabase
         .from('password_reset_requests')
         .insert([
@@ -107,7 +106,6 @@ const Auth = () => {
 
       if (error) throw error;
 
-      // Send notification to admin
       const { error: notificationError } = await supabase
         .from('system_notifications')
         .insert([
@@ -115,7 +113,7 @@ const Auth = () => {
             type: 'password_reset_request',
             title: 'Solicitud de Restablecimiento de Contraseña',
             message: `El usuario ${email} ha solicitado restablecer su contraseña.`,
-            recipient_id: null, // Admin notification
+            recipient_id: null,
             notification_category: 'admin'
           }
         ]);
@@ -124,172 +122,376 @@ const Auth = () => {
         console.error('Error sending admin notification:', notificationError);
       }
 
-      toast.success('Solicitud enviada. El administrador será notificado para generar una contraseña provisional.');
+      toast.success('Solicitud enviada. El administrador será notificado.');
     } catch (error: any) {
       toast.error('Error al solicitar restablecimiento: ' + error.message);
     }
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setStartY(e.touches[0].clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const currentY = e.touches[0].clientY;
+    const diff = startY - currentY;
+    
+    if (diff > 50 && !showSwipeMenu) {
+      setShowSwipeMenu(true);
+    } else if (diff < -20 && showSwipeMenu) {
+      setShowSwipeMenu(false);
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const windowHeight = window.innerHeight;
+    const mouseY = e.clientY;
+    
+    if (mouseY > windowHeight - 100 && !showSwipeMenu) {
+      setShowSwipeMenu(true);
+    } else if (mouseY < windowHeight - 150 && showSwipeMenu) {
+      setShowSwipeMenu(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-modern-gradient flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
-      
-      <Card className="w-full max-w-md relative z-10 backdrop-blur-sm bg-white/95 border-white/20 shadow-2xl">
-        <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-28 h-28 bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl flex items-center justify-center shadow-xl">
-            <img 
-              src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" 
-              alt="ARCANA Logo" 
-              className="w-20 h-20 object-cover rounded-2xl"
-            />
-          </div>
-          <div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              ARCANA
-            </CardTitle>
-            <CardDescription className="text-gray-600">
-              Sistema de Gestión Musical
-            </CardDescription>
-          </div>
-        </CardHeader>
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 relative"
+      style={{ background: "var(--gradient-primary)" }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onMouseMove={handleMouseMove}
+    >
+      {/* Swipe Menu */}
+      <div 
+        className={`fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm rounded-t-3xl p-6 transform transition-transform duration-300 z-50 ${
+          showSwipeMenu ? 'translate-y-0' : 'translate-y-full'
+        }`}
+        style={{ boxShadow: "0 -10px 30px rgba(0, 0, 0, 0.2)" }}
+      >
+        <div className="flex justify-center mb-4">
+          <div className="w-12 h-1 bg-gray-300 rounded-full"></div>
+        </div>
+        <div className="flex justify-center">
+          <Button 
+            variant="outline" 
+            size="lg"
+            onClick={() => {
+              navigate('/');
+              setShowSwipeMenu(false);
+            }}
+            className="bg-white hover:bg-gray-50 shadow-md"
+          >
+            Volver a la Pantalla Principal
+          </Button>
+        </div>
+      </div>
 
-        <CardContent>
-          <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Iniciar Sesión</TabsTrigger>
-              <TabsTrigger value="signup">Registrarse</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="signin" className="space-y-4">
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="signin-email"
-                      type="email"
-                      placeholder="tu@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="signin-password">Contraseña</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="signin-password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 pr-10"
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-gray-400" />
-                      )}
-                    </Button>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="link"
-                    onClick={handleForgotPassword}
-                    className="text-blue-600 hover:text-blue-800 text-sm p-0 h-auto"
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </Button>
-                </div>
-
-                <Button 
-                  type="submit" 
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                  disabled={isLoading}
+      <div className={`auth-container ${isActive ? 'active' : ''}`}>
+        {/* Login Form */}
+        <div className="form-box login">
+          <form onSubmit={isActive ? handleSignUp : handleSignIn}>
+            <div className="text-center mb-6">
+              <img 
+                src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" 
+                alt="ARCANA Logo" 
+                className="w-16 h-16 mx-auto mb-4 object-contain"
+              />
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                {isActive ? 'Registrarse' : 'Iniciar Sesión'}
+              </h1>
+            </div>
+            
+            {isActive && (
+              <div className="input-box">
+                <Input
+                  type="text"
+                  placeholder="Nombre Completo"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                  className="auth-input"
+                />
+                <User className="input-icon" />
+              </div>
+            )}
+            
+            <div className="input-box">
+              <Input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="auth-input"
+              />
+              <Mail className="input-icon" />
+            </div>
+            
+            {!isActive && (
+              <div className="input-box">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="auth-input"
+                />
+                <Lock className="input-icon" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-12 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-                </Button>
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+            )}
 
-                {/* Biometric Authentication Section */}
+            {isActive && (
+              <div className="mb-4">
+                <p className="text-blue-600 text-sm font-medium">
+                  ℹ️ Contraseña inicial: <span className="font-bold">ADN_2025</span>
+                </p>
+                <p className="text-gray-600 text-xs mt-1">
+                  Deberás cambiarla en tu primer inicio de sesión.
+                </p>
+              </div>
+            )}
+
+            <Button 
+              type="submit" 
+              className="auth-btn"
+              disabled={isLoading}
+            >
+              {isLoading ? "Cargando..." : (isActive ? "Solicitar Registro" : "Iniciar Sesión")}
+            </Button>
+
+            {!isActive && (
+              <>
                 <BiometricAuthSection userEmail={email} />
-              </form>
-            </TabsContent>
-
-            <TabsContent value="signup" className="space-y-4">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-name">Nombre Completo</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="signup-name"
-                      type="text"
-                      placeholder="Tu nombre completo"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="tu@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                  <p className="text-blue-600 text-sm font-medium">
-                    ℹ️ Contraseña inicial: <span className="font-bold">ADN_2025</span>
-                  </p>
-                  <p className="text-gray-600 text-xs">
-                    Deberás cambiar esta contraseña en tu primer inicio de sesión.
-                  </p>
-                  <p className="text-gray-600 text-xs">
-                    Los nuevos usuarios requieren aprobación del administrador antes de poder acceder al sistema.
-                  </p>
-                </div>
-
-                <Button 
-                  type="submit" 
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                  disabled={isLoading}
+                
+                <Button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="auth-btn-secondary"
                 >
-                  {isLoading ? 'Creando cuenta...' : 'Solicitar Registro'}
+                  ¿Olvidaste tu contraseña?
                 </Button>
+              </>
+            )}
 
-                {/* Biometric Setup Option for New Users */}
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground">
-                    Después del registro podrás configurar autenticación biométrica para mayor seguridad
-                  </p>
-                </div>
-              </form>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+            <Button
+              type="button"
+              onClick={() => setIsActive(!isActive)}
+              className="auth-btn-secondary"
+            >
+              {isActive ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
+            </Button>
+          </form>
+        </div>
+
+        {/* Info Panel */}
+        <div className="form-box info">
+          <div className="info-content">
+            <h1 className="text-3xl font-bold text-white mb-4">¡Bienvenido!</h1>
+            <p className="text-white/90 mb-6">
+              Sistema de Gestión Musical ARCANA
+            </p>
+            <p className="text-white/80 text-sm">
+              Accede con tus credenciales para gestionar el ministerio de alabanza
+            </p>
+          </div>
+        </div>
+
+        {/* Toggle Background */}
+        <div className="toggle-box">
+          <div className="toggle-background"></div>
+        </div>
+      </div>
+
+      <style>{`
+        .auth-container {
+          position: relative;
+          width: 850px;
+          height: 550px;
+          background: #fff;
+          border-radius: 30px;
+          box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+          margin: 20px;
+          overflow: hidden;
+          max-width: 90vw;
+        }
+
+        .form-box {
+          position: absolute;
+          width: 50%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 40px;
+          transition: 0.6s ease-in-out;
+        }
+
+        .form-box.login {
+          left: 0;
+          background: #fff;
+          z-index: 2;
+        }
+
+        .form-box.info {
+          right: 0;
+          background: transparent;
+          color: #fff;
+          z-index: 3;
+        }
+
+        .form-box form {
+          width: 100%;
+          max-width: 300px;
+        }
+
+        .input-box {
+          position: relative;
+          margin: 30px 0;
+        }
+
+        .auth-input {
+          width: 100%;
+          padding: 13px 50px 13px 20px !important;
+          background: #eee !important;
+          border-radius: 8px !important;
+          border: none !important;
+          outline: none !important;
+          font-size: 16px !important;
+          color: #333 !important;
+          font-weight: 500 !important;
+        }
+
+        .auth-input::placeholder {
+          color: #888 !important;
+          font-weight: 400 !important;
+        }
+
+        .input-icon {
+          position: absolute;
+          right: 20px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 20px;
+          height: 20px;
+          color: #888;
+          pointer-events: none;
+        }
+
+        .auth-btn {
+          width: 100%;
+          height: 48px;
+          background: hsl(var(--primary)) !important;
+          border-radius: 8px !important;
+          box-shadow: var(--shadow-form) !important;
+          border: none !important;
+          cursor: pointer !important;
+          font-size: 16px !important;
+          color: hsl(var(--primary-foreground)) !important;
+          font-weight: 600 !important;
+          margin-top: 20px;
+          transition: var(--transition-smooth);
+        }
+
+        .auth-btn:hover {
+          background: hsl(217 91% 55%) !important;
+        }
+
+        .auth-btn-secondary {
+          width: 100%;
+          height: 40px;
+          background: transparent !important;
+          border: 1px solid hsl(var(--border)) !important;
+          border-radius: 8px !important;
+          cursor: pointer !important;
+          font-size: 12px !important;
+          color: hsl(var(--muted-foreground)) !important;
+          font-weight: 500 !important;
+          margin-top: 15px;
+          transition: var(--transition-smooth);
+        }
+
+        .auth-btn-secondary:hover {
+          background: hsl(var(--muted)/0.1) !important;
+        }
+
+        .info-content {
+          text-align: center;
+          z-index: 5;
+          position: relative;
+        }
+
+        .toggle-box {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+        }
+
+        .toggle-background {
+          content: '';
+          position: absolute;
+          right: 0;
+          width: 50%;
+          height: 100%;
+          background: var(--gradient-blue-form);
+          z-index: 2;
+          transition: 1.8s ease-in-out;
+        }
+
+        /* Responsive Design */
+        @media screen and (max-width: 768px) {
+          .auth-container {
+            width: 100%;
+            height: 100vh;
+            border-radius: 0;
+            margin: 0;
+          }
+
+          .form-box {
+            width: 100%;
+            padding: 20px;
+          }
+
+          .form-box.login {
+            position: relative;
+            height: 70%;
+            background: #fff;
+          }
+
+          .form-box.info {
+            position: relative;
+            height: 30%;
+            background: var(--gradient-blue-form);
+          }
+
+          .toggle-background {
+            display: none;
+          }
+
+          .input-box {
+            margin: 20px 0;
+          }
+        }
+
+        @media screen and (max-width: 400px) {
+          .form-box {
+            padding: 15px;
+          }
+          
+          .info-content h1 {
+            font-size: 24px;
+          }
+        }
+      `}</style>
     </div>
   );
 };
