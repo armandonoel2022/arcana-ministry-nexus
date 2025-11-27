@@ -465,10 +465,10 @@ const Index = () => {
             width: 100%;
             height: 80%;
             background: #fff;
-            padding: 20px 16px;
+            padding: 16px 16px 20px 16px;
             overflow-y: auto;
             overflow-x: hidden;
-            justify-content: space-between;
+            justify-content: flex-start;
             gap: 0;
           }
 
@@ -476,7 +476,7 @@ const Index = () => {
             grid-template-columns: repeat(2, 1fr);
             gap: 16px;
             max-width: 100%;
-            margin-bottom: 10px;
+            margin-bottom: 18px;
           }
 
           .option-card {
