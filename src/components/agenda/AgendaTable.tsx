@@ -56,7 +56,7 @@ interface Service {
   }[];
 }
 
-type FilterType = "current_weekend" | "month" | "all" | "my_agenda" | "year_2025" | "year_2026";
+type FilterType = "current_weekend" | "month" | "all" | "my_agenda" | string;
 
 interface AgendaTableProps {
   initialFilter?: string | null;
@@ -78,11 +78,18 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
   const [editingSongsServiceTitle, setEditingSongsServiceTitle] = useState<string>("");
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
 
   useEffect(() => {
     fetchServices();
     getCurrentUser();
   }, []);
+
+  useEffect(() => {
+    // Extraer años únicos de los servicios
+    const years = [...new Set(services.map(s => new Date(s.service_date).getFullYear()))].sort((a, b) => a - b);
+    setAvailableYears(years);
+  }, [services]);
 
   useEffect(() => {
     applyFilter();
@@ -224,23 +231,21 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
         );
         break;
 
-      case "year_2025":
-        filtered = services.filter((service) => {
-          const year = new Date(service.service_date).getFullYear();
-          return year === 2025;
-        });
-        break;
-
-      case "year_2026":
-        filtered = services.filter((service) => {
-          const year = new Date(service.service_date).getFullYear();
-          return year === 2026;
-        });
-        break;
-
       case "all":
-      default:
         filtered = services;
+        break;
+
+      default:
+        // Filtrar por año si el filtro empieza con "year_"
+        if (filter.startsWith("year_")) {
+          const year = parseInt(filter.replace("year_", ""));
+          filtered = services.filter((service) => {
+            const serviceYear = new Date(service.service_date).getFullYear();
+            return serviceYear === year;
+          });
+        } else {
+          filtered = services;
+        }
         break;
     }
 
@@ -315,13 +320,14 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
         return "Mis Servicios - Este Mes";
       case "my_agenda":
         return "Mi Agenda - Fin de Semana";
-      case "year_2025":
-        return "Servicios 2025";
-      case "year_2026":
-        return "Servicios 2026";
       case "all":
         return "Todos los Servicios";
       default:
+        // Para filtros de año
+        if (filterType.startsWith("year_")) {
+          const year = filterType.replace("year_", "");
+          return `Servicios ${year}`;
+        }
         return "Filtro";
     }
   };
@@ -404,25 +410,22 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
               </Button>
             </div>
 
-            <div className="flex flex-wrap gap-2 pt-2 border-t">
-              <span className="text-xs sm:text-sm text-gray-600 font-medium self-center mr-1 sm:mr-2">Por Año:</span>
-              <Button
-                variant={filter === "year_2025" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilter("year_2025")}
-                className="text-xs sm:text-sm"
-              >
-                2025
-              </Button>
-              <Button
-                variant={filter === "year_2026" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilter("year_2026")}
-                className="text-xs sm:text-sm"
-              >
-                2026
-              </Button>
-            </div>
+            {availableYears.length > 0 && (
+              <div className="flex flex-wrap gap-2 pt-2 border-t">
+                <span className="text-xs sm:text-sm text-gray-600 font-medium self-center mr-1 sm:mr-2">Por Año:</span>
+                {availableYears.map(year => (
+                  <Button
+                    key={year}
+                    variant={filter === `year_${year}` ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFilter(`year_${year}`)}
+                    className="text-xs sm:text-sm"
+                  >
+                    {year}
+                  </Button>
+                ))}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
