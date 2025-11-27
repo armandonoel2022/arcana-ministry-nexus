@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -438,52 +438,52 @@ const ScheduledNotifications = () => {
   }
 
   return (
-      <div className="w-full min-h-screen overflow-x-hidden bg-background">
-        <div className="w-full px-4 py-4 space-y-4 max-w-7xl mx-auto">
-      <div className="space-y-3">
-        <div>
-          <h1 className="text-xl font-bold">Notificaciones Programadas</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+    <div className="container mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-arcana-gradient rounded-full flex items-center justify-center flex-shrink-0">
+          <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold arcana-gradient-text truncate">Notificaciones Programadas</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">
             Configura notificaciones automáticas
           </p>
         </div>
-        <Button onClick={openCreateDialog} className="w-full">
-          <Plus className="w-4 h-4 mr-2" />
-          Nueva Notificación
+        <Button onClick={openCreateDialog} size="sm" className="flex-shrink-0">
+          <Plus className="w-4 h-4" />
         </Button>
       </div>
 
       {/* Panel de Gestión de Overlays */}
       <Card className="w-full">
-        <CardHeader className="p-4 pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
+        <CardHeader className="pb-3 sm:pb-4">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
             <span>📱</span>
-            <span>Gestión de Overlays</span>
+            <span className="truncate">Gestión de Overlays</span>
           </CardTitle>
-          <p className="text-xs text-muted-foreground mt-1">
+          <CardDescription className="text-xs sm:text-sm truncate">
             Configura y prueba notificaciones
-          </p>
+          </CardDescription>
         </CardHeader>
-        <CardContent className="p-3">
-          <div className="space-y-3">
+        <CardContent className="space-y-3">
             {/* Cumpleaños */}
             <Card className="border-2 border-pink-200 bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-950 dark:to-pink-900">
-              <CardContent className="p-3">
+              <CardContent className="p-3 sm:p-4">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-pink-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-xl">🎁</span>
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-pink-500 to-pink-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-lg sm:text-xl">🎁</span>
                     </div>
-                    <h3 className="text-base font-bold text-pink-800 dark:text-pink-200">Cumpleaños</h3>
+                    <h3 className="text-sm sm:text-base font-bold text-pink-800 dark:text-pink-200 truncate">Cumpleaños</h3>
                   </div>
-                  <p className="text-xs text-foreground/70">
+                  <p className="text-xs text-foreground/70 line-clamp-1">
                     Próximo cumpleaños del ministerio
                   </p>
                   <div className="space-y-1.5 pt-1">
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full border-pink-600 text-pink-600 hover:bg-pink-50 h-8 text-xs"
+                      className="w-full border-pink-600 text-pink-600 hover:bg-pink-50 text-xs"
                       onClick={() => {
                         setFormData({
                           ...formData,
@@ -498,7 +498,7 @@ const ScheduledNotifications = () => {
                     </Button>
                     <Button
                       size="sm"
-                      className="w-full bg-pink-600 hover:bg-pink-700 text-white h-8 text-xs"
+                      className="w-full bg-pink-600 hover:bg-pink-700 text-white text-xs"
                       onClick={async () => {
                         setLoadingTest('birthday');
                         try {
@@ -559,22 +559,22 @@ const ScheduledNotifications = () => {
 
             {/* Versículo del Día */}
             <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-900">
-              <CardContent className="p-3">
+              <CardContent className="p-3 sm:p-4">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-xl">📖</span>
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-lg sm:text-xl">📖</span>
                     </div>
-                    <h3 className="text-base font-bold text-blue-800 dark:text-blue-200">Versículo del Día</h3>
+                    <h3 className="text-sm sm:text-base font-bold text-blue-800 dark:text-blue-200 truncate">Versículo del Día</h3>
                   </div>
-                  <p className="text-xs text-foreground/70">
+                  <p className="text-xs text-foreground/70 line-clamp-1">
                     Versículo bíblico diario
                   </p>
                   <div className="space-y-1.5 pt-1">
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 h-8 text-xs"
+                      className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 text-xs"
                       onClick={() => {
                         setFormData({
                           ...formData,
@@ -590,7 +590,7 @@ const ScheduledNotifications = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 h-8 text-xs"
+                      className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 text-xs"
                       onClick={async () => {
                         try {
                           const today = new Date().toISOString().split('T')[0];
@@ -641,7 +641,7 @@ const ScheduledNotifications = () => {
                     </Button>
                     <Button
                       size="sm"
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white h-8 text-xs"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs"
                       onClick={async () => {
                         try {
                           // Cargar el versículo actual del día
@@ -686,22 +686,22 @@ const ScheduledNotifications = () => {
 
             {/* Consejo del Día */}
             <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-900">
-              <CardContent className="p-3">
+              <CardContent className="p-3 sm:p-4">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-xl">💡</span>
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-lg sm:text-xl">💡</span>
                     </div>
-                    <h3 className="text-base font-bold text-yellow-800 dark:text-yellow-200">Consejo del Día</h3>
+                    <h3 className="text-sm sm:text-base font-bold text-yellow-800 dark:text-yellow-200 truncate">Consejo del Día</h3>
                   </div>
-                  <p className="text-xs text-foreground/70">
+                  <p className="text-xs text-foreground/70 line-clamp-1">
                     Consejos musicales y vocales
                   </p>
                   <div className="space-y-1.5 pt-1">
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full border-yellow-600 text-yellow-600 hover:bg-yellow-50 h-8 text-xs"
+                      className="w-full border-yellow-600 text-yellow-600 hover:bg-yellow-50 text-xs"
                       onClick={() => {
                         setFormData({
                           ...formData,
@@ -717,7 +717,7 @@ const ScheduledNotifications = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full border-yellow-600 text-yellow-600 hover:bg-yellow-50 h-8 text-xs"
+                      className="w-full border-yellow-600 text-yellow-600 hover:bg-yellow-50 text-xs"
                       onClick={async () => {
                         try {
                           const { data: adviceList } = await supabase
@@ -754,7 +754,7 @@ const ScheduledNotifications = () => {
                     </Button>
                     <Button
                       size="sm"
-                      className="w-full bg-yellow-600 hover:bg-yellow-700 text-white h-8 text-xs"
+                      className="w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xs"
                       onClick={async () => {
                         try {
                           // Cargar un consejo aleatorio de la base de datos
@@ -1018,7 +1018,7 @@ const ScheduledNotifications = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full border-gray-600 text-gray-600 hover:bg-gray-50 h-8 text-xs"
+                      className="w-full border-gray-600 text-gray-600 hover:bg-gray-50 text-xs"
                       onClick={() => {
                         setFormData({
                           ...formData,
@@ -1028,12 +1028,12 @@ const ScheduledNotifications = () => {
                         setIsDialogOpen(true);
                       }}
                     >
-                      <Edit className="w-4 h-4 mr-2" />
+                      <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                       Editar
                     </Button>
                     <Button
                       size="sm"
-                      className="w-full bg-gray-600 hover:bg-gray-700 text-white h-8 text-xs"
+                      className="w-full bg-gray-600 hover:bg-gray-700 text-white text-xs"
                       onClick={() => {
                         setTestingNotification({
                           type: 'death_announcement',
@@ -1053,9 +1053,8 @@ const ScheduledNotifications = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
       <div className="grid gap-6">
         {notifications.map((notification) => (
@@ -1660,8 +1659,7 @@ const ScheduledNotifications = () => {
           }}
         />
       )}
-        </div>
-      </div>
+    </div>
   );
 };
 
