@@ -7,7 +7,9 @@ import {
   Music,
   Users,
   MessageSquare,
-  UserCog
+  UserCog,
+  Cake,
+  Lightbulb
 } from "lucide-react";
 import BirthdayNotificationBanner from "@/components/notifications/BirthdayNotificationBanner";
 import { Button } from "@/components/ui/button";
@@ -51,6 +53,20 @@ const Index = () => {
       icon: MessageSquare,
       url: "/communication",
       gradient: "from-cyan-500 to-blue-500"
+    },
+    {
+      title: "Cumpleaños",
+      description: "Fechas especiales",
+      icon: Cake,
+      url: "/birthday-module",
+      gradient: "from-pink-500 to-rose-600"
+    },
+    {
+      title: "Recomendaciones",
+      description: "Sugerencias y consejos",
+      icon: Lightbulb,
+      url: "/recomendaciones",
+      gradient: "from-amber-500 to-orange-600"
     }
   ];
 
@@ -261,6 +277,12 @@ const Index = () => {
           width: 100%;
           max-width: 600px;
           margin-bottom: 20px;
+        }
+        
+        @media screen and (min-width: 769px) {
+          .options-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
         }
 
         .stats-cards {
