@@ -7,10 +7,7 @@ import {
   Music,
   Users,
   MessageSquare,
-  Settings,
-  Heart,
-  Bell,
-  Sparkles
+  UserCog
 } from "lucide-react";
 import BirthdayNotificationBanner from "@/components/notifications/BirthdayNotificationBanner";
 import { Button } from "@/components/ui/button";
@@ -42,10 +39,10 @@ const Index = () => {
       gradient: "from-purple-500 to-purple-600"
     },
     {
-      title: "Grupos de Alabanza",
-      description: "Administración de grupos",
-      icon: Users,
-      url: "/worship-groups",
+      title: "Solicitar Reemplazo",
+      description: "Reemplazos de director",
+      icon: UserCog,
+      url: "/director-replacements",
       gradient: "from-green-500 to-emerald-600"
     },
     {
@@ -121,8 +118,8 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative"
-         style={{ background: "var(--gradient-primary)" }}>
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
+         style={{ background: "var(--gradient-primary)", width: "100vw", maxWidth: "100vw" }}>
       
       <div className={`welcome-container ${isAnimating ? 'animating' : ''}`}>
         
@@ -151,32 +148,6 @@ const Index = () => {
               />
             </div>
           )}
-          
-          {/* Stats Cards - Clickable */}
-          <div className="stats-cards">
-            <Button
-              onClick={() => handleOptionClick("/integrantes")}
-              className="stat-card"
-              variant="outline"
-            >
-              <div className="stat-content">
-                <Users className="w-8 h-8 mb-2" />
-                <span className="stat-number">{memberCount}</span>
-                <span className="stat-label">Miembros</span>
-              </div>
-            </Button>
-            <Button
-              onClick={() => handleOptionClick("/worship-groups")}
-              className="stat-card"
-              variant="outline"
-            >
-              <div className="stat-content">
-                <Music className="w-8 h-8 mb-2" />
-                <span className="stat-number">{groupCount}</span>
-                <span className="stat-label">Grupos</span>
-              </div>
-            </Button>
-          </div>
 
           {/* Main Services Grid - 4 buttons */}
           <div className="options-grid">
@@ -198,6 +169,32 @@ const Index = () => {
                 </div>
               </Button>
             ))}
+          </div>
+          
+          {/* Stats Cards - Clickable - BELOW main services */}
+          <div className="stats-cards">
+            <Button
+              onClick={() => handleOptionClick("/integrantes")}
+              className="stat-card"
+              variant="outline"
+            >
+              <div className="stat-content">
+                <Users className="w-6 h-6 mb-1" />
+                <span className="stat-number">{memberCount}</span>
+                <span className="stat-label">Miembros</span>
+              </div>
+            </Button>
+            <Button
+              onClick={() => handleOptionClick("/worship-groups")}
+              className="stat-card"
+              variant="outline"
+            >
+              <div className="stat-content">
+                <Music className="w-6 h-6 mb-1" />
+                <span className="stat-number">{groupCount}</span>
+                <span className="stat-label">Grupos</span>
+              </div>
+            </Button>
           </div>
         </div>
 
@@ -257,7 +254,7 @@ const Index = () => {
           position: relative;
         }
 
-        .stats-cards {
+        .options-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
           gap: 15px;
@@ -266,10 +263,18 @@ const Index = () => {
           margin-bottom: 20px;
         }
 
+        .stats-cards {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 12px;
+          width: 100%;
+          max-width: 600px;
+        }
+
         .stat-card {
-          height: 100px !important;
+          height: 70px !important;
           border: 2px solid hsl(var(--primary)) !important;
-          border-radius: 16px !important;
+          border-radius: 12px !important;
           background: linear-gradient(135deg, hsl(var(--primary)), hsl(217 91% 55%)) !important;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
           position: relative;
@@ -277,7 +282,7 @@ const Index = () => {
         }
 
         .stat-card:hover {
-          transform: translateY(-4px) !important;
+          transform: translateY(-2px) !important;
           box-shadow: var(--shadow-elegant) !important;
         }
 
@@ -296,22 +301,14 @@ const Index = () => {
         }
 
         .stat-number {
-          font-size: 24px;
+          font-size: 18px;
           font-weight: bold;
           line-height: 1;
         }
 
         .stat-label {
-          font-size: 12px;
+          font-size: 11px;
           opacity: 0.9;
-        }
-
-        .options-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 15px;
-          width: 100%;
-          max-width: 600px;
         }
 
         .option-card {
@@ -413,6 +410,10 @@ const Index = () => {
 
         /* Responsive Design */
         @media screen and (max-width: 768px) {
+          body, html {
+            overflow-x: hidden;
+          }
+
           .welcome-container {
             width: 100vw;
             height: 100vh;
@@ -421,6 +422,11 @@ const Index = () => {
             margin: 0;
             flex-direction: column;
             max-width: 100vw;
+            position: fixed;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
           }
 
           .message-panel {
@@ -439,38 +445,16 @@ const Index = () => {
             background: #fff;
             padding: 16px;
             overflow-y: auto;
+            overflow-x: hidden;
             justify-content: flex-start;
-            gap: 16px;
-          }
-
-          .stats-cards {
-            grid-template-columns: repeat(2, 1fr);
             gap: 12px;
-            max-width: 100%;
-            margin-bottom: 16px;
-          }
-
-          .stat-card {
-            height: 80px !important;
-          }
-
-          .stat-number {
-            font-size: 20px;
-          }
-
-          .stat-label {
-            font-size: 11px;
-          }
-
-          .stat-content svg {
-            width: 28px;
-            height: 28px;
           }
 
           .options-grid {
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
             max-width: 100%;
+            margin-bottom: 12px;
           }
 
           .option-card {
@@ -488,6 +472,31 @@ const Index = () => {
 
           .option-content p {
             font-size: 10px;
+          }
+
+          .stats-cards {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            max-width: 100%;
+            margin-bottom: 0;
+          }
+
+          .stat-card {
+            height: 60px !important;
+          }
+
+          .stat-number {
+            font-size: 16px;
+          }
+
+          .stat-label {
+            font-size: 10px;
+          }
+
+          .stat-content svg {
+            width: 20px;
+            height: 20px;
+            margin-bottom: 4px;
           }
 
           .toggle-background {
