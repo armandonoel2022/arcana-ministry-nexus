@@ -129,7 +129,7 @@ const Index = () => {
             <img 
               src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" 
               alt="ARCANA Logo" 
-              className="w-20 h-20 mx-auto mb-6 object-contain"
+              className="w-20 h-20 mx-auto mb-6 object-contain rounded-3xl shadow-lg"
             />
             <h1 className="text-4xl font-bold text-white mb-4">¡Hola, {firstName}!</h1>
             <p className="text-white/90 mb-6 text-lg">
@@ -140,6 +140,15 @@ const Index = () => {
 
         {/* Menu Options Panel */}
         <div className="options-panel">
+          {/* Logo for mobile/tablet - hidden on desktop */}
+          <div className="mobile-logo">
+            <img 
+              src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" 
+              alt="ARCANA Logo" 
+              className="logo-image"
+            />
+          </div>
+
           {birthdayNotification && (
             <div className="mb-4 w-full max-w-[600px]">
               <BirthdayNotificationBanner
