@@ -224,7 +224,10 @@ const GenerateNextYearServices = () => {
         const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
                            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         const monthName = monthNames[sunday.getMonth()];
-        const monthOrder = sunday.getMonth() + 1;
+        
+        // Calcular el número de domingo del mes (1º, 2º, 3º, 4º, 5º)
+        const sundaysInMonth = sundays.filter(s => s.getMonth() === sunday.getMonth());
+        const monthOrder = sundaysInMonth.findIndex(s => s.getTime() === sunday.getTime()) + 1;
         
         services.push({
           title: '08:00 a.m.',
