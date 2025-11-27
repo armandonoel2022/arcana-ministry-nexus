@@ -195,6 +195,84 @@ const GenerateNextYearServices = () => {
     return DIRECTORS.ALL[0];
   };
 
+  const recalculateMonthOrders = async (year: number) => {
+    try {
+      setIsGenerating(true);
+      
+      // Obtener todos los servicios del año especificado
+      const { data: servicesData, error: fetchError } = await supabase
+        .from('services')
+        .select('id, service_date')
+        .gte('service_date', `${year}-01-01`)
+        .lt('service_date', `${year + 1}-01-01`)
+        .order('service_date', { ascending: true });
+
+      if (fetchError) throw fetchError;
+
+      // Agrupar por día (fecha sin hora) y calcular el número de domingo del mes
+      const updates = [];
+      const servicesByDay = new Map<string, any[]>();
+
+      servicesData.forEach(service => {
+        const date = new Date(service.service_date);
+        const dayKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        
+        if (!servicesByDay.has(dayKey)) {
+          servicesByDay.set(dayKey, []);
+        }
+        servicesByDay.get(dayKey)!.push(service);
+      });
+
+      // Calcular el número de domingo para cada grupo de servicios del mismo día
+      const daysByMonth = new Map<string, string[]>();
+      servicesByDay.forEach((services, dayKey) => {
+        const [yearStr, monthStr] = dayKey.split('-');
+        const monthKey = `${yearStr}-${monthStr}`;
+        
+        if (!daysByMonth.has(monthKey)) {
+          daysByMonth.set(monthKey, []);
+        }
+        daysByMonth.get(monthKey)!.push(dayKey);
+      });
+
+      // Ordenar los días de cada mes y asignar el número de domingo
+      daysByMonth.forEach((days, monthKey) => {
+        days.sort();
+        days.forEach((dayKey, index) => {
+          const sundayNumber = index + 1;
+          const servicesOfDay = servicesByDay.get(dayKey) || [];
+          
+          servicesOfDay.forEach(service => {
+            updates.push({
+              id: service.id,
+              month_order: sundayNumber
+            });
+          });
+        });
+      });
+
+      // Actualizar todos los servicios
+      for (const update of updates) {
+        const { error: updateError } = await supabase
+          .from('services')
+          .update({ month_order: update.month_order })
+          .eq('id', update.id);
+
+        if (updateError) throw updateError;
+      }
+
+      toast.success(`Se recalcularon ${updates.length} servicios para el año ${year}`);
+      
+    } catch (error: any) {
+      console.error('Error recalculando month_order:', error);
+      toast.error('Error al recalcular los números de orden', {
+        description: error.message
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const generateServices = async () => {
     if (!selectedYear) {
       toast.error('No se pudo determinar el año a generar');
@@ -282,21 +360,22 @@ const GenerateNextYearServices = () => {
   };
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button 
-          variant="default" 
-          className="gap-2"
-          disabled={isGenerating || !selectedYear}
-        >
-          {isGenerating ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Calendar className="h-4 w-4" />
-          )}
-          Generar Año
-        </Button>
-      </AlertDialogTrigger>
+    <div className="flex gap-2">
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button 
+            variant="default" 
+            className="gap-2"
+            disabled={isGenerating || !selectedYear}
+          >
+            {isGenerating ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Calendar className="h-4 w-4" />
+            )}
+            Generar Año
+          </Button>
+        </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Generar Servicios</AlertDialogTitle>
@@ -338,6 +417,53 @@ const GenerateNextYearServices = () => {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button 
+          variant="outline" 
+          className="gap-2"
+          disabled={isGenerating}
+        >
+          Recalcular Orden
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Recalcular Números de Orden</AlertDialogTitle>
+          <AlertDialogDescription className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Selecciona el año a recalcular:
+              </label>
+              <select
+                value={selectedYear || ''}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              >
+                {availableYears.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="space-y-2">
+              <p>Esta acción recalculará el número de orden (1º, 2º, 3º, 4º, 5º domingo) para todos los servicios del {selectedYear}.</p>
+              <p className="text-amber-600 font-medium mt-4">
+                Esto es útil si los servicios fueron generados con un algoritmo anterior. ¿Desea continuar?
+              </p>
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={() => selectedYear && recalculateMonthOrders(selectedYear)}>
+            Recalcular
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  </div>
   );
 };
 
