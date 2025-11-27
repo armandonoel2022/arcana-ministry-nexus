@@ -19,23 +19,23 @@ const MinistryInstructionsOverlay = ({
     switch (priority) {
       case 'urgent':
         return {
-          bgGradient: 'from-red-500 via-red-400 to-white',
+          bgColor: 'bg-red-500',
           accentColor: 'border-red-400',
-          badge: 'bg-red-500',
+          badge: 'bg-red-600',
           label: 'URGENTE'
         };
       case 'high':
         return {
-          bgGradient: 'from-orange-500 via-orange-400 to-white',
+          bgColor: 'bg-orange-500',
           accentColor: 'border-orange-400',
-          badge: 'bg-orange-500',
+          badge: 'bg-orange-600',
           label: 'ALTA PRIORIDAD'
         };
       default:
         return {
-          bgGradient: 'from-blue-500 via-blue-400 to-white',
+          bgColor: 'bg-blue-500',
           accentColor: 'border-blue-400',
-          badge: 'bg-blue-500',
+          badge: 'bg-blue-600',
           label: 'IMPORTANTE'
         };
     }
@@ -45,7 +45,7 @@ const MinistryInstructionsOverlay = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-      <Card className={`w-full max-w-2xl bg-gradient-to-br ${config.bgGradient} border-2 ${config.accentColor} shadow-2xl`}>
+      <Card className={`w-full max-w-2xl ${config.bgColor} border-2 ${config.accentColor} shadow-2xl`}>
         <div className="relative p-8">
           <button
             onClick={onClose}
