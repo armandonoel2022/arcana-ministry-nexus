@@ -1,19 +1,31 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Edit, Trash2, CheckCircle, XCircle, Music, Calendar, User, UserCheck, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Edit,
+  Trash2,
+  CheckCircle,
+  XCircle,
+  Music,
+  Calendar,
+  User,
+  UserCheck,
+  ChevronDown,
+  ChevronUp,
+  MoreHorizontal,
+} from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, addWeeks, getDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import ServiceActionsMenu from './ServiceActionsMenu';
-import DirectorChangeRequest from './DirectorChangeRequest';
-import SelectedSongsDisplay from './SelectedSongsDisplay';
-import { EditServiceForm } from './EditServiceForm';
-import { EditSelectedSongsDialog } from './EditSelectedSongsDialog';
+import ServiceActionsMenu from "./ServiceActionsMenu";
+import DirectorChangeRequest from "./DirectorChangeRequest";
+import SelectedSongsDisplay from "./SelectedSongsDisplay";
+import { EditServiceForm } from "./EditServiceForm";
+import { EditSelectedSongsDialog } from "./EditSelectedSongsDialog";
 
 interface Service {
   id: string;
@@ -44,7 +56,7 @@ interface Service {
   }[];
 }
 
-type FilterType = 'current_weekend' | 'month' | 'all' | 'my_agenda' | 'year_2025' | 'year_2026';
+type FilterType = "current_weekend" | "month" | "all" | "my_agenda" | "year_2025" | "year_2026";
 
 interface AgendaTableProps {
   initialFilter?: string | null;
@@ -55,15 +67,15 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
   const [filteredServices, setFilteredServices] = useState<Service[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<FilterType>(() => {
-    if (initialFilter === 'my_agenda') return 'my_agenda';
-    return 'current_weekend';
+    if (initialFilter === "my_agenda") return "my_agenda";
+    return "current_weekend";
   });
   const [selectedServiceForReplacement, setSelectedServiceForReplacement] = useState<Service | null>(null);
   const [selectedServiceForSongs, setSelectedServiceForSongs] = useState<Service | null>(null);
   const [selectedServiceForEdit, setSelectedServiceForEdit] = useState<Service | null>(null);
-  const [currentUserName, setCurrentUserName] = useState<string>('');
+  const [currentUserName, setCurrentUserName] = useState<string>("");
   const [editingSongsServiceId, setEditingSongsServiceId] = useState<string | null>(null);
-  const [editingSongsServiceTitle, setEditingSongsServiceTitle] = useState<string>('');
+  const [editingSongsServiceTitle, setEditingSongsServiceTitle] = useState<string>("");
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
@@ -78,28 +90,27 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
 
   const getCurrentUser = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('id', user.id)
-          .single();
-        
+        const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
+
         if (profile) {
           setCurrentUserName(profile.full_name.toLowerCase());
         }
       }
     } catch (error) {
-      console.error('Error getting current user:', error);
+      console.error("Error getting current user:", error);
     }
   };
 
   const fetchServices = async () => {
     try {
       const { data, error } = await supabase
-        .from('services')
-        .select(`
+        .from("services")
+        .select(
+          `
           *,
           worship_groups (
             name,
@@ -113,14 +124,15 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
               artist
             )
           )
-        `)
-        .order('service_date', { ascending: true });
+        `,
+        )
+        .order("service_date", { ascending: true });
 
       if (error) throw error;
       setServices(data || []);
     } catch (error) {
-      console.error('Error fetching services:', error);
-      toast.error('Error al cargar los servicios');
+      console.error("Error fetching services:", error);
+      toast.error("Error al cargar los servicios");
     } finally {
       setIsLoading(false);
     }
@@ -129,9 +141,9 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
   const getCurrentWeekend = () => {
     const now = new Date();
     const currentDay = getDay(now); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    
+
     let weekStart, weekEnd;
-    
+
     // Si estamos entre lunes (1) y jueves (4), mostrar el próximo fin de semana
     if (currentDay >= 1 && currentDay <= 4) {
       // Obtener el próximo viernes
@@ -139,7 +151,7 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
       weekStart = new Date(now);
       weekStart.setDate(now.getDate() + daysUntilFriday);
       weekStart.setHours(0, 0, 0, 0);
-      
+
       // El domingo será 2 días después del viernes
       weekEnd = new Date(weekStart);
       weekEnd.setDate(weekStart.getDate() + 2);
@@ -159,19 +171,22 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
         weekStart = new Date(now);
         weekStart.setDate(now.getDate() - daysFromFriday);
         weekStart.setHours(0, 0, 0, 0);
-        
+
         weekEnd = new Date(weekStart);
         weekEnd.setDate(weekStart.getDate() + 2);
         weekEnd.setHours(23, 59, 59, 999);
       }
     }
-    
+
     return { start: weekStart, end: weekEnd };
   };
 
   // Helper function to normalize strings (remove accents) for comparison
   const normalizeString = (str: string) => {
-    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    return str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
   };
 
   const applyFilter = () => {
@@ -180,48 +195,50 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
     const normalizedUserName = normalizeString(currentUserName);
 
     switch (filter) {
-      case 'current_weekend':
+      case "current_weekend":
         const { start: weekStart, end: weekEnd } = getCurrentWeekend();
-        console.log('Filtering weekend from:', weekStart, 'to:', weekEnd);
-        filtered = services.filter(service => 
-          isWithinInterval(new Date(service.service_date), { start: weekStart, end: weekEnd })
+        console.log("Filtering weekend from:", weekStart, "to:", weekEnd);
+        filtered = services.filter((service) =>
+          isWithinInterval(new Date(service.service_date), { start: weekStart, end: weekEnd }),
         );
         break;
-      
-      case 'month':
+
+      case "month":
         // Show only MY services for the current month
         const monthStart = startOfMonth(now);
         const monthEnd = endOfMonth(now);
-        filtered = services.filter(service => 
-          isWithinInterval(new Date(service.service_date), { start: monthStart, end: monthEnd }) &&
-          normalizeString(service.leader).includes(normalizedUserName)
+        filtered = services.filter(
+          (service) =>
+            isWithinInterval(new Date(service.service_date), { start: monthStart, end: monthEnd }) &&
+            normalizeString(service.leader).includes(normalizedUserName),
         );
         break;
-      
-      case 'my_agenda':
+
+      case "my_agenda":
         // Show only MY services for the current weekend
         const { start: myWeekStart, end: myWeekEnd } = getCurrentWeekend();
-        filtered = services.filter(service => 
-          isWithinInterval(new Date(service.service_date), { start: myWeekStart, end: myWeekEnd }) &&
-          normalizeString(service.leader).includes(normalizedUserName)
+        filtered = services.filter(
+          (service) =>
+            isWithinInterval(new Date(service.service_date), { start: myWeekStart, end: myWeekEnd }) &&
+            normalizeString(service.leader).includes(normalizedUserName),
         );
         break;
-      
-      case 'year_2025':
-        filtered = services.filter(service => {
+
+      case "year_2025":
+        filtered = services.filter((service) => {
           const year = new Date(service.service_date).getFullYear();
           return year === 2025;
         });
         break;
-      
-      case 'year_2026':
-        filtered = services.filter(service => {
+
+      case "year_2026":
+        filtered = services.filter((service) => {
           const year = new Date(service.service_date).getFullYear();
           return year === 2026;
         });
         break;
-      
-      case 'all':
+
+      case "all":
       default:
         filtered = services;
         break;
@@ -232,53 +249,41 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
 
   const toggleConfirmation = async (id: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase
-        .from('services')
-        .update({ is_confirmed: !currentStatus })
-        .eq('id', id);
+      const { error } = await supabase.from("services").update({ is_confirmed: !currentStatus }).eq("id", id);
 
       if (error) throw error;
 
-      setServices(prev => 
-        prev.map(service => 
-          service.id === id 
-            ? { ...service, is_confirmed: !currentStatus }
-            : service
-        )
+      setServices((prev) =>
+        prev.map((service) => (service.id === id ? { ...service, is_confirmed: !currentStatus } : service)),
       );
 
-      toast.success(
-        !currentStatus ? 'Servicio confirmado' : 'Confirmación removida'
-      );
+      toast.success(!currentStatus ? "Servicio confirmado" : "Confirmación removida");
     } catch (error) {
-      console.error('Error updating service:', error);
-      toast.error('Error al actualizar el servicio');
+      console.error("Error updating service:", error);
+      toast.error("Error al actualizar el servicio");
     }
   };
 
   const deleteService = async (id: string) => {
-    if (!confirm('¿Está seguro de que desea eliminar este servicio?')) {
+    if (!confirm("¿Está seguro de que desea eliminar este servicio?")) {
       return;
     }
 
     try {
-      const { error } = await supabase
-        .from('services')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.from("services").delete().eq("id", id);
 
       if (error) throw error;
 
-      setServices(prev => prev.filter(service => service.id !== id));
-      toast.success('Servicio eliminado exitosamente');
+      setServices((prev) => prev.filter((service) => service.id !== id));
+      toast.success("Servicio eliminado exitosamente");
     } catch (error) {
-      console.error('Error deleting service:', error);
-      toast.error('Error al eliminar el servicio');
+      console.error("Error deleting service:", error);
+      toast.error("Error al eliminar el servicio");
     }
   };
 
   const handleRequestDirectorChange = (serviceId: string) => {
-    const service = services.find(s => s.id === serviceId);
+    const service = services.find((s) => s.id === serviceId);
     if (service) {
       setSelectedServiceForReplacement(service);
     }
@@ -291,31 +296,42 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
 
   const getServiceTypeColor = (type: string) => {
     switch (type) {
-      case 'especial': return 'bg-purple-100 text-purple-800';
-      case 'conferencia': return 'bg-blue-100 text-blue-800';
-      case 'evento': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "especial":
+        return "bg-purple-100 text-purple-800";
+      case "conferencia":
+        return "bg-blue-100 text-blue-800";
+      case "evento":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getFilterLabel = (filterType: FilterType) => {
     switch (filterType) {
-      case 'current_weekend': return 'Fin de Semana Actual';
-      case 'month': return 'Mis Servicios - Este Mes';
-      case 'my_agenda': return 'Mi Agenda - Fin de Semana';
-      case 'year_2025': return 'Servicios 2025';
-      case 'year_2026': return 'Servicios 2026';
-      case 'all': return 'Todos los Servicios';
-      default: return 'Filtro';
+      case "current_weekend":
+        return "Fin de Semana Actual";
+      case "month":
+        return "Mis Servicios - Este Mes";
+      case "my_agenda":
+        return "Mi Agenda - Fin de Semana";
+      case "year_2025":
+        return "Servicios 2025";
+      case "year_2026":
+        return "Servicios 2026";
+      case "all":
+        return "Todos los Servicios";
+      default:
+        return "Filtro";
     }
   };
 
   const shouldShowChoirBreaks = () => {
-    return filter !== 'all' && filteredServices.some(s => s.choir_breaks);
+    return filter !== "all" && filteredServices.some((s) => s.choir_breaks);
   };
 
   const toggleRowExpansion = (serviceId: string) => {
-    setExpandedRows(prev => {
+    setExpandedRows((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(serviceId)) {
         newSet.delete(serviceId);
@@ -353,25 +369,25 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
           <div className="space-y-3">
             <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
               <Button
-                variant={filter === 'current_weekend' ? 'default' : 'outline'}
+                variant={filter === "current_weekend" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setFilter('current_weekend')}
+                onClick={() => setFilter("current_weekend")}
                 className="text-xs sm:text-sm"
               >
                 Fin de Semana
               </Button>
               <Button
-                variant={filter === 'month' ? 'default' : 'outline'}
+                variant={filter === "month" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setFilter('month')}
+                onClick={() => setFilter("month")}
                 className="text-xs sm:text-sm"
               >
                 Este Mes
               </Button>
               <Button
-                variant={filter === 'my_agenda' ? 'default' : 'outline'}
+                variant={filter === "my_agenda" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setFilter('my_agenda')}
+                onClick={() => setFilter("my_agenda")}
                 className="flex items-center gap-1 text-xs sm:text-sm"
               >
                 <User className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -379,29 +395,29 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                 <span className="sm:hidden">Mi Agenda</span>
               </Button>
               <Button
-                variant={filter === 'all' ? 'default' : 'outline'}
+                variant={filter === "all" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setFilter('all')}
+                onClick={() => setFilter("all")}
                 className="text-xs sm:text-sm"
               >
                 Todos
               </Button>
             </div>
-            
+
             <div className="flex flex-wrap gap-2 pt-2 border-t">
               <span className="text-xs sm:text-sm text-gray-600 font-medium self-center mr-1 sm:mr-2">Por Año:</span>
               <Button
-                variant={filter === 'year_2025' ? 'default' : 'outline'}
+                variant={filter === "year_2025" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setFilter('year_2025')}
+                onClick={() => setFilter("year_2025")}
                 className="text-xs sm:text-sm"
               >
                 2025
               </Button>
               <Button
-                variant={filter === 'year_2026' ? 'default' : 'outline'}
+                variant={filter === "year_2026" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setFilter('year_2026')}
+                onClick={() => setFilter("year_2026")}
                 className="text-xs sm:text-sm"
               >
                 2026
@@ -421,160 +437,334 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
         <CardContent className="p-2 sm:p-6">
           {filteredServices.length === 0 ? (
             <div className="text-center text-gray-500 py-6 sm:py-8 text-sm sm:text-base">
-              {filter === 'my_agenda' 
-                ? "🎉 ¡Estás libre este fin de semana!" 
-                : filter === 'month'
-                ? "No tienes servicios asignados este mes."
-                : "No hay servicios programados para este período."}
+              {filter === "my_agenda"
+                ? "🎉 ¡Estás libre este fin de semana!"
+                : filter === "month"
+                  ? "No tienes servicios asignados este mes."
+                  : "No hay servicios programados para este período."}
             </div>
           ) : (
             <div className="w-full overflow-x-auto -mx-2 sm:mx-0">
-              <div className="min-w-[800px] rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs sm:text-sm">Fecha</TableHead>
-                    <TableHead className="text-xs sm:text-sm hidden sm:table-cell">Mes</TableHead>
-                    <TableHead className="text-xs sm:text-sm hidden md:table-cell">Orden</TableHead>
-                    <TableHead className="text-xs sm:text-sm">Dirige</TableHead>
-                    <TableHead className="text-xs sm:text-sm hidden md:table-cell">Grupo</TableHead>
-                    <TableHead className="text-xs sm:text-sm">Servicio</TableHead>
-                    <TableHead className="text-xs sm:text-sm hidden md:table-cell">Tipo</TableHead>
-                    <TableHead className="text-xs sm:text-sm hidden lg:table-cell">Canciones</TableHead>
-                    <TableHead className="text-xs sm:text-sm">Estado</TableHead>
-                    <TableHead className="text-xs sm:text-sm">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredServices.map((service) => {
-                    const isExpanded = expandedRows.has(service.id);
-                    
-                    return (
-                      <React.Fragment key={service.id}>
-                        {/* Vista de Desktop - tabla completa */}
-                        <TableRow className="hidden md:table-row">
-                          <TableCell className="text-xs sm:text-sm">
-                            <div className="font-medium">
-                              {format(new Date(service.service_date), 'dd/MM', { locale: es })}
-                            </div>
-                            <div className="text-[10px] sm:text-xs text-gray-500">
-                              {format(new Date(service.service_date), 'HH:mm')}
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-medium text-xs sm:text-sm">
-                            {service.month_name}
-                          </TableCell>
-                          <TableCell className="text-xs sm:text-sm">
-                            <Badge variant="outline" className="text-xs">{service.month_order}°</Badge>
-                          </TableCell>
-                          <TableCell className="font-medium text-xs sm:text-sm">
-                            <div className="truncate">
-                              {service.leader}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {service.worship_groups ? (
-                              <Badge 
-                                className="text-xs"
-                                style={{ 
-                                  backgroundColor: service.worship_groups.color_theme + '20',
-                                  color: service.worship_groups.color_theme,
-                                  borderColor: service.worship_groups.color_theme + '40'
-                                }}
-                              >
-                                {service.worship_groups.name}
-                              </Badge>
-                            ) : (
-                              <span className="text-xs text-gray-400">Sin asignar</span>
+              {/* Desktop Table */}
+              <div className="hidden md:block min-w-[800px] rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs sm:text-sm">Fecha</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Mes</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Orden</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Dirige</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Grupo</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Servicio</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Tipo</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Canciones</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Estado</TableHead>
+                      <TableHead className="text-xs sm:text-sm">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredServices.map((service) => (
+                      <TableRow key={service.id}>
+                        <TableCell className="text-xs sm:text-sm">
+                          <div className="font-medium">
+                            {format(new Date(service.service_date), "dd/MM", { locale: es })}
+                          </div>
+                          <div className="text-[10px] sm:text-xs text-gray-500">
+                            {format(new Date(service.service_date), "HH:mm")}
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium text-xs sm:text-sm">{service.month_name}</TableCell>
+                        <TableCell className="text-xs sm:text-sm">
+                          <Badge variant="outline" className="text-xs">
+                            {service.month_order}°
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-medium text-xs sm:text-sm">
+                          <div className="truncate">{service.leader}</div>
+                        </TableCell>
+                        <TableCell>
+                          {service.worship_groups ? (
+                            <Badge
+                              className="text-xs"
+                              style={{
+                                backgroundColor: service.worship_groups.color_theme + "20",
+                                color: service.worship_groups.color_theme,
+                                borderColor: service.worship_groups.color_theme + "40",
+                              }}
+                            >
+                              {service.worship_groups.name}
+                            </Badge>
+                          ) : (
+                            <span className="text-xs text-gray-400">Sin asignar</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{service.title}</div>
+                            {service.special_activity && (
+                              <div className="text-sm text-gray-500 mt-1">{service.special_activity}</div>
                             )}
-                          </TableCell>
-                          <TableCell>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={`${getServiceTypeColor(service.service_type)} text-xs`}>
+                            {service.service_type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-2">
+                            {/* Service Songs (from service_songs table) */}
+                            {service.service_songs && service.service_songs.length > 0 ? (
+                              <div className="space-y-1">
+                                <div className="text-xs text-gray-500 font-medium">Repertorio:</div>
+                                {service.service_songs
+                                  .sort((a, b) => a.song_order - b.song_order)
+                                  .slice(0, 2)
+                                  .map((serviceSong, index) => (
+                                    <div key={index} className="flex items-center gap-1 text-sm">
+                                      <Music className="w-3 h-3 text-gray-400" />
+                                      <span className="truncate max-w-32">
+                                        {serviceSong.songs.title}
+                                        {serviceSong.songs.artist && (
+                                          <span className="text-gray-500 text-xs ml-1">
+                                            - {serviceSong.songs.artist}
+                                          </span>
+                                        )}
+                                      </span>
+                                    </div>
+                                  ))}
+                                {service.service_songs.length > 2 && (
+                                  <div className="text-xs text-gray-500">
+                                    +{service.service_songs.length - 2} más...
+                                  </div>
+                                )}
+                              </div>
+                            ) : null}
+
+                            {/* Selected Songs (from song_selections table) */}
                             <div>
-                              <div className="font-medium">{service.title}</div>
-                              {service.special_activity && (
-                                <div className="text-sm text-gray-500 mt-1">
-                                  {service.special_activity}
-                                </div>
+                              <div className="text-xs text-blue-600 font-medium mb-1">Seleccionadas:</div>
+                              <SelectedSongsDisplay
+                                serviceId={service.id}
+                                serviceTitle={service.title}
+                                compact={true}
+                              />
+                            </div>
+
+                            {/* View all selected songs button */}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedServiceForSongs(service)}
+                              className="text-xs h-6 px-2"
+                            >
+                              Ver todas las seleccionadas
+                            </Button>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={service.is_confirmed ? "default" : "secondary"}>
+                            {service.is_confirmed ? "Confirmado" : "Pendiente"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" onClick={() => setSelectedServiceForEdit(service)}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => deleteService(service.id)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                            <ServiceActionsMenu
+                              service={service}
+                              currentUser={currentUserName}
+                              onToggleConfirmation={toggleConfirmation}
+                              onDelete={deleteService}
+                              onRequestDirectorChange={handleRequestDirectorChange}
+                              onEditSongs={handleEditSongs}
+                            />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden space-y-3">
+                {filteredServices.map((service) => {
+                  const isExpanded = expandedRows.has(service.id);
+
+                  return (
+                    <Card key={service.id} className="overflow-hidden">
+                      <CardContent className="p-4">
+                        {/* Vista compacta - siempre visible */}
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            {/* Fecha y Hora */}
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="bg-blue-100 text-blue-800 rounded-lg px-2 py-1 text-sm font-bold">
+                                {format(new Date(service.service_date), "dd/MM", { locale: es })}
+                              </div>
+                              <div className="text-xs text-gray-500 bg-gray-100 rounded px-2 py-1">
+                                {format(new Date(service.service_date), "HH:mm")}
+                              </div>
+                            </div>
+
+                            {/* Dirige */}
+                            <div className="mb-2">
+                              <div className="text-xs text-gray-500 mb-1">Dirige</div>
+                              <div className="text-sm font-medium truncate">{service.leader}</div>
+                            </div>
+
+                            {/* Grupo */}
+                            <div className="mb-2">
+                              <div className="text-xs text-gray-500 mb-1">Grupo</div>
+                              {service.worship_groups ? (
+                                <Badge
+                                  className="text-xs"
+                                  style={{
+                                    backgroundColor: service.worship_groups.color_theme + "20",
+                                    color: service.worship_groups.color_theme,
+                                    borderColor: service.worship_groups.color_theme + "40",
+                                  }}
+                                >
+                                  {service.worship_groups.name}
+                                </Badge>
+                              ) : (
+                                <span className="text-xs text-gray-400">Sin asignar</span>
                               )}
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={`${getServiceTypeColor(service.service_type)} text-xs`}>
-                              {service.service_type}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="space-y-2">
-                              {/* Service Songs (from service_songs table) */}
-                              {service.service_songs && service.service_songs.length > 0 ? (
-                                <div className="space-y-1">
-                                  <div className="text-xs text-gray-500 font-medium">Repertorio:</div>
+
+                            {/* Estado */}
+                            <div className="flex items-center gap-2">
+                              <Badge variant={service.is_confirmed ? "default" : "secondary"} className="text-xs">
+                                {service.is_confirmed ? "Confirmado" : "Pendiente"}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          {/* Botón de expansión */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleRowExpansion(service.id)}
+                            className="flex-shrink-0 h-8 w-8 p-0"
+                          >
+                            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                          </Button>
+                        </div>
+
+                        {/* Detalles expandidos */}
+                        {isExpanded && (
+                          <div className="mt-4 pt-4 border-t space-y-4">
+                            {/* Servicio */}
+                            <div>
+                              <div className="text-xs text-gray-500 mb-1">Servicio</div>
+                              <div className="text-sm font-medium">{service.title}</div>
+                              {service.special_activity && (
+                                <div className="text-xs text-gray-600 mt-1">{service.special_activity}</div>
+                              )}
+                            </div>
+
+                            {/* Tipo de Servicio */}
+                            <div>
+                              <div className="text-xs text-gray-500 mb-1">Tipo</div>
+                              <Badge className={`${getServiceTypeColor(service.service_type)} text-xs`}>
+                                {service.service_type}
+                              </Badge>
+                            </div>
+
+                            {/* Mes y Orden */}
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <div className="text-xs text-gray-500 mb-1">Mes</div>
+                                <div className="text-sm">{service.month_name}</div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-gray-500 mb-1">Orden</div>
+                                <Badge variant="outline" className="text-xs">
+                                  {service.month_order}°
+                                </Badge>
+                              </div>
+                            </div>
+
+                            {/* Canciones del Repertorio */}
+                            {service.service_songs && service.service_songs.length > 0 && (
+                              <div>
+                                <div className="text-xs text-gray-500 mb-2">Canciones del Repertorio</div>
+                                <div className="space-y-2">
                                   {service.service_songs
                                     .sort((a, b) => a.song_order - b.song_order)
-                                    .slice(0, 2)
+                                    .slice(0, 3)
                                     .map((serviceSong, index) => (
-                                      <div key={index} className="flex items-center gap-1 text-sm">
-                                        <Music className="w-3 h-3 text-gray-400" />
-                                        <span className="truncate max-w-32">
-                                          {serviceSong.songs.title}
+                                      <div
+                                        key={index}
+                                        className="flex items-center gap-2 text-sm p-2 bg-gray-50 rounded"
+                                      >
+                                        <Music className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                        <div className="flex-1 min-w-0">
+                                          <div className="font-medium truncate">{serviceSong.songs.title}</div>
                                           {serviceSong.songs.artist && (
-                                            <span className="text-gray-500 text-xs ml-1">
-                                              - {serviceSong.songs.artist}
-                                            </span>
+                                            <div className="text-xs text-gray-500 truncate">
+                                              {serviceSong.songs.artist}
+                                            </div>
                                           )}
-                                        </span>
+                                        </div>
                                       </div>
                                     ))}
-                                  {service.service_songs.length > 2 && (
-                                    <div className="text-xs text-gray-500">
-                                      +{service.service_songs.length - 2} más...
+                                  {service.service_songs.length > 3 && (
+                                    <div className="text-xs text-gray-500 text-center">
+                                      +{service.service_songs.length - 3} canciones más
                                     </div>
                                   )}
                                 </div>
-                              ) : null}
-                              
-                              {/* Selected Songs (from song_selections table) */}
-                              <div>
-                                <div className="text-xs text-blue-600 font-medium mb-1">Seleccionadas:</div>
-                                <SelectedSongsDisplay 
-                                  serviceId={service.id} 
-                                  serviceTitle={service.title}
-                                  compact={true} 
-                                />
                               </div>
-                              
-                              {/* View all selected songs button */}
+                            )}
+
+                            {/* Canciones Seleccionadas */}
+                            <div>
+                              <div className="text-xs text-blue-600 font-medium mb-2">Canciones Seleccionadas</div>
+                              <SelectedSongsDisplay
+                                serviceId={service.id}
+                                serviceTitle={service.title}
+                                compact={true}
+                              />
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setSelectedServiceForSongs(service)}
-                                className="text-xs h-6 px-2"
+                                className="text-xs h-7 px-2 mt-2 w-full"
                               >
                                 Ver todas las seleccionadas
                               </Button>
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={service.is_confirmed ? "default" : "secondary"}>
-                              {service.is_confirmed ? 'Confirmado' : 'Pendiente'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
+
+                            {/* Acciones */}
+                            <div className="flex flex-wrap gap-2 pt-3 border-t">
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setSelectedServiceForEdit(service)}
+                                className="text-xs flex-1"
                               >
-                                <Edit className="w-4 h-4" />
+                                <Edit className="w-3 h-3 mr-1" />
+                                Editar
                               </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => deleteService(service.id)}
-                                className="text-red-600 hover:text-red-700"
+                                className="text-red-600 hover:text-red-700 text-xs flex-1"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-3 h-3 mr-1" />
+                                Eliminar
                               </Button>
                               <ServiceActionsMenu
                                 service={service}
@@ -585,162 +775,12 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                                 onEditSongs={handleEditSongs}
                               />
                             </div>
-                          </TableCell>
-                        </TableRow>
-                        
-                        {/* Vista Móvil - Compacta con expansión */}
-                        <TableRow className="md:hidden">
-                          <TableCell colSpan={10} className="p-0">
-                            <div className="p-3">
-                              {/* Vista compacta - siempre visible */}
-                              <div className="flex items-center justify-between gap-3">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-3 mb-2">
-                                    <div className="flex-shrink-0">
-                                      <div className="text-sm font-bold">
-                                        {format(new Date(service.service_date), 'dd/MM', { locale: es })}
-                                      </div>
-                                      <div className="text-[10px] text-gray-500">
-                                        {format(new Date(service.service_date), 'HH:mm')}
-                                      </div>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <div className="text-sm font-medium truncate">
-                                        {service.leader}
-                                      </div>
-                                      {service.worship_groups && (
-                                        <Badge 
-                                          className="text-[10px] mt-1"
-                                          style={{ 
-                                            backgroundColor: service.worship_groups.color_theme + '20',
-                                            color: service.worship_groups.color_theme,
-                                            borderColor: service.worship_groups.color_theme + '40'
-                                          }}
-                                        >
-                                          {service.worship_groups.name}
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => toggleRowExpansion(service.id)}
-                                  className="flex-shrink-0"
-                                >
-                                  {isExpanded ? (
-                                    <ChevronUp className="w-4 h-4" />
-                                  ) : (
-                                    <ChevronDown className="w-4 h-4" />
-                                  )}
-                                </Button>
-                              </div>
-                              
-                              {/* Detalles expandidos */}
-                              {isExpanded && (
-                                <div className="mt-3 pt-3 border-t space-y-3">
-                                  <div>
-                                    <div className="text-xs text-gray-500 mb-1">Servicio</div>
-                                    <div className="text-sm font-medium">{service.title}</div>
-                                    {service.special_activity && (
-                                      <div className="text-xs text-gray-600 mt-1">
-                                        {service.special_activity}
-                                      </div>
-                                    )}
-                                  </div>
-                                  
-                                  <div>
-                                    <div className="text-xs text-gray-500 mb-1">Tipo</div>
-                                    <Badge className={`${getServiceTypeColor(service.service_type)} text-xs`}>
-                                      {service.service_type}
-                                    </Badge>
-                                  </div>
-                                  
-                                  <div>
-                                    <div className="text-xs text-gray-500 mb-1">Estado</div>
-                                    <Badge variant={service.is_confirmed ? "default" : "secondary"}>
-                                      {service.is_confirmed ? 'Confirmado' : 'Pendiente'}
-                                    </Badge>
-                                  </div>
-                                  
-                                  {service.service_songs && service.service_songs.length > 0 && (
-                                    <div>
-                                      <div className="text-xs text-gray-500 mb-1">Canciones del Repertorio</div>
-                                      {service.service_songs
-                                        .sort((a, b) => a.song_order - b.song_order)
-                                        .slice(0, 3)
-                                        .map((serviceSong, index) => (
-                                          <div key={index} className="flex items-center gap-1 text-xs py-1">
-                                            <Music className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                                            <span className="truncate">
-                                              {serviceSong.songs.title}
-                                            </span>
-                                          </div>
-                                        ))}
-                                      {service.service_songs.length > 3 && (
-                                        <div className="text-xs text-gray-500 mt-1">
-                                          +{service.service_songs.length - 3} canciones más
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                  
-                                  <div>
-                                    <div className="text-xs text-blue-600 font-medium mb-1">Canciones Seleccionadas</div>
-                                    <SelectedSongsDisplay 
-                                      serviceId={service.id} 
-                                      serviceTitle={service.title}
-                                      compact={true} 
-                                    />
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => setSelectedServiceForSongs(service)}
-                                      className="text-xs h-6 px-2 mt-1"
-                                    >
-                                      Ver todas las seleccionadas
-                                    </Button>
-                                  </div>
-                                  
-                                  <div className="flex flex-wrap gap-2 pt-2">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => setSelectedServiceForEdit(service)}
-                                      className="text-xs"
-                                    >
-                                      <Edit className="w-3 h-3 mr-1" />
-                                      Editar
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => deleteService(service.id)}
-                                      className="text-red-600 hover:text-red-700 text-xs"
-                                    >
-                                      <Trash2 className="w-3 h-3 mr-1" />
-                                      Eliminar
-                                    </Button>
-                                    <ServiceActionsMenu
-                                      service={service}
-                                      currentUser={currentUserName}
-                                      onToggleConfirmation={toggleConfirmation}
-                                      onDelete={deleteService}
-                                      onRequestDirectorChange={handleRequestDirectorChange}
-                                      onEditSongs={handleEditSongs}
-                                    />
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      </React.Fragment>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -752,22 +792,18 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
         <Card>
           <CardHeader>
             <CardTitle>Descansos de los Coros</CardTitle>
-            <CardDescription>
-              Información sobre descansos programados en el período seleccionado
-            </CardDescription>
+            <CardDescription>Información sobre descansos programados en el período seleccionado</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               {filteredServices
-                .filter(s => s.choir_breaks)
-                .map(service => (
+                .filter((s) => s.choir_breaks)
+                .map((service) => (
                   <div key={service.id} className="p-3 bg-gray-50 rounded-lg">
                     <div className="font-medium">
-                      {format(new Date(service.service_date), 'dd/MM/yyyy', { locale: es })} - {service.title}
+                      {format(new Date(service.service_date), "dd/MM/yyyy", { locale: es })} - {service.title}
                     </div>
-                    <div className="text-sm text-gray-600 mt-1">
-                      {service.choir_breaks}
-                    </div>
+                    <div className="text-sm text-gray-600 mt-1">{service.choir_breaks}</div>
                   </div>
                 ))}
             </div>
