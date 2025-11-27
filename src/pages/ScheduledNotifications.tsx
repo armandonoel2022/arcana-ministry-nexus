@@ -303,6 +303,23 @@ const ScheduledNotifications = () => {
     setSelectedDays(newDays);
   };
 
+  // Auto-generate name based on notification type and selected days
+  useEffect(() => {
+    const typeNames: Record<string, string> = {
+      service_overlay: "Overlay de Servicios",
+      daily_verse: "Versículo del Día",
+      daily_advice: "Consejo del Día",
+      general: "Notificación General",
+      reminder: "Recordatorio",
+    };
+    
+    const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+    const selectedDays = formData.days_of_week.sort().map(d => dayNames[d]).join(", ");
+    
+    const autoName = `${typeNames[formData.notification_type] || formData.notification_type} - ${selectedDays}`;
+    setFormData(prev => ({ ...prev, name: autoName }));
+  }, [formData.notification_type, formData.days_of_week]);
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -665,14 +682,17 @@ const ScheduledNotifications = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nombre</Label>
+              <Label htmlFor="name">Nombre (Generado Automáticamente)</Label>
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Nombre de la notificación"
-                required
+                disabled
+                className="bg-muted cursor-not-allowed"
               />
+              <p className="text-xs text-muted-foreground">
+                El nombre se genera automáticamente según el tipo y los días seleccionados
+              </p>
             </div>
 
             <div className="space-y-2">
