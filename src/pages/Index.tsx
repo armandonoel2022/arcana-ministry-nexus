@@ -119,7 +119,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-         style={{ background: "hsl(217, 91%, 60%)", width: "100vw", maxWidth: "100vw" }}>
+         style={{ background: "var(--gradient-primary)", width: "100vw", maxWidth: "100vw" }}>
       
       <div className={`welcome-container ${isAnimating ? 'animating' : ''}`}>
         
@@ -389,16 +389,16 @@ const Index = () => {
           pointer-events: none;
         }
 
-          .toggle-background {
-            content: '';
-            position: absolute;
-            left: 0;
-            width: 35%;
-            height: 100%;
-            background: hsl(217, 91%, 60%);
-            z-index: 2;
-            transition: 1.8s ease-in-out;
-          }
+        .toggle-background {
+          content: '';
+          position: absolute;
+          left: 0;
+          width: 35%;
+          height: 100%;
+          background: var(--gradient-blue-form);
+          z-index: 2;
+          transition: 1.8s ease-in-out;
+        }
 
         .welcome-container.animating .message-panel {
           transform: translateX(-100%);
@@ -432,22 +432,22 @@ const Index = () => {
           .message-panel {
             position: relative;
             width: 100%;
-            height: 22%;
+            height: 20%;
             min-height: 140px;
-            background: hsl(217, 91%, 60%);
-            padding: 20px 16px 16px;
+            background: var(--gradient-blue-form);
+            padding: 16px;
           }
 
           .options-panel {
             position: relative;
             width: 100%;
-            height: 78%;
+            height: 80%;
             background: #fff;
-            padding: 20px 16px;
+            padding: 16px;
             overflow-y: auto;
             overflow-x: hidden;
             justify-content: flex-start;
-            gap: 14px;
+            gap: 12px;
           }
 
           .options-grid {
@@ -516,17 +516,13 @@ const Index = () => {
             width: 56px;
             height: 56px;
             margin-bottom: 12px;
-            border-radius: 16px;
           }
         }
 
         @media screen and (max-width: 400px) {
-          .message-panel {
-            padding: 18px 15px 15px;
-          }
-
+          .message-panel,
           .options-panel {
-            padding: 18px 15px;
+            padding: 15px;
           }
           
           .message-content h1 {
@@ -534,7 +530,7 @@ const Index = () => {
           }
 
           .option-card {
-            height: 110px !important;
+            height: 80px !important;
           }
 
           .options-grid {
