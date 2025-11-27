@@ -525,6 +525,64 @@ const Index = () => {
             width: 56px;
             height: 56px;
             margin-bottom: 12px;
+            border-radius: 20px;
+          }
+
+          /* Mobile logo visible on mobile */
+          .mobile-logo {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 16px;
+            padding-top: 8px;
+          }
+
+          .logo-image {
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          }
+        }
+
+        /* Tablet and intermediate sizes */
+        @media screen and (min-width: 769px) and (max-width: 1024px) {
+          .message-panel {
+            display: none;
+          }
+
+          .options-panel {
+            width: 100%;
+            padding-top: 32px;
+          }
+
+          .mobile-logo {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 24px;
+          }
+
+          .logo-image {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            border-radius: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          }
+
+          .toggle-background {
+            display: none;
+          }
+
+          .welcome-container {
+            height: 100vh;
+          }
+        }
+
+        /* Desktop - hide mobile logo */
+        @media screen and (min-width: 1025px) {
+          .mobile-logo {
+            display: none;
           }
         }
 
