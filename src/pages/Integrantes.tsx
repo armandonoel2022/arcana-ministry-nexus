@@ -157,7 +157,7 @@ const Integrantes = () => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         /* Responsive Design - Mismo patrón que index */
         @media screen and (max-width: 768px) {
           body, html {
