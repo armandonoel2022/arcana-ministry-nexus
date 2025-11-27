@@ -438,15 +438,15 @@ const ScheduledNotifications = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="container mx-auto p-4 md:p-6 space-y-6 max-w-7xl">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Notificaciones Programadas</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Notificaciones Programadas</h1>
+          <p className="text-sm md:text-base text-gray-600 mt-2">
             Configura notificaciones automáticas que se enviarán según el horario programado
           </p>
         </div>
-        <Button onClick={openCreateDialog} className="flex items-center gap-2">
+        <Button onClick={openCreateDialog} className="flex items-center gap-2 w-full sm:w-auto">
           <Plus className="w-4 h-4" />
           Nueva Notificación
         </Button>
@@ -461,22 +461,22 @@ const ScheduledNotifications = () => {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {/* Cumpleaños */}
             <Card className="border-2 border-pink-200 bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-950 dark:to-pink-900">
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="w-20 h-20 bg-gradient-to-br from-pink-500 to-pink-600 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-4xl">🎁</span>
+              <CardContent className="p-4 md:p-6">
+                <div className="flex flex-col items-center text-center space-y-3 md:space-y-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-pink-500 to-pink-600 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-3xl md:text-4xl">🎁</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-pink-800 dark:text-pink-200">Cumpleaños</h3>
-                  <p className="text-sm text-foreground/70 min-h-[40px]">
+                  <h3 className="text-xl md:text-2xl font-bold text-pink-800 dark:text-pink-200">Cumpleaños</h3>
+                  <p className="text-xs md:text-sm text-foreground/70 min-h-[40px]">
                     Overlay del próximo cumpleaños real del ministerio
                   </p>
-                  <div className="flex gap-2 w-full">
+                  <div className="flex flex-col sm:flex-row gap-2 w-full">
                     <Button
                       variant="outline"
-                      className="flex-1 border-pink-600 text-pink-600 hover:bg-pink-50"
+                      className="flex-1 border-pink-600 text-pink-600 hover:bg-pink-50 text-sm"
                       onClick={() => {
                         setFormData({
                           ...formData,
@@ -490,7 +490,7 @@ const ScheduledNotifications = () => {
                       Editar
                     </Button>
                     <Button
-                      className="flex-1 bg-pink-600 hover:bg-pink-700 text-white"
+                      className="flex-1 bg-pink-600 hover:bg-pink-700 text-white text-sm"
                       onClick={async () => {
                         setLoadingTest('birthday');
                         try {
@@ -551,19 +551,19 @@ const ScheduledNotifications = () => {
 
             {/* Versículo del Día */}
             <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-900">
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-4xl">📖</span>
+              <CardContent className="p-4 md:p-6">
+                <div className="flex flex-col items-center text-center space-y-3 md:space-y-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-3xl md:text-4xl">📖</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-200">Versículo del Día</h3>
-                  <p className="text-sm text-foreground/70 min-h-[40px]">
+                  <h3 className="text-xl md:text-2xl font-bold text-blue-800 dark:text-blue-200">Versículo del Día</h3>
+                  <p className="text-xs md:text-sm text-foreground/70 min-h-[40px]">
                     Versículo bíblico diario con reflexión espiritual
                   </p>
-                  <div className="flex gap-2 w-full">
+                  <div className="flex flex-col sm:flex-row gap-2 w-full">
                     <Button
                       variant="outline"
-                      className="flex-1 border-blue-600 text-blue-600 hover:bg-blue-50"
+                      className="flex-1 border-blue-600 text-blue-600 hover:bg-blue-50 text-sm"
                       onClick={() => {
                         setFormData({
                           ...formData,
@@ -577,75 +577,8 @@ const ScheduledNotifications = () => {
                       Editar
                     </Button>
                     <Button
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={async () => {
-                        setLoadingTest('verse');
-                        try {
-                          const today = new Date().toISOString().split('T')[0];
-                          const juan316Id = 'e424c67b-5b7b-49a5-9a28-227d65100371';
-                          
-                          let { data: dailyVerse, error } = await supabase
-                            .from('daily_verses')
-                            .select(`
-                              *,
-                              bible_verses (*)
-                            `)
-                            .eq('date', today)
-                            .maybeSingle();
-
-                          if (error) throw error;
-
-                          if (!dailyVerse) {
-                            const { data: randomVerse } = await supabase
-                              .from('bible_verses')
-                              .select('*')
-                              .neq('id', juan316Id)
-                              .limit(100);
-
-                            if (randomVerse && randomVerse.length > 0) {
-                              const selected = randomVerse[Math.floor(Math.random() * randomVerse.length)];
-                              const { data: newDaily } = await supabase
-                                .from('daily_verses')
-                                .insert({
-                                  date: today,
-                                  verse_id: selected.id,
-                                  reflection: 'Reflexión generada automáticamente'
-                                })
-                                .select(`
-                                  *,
-                                  bible_verses (*)
-                                `)
-                                .single();
-                              dailyVerse = newDaily;
-                            }
-                          }
-
-                          if (dailyVerse?.bible_verses) {
-                            setTestingNotification({
-                              type: 'daily_verse',
-                              title: 'Versículo del Día',
-                              message: dailyVerse.bible_verses.text,
-                              metadata: {
-                                verse_reference: `${dailyVerse.bible_verses.book} ${dailyVerse.bible_verses.chapter}:${dailyVerse.bible_verses.verse}`,
-                                reflection: dailyVerse.reflection
-                              }
-                            });
-                            setShowVersePreview(true);
-                          }
-                        } catch (error) {
-                          console.error('Error:', error);
-                          toast.error('Error al cargar versículo');
-                        } finally {
-                          setLoadingTest(null);
-                        }
-                      }}
-                      disabled={loadingTest === 'verse'}
-                    >
-                      {loadingTest === 'verse' ? 'Cargando...' : 'Vista Previa'}
-                    </Button>
-                    <Button
                       variant="outline"
-                      className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400"
+                      className="flex-1 border-blue-600 text-blue-600 hover:bg-blue-50 text-sm"
                       onClick={async () => {
                         try {
                           const today = new Date().toISOString().split('T')[0];
@@ -674,7 +607,6 @@ const ScheduledNotifications = () => {
                               });
                             
                             toast.success(`Versículo cambiado: ${newVerse.book} ${newVerse.chapter}:${newVerse.verse}`);
-                            setTestingNotification(null);
                           }
                         } catch (error) {
                           console.error('Error:', error);
@@ -691,19 +623,19 @@ const ScheduledNotifications = () => {
 
             {/* Consejo del Día */}
             <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-900">
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-4xl">💡</span>
+              <CardContent className="p-4 md:p-6">
+                <div className="flex flex-col items-center text-center space-y-3 md:space-y-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-3xl md:text-4xl">💡</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-yellow-800 dark:text-yellow-200">Consejo del Día</h3>
-                  <p className="text-sm text-foreground/70 min-h-[40px]">
+                  <h3 className="text-xl md:text-2xl font-bold text-yellow-800 dark:text-yellow-200">Consejo del Día</h3>
+                  <p className="text-xs md:text-sm text-foreground/70 min-h-[40px]">
                     Consejos musicales, vocales y de danza
                   </p>
-                  <div className="flex gap-2 w-full">
+                  <div className="flex flex-col sm:flex-row gap-2 w-full">
                     <Button
                       variant="outline"
-                      className="flex-1 border-yellow-600 text-yellow-600 hover:bg-yellow-50"
+                      className="flex-1 border-yellow-600 text-yellow-600 hover:bg-yellow-50 text-sm"
                       onClick={() => {
                         setFormData({
                           ...formData,
@@ -717,36 +649,28 @@ const ScheduledNotifications = () => {
                       Editar
                     </Button>
                     <Button
-                      className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white"
+                      variant="outline"
+                      className="flex-1 border-yellow-600 text-yellow-600 hover:bg-yellow-50 text-sm"
                       onClick={async () => {
-                        setLoadingTest('advice');
                         try {
-                          const { data: advice } = await supabase
+                          const { data: adviceList } = await supabase
                             .from('daily_advice')
                             .select('*')
                             .eq('is_active', true);
 
-                          const selected = advice && advice.length > 0 
-                            ? advice[Math.floor(Math.random() * advice.length)]
-                            : { title: 'Consejo de Prueba', message: 'Este es un consejo de ejemplo' };
-
-                          setTestingNotification({
-                            type: 'daily_advice',
-                            title: selected.title,
-                            message: selected.message,
-                            metadata: { category: selected.category || 'general' }
-                          });
-                          setShowAdvicePreview(true);
+                          if (adviceList && adviceList.length > 0) {
+                            const randomAdvice = adviceList[Math.floor(Math.random() * adviceList.length)];
+                            toast.success(`Consejo actualizado: ${randomAdvice.title}`);
+                          } else {
+                            toast.error('No hay consejos disponibles');
+                          }
                         } catch (error) {
                           console.error('Error:', error);
-                          toast.error('Error al cargar consejo');
-                        } finally {
-                          setLoadingTest(null);
+                          toast.error('Error al cambiar consejo');
                         }
                       }}
-                      disabled={loadingTest === 'advice'}
                     >
-                      {loadingTest === 'advice' ? 'Cargando...' : 'Vista Previa'}
+                      Cambiar
                     </Button>
                   </div>
                 </div>
@@ -755,19 +679,19 @@ const ScheduledNotifications = () => {
 
             {/* Programa de Servicios */}
             <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-900">
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-4xl">🎵</span>
+              <CardContent className="p-4 md:p-6">
+                <div className="flex flex-col items-center text-center space-y-3 md:space-y-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-3xl md:text-4xl">🎵</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-green-800 dark:text-green-200">Programa de Servicios</h3>
-                  <p className="text-sm text-foreground/70 min-h-[40px]">
+                  <h3 className="text-xl md:text-2xl font-bold text-green-800 dark:text-green-200">Programa de Servicios</h3>
+                  <p className="text-xs md:text-sm text-foreground/70 min-h-[40px]">
                     Detalles del próximo servicio de adoración
                   </p>
-                  <div className="flex gap-2 w-full">
+                  <div className="flex flex-col sm:flex-row gap-2 w-full">
                     <Button
                       variant="outline"
-                      className="flex-1 border-green-600 text-green-600 hover:bg-green-50"
+                      className="flex-1 border-green-600 text-green-600 hover:bg-green-50 text-sm"
                       onClick={() => {
                         setFormData({
                           ...formData,
@@ -781,7 +705,7 @@ const ScheduledNotifications = () => {
                       Editar
                     </Button>
                     <Button
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm"
                       onClick={() => setShowServicePreview(true)}
                     >
                       Vista Previa
@@ -793,19 +717,19 @@ const ScheduledNotifications = () => {
 
             {/* Donación de Sangre Urgente */}
             <Card className="border-2 border-red-200 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950 dark:to-rose-900">
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-rose-600 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-4xl">🩸</span>
+              <CardContent className="p-4 md:p-6">
+                <div className="flex flex-col items-center text-center space-y-3 md:space-y-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-red-500 to-rose-600 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-3xl md:text-4xl">🩸</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-red-800 dark:text-red-200">Donación de Sangre</h3>
-                  <p className="text-sm text-foreground/70 min-h-[40px]">
+                  <h3 className="text-xl md:text-2xl font-bold text-red-800 dark:text-red-200">Donación de Sangre</h3>
+                  <p className="text-xs md:text-sm text-foreground/70 min-h-[40px]">
                     Solicitud urgente de donación de sangre
                   </p>
-                  <div className="flex gap-2 w-full">
+                  <div className="flex flex-col sm:flex-row gap-2 w-full">
                     <Button
                       variant="outline"
-                      className="flex-1 border-red-600 text-red-600 hover:bg-red-50"
+                      className="flex-1 border-red-600 text-red-600 hover:bg-red-50 text-sm"
                       onClick={() => {
                         setFormData({
                           ...formData,
@@ -819,7 +743,7 @@ const ScheduledNotifications = () => {
                       Editar
                     </Button>
                     <Button
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm"
                       onClick={() => {
                         setTestingNotification({
                           type: 'blood_donation',
@@ -846,19 +770,19 @@ const ScheduledNotifications = () => {
 
             {/* Ensayo Extraordinario */}
             <Card className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-900">
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-4xl">🎭</span>
+              <CardContent className="p-4 md:p-6">
+                <div className="flex flex-col items-center text-center space-y-3 md:space-y-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-3xl md:text-4xl">🎭</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-indigo-800 dark:text-indigo-200">Ensayo Extraordinario</h3>
-                  <p className="text-sm text-foreground/70 min-h-[40px]">
+                  <h3 className="text-xl md:text-2xl font-bold text-indigo-800 dark:text-indigo-200">Ensayo Extraordinario</h3>
+                  <p className="text-xs md:text-sm text-foreground/70 min-h-[40px]">
                     Convocatoria a ensayo extraordinario
                   </p>
-                  <div className="flex gap-2 w-full">
+                  <div className="flex flex-col sm:flex-row gap-2 w-full">
                     <Button
                       variant="outline"
-                      className="flex-1 border-indigo-600 text-indigo-600 hover:bg-indigo-50"
+                      className="flex-1 border-indigo-600 text-indigo-600 hover:bg-indigo-50 text-sm"
                       onClick={() => {
                         setFormData({
                           ...formData,
@@ -872,7 +796,7 @@ const ScheduledNotifications = () => {
                       Editar
                     </Button>
                     <Button
-                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white"
+                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm"
                       onClick={() => {
                         setTestingNotification({
                           type: 'extraordinary_rehearsal',
@@ -898,19 +822,19 @@ const ScheduledNotifications = () => {
 
             {/* Instrucciones a Integrantes */}
             <Card className="border-2 border-sky-200 bg-gradient-to-br from-sky-50 to-blue-50 dark:from-sky-950 dark:to-blue-900">
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="w-20 h-20 bg-gradient-to-br from-sky-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-4xl">📋</span>
+              <CardContent className="p-4 md:p-6">
+                <div className="flex flex-col items-center text-center space-y-3 md:space-y-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-sky-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-3xl md:text-4xl">📋</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-sky-800 dark:text-sky-200">Instrucciones</h3>
-                  <p className="text-sm text-foreground/70 min-h-[40px]">
+                  <h3 className="text-xl md:text-2xl font-bold text-sky-800 dark:text-sky-200">Instrucciones</h3>
+                  <p className="text-xs md:text-sm text-foreground/70 min-h-[40px]">
                     Instrucciones importantes para el ministerio
                   </p>
-                  <div className="flex gap-2 w-full">
+                  <div className="flex flex-col sm:flex-row gap-2 w-full">
                     <Button
                       variant="outline"
-                      className="flex-1 border-sky-600 text-sky-600 hover:bg-sky-50"
+                      className="flex-1 border-sky-600 text-sky-600 hover:bg-sky-50 text-sm"
                       onClick={() => {
                         setFormData({
                           ...formData,
@@ -924,7 +848,7 @@ const ScheduledNotifications = () => {
                       Editar
                     </Button>
                     <Button
-                      className="flex-1 bg-sky-600 hover:bg-sky-700 text-white"
+                      className="flex-1 bg-sky-600 hover:bg-sky-700 text-white text-sm"
                       onClick={() => {
                         setTestingNotification({
                           type: 'ministry_instructions',
@@ -947,19 +871,19 @@ const ScheduledNotifications = () => {
 
             {/* Anuncios Generales */}
             <Card className="border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-950 dark:to-slate-900">
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="w-20 h-20 bg-gradient-to-br from-gray-500 to-slate-600 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-4xl">📢</span>
+              <CardContent className="p-4 md:p-6">
+                <div className="flex flex-col items-center text-center space-y-3 md:space-y-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-gray-500 to-slate-600 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-3xl md:text-4xl">📢</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Anuncios Generales</h3>
-                  <p className="text-sm text-foreground/70 min-h-[40px]">
+                  <h3 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-200">Anuncios Generales</h3>
+                  <p className="text-xs md:text-sm text-foreground/70 min-h-[40px]">
                     Fallecimiento, reunión, servicio especial, oración
                   </p>
-                  <div className="flex gap-2 w-full">
+                  <div className="flex flex-col sm:flex-row gap-2 w-full">
                     <Button
                       variant="outline"
-                      className="flex-1 border-gray-600 text-gray-600 hover:bg-gray-50"
+                      className="flex-1 border-gray-600 text-gray-600 hover:bg-gray-50 text-sm"
                       onClick={() => {
                         setFormData({
                           ...formData,
@@ -973,7 +897,7 @@ const ScheduledNotifications = () => {
                       Editar
                     </Button>
                     <Button
-                      className="flex-1 bg-gray-600 hover:bg-gray-700 text-white"
+                      className="flex-1 bg-gray-600 hover:bg-gray-700 text-white text-sm"
                       onClick={() => {
                         setTestingNotification({
                           type: 'death_announcement',
@@ -1525,10 +1449,10 @@ const ScheduledNotifications = () => {
         />
       )}
 
-      {showVersePreview && (
+      {showVersePreview && testingNotification && (
         <DailyVerseOverlay
-          verseText={testingNotification?.metadata?.verse_text || "Porque de tal manera amó Dios al mundo, que ha dado a su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna."}
-          verseReference={testingNotification?.metadata?.verse_reference || "Juan 3:16"}
+          verseText={testingNotification.message || "Cargando versículo..."}
+          verseReference={testingNotification.metadata?.verse_reference || ""}
           onClose={() => {
             setShowVersePreview(false);
             setTestingNotification(null);
