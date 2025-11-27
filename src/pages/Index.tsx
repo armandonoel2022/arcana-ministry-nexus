@@ -452,13 +452,13 @@ const Index = () => {
 
           .options-grid {
             grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
+            gap: 24px;
             max-width: 100%;
-            margin-bottom: 16px;
+            margin-bottom: 24px;
           }
 
           .option-card {
-            height: 140px !important;
+            height: 180px !important;
           }
 
           .option-content svg {
@@ -476,13 +476,13 @@ const Index = () => {
 
           .stats-cards {
             grid-template-columns: repeat(2, 1fr);
-            gap: 14px;
+            gap: 22px;
             max-width: 100%;
             margin-bottom: 0;
           }
 
           .stat-card {
-            height: 75px !important;
+            height: 105px !important;
           }
 
           .stat-number {
