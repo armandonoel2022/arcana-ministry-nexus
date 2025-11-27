@@ -71,8 +71,9 @@ const ScheduledNotifications = () => {
   const [showExtraordinaryRehearsal, setShowExtraordinaryRehearsal] = useState(false);
   const [showBloodDonation, setShowBloodDonation] = useState(false);
   const [editingNotification, setEditingNotification] = useState<ScheduledNotification | null>(null);
-  const [testingNotification, setTestingNotification] = useState<ScheduledNotification | null>(null);
+  const [testingNotification, setTestingNotification] = useState<any>(null);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
+  const [loadingTest, setLoadingTest] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -451,249 +452,284 @@ const ScheduledNotifications = () => {
         </Button>
       </div>
 
-      {/* Panel de Pruebas de Notificaciones */}
-      <Card className="border-2 border-dashed border-blue-300 bg-blue-50">
+      {/* Panel de Gestión de Overlays */}
+      <Card className="border-2 border-primary/20 bg-gradient-to-br from-background to-muted/30">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Play className="w-5 h-5" />
-            Panel de Prueba de Notificaciones
-          </CardTitle>
-          <p className="text-sm text-gray-600">
-            Prueba los diferentes tipos de overlays de notificaciones
+          <CardTitle className="text-xl mb-2">📱 Gestión de Overlays</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Configura y prueba cada tipo de notificación overlay
           </p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Cumpleaños */}
-            <div className="p-4 bg-pink-100 rounded-lg border-2 border-pink-200 min-h-[200px] flex flex-col">
-              <h3 className="font-semibold mb-2 flex items-center gap-2">
-                🎁 Cumpleaños
-              </h3>
-              <p className="text-xs text-gray-600 mb-3 flex-grow">
-                Overlay del próximo cumpleaños real
-              </p>
-              <Button
-                size="sm"
-                className="w-full"
-                onClick={async () => {
-                  try {
-                    // Obtener el próximo cumpleaños de la base de datos
-                    const { data: members, error } = await supabase
-                      .from('members')
-                      .select('id, nombres, apellidos, photo_url, cargo, fecha_nacimiento')
-                      .eq('is_active', true)
-                      .not('fecha_nacimiento', 'is', null);
+            <Card className="border-2 border-pink-200 bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-950 dark:to-pink-900">
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="w-20 h-20 bg-gradient-to-br from-pink-500 to-pink-600 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-4xl">🎁</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-pink-800 dark:text-pink-200">Cumpleaños</h3>
+                  <p className="text-sm text-foreground/70">
+                    Overlay del próximo cumpleaños real del ministerio
+                  </p>
+                  <div className="flex gap-2 w-full">
+                    <Button
+                      className="flex-1 bg-pink-600 hover:bg-pink-700 text-white"
+                      onClick={async () => {
+                        setLoadingTest('birthday');
+                        try {
+                          const { data: members, error } = await supabase
+                            .from('members')
+                            .select('*')
+                            .eq('is_active', true)
+                            .not('fecha_nacimiento', 'is', null);
 
-                    if (error) throw error;
+                          if (error) throw error;
 
-                    if (!members || members.length === 0) {
-                      toast.error('No hay miembros con cumpleaños registrados');
-                      return;
-                    }
+                          const today = new Date();
+                          const upcomingBirthdays = members
+                            ?.map(member => {
+                              if (!member.fecha_nacimiento) return null;
+                              const birthDate = new Date(member.fecha_nacimiento);
+                              const nextBirthday = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());
+                              if (nextBirthday < today) {
+                                nextBirthday.setFullYear(today.getFullYear() + 1);
+                              }
+                              const daysUntil = Math.ceil((nextBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                              return { ...member, daysUntil, nextBirthday };
+                            })
+                            .filter(Boolean)
+                            .sort((a, b) => a.daysUntil - b.daysUntil);
 
-                    // Encontrar el próximo cumpleaños
-                    const today = new Date();
-                    const currentYear = today.getFullYear();
-                    
-                    const membersWithNextBirthday = members.map(member => {
-                      const [year, month, day] = member.fecha_nacimiento.split('-').map(Number);
-                      let nextBirthday = new Date(currentYear, month - 1, day);
-                      
-                      // Si el cumpleaños ya pasó este año, usar el próximo año
-                      if (nextBirthday < today) {
-                        nextBirthday = new Date(currentYear + 1, month - 1, day);
-                      }
-                      
-                      const daysUntil = Math.ceil((nextBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-                      
-                      return {
-                        ...member,
-                        nextBirthday,
-                        daysUntil
-                      };
-                    });
-
-                    // Ordenar por días hasta el cumpleaños
-                    membersWithNextBirthday.sort((a, b) => a.daysUntil - b.daysUntil);
-                    
-                    const nextBirthdayMember = membersWithNextBirthday[0];
-
-                    // Disparar el evento customizado para mostrar el overlay
-                    window.dispatchEvent(new CustomEvent('testBirthdayOverlay', { 
-                      detail: {
-                        id: nextBirthdayMember.id,
-                        nombres: nextBirthdayMember.nombres,
-                        apellidos: nextBirthdayMember.apellidos,
-                        photo_url: nextBirthdayMember.photo_url,
-                        cargo: nextBirthdayMember.cargo,
-                        fecha_nacimiento: nextBirthdayMember.fecha_nacimiento
-                      }
-                    }));
-
-                    toast.success(`Mostrando cumpleaños de ${nextBirthdayMember.nombres} (en ${nextBirthdayMember.daysUntil} días)`);
-                  } catch (error) {
-                    console.error(error);
-                    toast.error('Error al cargar cumpleaños');
-                  }
-                }}
-              >
-                Probar Overlay
-              </Button>
-            </div>
+                          if (upcomingBirthdays && upcomingBirthdays.length > 0) {
+                            const nextBirthday = upcomingBirthdays[0];
+                            window.dispatchEvent(new CustomEvent('testBirthdayOverlay', { 
+                              detail: {
+                                id: nextBirthday.id,
+                                nombres: nextBirthday.nombres,
+                                apellidos: nextBirthday.apellidos,
+                                photo_url: nextBirthday.photo_url,
+                                cargo: nextBirthday.cargo,
+                                fecha_nacimiento: nextBirthday.fecha_nacimiento
+                              }
+                            }));
+                            toast.success(`Mostrando cumpleaños de ${nextBirthday.nombres}`);
+                          } else {
+                            toast.error('No hay cumpleaños próximos');
+                          }
+                        } catch (error) {
+                          console.error('Error fetching birthday:', error);
+                          toast.error('Error al cargar cumpleaños');
+                        } finally {
+                          setLoadingTest(null);
+                        }
+                      }}
+                      disabled={loadingTest === 'birthday'}
+                    >
+                      {loadingTest === 'birthday' ? 'Cargando...' : 'Vista Previa'}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Versículo del Día */}
-            <div className="p-4 bg-blue-100 rounded-lg border-2 border-blue-200 min-h-[200px] flex flex-col">
-              <h3 className="font-semibold mb-2 flex items-center gap-2">
-                📖 Versículo del Día
-              </h3>
-              <p className="text-xs text-gray-600 mb-3 flex-grow">
-                Versículo bíblico diario con reflexión
-              </p>
-              <div className="flex gap-2 mt-auto">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={async () => {
-                    try {
-                      // Buscar la primera notificación programada de versículo
-                      const { data: verseNotifications } = await supabase
-                        .from('scheduled_notifications')
-                        .select('*')
-                        .eq('notification_type', 'daily_verse')
-                        .eq('is_active', true)
-                        .limit(1)
-                        .single();
+            <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-900">
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-4xl">📖</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-200">Versículo del Día</h3>
+                  <p className="text-sm text-foreground/70">
+                    Versículo bíblico diario con reflexión espiritual
+                  </p>
+                  <div className="flex gap-2 w-full">
+                    <Button
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                      onClick={async () => {
+                        setLoadingTest('verse');
+                        try {
+                          const today = new Date().toISOString().split('T')[0];
+                          const juan316Id = 'e424c67b-5b7b-49a5-9a28-227d65100371';
+                          
+                          let { data: dailyVerse, error } = await supabase
+                            .from('daily_verses')
+                            .select(`
+                              *,
+                              bible_verses (*)
+                            `)
+                            .eq('date', today)
+                            .maybeSingle();
 
-                      if (verseNotifications && verseNotifications.metadata) {
-                        setTestingNotification(verseNotifications);
-                      } else {
-                        setTestingNotification(null);
-                      }
-                      setShowVersePreview(true);
-                    } catch (error) {
-                      // Si no hay notificación programada, usar datos de ejemplo
-                      setTestingNotification(null);
-                      setShowVersePreview(true);
-                    }
-                  }}
-                >
-                  Probar Overlay
-                </Button>
-                <Button
-                  size="sm"
-                  variant="default"
-                  className="bg-blue-600 hover:bg-blue-700"
-                  onClick={async () => {
-                    try {
-                      const today = new Date().toISOString().split('T')[0];
-                      const juan316Id = 'e424c67b-5b7b-49a5-9a28-227d65100371';
-                      
-                      // Eliminar el versículo actual de hoy
-                      await supabase
-                        .from('daily_verses')
-                        .delete()
-                        .eq('date', today);
-                      
-                      // Obtener todos los versículos excepto Juan 3:16
-                      const { data: allVerses, error: versesError } = await supabase
-                        .from('bible_verses')
-                        .select('*')
-                        .neq('id', juan316Id);
-                      
-                      if (versesError) throw versesError;
-                      
-                      if (!allVerses || allVerses.length === 0) {
-                        toast.error('No hay versículos disponibles en la base de datos');
-                        return;
-                      }
-                      
-                      // Seleccionar un versículo aleatorio
-                      const randomIndex = Math.floor(Math.random() * allVerses.length);
-                      const newVerse = allVerses[randomIndex];
-                      
-                      // Crear nuevo versículo del día
-                      const { error: insertError } = await supabase
-                        .from('daily_verses')
-                        .insert({
-                          date: today,
-                          verse_id: newVerse.id
-                        });
-                      
-                      if (insertError) throw insertError;
-                      
-                      toast.success(`Versículo cambiado: ${newVerse.book} ${newVerse.chapter}:${newVerse.verse}`);
-                      
-                      // Actualizar el preview si está abierto
-                      setTestingNotification(null);
-                    } catch (error) {
-                      console.error('Error changing verse:', error);
-                      toast.error('Error al cambiar el versículo');
-                    }
-                  }}
-                >
-                  Cambiar
-                </Button>
-              </div>
-            </div>
+                          if (error) throw error;
+
+                          if (!dailyVerse) {
+                            const { data: randomVerse } = await supabase
+                              .from('bible_verses')
+                              .select('*')
+                              .neq('id', juan316Id)
+                              .limit(100);
+
+                            if (randomVerse && randomVerse.length > 0) {
+                              const selected = randomVerse[Math.floor(Math.random() * randomVerse.length)];
+                              const { data: newDaily } = await supabase
+                                .from('daily_verses')
+                                .insert({
+                                  date: today,
+                                  verse_id: selected.id,
+                                  reflection: 'Reflexión generada automáticamente'
+                                })
+                                .select(`
+                                  *,
+                                  bible_verses (*)
+                                `)
+                                .single();
+                              dailyVerse = newDaily;
+                            }
+                          }
+
+                          if (dailyVerse?.bible_verses) {
+                            setTestingNotification({
+                              type: 'daily_verse',
+                              title: 'Versículo del Día',
+                              message: dailyVerse.bible_verses.text,
+                              metadata: {
+                                verse_reference: `${dailyVerse.bible_verses.book} ${dailyVerse.bible_verses.chapter}:${dailyVerse.bible_verses.verse}`,
+                                reflection: dailyVerse.reflection
+                              }
+                            });
+                            setShowVersePreview(true);
+                          }
+                        } catch (error) {
+                          console.error('Error:', error);
+                          toast.error('Error al cargar versículo');
+                        } finally {
+                          setLoadingTest(null);
+                        }
+                      }}
+                      disabled={loadingTest === 'verse'}
+                    >
+                      {loadingTest === 'verse' ? 'Cargando...' : 'Vista Previa'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400"
+                      onClick={async () => {
+                        try {
+                          const today = new Date().toISOString().split('T')[0];
+                          const juan316Id = 'e424c67b-5b7b-49a5-9a28-227d65100371';
+                          
+                          await supabase
+                            .from('daily_verses')
+                            .delete()
+                            .eq('date', today);
+                          
+                          const { data: allVerses } = await supabase
+                            .from('bible_verses')
+                            .select('*')
+                            .neq('id', juan316Id)
+                            .limit(100);
+                          
+                          if (allVerses && allVerses.length > 0) {
+                            const newVerse = allVerses[Math.floor(Math.random() * allVerses.length)];
+                            
+                            await supabase
+                              .from('daily_verses')
+                              .insert({
+                                date: today,
+                                verse_id: newVerse.id,
+                                reflection: 'Reflexión generada automáticamente'
+                              });
+                            
+                            toast.success(`Versículo cambiado: ${newVerse.book} ${newVerse.chapter}:${newVerse.verse}`);
+                            setTestingNotification(null);
+                          }
+                        } catch (error) {
+                          console.error('Error:', error);
+                          toast.error('Error al cambiar versículo');
+                        }
+                      }}
+                    >
+                      Cambiar
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Consejo del Día */}
-            <div className="p-4 bg-yellow-100 rounded-lg border-2 border-yellow-200 min-h-[200px] flex flex-col">
-              <h3 className="font-semibold mb-2 flex items-center gap-2">
-                💡 Consejo del Día
-              </h3>
-              <p className="text-xs text-gray-600 mb-3 flex-grow">
-                Consejo diario para músicos
-              </p>
-              <Button
-                size="sm"
-                variant="outline"
-                className="w-full"
-                onClick={async () => {
-                  try {
-                    // Buscar la primera notificación programada de consejo
-                    const { data: adviceNotifications } = await supabase
-                      .from('scheduled_notifications')
-                      .select('*')
-                      .eq('notification_type', 'daily_advice')
-                      .eq('is_active', true)
-                      .limit(1)
-                      .single();
+            <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-900">
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-4xl">💡</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-yellow-800 dark:text-yellow-200">Consejo del Día</h3>
+                  <p className="text-sm text-foreground/70">
+                    Consejos musicales, vocales y de danza
+                  </p>
+                  <div className="flex gap-2 w-full">
+                    <Button
+                      className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white"
+                      onClick={async () => {
+                        setLoadingTest('advice');
+                        try {
+                          const { data: advice } = await supabase
+                            .from('daily_advice')
+                            .select('*')
+                            .eq('is_active', true);
 
-                    if (adviceNotifications && adviceNotifications.metadata) {
-                      setTestingNotification(adviceNotifications);
-                    } else {
-                      setTestingNotification(null);
-                    }
-                    setShowAdvicePreview(true);
-                  } catch (error) {
-                    // Si no hay notificación programada, usar datos de ejemplo
-                    setTestingNotification(null);
-                    setShowAdvicePreview(true);
-                  }
-                }}
-              >
-                Probar Overlay
-              </Button>
-            </div>
+                          const selected = advice && advice.length > 0 
+                            ? advice[Math.floor(Math.random() * advice.length)]
+                            : { title: 'Consejo de Prueba', message: 'Este es un consejo de ejemplo' };
+
+                          setTestingNotification({
+                            type: 'daily_advice',
+                            title: selected.title,
+                            message: selected.message,
+                            metadata: { category: selected.category || 'general' }
+                          });
+                          setShowAdvicePreview(true);
+                        } catch (error) {
+                          console.error('Error:', error);
+                          toast.error('Error al cargar consejo');
+                        } finally {
+                          setLoadingTest(null);
+                        }
+                      }}
+                      disabled={loadingTest === 'advice'}
+                    >
+                      {loadingTest === 'advice' ? 'Cargando...' : 'Vista Previa'}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Programa de Servicios */}
-            <div className="p-4 bg-green-100 rounded-lg border-2 border-green-200 min-h-[200px] flex flex-col">
-              <h3 className="font-semibold mb-2 flex items-center gap-2">
-                🎵 Programa de Servicios
-              </h3>
-              <p className="text-xs text-gray-600 mb-3 flex-grow">
-                Overlay con detalles del próximo servicio
-              </p>
-              <Button
-                size="sm"
-                variant="outline"
-                className="w-full mt-auto"
-                onClick={() => setShowServicePreview(true)}
-              >
-                Probar Notificación
-              </Button>
-            </div>
+            <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-900">
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-4xl">🎵</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-green-800 dark:text-green-200">Programa de Servicios</h3>
+                  <p className="text-sm text-foreground/70">
+                    Detalles del próximo servicio de adoración
+                  </p>
+                  <div className="flex gap-2 w-full">
+                    <Button
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                      onClick={() => setShowServicePreview(true)}
+                    >
+                      Vista Previa
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </CardContent>
       </Card>
