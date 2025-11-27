@@ -92,7 +92,7 @@ p, h1, h2, h3, h4, h5, h6 {
     --popover-foreground: 215 25% 27%;
 
     /* Primary blue - main brand color from the design */
-    --primary: 212 100% 47%;
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
 
     /* Light blue secondary */
@@ -111,9 +111,20 @@ p, h1, h2, h3, h4, h5, h6 {
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 212 100% 47%;
+    --ring: 217 91% 60%;
 
     --radius: 1rem;
+
+    /* Gradients for forms */
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(217 91% 55%) 50%, hsl(217 91% 50%) 100%);
+    --gradient-blue-form: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(217 91% 50%) 100%);
+    
+    /* Shadows for forms */
+    --shadow-form: 0 4px 12px rgba(30, 136, 229, 0.3);
+    --shadow-elegant: 0 10px 30px -10px rgba(30, 136, 229, 0.4);
+    
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     /* Modern blue palette inspired by the uploaded design */
     --modern-blue-50: 210 100% 98%;
