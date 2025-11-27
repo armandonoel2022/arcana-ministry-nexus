@@ -52,32 +52,34 @@ const GeneralAnnouncementOverlay = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-      <Card className={`w-full max-w-2xl bg-gradient-to-br ${config.bgGradient} border-2 ${config.accentColor} shadow-2xl`}>
-        <div className="relative p-8 text-white">
+      <Card className={`w-full max-w-2xl max-h-[90vh] flex flex-col bg-gradient-to-br ${config.bgGradient} border-2 ${config.accentColor} shadow-2xl`}>
+        <div className="relative flex-shrink-0 p-6 pb-4 text-white border-b border-white/10">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
             aria-label="Cerrar"
           >
             <X className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center gap-4 mb-6">
-            <span className="text-6xl">{config.icon}</span>
-            <div>
-              <p className="text-sm font-medium opacity-80">{config.label}</p>
-              <h2 className="text-3xl font-bold mt-1">{title}</h2>
+          <div className="flex items-center gap-4 pr-12">
+            <span className="text-5xl md:text-6xl flex-shrink-0">{config.icon}</span>
+            <div className="min-w-0">
+              <p className="text-xs md:text-sm font-medium opacity-80">{config.label}</p>
+              <h2 className="text-2xl md:text-3xl font-bold mt-1 break-words">{title}</h2>
             </div>
           </div>
+        </div>
 
+        <div className="flex-1 overflow-y-auto p-6 pt-4">
           <div className="space-y-4">
-            <div className={`p-6 rounded-lg bg-white border ${config.accentColor} backdrop-blur-sm`}>
-              <p className="text-lg leading-relaxed whitespace-pre-wrap text-gray-900">{message}</p>
+            <div className={`p-4 md:p-6 rounded-lg bg-white border ${config.accentColor} backdrop-blur-sm`}>
+              <p className="text-base md:text-lg leading-relaxed whitespace-pre-wrap text-gray-900">{message}</p>
             </div>
           </div>
 
           <div className="mt-6 text-center">
-            <p className="text-sm opacity-70">
+            <p className="text-xs md:text-sm opacity-70 text-white">
               Ministerio de Alabanza y Adoración
             </p>
           </div>
