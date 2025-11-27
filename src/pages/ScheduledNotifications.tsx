@@ -438,46 +438,46 @@ const ScheduledNotifications = () => {
   }
 
   return (
-      <div className="w-full min-h-screen overflow-x-hidden">
-        <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6 max-w-7xl">
-      <div className="flex flex-col gap-3">
+      <div className="w-full min-h-screen overflow-x-hidden bg-background">
+        <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:py-6 space-y-3 sm:space-y-4 md:space-y-6">
+      <div className="flex flex-col gap-2 sm:gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Notificaciones Programadas</h1>
-          <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 md:mt-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Notificaciones Programadas</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Configura notificaciones automáticas que se enviarán según el horario programado
           </p>
         </div>
-        <Button onClick={openCreateDialog} className="flex items-center justify-center gap-2 w-full sm:w-auto text-sm">
+        <Button onClick={openCreateDialog} className="flex items-center justify-center gap-2 w-full sm:w-auto text-sm sm:text-base">
           <Plus className="w-4 h-4" />
           Nueva Notificación
         </Button>
       </div>
 
       {/* Panel de Gestión de Overlays */}
-      <Card className="border-2 border-primary/20 bg-gradient-to-br from-background to-muted/30">
-        <CardHeader className="px-3 sm:px-6 py-4">
-          <CardTitle className="text-lg sm:text-xl mb-2">📱 Gestión de Overlays</CardTitle>
+      <Card className="border-2 border-primary/20 bg-gradient-to-br from-background to-muted/30 w-full">
+        <CardHeader className="px-3 sm:px-4 md:px-6 py-3 sm:py-4">
+          <CardTitle className="text-base sm:text-lg md:text-xl mb-1 sm:mb-2">📱 Gestión de Overlays</CardTitle>
           <p className="text-xs sm:text-sm text-muted-foreground">
             Configura y prueba cada tipo de notificación overlay
           </p>
         </CardHeader>
-        <CardContent className="px-3 sm:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+        <CardContent className="px-2 sm:px-3 md:px-6 pb-3 sm:pb-4 md:pb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full">
             {/* Cumpleaños */}
-            <Card className="border-2 border-pink-200 bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-950 dark:to-pink-900">
-              <CardContent className="p-3 sm:p-4 md:p-6">
-                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3 md:space-y-4">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br from-pink-500 to-pink-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
-                    <span className="text-2xl sm:text-3xl md:text-4xl">🎁</span>
+            <Card className="border-2 border-pink-200 bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-950 dark:to-pink-900 w-full">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-pink-500 to-pink-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                    <span className="text-xl sm:text-2xl md:text-3xl">🎁</span>
                   </div>
-                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-pink-800 dark:text-pink-200">Cumpleaños</h3>
-                  <p className="text-xs sm:text-sm text-foreground/70 min-h-[30px] sm:min-h-[40px]">
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-pink-800 dark:text-pink-200">Cumpleaños</h3>
+                  <p className="text-xs sm:text-sm text-foreground/70 line-clamp-2">
                     Overlay del próximo cumpleaños real del ministerio
                   </p>
-                  <div className="flex flex-col gap-2 w-full mt-auto">
+                  <div className="flex flex-col gap-1.5 sm:gap-2 w-full mt-auto pt-1">
                     <Button
                       variant="outline"
-                      className="w-full border-pink-600 text-pink-600 hover:bg-pink-50 text-xs sm:text-sm"
+                      className="w-full border-pink-600 text-pink-600 hover:bg-pink-50 text-xs h-8 sm:h-9"
                       onClick={() => {
                         setFormData({
                           ...formData,
@@ -491,7 +491,7 @@ const ScheduledNotifications = () => {
                       Editar
                     </Button>
                     <Button
-                      className="w-full bg-pink-600 hover:bg-pink-700 text-white text-xs sm:text-sm"
+                      className="w-full bg-pink-600 hover:bg-pink-700 text-white text-xs h-8 sm:h-9"
                       onClick={async () => {
                         setLoadingTest('birthday');
                         try {
@@ -551,14 +551,14 @@ const ScheduledNotifications = () => {
             </Card>
 
             {/* Versículo del Día */}
-            <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-900">
-              <CardContent className="p-3 sm:p-4 md:p-6">
-                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3 md:space-y-4">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
-                    <span className="text-2xl sm:text-3xl md:text-4xl">📖</span>
+            <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-900 w-full">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                    <span className="text-xl sm:text-2xl md:text-3xl">📖</span>
                   </div>
-                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800 dark:text-blue-200">Versículo del Día</h3>
-                  <p className="text-xs sm:text-sm text-foreground/70 min-h-[30px] sm:min-h-[40px]">
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-blue-800 dark:text-blue-200">Versículo del Día</h3>
+                  <p className="text-xs sm:text-sm text-foreground/70 line-clamp-2">
                     Versículo bíblico diario con reflexión espiritual
                   </p>
                   <div className="flex flex-col gap-2 w-full mt-auto">
@@ -673,14 +673,14 @@ const ScheduledNotifications = () => {
             </Card>
 
             {/* Consejo del Día */}
-            <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-900">
-              <CardContent className="p-3 sm:p-4 md:p-6">
-                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3 md:space-y-4">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
-                    <span className="text-2xl sm:text-3xl md:text-4xl">💡</span>
+            <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-900 w-full">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                    <span className="text-xl sm:text-2xl md:text-3xl">💡</span>
                   </div>
-                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-yellow-800 dark:text-yellow-200">Consejo del Día</h3>
-                  <p className="text-xs sm:text-sm text-foreground/70 min-h-[30px] sm:min-h-[40px]">
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-yellow-800 dark:text-yellow-200">Consejo del Día</h3>
+                  <p className="text-xs sm:text-sm text-foreground/70 line-clamp-2">
                     Consejos musicales, vocales y de danza
                   </p>
                   <div className="flex flex-col gap-2 w-full mt-auto">
@@ -777,14 +777,14 @@ const ScheduledNotifications = () => {
             </Card>
 
             {/* Programa de Servicios */}
-            <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-900">
-              <CardContent className="p-4 md:p-6">
-                <div className="flex flex-col items-center text-center space-y-3 md:space-y-4">
-                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-3xl md:text-4xl">🎵</span>
+            <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-900 w-full">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                    <span className="text-xl sm:text-2xl md:text-3xl">🎵</span>
                   </div>
-                  <h3 className="text-xl md:text-2xl font-bold text-green-800 dark:text-green-200">Programa de Servicios</h3>
-                  <p className="text-xs md:text-sm text-foreground/70 min-h-[40px]">
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-green-800 dark:text-green-200">Programa de Servicios</h3>
+                  <p className="text-xs sm:text-sm text-foreground/70 line-clamp-2">
                     Detalles del próximo servicio de adoración
                   </p>
                   <div className="flex flex-col sm:flex-row gap-2 w-full">
@@ -815,14 +815,14 @@ const ScheduledNotifications = () => {
             </Card>
 
             {/* Donación de Sangre Urgente */}
-            <Card className="border-2 border-red-200 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950 dark:to-rose-900">
-              <CardContent className="p-4 md:p-6">
-                <div className="flex flex-col items-center text-center space-y-3 md:space-y-4">
-                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-red-500 to-rose-600 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-3xl md:text-4xl">🩸</span>
+            <Card className="border-2 border-red-200 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950 dark:to-rose-900 w-full">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-red-500 to-rose-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                    <span className="text-xl sm:text-2xl md:text-3xl">🩸</span>
                   </div>
-                  <h3 className="text-xl md:text-2xl font-bold text-red-800 dark:text-red-200">Donación de Sangre</h3>
-                  <p className="text-xs md:text-sm text-foreground/70 min-h-[40px]">
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-red-800 dark:text-red-200">Donación de Sangre</h3>
+                  <p className="text-xs sm:text-sm text-foreground/70 line-clamp-2">
                     Solicitud urgente de donación de sangre
                   </p>
                   <div className="flex flex-col sm:flex-row gap-2 w-full">
@@ -868,14 +868,14 @@ const ScheduledNotifications = () => {
             </Card>
 
             {/* Ensayo Extraordinario */}
-            <Card className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-900">
-              <CardContent className="p-4 md:p-6">
-                <div className="flex flex-col items-center text-center space-y-3 md:space-y-4">
-                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-3xl md:text-4xl">🎭</span>
+            <Card className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-900 w-full">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                    <span className="text-xl sm:text-2xl md:text-3xl">🎭</span>
                   </div>
-                  <h3 className="text-xl md:text-2xl font-bold text-indigo-800 dark:text-indigo-200">Ensayo Extraordinario</h3>
-                  <p className="text-xs md:text-sm text-foreground/70 min-h-[40px]">
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-indigo-800 dark:text-indigo-200">Ensayo Extraordinario</h3>
+                  <p className="text-xs sm:text-sm text-foreground/70 line-clamp-2">
                     Convocatoria a ensayo extraordinario
                   </p>
                   <div className="flex flex-col sm:flex-row gap-2 w-full">
@@ -920,14 +920,14 @@ const ScheduledNotifications = () => {
             </Card>
 
             {/* Instrucciones a Integrantes */}
-            <Card className="border-2 border-sky-200 bg-gradient-to-br from-sky-50 to-blue-50 dark:from-sky-950 dark:to-blue-900">
-              <CardContent className="p-4 md:p-6">
-                <div className="flex flex-col items-center text-center space-y-3 md:space-y-4">
-                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-sky-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-3xl md:text-4xl">📋</span>
+            <Card className="border-2 border-sky-200 bg-gradient-to-br from-sky-50 to-blue-50 dark:from-sky-950 dark:to-blue-900 w-full">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-sky-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                    <span className="text-xl sm:text-2xl md:text-3xl">📋</span>
                   </div>
-                  <h3 className="text-xl md:text-2xl font-bold text-sky-800 dark:text-sky-200">Instrucciones</h3>
-                  <p className="text-xs md:text-sm text-foreground/70 min-h-[40px]">
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-sky-800 dark:text-sky-200">Instrucciones</h3>
+                  <p className="text-xs sm:text-sm text-foreground/70 line-clamp-2">
                     Instrucciones importantes para el ministerio
                   </p>
                   <div className="flex flex-col sm:flex-row gap-2 w-full">
@@ -969,14 +969,14 @@ const ScheduledNotifications = () => {
             </Card>
 
             {/* Anuncios Generales */}
-            <Card className="border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-950 dark:to-slate-900">
-              <CardContent className="p-4 md:p-6">
-                <div className="flex flex-col items-center text-center space-y-3 md:space-y-4">
-                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-gray-500 to-slate-600 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-3xl md:text-4xl">📢</span>
+            <Card className="border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-950 dark:to-slate-900 w-full">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-gray-500 to-slate-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                    <span className="text-xl sm:text-2xl md:text-3xl">📢</span>
                   </div>
-                  <h3 className="text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-200">Anuncios Generales</h3>
-                  <p className="text-xs md:text-sm text-foreground/70 min-h-[40px]">
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 dark:text-gray-200">Anuncios Generales</h3>
+                  <p className="text-xs sm:text-sm text-foreground/70 line-clamp-2">
                     Fallecimiento, reunión, servicio especial, oración
                   </p>
                   <div className="flex flex-col sm:flex-row gap-2 w-full">
