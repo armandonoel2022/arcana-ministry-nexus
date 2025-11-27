@@ -35,7 +35,7 @@ const ExtraordinaryRehearsalOverlay = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-      <Card className="w-full max-w-2xl bg-gradient-to-br from-indigo-500 via-indigo-400 to-white border-2 border-indigo-400 shadow-2xl">
+      <Card className="w-full max-w-2xl bg-indigo-500 border-2 border-indigo-400 shadow-2xl">
         <div className="relative p-8">
           <button
             onClick={onClose}
