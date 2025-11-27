@@ -463,13 +463,13 @@ const ScheduledNotifications = () => {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Cumpleaños */}
-            <div className="p-4 bg-pink-100 rounded-lg border-2 border-pink-200">
+            <div className="p-4 bg-pink-100 rounded-lg border-2 border-pink-200 min-h-[200px] flex flex-col">
               <h3 className="font-semibold mb-2 flex items-center gap-2">
                 🎁 Cumpleaños
               </h3>
-              <p className="text-xs text-gray-600 mb-3">
+              <p className="text-xs text-gray-600 mb-3 flex-grow">
                 Overlay del próximo cumpleaños real
               </p>
               <Button
@@ -542,14 +542,14 @@ const ScheduledNotifications = () => {
             </div>
 
             {/* Versículo del Día */}
-            <div className="p-4 bg-blue-100 rounded-lg border-2 border-blue-200">
+            <div className="p-4 bg-blue-100 rounded-lg border-2 border-blue-200 min-h-[200px] flex flex-col">
               <h3 className="font-semibold mb-2 flex items-center gap-2">
                 📖 Versículo del Día
               </h3>
-              <p className="text-xs text-gray-600 mb-3">
+              <p className="text-xs text-gray-600 mb-3 flex-grow">
                 Versículo bíblico diario con reflexión
               </p>
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-auto">
                 <Button
                   size="sm"
                   variant="outline"
@@ -587,6 +587,7 @@ const ScheduledNotifications = () => {
                   onClick={async () => {
                     try {
                       const today = new Date().toISOString().split('T')[0];
+                      const juan316Id = 'e424c67b-5b7b-49a5-9a28-227d65100371';
                       
                       // Eliminar el versículo actual de hoy
                       await supabase
@@ -594,10 +595,11 @@ const ScheduledNotifications = () => {
                         .delete()
                         .eq('date', today);
                       
-                      // Obtener todos los versículos disponibles
+                      // Obtener todos los versículos excepto Juan 3:16
                       const { data: allVerses, error: versesError } = await supabase
                         .from('bible_verses')
-                        .select('*');
+                        .select('*')
+                        .neq('id', juan316Id);
                       
                       if (versesError) throw versesError;
                       
@@ -621,6 +623,9 @@ const ScheduledNotifications = () => {
                       if (insertError) throw insertError;
                       
                       toast.success(`Versículo cambiado: ${newVerse.book} ${newVerse.chapter}:${newVerse.verse}`);
+                      
+                      // Actualizar el preview si está abierto
+                      setTestingNotification(null);
                     } catch (error) {
                       console.error('Error changing verse:', error);
                       toast.error('Error al cambiar el versículo');
@@ -633,11 +638,11 @@ const ScheduledNotifications = () => {
             </div>
 
             {/* Consejo del Día */}
-            <div className="p-4 bg-yellow-100 rounded-lg border-2 border-yellow-200">
+            <div className="p-4 bg-yellow-100 rounded-lg border-2 border-yellow-200 min-h-[200px] flex flex-col">
               <h3 className="font-semibold mb-2 flex items-center gap-2">
                 💡 Consejo del Día
               </h3>
-              <p className="text-xs text-gray-600 mb-3">
+              <p className="text-xs text-gray-600 mb-3 flex-grow">
                 Consejo diario para músicos
               </p>
               <Button
@@ -673,17 +678,17 @@ const ScheduledNotifications = () => {
             </div>
 
             {/* Programa de Servicios */}
-            <div className="p-4 bg-green-100 rounded-lg border-2 border-green-200">
+            <div className="p-4 bg-green-100 rounded-lg border-2 border-green-200 min-h-[200px] flex flex-col">
               <h3 className="font-semibold mb-2 flex items-center gap-2">
                 🎵 Programa de Servicios
               </h3>
-              <p className="text-xs text-gray-600 mb-3">
+              <p className="text-xs text-gray-600 mb-3 flex-grow">
                 Overlay con detalles del próximo servicio
               </p>
               <Button
                 size="sm"
                 variant="outline"
-                className="w-full"
+                className="w-full mt-auto"
                 onClick={() => setShowServicePreview(true)}
               >
                 Probar Notificación
