@@ -432,7 +432,7 @@ function AppContent() {
         <ExtraordinaryRehearsalOverlay
           activityName={currentNotification.metadata?.activity_name || currentNotification.title}
           date={currentNotification.metadata?.date || new Date().toISOString()}
-          time={currentNotification.metadata?.time || ""}
+          time={currentNotification.metadata?.rehearsal_time || ""}
           location={currentNotification.metadata?.location}
           additionalNotes={currentNotification.metadata?.additional_notes}
           onClose={closeExtraordinaryRehearsal}
