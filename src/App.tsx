@@ -151,10 +151,32 @@ function useSystemNotifications() {
               case "daily_verse":
                 console.log("📖 Mostrando overlay de versículo");
                 setShowVerseOverlay(true);
+                
+                // Marcar como leída
+                try {
+                  await supabase
+                    .from("system_notifications")
+                    .update({ is_read: true })
+                    .eq("id", notification.id);
+                  console.log("✅ Notificación de versículo marcada como leída");
+                } catch (err) {
+                  console.error("❌ Error marcando notificación:", err);
+                }
                 break;
               case "daily_advice":
                 console.log("💡 Mostrando overlay de consejo");
                 setShowAdviceOverlay(true);
+                
+                // Marcar como leída
+                try {
+                  await supabase
+                    .from("system_notifications")
+                    .update({ is_read: true })
+                    .eq("id", notification.id);
+                  console.log("✅ Notificación de consejo marcada como leída");
+                } catch (err) {
+                  console.error("❌ Error marcando notificación:", err);
+                }
                 break;
               case "death_announcement":
               case "meeting_announcement":
@@ -162,18 +184,62 @@ function useSystemNotifications() {
               case "prayer_request":
                 console.log("📢 Mostrando anuncio general:", notification.type);
                 setShowGeneralAnnouncement(true);
+                
+                // Marcar como leída
+                try {
+                  await supabase
+                    .from("system_notifications")
+                    .update({ is_read: true })
+                    .eq("id", notification.id);
+                  console.log("✅ Notificación de anuncio general marcada como leída");
+                } catch (err) {
+                  console.error("❌ Error marcando notificación:", err);
+                }
                 break;
               case "ministry_instructions":
                 console.log("📋 Mostrando instrucciones ministeriales");
                 setShowMinistryInstructions(true);
+                
+                // Marcar como leída
+                try {
+                  await supabase
+                    .from("system_notifications")
+                    .update({ is_read: true })
+                    .eq("id", notification.id);
+                  console.log("✅ Notificación de instrucciones marcada como leída");
+                } catch (err) {
+                  console.error("❌ Error marcando notificación:", err);
+                }
                 break;
               case "extraordinary_rehearsal":
                 console.log("🎵 Mostrando ensayo extraordinario");
                 setShowExtraordinaryRehearsal(true);
+                
+                // Marcar como leída
+                try {
+                  await supabase
+                    .from("system_notifications")
+                    .update({ is_read: true })
+                    .eq("id", notification.id);
+                  console.log("✅ Notificación de ensayo marcada como leída");
+                } catch (err) {
+                  console.error("❌ Error marcando notificación:", err);
+                }
                 break;
               case "blood_donation":
                 console.log("🩸 Mostrando solicitud de donación de sangre");
                 setShowBloodDonation(true);
+                
+                // Marcar como leída
+                try {
+                  await supabase
+                    .from("system_notifications")
+                    .update({ is_read: true })
+                    .eq("id", notification.id);
+                  console.log("✅ Notificación de donación marcada como leída");
+                } catch (err) {
+                  console.error("❌ Error marcando notificación:", err);
+                }
                 break;
               case "general":
               case "reminder":
