@@ -136,7 +136,7 @@ const Index = () => {
             <img
               src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png"
               alt="ARCANA Logo"
-              className="w-20 h-20 mx-auto mb-6 object-contain"
+              className="logo-image"
             />
             <h1 className="text-4xl font-bold text-white mb-4">¡Hola, {firstName}!</h1>
             <p className="text-white/90 mb-6 text-lg">Sistema de Gestión Musical ARCANA</p>
@@ -246,6 +246,18 @@ const Index = () => {
           text-align: center;
           z-index: 5;
           position: relative;
+        }
+
+        /* NUEVOS ESTILOS PARA EL LOGO */
+        .logo-image {
+          width: 100px;
+          height: 100px;
+          margin: 0 auto 24px auto;
+          object-fit: contain;
+          border-radius: 20px; /* Esquinas ovaladas */
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Sombra suave para destacar */
+          background: rgba(255, 255, 255, 0.1); /* Fondo sutil para contrastar */
+          padding: 8px; /* Espacio interno */
         }
 
         .options-grid {
@@ -408,7 +420,7 @@ const Index = () => {
           transform: translateX(100%);
         }
 
-        /* Responsive Design - CORREGIDO */
+        /* Responsive Design */
         @media screen and (max-width: 768px) {
           body, html {
             overflow-x: hidden;
@@ -436,6 +448,8 @@ const Index = () => {
             min-height: 140px;
             background: var(--gradient-blue-form);
             padding: 16px;
+            /* Añadir espacio superior en móvil */
+            padding-top: 24px;
           }
 
           .options-panel {
@@ -446,16 +460,24 @@ const Index = () => {
             padding: 16px 16px 20px 16px;
             overflow-y: auto;
             overflow-x: hidden;
-            /* CAMBIO CLAVE: Eliminar justify-content y usar gap para controlar el espaciado */
             justify-content: flex-start;
             gap: 16px;
+          }
+
+          /* AJUSTES DEL LOGO EN MÓVIL */
+          .logo-image {
+            width: 70px;
+            height: 70px;
+            margin-bottom: 16px;
+            border-radius: 16px; /* Esquinas ovaladas más pequeñas en móvil */
+            padding: 6px;
           }
 
           .options-grid {
             grid-template-columns: repeat(2, 1fr);
             gap: 16px;
             max-width: 100%;
-            margin-bottom: 0; /* Eliminar margin-bottom ya que usamos gap en el contenedor */
+            margin-bottom: 0;
           }
 
           .option-card {
@@ -512,12 +534,6 @@ const Index = () => {
           .message-content p {
             font-size: 14px;
           }
-
-          .message-content img {
-            width: 56px;
-            height: 56px;
-            margin-bottom: 12px;
-          }
         }
 
         @media screen and (max-width: 400px) {
@@ -525,9 +541,13 @@ const Index = () => {
           .options-panel {
             padding: 15px;
           }
+
+          .message-panel {
+            padding-top: 20px; /* Mantener espacio superior en pantallas pequeñas */
+          }
           
           .options-panel {
-            gap: 12px; /* Reducir gap en pantallas muy pequeñas */
+            gap: 12px;
           }
           
           .message-content h1 {
@@ -535,7 +555,7 @@ const Index = () => {
           }
 
           .option-card {
-            height: 120px !important; /* Ajustar altura para pantallas pequeñas */
+            height: 120px !important;
           }
 
           .options-grid {
@@ -544,6 +564,14 @@ const Index = () => {
 
           .stats-cards {
             gap: 12px;
+          }
+
+          /* Ajuste final del logo en pantallas muy pequeñas */
+          .logo-image {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 12px;
+            border-radius: 14px;
           }
         }
 
@@ -561,6 +589,13 @@ const Index = () => {
           
           .stat-card {
             height: 80px !important;
+          }
+
+          /* Ajustar logo en pantallas con poca altura */
+          .logo-image {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 8px;
           }
         }
       `}</style>
