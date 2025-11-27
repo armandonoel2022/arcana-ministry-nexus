@@ -89,7 +89,7 @@ function useSystemNotifications() {
   useEffect(() => {
     console.log("🔔 Configurando listener de notificaciones del sistema...");
 
-    let channel: any = null;
+    let cleanup: (() => void) | null = null;
 
     // Obtener el usuario actual para filtrar solo sus notificaciones
     const setupListener = async () => {
@@ -102,8 +102,13 @@ function useSystemNotifications() {
       console.log("👤 Usuario autenticado:", user.id);
       console.log("🔧 Creando canal de Realtime para notificaciones...");
 
-      channel = supabase
-        .channel(`user-notifications-${user.id}`)
+      const channel = supabase
+        .channel(`user-notifications-${user.id}`, {
+          config: {
+            broadcast: { self: true },
+            presence: { key: user.id }
+          }
+        })
         .on(
           "postgres_changes",
           {
@@ -191,14 +196,19 @@ function useSystemNotifications() {
             console.log("🔒 Canal de notificaciones cerrado");
           }
         });
+
+      // Guardar función de cleanup para el canal
+      cleanup = () => {
+        console.log("🧹 Limpiando canal de notificaciones");
+        supabase.removeChannel(channel);
+      };
     };
 
     setupListener();
 
     return () => {
-      console.log("🧹 Limpiando listener de notificaciones");
-      if (channel) {
-        supabase.removeChannel(channel);
+      if (cleanup) {
+        cleanup();
       }
     };
   }, []);
