@@ -607,6 +607,16 @@ const ScheduledNotifications = () => {
                                 reflection: 'Reflexión generada automáticamente'
                               });
                             
+                            // Actualizar el estado para mostrar el nuevo versículo
+                            setTestingNotification({
+                              type: 'daily_verse',
+                              title: 'Versículo del Día',
+                              message: newVerse.text,
+                              metadata: {
+                                verse_reference: `${newVerse.book} ${newVerse.chapter}:${newVerse.verse}`
+                              }
+                            });
+                            
                             toast.success(`Versículo cambiado: ${newVerse.book} ${newVerse.chapter}:${newVerse.verse}`);
                           }
                         } catch (error) {
@@ -620,7 +630,39 @@ const ScheduledNotifications = () => {
                     </Button>
                     <Button
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm"
-                      onClick={() => setShowVersePreview(true)}
+                      onClick={async () => {
+                        try {
+                          // Cargar el versículo actual del día
+                          const today = new Date().toISOString().split('T')[0];
+                          
+                          const { data: dailyVerse } = await supabase
+                            .from('daily_verses')
+                            .select(`
+                              *,
+                              bible_verses (*)
+                            `)
+                            .eq('date', today)
+                            .single();
+
+                          if (dailyVerse && dailyVerse.bible_verses) {
+                            const verse = dailyVerse.bible_verses as any;
+                            setTestingNotification({
+                              type: 'daily_verse',
+                              title: 'Versículo del Día',
+                              message: verse.text,
+                              metadata: {
+                                verse_reference: `${verse.book} ${verse.chapter}:${verse.verse}`
+                              }
+                            });
+                            setShowVersePreview(true);
+                          } else {
+                            toast.error('No hay versículo del día configurado');
+                          }
+                        } catch (error) {
+                          console.error('Error:', error);
+                          toast.error('Error al cargar versículo');
+                        }
+                      }}
                     >
                       <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                       Vista Previa
@@ -669,6 +711,18 @@ const ScheduledNotifications = () => {
 
                           if (adviceList && adviceList.length > 0) {
                             const randomAdvice = adviceList[Math.floor(Math.random() * adviceList.length)];
+                            
+                            // Actualizar el estado para mostrar el nuevo consejo
+                            setTestingNotification({
+                              type: 'daily_advice',
+                              title: 'Consejo del Día',
+                              message: randomAdvice.message,
+                              metadata: {
+                                advice_title: randomAdvice.title,
+                                advice_message: randomAdvice.message
+                              }
+                            });
+                            
                             toast.success(`Consejo actualizado: ${randomAdvice.title}`);
                           } else {
                             toast.error('No hay consejos disponibles');
@@ -684,7 +738,35 @@ const ScheduledNotifications = () => {
                     </Button>
                     <Button
                       className="w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xs sm:text-sm"
-                      onClick={() => setShowAdvicePreview(true)}
+                      onClick={async () => {
+                        try {
+                          // Cargar un consejo aleatorio de la base de datos
+                          const { data: adviceList } = await supabase
+                            .from('daily_advice')
+                            .select('*')
+                            .eq('is_active', true);
+
+                          if (adviceList && adviceList.length > 0) {
+                            const randomAdvice = adviceList[Math.floor(Math.random() * adviceList.length)];
+                            
+                            setTestingNotification({
+                              type: 'daily_advice',
+                              title: 'Consejo del Día',
+                              message: randomAdvice.message,
+                              metadata: {
+                                advice_title: randomAdvice.title,
+                                advice_message: randomAdvice.message
+                              }
+                            });
+                            setShowAdvicePreview(true);
+                          } else {
+                            toast.error('No hay consejos disponibles');
+                          }
+                        } catch (error) {
+                          console.error('Error:', error);
+                          toast.error('Error al cargar consejo');
+                        }
+                      }}
                     >
                       <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                       Vista Previa
