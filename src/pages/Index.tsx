@@ -476,7 +476,7 @@ const Index = () => {
             grid-template-columns: repeat(2, 1fr);
             gap: 16px;
             max-width: 100%;
-            margin-bottom: 16px;
+            margin-bottom: 10px;
           }
 
           .option-card {
