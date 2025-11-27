@@ -311,8 +311,8 @@ function AppContent() {
 
       {showGeneralAnnouncement && currentNotification && (
         <GeneralAnnouncementOverlay
-          title={currentNotification.title}
-          message={currentNotification.message}
+          title={currentNotification.metadata?.title || currentNotification.title}
+          message={currentNotification.metadata?.message || currentNotification.message}
           announcementType={currentNotification.type}
           onClose={closeGeneralAnnouncement}
         />
@@ -320,8 +320,8 @@ function AppContent() {
 
       {showMinistryInstructions && currentNotification && (
         <MinistryInstructionsOverlay
-          title={currentNotification.title}
-          instructions={currentNotification.message}
+          title={currentNotification.metadata?.title || currentNotification.title}
+          instructions={currentNotification.metadata?.instructions || currentNotification.message}
           priority={currentNotification.metadata?.priority || 'normal'}
           onClose={closeMinistryInstructions}
         />
