@@ -21,7 +21,7 @@ const GeneralAnnouncementOverlay = ({
         return {
           bgGradient: 'from-gray-900 via-gray-800 to-gray-900',
           accentColor: 'border-gray-500',
-          icon: '🕯️',
+          icon: '🎗️',
           label: 'Anuncio de Fallecimiento'
         };
       case 'meeting_announcement':
@@ -71,8 +71,8 @@ const GeneralAnnouncementOverlay = ({
           </div>
 
           <div className="space-y-4">
-            <div className={`p-6 rounded-lg bg-white/10 border ${config.accentColor} backdrop-blur-sm`}>
-              <p className="text-lg leading-relaxed whitespace-pre-wrap">{message}</p>
+            <div className={`p-6 rounded-lg bg-white border ${config.accentColor} backdrop-blur-sm`}>
+              <p className="text-lg leading-relaxed whitespace-pre-wrap text-gray-900">{message}</p>
             </div>
           </div>
 
