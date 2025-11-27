@@ -424,8 +424,8 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                     <TableHead className="text-xs sm:text-sm hidden sm:table-cell">Mes</TableHead>
                     <TableHead className="text-xs sm:text-sm hidden md:table-cell">Orden</TableHead>
                     <TableHead className="text-xs sm:text-sm">Dirige</TableHead>
+                    <TableHead className="text-xs sm:text-sm hidden md:table-cell">Grupo</TableHead>
                     <TableHead className="text-xs sm:text-sm">Servicio</TableHead>
-                    <TableHead className="text-xs sm:text-sm hidden lg:table-cell">Grupo</TableHead>
                     <TableHead className="text-xs sm:text-sm hidden md:table-cell">Tipo</TableHead>
                     <TableHead className="text-xs sm:text-sm hidden lg:table-cell">Canciones</TableHead>
                     <TableHead className="text-xs sm:text-sm">Estado</TableHead>
@@ -454,11 +454,27 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                           {service.leader}
                         </div>
                       </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {service.worship_groups ? (
+                          <Badge 
+                            className="text-xs"
+                            style={{ 
+                              backgroundColor: service.worship_groups.color_theme + '20',
+                              color: service.worship_groups.color_theme,
+                              borderColor: service.worship_groups.color_theme + '40'
+                            }}
+                          >
+                            {service.worship_groups.name}
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-gray-400">Sin asignar</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <div>
                           <div className="font-medium">{service.title}</div>
                           {service.worship_groups && (
-                            <div className="lg:hidden text-xs mt-1">
+                            <div className="md:hidden text-xs mt-1">
                               <Badge 
                                 className="text-xs"
                                 style={{ 
@@ -477,22 +493,6 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                             </div>
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell">
-                        {service.worship_groups ? (
-                          <Badge 
-                            className="text-xs"
-                            style={{ 
-                              backgroundColor: service.worship_groups.color_theme + '20',
-                              color: service.worship_groups.color_theme,
-                              borderColor: service.worship_groups.color_theme + '40'
-                            }}
-                          >
-                            {service.worship_groups.name}
-                          </Badge>
-                        ) : (
-                          <span className="text-gray-400 text-xs">Sin asignar</span>
-                        )}
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
                         <Badge className={`${getServiceTypeColor(service.service_type)} text-xs`}>
