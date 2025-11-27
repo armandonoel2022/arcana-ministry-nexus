@@ -89,6 +89,8 @@ function useSystemNotifications() {
   useEffect(() => {
     console.log("🔔 Configurando listener de notificaciones del sistema...");
 
+    let channel: any = null;
+
     // Obtener el usuario actual para filtrar solo sus notificaciones
     const setupListener = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -98,8 +100,9 @@ function useSystemNotifications() {
       }
 
       console.log("👤 Usuario autenticado:", user.id);
+      console.log("🔧 Creando canal de Realtime para notificaciones...");
 
-      const channel = supabase
+      channel = supabase
         .channel(`user-notifications-${user.id}`)
         .on(
           "postgres_changes",
@@ -122,6 +125,8 @@ function useSystemNotifications() {
             setCurrentNotification(notification);
 
             // Mostrar el overlay correspondiente según el tipo
+            console.log("📋 Tipo de notificación:", notification.type);
+            
             switch (notification.type) {
               case "service_overlay":
                 console.log("📢 Activando overlay de servicios");
@@ -180,16 +185,22 @@ function useSystemNotifications() {
             console.log("✅ Suscripción exitosa a notificaciones del usuario");
           } else if (status === "CHANNEL_ERROR") {
             console.error("❌ Error en la suscripción a notificaciones");
+          } else if (status === "TIMED_OUT") {
+            console.error("⏱️ Timeout en la suscripción a notificaciones");
+          } else if (status === "CLOSED") {
+            console.log("🔒 Canal de notificaciones cerrado");
           }
         });
-
-      return () => {
-        console.log("🧹 Limpiando listener de notificaciones");
-        supabase.removeChannel(channel);
-      };
     };
 
     setupListener();
+
+    return () => {
+      console.log("🧹 Limpiando listener de notificaciones");
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, []);
 
   const closeServiceOverlay = () => {
