@@ -549,36 +549,87 @@ const ScheduledNotifications = () => {
               <p className="text-xs text-gray-600 mb-3">
                 Versículo bíblico diario con reflexión
               </p>
-              <Button
-                size="sm"
-                variant="outline"
-                className="w-full"
-                onClick={async () => {
-                  try {
-                    // Buscar la primera notificación programada de versículo
-                    const { data: verseNotifications } = await supabase
-                      .from('scheduled_notifications')
-                      .select('*')
-                      .eq('notification_type', 'daily_verse')
-                      .eq('is_active', true)
-                      .limit(1)
-                      .single();
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={async () => {
+                    try {
+                      // Buscar la primera notificación programada de versículo
+                      const { data: verseNotifications } = await supabase
+                        .from('scheduled_notifications')
+                        .select('*')
+                        .eq('notification_type', 'daily_verse')
+                        .eq('is_active', true)
+                        .limit(1)
+                        .single();
 
-                    if (verseNotifications && verseNotifications.metadata) {
-                      setTestingNotification(verseNotifications);
-                    } else {
+                      if (verseNotifications && verseNotifications.metadata) {
+                        setTestingNotification(verseNotifications);
+                      } else {
+                        setTestingNotification(null);
+                      }
+                      setShowVersePreview(true);
+                    } catch (error) {
+                      // Si no hay notificación programada, usar datos de ejemplo
                       setTestingNotification(null);
+                      setShowVersePreview(true);
                     }
-                    setShowVersePreview(true);
-                  } catch (error) {
-                    // Si no hay notificación programada, usar datos de ejemplo
-                    setTestingNotification(null);
-                    setShowVersePreview(true);
-                  }
-                }}
-              >
-                Probar Overlay
-              </Button>
+                  }}
+                >
+                  Probar Overlay
+                </Button>
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={async () => {
+                    try {
+                      const today = new Date().toISOString().split('T')[0];
+                      
+                      // Eliminar el versículo actual de hoy
+                      await supabase
+                        .from('daily_verses')
+                        .delete()
+                        .eq('date', today);
+                      
+                      // Obtener todos los versículos disponibles
+                      const { data: allVerses, error: versesError } = await supabase
+                        .from('bible_verses')
+                        .select('*');
+                      
+                      if (versesError) throw versesError;
+                      
+                      if (!allVerses || allVerses.length === 0) {
+                        toast.error('No hay versículos disponibles en la base de datos');
+                        return;
+                      }
+                      
+                      // Seleccionar un versículo aleatorio
+                      const randomIndex = Math.floor(Math.random() * allVerses.length);
+                      const newVerse = allVerses[randomIndex];
+                      
+                      // Crear nuevo versículo del día
+                      const { error: insertError } = await supabase
+                        .from('daily_verses')
+                        .insert({
+                          date: today,
+                          verse_id: newVerse.id
+                        });
+                      
+                      if (insertError) throw insertError;
+                      
+                      toast.success(`Versículo cambiado: ${newVerse.book} ${newVerse.chapter}:${newVerse.verse}`);
+                    } catch (error) {
+                      console.error('Error changing verse:', error);
+                      toast.error('Error al cambiar el versículo');
+                    }
+                  }}
+                >
+                  Cambiar
+                </Button>
+              </div>
             </div>
 
             {/* Consejo del Día */}
