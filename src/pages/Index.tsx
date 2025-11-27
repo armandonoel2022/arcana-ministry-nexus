@@ -119,7 +119,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-         style={{ background: "var(--gradient-primary)", width: "100vw", maxWidth: "100vw" }}>
+         style={{ background: "hsl(217, 91%, 60%)", width: "100vw", maxWidth: "100vw" }}>
       
       <div className={`welcome-container ${isAnimating ? 'animating' : ''}`}>
         
@@ -389,16 +389,16 @@ const Index = () => {
           pointer-events: none;
         }
 
-        .toggle-background {
-          content: '';
-          position: absolute;
-          left: 0;
-          width: 35%;
-          height: 100%;
-          background: var(--gradient-blue-form);
-          z-index: 2;
-          transition: 1.8s ease-in-out;
-        }
+          .toggle-background {
+            content: '';
+            position: absolute;
+            left: 0;
+            width: 35%;
+            height: 100%;
+            background: hsl(217, 91%, 60%);
+            z-index: 2;
+            transition: 1.8s ease-in-out;
+          }
 
         .welcome-container.animating .message-panel {
           transform: translateX(-100%);
@@ -427,36 +427,27 @@ const Index = () => {
             right: 0;
             top: 0;
             bottom: 0;
-            display: flex;
           }
 
           .message-panel {
             position: relative;
             width: 100%;
-            flex-shrink: 0;
-            background: var(--gradient-blue-form);
+            height: 22%;
+            min-height: 140px;
+            background: hsl(217, 91%, 60%);
             padding: 20px 16px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-
-          .message-content img {
-            border-radius: 16px;
           }
 
           .options-panel {
             position: relative;
             width: 100%;
-            flex: 1;
+            height: 78%;
             background: #fff;
             padding: 20px 16px;
             overflow-y: auto;
             overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 16px;
+            justify-content: flex-start;
+            gap: 14px;
           }
 
           .options-grid {
@@ -529,51 +520,6 @@ const Index = () => {
           }
         }
 
-        /* Tablet breakpoint */
-        @media screen and (min-width: 769px) and (max-width: 1024px) {
-          .welcome-container {
-            width: 100vw;
-            height: 100vh;
-            height: 100dvh;
-            border-radius: 0;
-            margin: 0;
-            flex-direction: column;
-            max-width: 100vw;
-            display: flex;
-          }
-
-          .message-panel {
-            width: 100%;
-            flex-shrink: 0;
-            background: var(--gradient-blue-form);
-            padding: 24px 20px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-
-          .message-content img {
-            width: 70px;
-            height: 70px;
-            border-radius: 18px;
-          }
-
-          .options-panel {
-            width: 100%;
-            flex: 1;
-            background: #fff;
-            padding: 24px 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 18px;
-          }
-
-          .toggle-background {
-            display: none;
-          }
-        }
-
         @media screen and (max-width: 400px) {
           .message-panel {
             padding: 18px 15px 15px;
@@ -588,7 +534,7 @@ const Index = () => {
           }
 
           .option-card {
-            height: 80px !important;
+            height: 110px !important;
           }
 
           .options-grid {
