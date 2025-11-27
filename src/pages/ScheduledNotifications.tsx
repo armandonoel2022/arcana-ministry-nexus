@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Clock, Calendar, Plus, Edit, Trash2, Bell, Save, X, Eye, Play, BookOpen, Lightbulb } from "lucide-react";
+import { Clock, Calendar, Plus, Edit, Trash2, Bell, Save, X, Eye, Play, BookOpen, Lightbulb, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -438,15 +438,16 @@ const ScheduledNotifications = () => {
   }
 
   return (
-      <div className="container mx-auto p-4 md:p-6 space-y-6 max-w-7xl">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="w-full min-h-screen overflow-x-hidden">
+        <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6 max-w-7xl">
+      <div className="flex flex-col gap-3">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Notificaciones Programadas</h1>
-          <p className="text-sm md:text-base text-gray-600 mt-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Notificaciones Programadas</h1>
+          <p className="text-xs sm:text-sm md:text-base text-gray-600 mt-1 md:mt-2">
             Configura notificaciones automáticas que se enviarán según el horario programado
           </p>
         </div>
-        <Button onClick={openCreateDialog} className="flex items-center gap-2 w-full sm:w-auto">
+        <Button onClick={openCreateDialog} className="flex items-center justify-center gap-2 w-full sm:w-auto text-sm">
           <Plus className="w-4 h-4" />
           Nueva Notificación
         </Button>
@@ -454,29 +455,29 @@ const ScheduledNotifications = () => {
 
       {/* Panel de Gestión de Overlays */}
       <Card className="border-2 border-primary/20 bg-gradient-to-br from-background to-muted/30">
-        <CardHeader>
-          <CardTitle className="text-xl mb-2">📱 Gestión de Overlays</CardTitle>
-          <p className="text-sm text-muted-foreground">
+        <CardHeader className="px-3 sm:px-6 py-4">
+          <CardTitle className="text-lg sm:text-xl mb-2">📱 Gestión de Overlays</CardTitle>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Configura y prueba cada tipo de notificación overlay
           </p>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        <CardContent className="px-3 sm:px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
             {/* Cumpleaños */}
             <Card className="border-2 border-pink-200 bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-950 dark:to-pink-900">
-              <CardContent className="p-4 md:p-6">
-                <div className="flex flex-col items-center text-center space-y-3 md:space-y-4">
-                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-pink-500 to-pink-600 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-3xl md:text-4xl">🎁</span>
+              <CardContent className="p-3 sm:p-4 md:p-6">
+                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3 md:space-y-4">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br from-pink-500 to-pink-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                    <span className="text-2xl sm:text-3xl md:text-4xl">🎁</span>
                   </div>
-                  <h3 className="text-xl md:text-2xl font-bold text-pink-800 dark:text-pink-200">Cumpleaños</h3>
-                  <p className="text-xs md:text-sm text-foreground/70 min-h-[40px]">
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-pink-800 dark:text-pink-200">Cumpleaños</h3>
+                  <p className="text-xs sm:text-sm text-foreground/70 min-h-[30px] sm:min-h-[40px]">
                     Overlay del próximo cumpleaños real del ministerio
                   </p>
-                  <div className="flex flex-col sm:flex-row gap-2 w-full">
+                  <div className="flex flex-col gap-2 w-full mt-auto">
                     <Button
                       variant="outline"
-                      className="flex-1 border-pink-600 text-pink-600 hover:bg-pink-50 text-sm"
+                      className="w-full border-pink-600 text-pink-600 hover:bg-pink-50 text-xs sm:text-sm"
                       onClick={() => {
                         setFormData({
                           ...formData,
@@ -486,11 +487,11 @@ const ScheduledNotifications = () => {
                         setIsDialogOpen(true);
                       }}
                     >
-                      <Edit className="w-4 h-4 mr-2" />
+                      <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                       Editar
                     </Button>
                     <Button
-                      className="flex-1 bg-pink-600 hover:bg-pink-700 text-white text-sm"
+                      className="w-full bg-pink-600 hover:bg-pink-700 text-white text-xs sm:text-sm"
                       onClick={async () => {
                         setLoadingTest('birthday');
                         try {
@@ -551,19 +552,19 @@ const ScheduledNotifications = () => {
 
             {/* Versículo del Día */}
             <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-900">
-              <CardContent className="p-4 md:p-6">
-                <div className="flex flex-col items-center text-center space-y-3 md:space-y-4">
-                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-3xl md:text-4xl">📖</span>
+              <CardContent className="p-3 sm:p-4 md:p-6">
+                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3 md:space-y-4">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                    <span className="text-2xl sm:text-3xl md:text-4xl">📖</span>
                   </div>
-                  <h3 className="text-xl md:text-2xl font-bold text-blue-800 dark:text-blue-200">Versículo del Día</h3>
-                  <p className="text-xs md:text-sm text-foreground/70 min-h-[40px]">
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800 dark:text-blue-200">Versículo del Día</h3>
+                  <p className="text-xs sm:text-sm text-foreground/70 min-h-[30px] sm:min-h-[40px]">
                     Versículo bíblico diario con reflexión espiritual
                   </p>
-                  <div className="flex flex-col sm:flex-row gap-2 w-full">
+                  <div className="flex flex-col gap-2 w-full mt-auto">
                     <Button
                       variant="outline"
-                      className="flex-1 border-blue-600 text-blue-600 hover:bg-blue-50 text-sm"
+                      className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 text-xs sm:text-sm"
                       onClick={() => {
                         setFormData({
                           ...formData,
@@ -573,12 +574,12 @@ const ScheduledNotifications = () => {
                         setIsDialogOpen(true);
                       }}
                     >
-                      <Edit className="w-4 h-4 mr-2" />
+                      <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                       Editar
                     </Button>
                     <Button
                       variant="outline"
-                      className="flex-1 border-blue-600 text-blue-600 hover:bg-blue-50 text-sm"
+                      className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 text-xs sm:text-sm"
                       onClick={async () => {
                         try {
                           const today = new Date().toISOString().split('T')[0];
@@ -614,13 +615,14 @@ const ScheduledNotifications = () => {
                         }
                       }}
                     >
+                      <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                       Cambiar
                     </Button>
                     <Button
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm"
                       onClick={() => setShowVersePreview(true)}
                     >
-                      <Eye className="w-4 h-4 mr-2" />
+                      <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                       Vista Previa
                     </Button>
                   </div>
@@ -630,19 +632,19 @@ const ScheduledNotifications = () => {
 
             {/* Consejo del Día */}
             <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-900">
-              <CardContent className="p-4 md:p-6">
-                <div className="flex flex-col items-center text-center space-y-3 md:space-y-4">
-                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-3xl md:text-4xl">💡</span>
+              <CardContent className="p-3 sm:p-4 md:p-6">
+                <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3 md:space-y-4">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                    <span className="text-2xl sm:text-3xl md:text-4xl">💡</span>
                   </div>
-                  <h3 className="text-xl md:text-2xl font-bold text-yellow-800 dark:text-yellow-200">Consejo del Día</h3>
-                  <p className="text-xs md:text-sm text-foreground/70 min-h-[40px]">
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-yellow-800 dark:text-yellow-200">Consejo del Día</h3>
+                  <p className="text-xs sm:text-sm text-foreground/70 min-h-[30px] sm:min-h-[40px]">
                     Consejos musicales, vocales y de danza
                   </p>
-                  <div className="flex flex-col sm:flex-row gap-2 w-full">
+                  <div className="flex flex-col gap-2 w-full mt-auto">
                     <Button
                       variant="outline"
-                      className="flex-1 border-yellow-600 text-yellow-600 hover:bg-yellow-50 text-sm"
+                      className="w-full border-yellow-600 text-yellow-600 hover:bg-yellow-50 text-xs sm:text-sm"
                       onClick={() => {
                         setFormData({
                           ...formData,
@@ -652,12 +654,12 @@ const ScheduledNotifications = () => {
                         setIsDialogOpen(true);
                       }}
                     >
-                      <Edit className="w-4 h-4 mr-2" />
+                      <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                       Editar
                     </Button>
                     <Button
                       variant="outline"
-                      className="flex-1 border-yellow-600 text-yellow-600 hover:bg-yellow-50 text-sm"
+                      className="w-full border-yellow-600 text-yellow-600 hover:bg-yellow-50 text-xs sm:text-sm"
                       onClick={async () => {
                         try {
                           const { data: adviceList } = await supabase
@@ -677,13 +679,14 @@ const ScheduledNotifications = () => {
                         }
                       }}
                     >
+                      <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                       Cambiar
                     </Button>
                     <Button
-                      className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white text-sm"
+                      className="w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xs sm:text-sm"
                       onClick={() => setShowAdvicePreview(true)}
                     >
-                      <Eye className="w-4 h-4 mr-2" />
+                      <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                       Vista Previa
                     </Button>
                   </div>
@@ -1538,7 +1541,8 @@ const ScheduledNotifications = () => {
           }}
         />
       )}
-    </div>
+        </div>
+      </div>
   );
 };
 
