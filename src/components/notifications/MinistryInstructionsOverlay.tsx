@@ -19,22 +19,22 @@ const MinistryInstructionsOverlay = ({
     switch (priority) {
       case 'urgent':
         return {
-          bgGradient: 'from-red-900 via-red-800 to-red-900',
-          accentColor: 'border-red-500',
+          bgGradient: 'from-red-500 via-red-400 to-white',
+          accentColor: 'border-red-400',
           badge: 'bg-red-500',
           label: 'URGENTE'
         };
       case 'high':
         return {
-          bgGradient: 'from-orange-900 via-orange-800 to-orange-900',
-          accentColor: 'border-orange-500',
+          bgGradient: 'from-orange-500 via-orange-400 to-white',
+          accentColor: 'border-orange-400',
           badge: 'bg-orange-500',
           label: 'ALTA PRIORIDAD'
         };
       default:
         return {
-          bgGradient: 'from-blue-900 via-blue-800 to-blue-900',
-          accentColor: 'border-blue-500',
+          bgGradient: 'from-blue-500 via-blue-400 to-white',
+          accentColor: 'border-blue-400',
           badge: 'bg-blue-500',
           label: 'IMPORTANTE'
         };
@@ -46,7 +46,7 @@ const MinistryInstructionsOverlay = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
       <Card className={`w-full max-w-2xl bg-gradient-to-br ${config.bgGradient} border-2 ${config.accentColor} shadow-2xl`}>
-        <div className="relative p-8 text-white">
+        <div className="relative p-8">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
@@ -56,28 +56,28 @@ const MinistryInstructionsOverlay = ({
           </button>
 
           <div className="flex items-start gap-4 mb-6">
-            <AlertCircle className="w-12 h-12 flex-shrink-0" />
+            <AlertCircle className="w-12 h-12 flex-shrink-0 text-white" />
             <div className="flex-1">
               <div className={`inline-block px-3 py-1 rounded-full ${config.badge} text-white text-xs font-bold mb-2`}>
                 {config.label}
               </div>
-              <h2 className="text-3xl font-bold">{title}</h2>
+              <h2 className="text-3xl font-bold text-white">{title}</h2>
             </div>
           </div>
 
           <div className="space-y-4">
-            <div className={`p-6 rounded-lg bg-white/10 border ${config.accentColor} backdrop-blur-sm`}>
-              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <div className="p-6 rounded-lg bg-white shadow-md">
+              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-gray-800">
                 📋 Instrucciones
               </h3>
-              <div className="text-base leading-relaxed whitespace-pre-wrap">
+              <div className="text-base leading-relaxed whitespace-pre-wrap text-gray-700">
                 {instructions}
               </div>
             </div>
           </div>
 
           <div className="mt-6 text-center">
-            <p className="text-sm opacity-70">
+            <p className="text-sm text-white opacity-90">
               Por favor, lea estas instrucciones cuidadosamente
             </p>
           </div>
