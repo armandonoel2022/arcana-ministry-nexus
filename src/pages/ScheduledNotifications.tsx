@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Clock, Calendar, Plus, Edit, Trash2, Bell, Save, X, Eye, Play } from "lucide-react";
+import { Clock, Calendar, Plus, Edit, Trash2, Bell, Save, X, Eye, Play, BookOpen, Lightbulb } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -707,71 +707,35 @@ const ScheduledNotifications = () => {
 
             {/* Campos específicos según el tipo */}
             {formData.notification_type === "daily_verse" && (
-              <div className="space-y-4 p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-semibold text-blue-900">Configuración del Versículo</h4>
-                <div className="space-y-2">
-                  <Label htmlFor="verse_text">Texto del Versículo</Label>
-                  <Textarea
-                    id="verse_text"
-                    value={formData.metadata.verse_text}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        metadata: { ...formData.metadata, verse_text: e.target.value },
-                      })
-                    }
-                    placeholder="Porque de tal manera amó Dios al mundo..."
-                    rows={3}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="verse_reference">Referencia</Label>
-                  <Input
-                    id="verse_reference"
-                    value={formData.metadata.verse_reference}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        metadata: { ...formData.metadata, verse_reference: e.target.value },
-                      })
-                    }
-                    placeholder="Juan 3:16"
-                  />
+              <div className="space-y-4 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="flex items-start gap-3">
+                  <BookOpen className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-blue-900 dark:text-blue-100">Carga Automática desde Base de Datos</h4>
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                      Los versículos del día se cargarán automáticamente desde la tabla <code className="bg-blue-100 dark:bg-blue-900 px-1.5 py-0.5 rounded text-xs font-mono">daily_verses</code> y rotarán entre los versículos disponibles cada día.
+                    </p>
+                    <p className="text-xs text-blue-700 dark:text-blue-300 italic">
+                      No necesitas ingresar texto manualmente. El sistema seleccionará automáticamente el versículo del día.
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
 
             {formData.notification_type === "daily_advice" && (
-              <div className="space-y-4 p-4 bg-yellow-50 rounded-lg">
-                <h4 className="font-semibold text-yellow-900">Configuración del Consejo</h4>
-                <div className="space-y-2">
-                  <Label htmlFor="advice_title">Título del Consejo</Label>
-                  <Input
-                    id="advice_title"
-                    value={formData.metadata.advice_title}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        metadata: { ...formData.metadata, advice_title: e.target.value },
-                      })
-                    }
-                    placeholder="La importancia de la oración"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="advice_message">Mensaje del Consejo</Label>
-                  <Textarea
-                    id="advice_message"
-                    value={formData.metadata.advice_message}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        metadata: { ...formData.metadata, advice_message: e.target.value },
-                      })
-                    }
-                    placeholder="La oración es nuestra línea directa con Dios..."
-                    rows={4}
-                  />
+              <div className="space-y-4 p-4 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <div className="flex items-start gap-3">
+                  <Lightbulb className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-yellow-900 dark:text-yellow-100">Carga Automática desde Base de Datos</h4>
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                      Los consejos del día se cargarán automáticamente desde la tabla <code className="bg-yellow-100 dark:bg-yellow-900 px-1.5 py-0.5 rounded text-xs font-mono">daily_advice</code> y rotarán entre los consejos activos disponibles.
+                    </p>
+                    <p className="text-xs text-yellow-700 dark:text-yellow-300 italic">
+                      No necesitas ingresar texto manualmente. El sistema seleccionará automáticamente el consejo del día.
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
