@@ -10,6 +10,10 @@ import { useNavigate } from "react-router-dom";
 import ServiceNotificationOverlay from "@/components/notifications/ServiceNotificationOverlay";
 import { DailyVerseOverlay } from "@/components/notifications/DailyVerseOverlay";
 import { DailyAdviceOverlay } from "@/components/notifications/DailyAdviceOverlay";
+import GeneralAnnouncementOverlay from "@/components/notifications/GeneralAnnouncementOverlay";
+import MinistryInstructionsOverlay from "@/components/notifications/MinistryInstructionsOverlay";
+import ExtraordinaryRehearsalOverlay from "@/components/notifications/ExtraordinaryRehearsalOverlay";
+import BloodDonationOverlay from "@/components/notifications/BloodDonationOverlay";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,8 +49,13 @@ const notificationTypes = [
   { value: "service_overlay", label: "Overlay de Servicios" },
   { value: "daily_verse", label: "Versículo del Día" },
   { value: "daily_advice", label: "Consejo del Día" },
-  { value: "general", label: "Notificación General" },
-  { value: "reminder", label: "Recordatorio" },
+  { value: "death_announcement", label: "Anuncio de Fallecimiento" },
+  { value: "meeting_announcement", label: "Convocatoria a Reunión" },
+  { value: "special_service", label: "Servicio Especial" },
+  { value: "prayer_request", label: "Solicitud de Oración" },
+  { value: "blood_donation", label: "Donación de Sangre Urgente" },
+  { value: "extraordinary_rehearsal", label: "Ensayo Extraordinario" },
+  { value: "ministry_instructions", label: "Instrucciones a Integrantes" },
 ];
 
 const ScheduledNotifications = () => {
@@ -57,6 +66,10 @@ const ScheduledNotifications = () => {
   const [showServicePreview, setShowServicePreview] = useState(false);
   const [showVersePreview, setShowVersePreview] = useState(false);
   const [showAdvicePreview, setShowAdvicePreview] = useState(false);
+  const [showGeneralAnnouncement, setShowGeneralAnnouncement] = useState(false);
+  const [showMinistryInstructions, setShowMinistryInstructions] = useState(false);
+  const [showExtraordinaryRehearsal, setShowExtraordinaryRehearsal] = useState(false);
+  const [showBloodDonation, setShowBloodDonation] = useState(false);
   const [editingNotification, setEditingNotification] = useState<ScheduledNotification | null>(null);
   const [testingNotification, setTestingNotification] = useState<ScheduledNotification | null>(null);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
@@ -69,10 +82,31 @@ const ScheduledNotifications = () => {
     target_audience: "all",
     is_active: true,
     metadata: {
+      // Daily verse & advice (auto-loaded)
       verse_text: "",
       verse_reference: "",
       advice_title: "",
       advice_message: "",
+      // General announcement fields
+      title: "",
+      message: "",
+      // Ministry instructions fields
+      instructions: "",
+      priority: "normal",
+      // Extraordinary rehearsal fields
+      activity_name: "",
+      date: "",
+      rehearsal_time: "",
+      location: "",
+      additional_notes: "",
+      // Blood donation fields
+      recipient_name: "",
+      blood_type: "",
+      contact_phone: "",
+      medical_center: "",
+      family_contact: "",
+      urgency_level: "urgent",
+      additional_info: "",
     },
   });
 
@@ -182,11 +216,27 @@ const ScheduledNotifications = () => {
       time: notification.time,
       target_audience: notification.target_audience,
       is_active: notification.is_active,
-      metadata: notification.metadata || {
-        verse_text: "",
-        verse_reference: "",
-        advice_title: "",
-        advice_message: "",
+      metadata: {
+        verse_text: notification.metadata?.verse_text || "",
+        verse_reference: notification.metadata?.verse_reference || "",
+        advice_title: notification.metadata?.advice_title || "",
+        advice_message: notification.metadata?.advice_message || "",
+        title: notification.metadata?.title || "",
+        message: notification.metadata?.message || "",
+        instructions: notification.metadata?.instructions || "",
+        priority: notification.metadata?.priority || "normal",
+        activity_name: notification.metadata?.activity_name || "",
+        date: notification.metadata?.date || "",
+        rehearsal_time: notification.metadata?.rehearsal_time || "",
+        location: notification.metadata?.location || "",
+        additional_notes: notification.metadata?.additional_notes || "",
+        recipient_name: notification.metadata?.recipient_name || "",
+        blood_type: notification.metadata?.blood_type || "",
+        contact_phone: notification.metadata?.contact_phone || "",
+        medical_center: notification.metadata?.medical_center || "",
+        family_contact: notification.metadata?.family_contact || "",
+        urgency_level: notification.metadata?.urgency_level || "urgent",
+        additional_info: notification.metadata?.additional_info || "",
       },
     });
     setSelectedDays(notification.days_of_week || [1]);
@@ -207,6 +257,22 @@ const ScheduledNotifications = () => {
         verse_reference: "",
         advice_title: "",
         advice_message: "",
+        title: "",
+        message: "",
+        instructions: "",
+        priority: "normal",
+        activity_name: "",
+        date: "",
+        rehearsal_time: "",
+        location: "",
+        additional_notes: "",
+        recipient_name: "",
+        blood_type: "",
+        contact_phone: "",
+        medical_center: "",
+        family_contact: "",
+        urgency_level: "urgent",
+        additional_info: "",
       },
     });
     setSelectedDays([]);
@@ -231,8 +297,13 @@ const ScheduledNotifications = () => {
       service_overlay: "bg-blue-100 text-blue-800 border-blue-200",
       daily_verse: "bg-green-100 text-green-800 border-green-200",
       daily_advice: "bg-yellow-100 text-yellow-800 border-yellow-200",
-      general: "bg-gray-100 text-gray-800 border-gray-200",
-      reminder: "bg-purple-100 text-purple-800 border-purple-200",
+      death_announcement: "bg-gray-100 text-gray-800 border-gray-200",
+      meeting_announcement: "bg-blue-100 text-blue-800 border-blue-200",
+      special_service: "bg-purple-100 text-purple-800 border-purple-200",
+      prayer_request: "bg-amber-100 text-amber-800 border-amber-200",
+      blood_donation: "bg-red-100 text-red-800 border-red-200",
+      extraordinary_rehearsal: "bg-indigo-100 text-indigo-800 border-indigo-200",
+      ministry_instructions: "bg-blue-100 text-blue-800 border-blue-200",
     };
     return colors[type as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
@@ -248,6 +319,21 @@ const ScheduledNotifications = () => {
         break;
       case "daily_advice":
         setShowAdvicePreview(true);
+        break;
+      case "death_announcement":
+      case "meeting_announcement":
+      case "special_service":
+      case "prayer_request":
+        setShowGeneralAnnouncement(true);
+        break;
+      case "ministry_instructions":
+        setShowMinistryInstructions(true);
+        break;
+      case "extraordinary_rehearsal":
+        setShowExtraordinaryRehearsal(true);
+        break;
+      case "blood_donation":
+        setShowBloodDonation(true);
         break;
       default:
         toast.info("Vista previa no disponible para este tipo de notificación");
@@ -269,6 +355,21 @@ const ScheduledNotifications = () => {
           break;
         case "daily_advice":
           setShowAdvicePreview(true);
+          break;
+        case "death_announcement":
+        case "meeting_announcement":
+        case "special_service":
+        case "prayer_request":
+          setShowGeneralAnnouncement(true);
+          break;
+        case "ministry_instructions":
+          setShowMinistryInstructions(true);
+          break;
+        case "extraordinary_rehearsal":
+          setShowExtraordinaryRehearsal(true);
+          break;
+        case "blood_donation":
+          setShowBloodDonation(true);
           break;
         default:
           toast.info("Vista previa no disponible para este tipo de notificación");
@@ -309,8 +410,13 @@ const ScheduledNotifications = () => {
       service_overlay: "Overlay de Servicios",
       daily_verse: "Versículo del Día",
       daily_advice: "Consejo del Día",
-      general: "Notificación General",
-      reminder: "Recordatorio",
+      death_announcement: "Anuncio de Fallecimiento",
+      meeting_announcement: "Convocatoria a Reunión",
+      special_service: "Servicio Especial",
+      prayer_request: "Solicitud de Oración",
+      blood_donation: "Donación de Sangre Urgente",
+      extraordinary_rehearsal: "Ensayo Extraordinario",
+      ministry_instructions: "Instrucciones a Integrantes",
     };
     
     const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
@@ -760,6 +866,230 @@ const ScheduledNotifications = () => {
               </div>
             )}
 
+            {/* General Announcements */}
+            {["death_announcement", "meeting_announcement", "special_service", "prayer_request"].includes(formData.notification_type) && (
+              <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Título del Anuncio</Label>
+                  <Input
+                    id="title"
+                    value={formData.metadata.title || ""}
+                    onChange={(e) => setFormData({ ...formData, metadata: { ...formData.metadata, title: e.target.value } })}
+                    placeholder="Ej: Fallecimiento de hermano/a, Reunión General, etc."
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="message">Mensaje</Label>
+                  <Textarea
+                    id="message"
+                    value={formData.metadata.message || ""}
+                    onChange={(e) => setFormData({ ...formData, metadata: { ...formData.metadata, message: e.target.value } })}
+                    placeholder="Detalles del anuncio..."
+                    rows={4}
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Ministry Instructions */}
+            {formData.notification_type === "ministry_instructions" && (
+              <div className="space-y-4 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="space-y-2">
+                  <Label htmlFor="instructions-title">Título de las Instrucciones</Label>
+                  <Input
+                    id="instructions-title"
+                    value={formData.metadata.title || ""}
+                    onChange={(e) => setFormData({ ...formData, metadata: { ...formData.metadata, title: e.target.value } })}
+                    placeholder="Ej: Instrucciones para el próximo servicio"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="instructions">Instrucciones Detalladas</Label>
+                  <Textarea
+                    id="instructions"
+                    value={formData.metadata.instructions || ""}
+                    onChange={(e) => setFormData({ ...formData, metadata: { ...formData.metadata, instructions: e.target.value } })}
+                    placeholder="Ejemplo:&#10;- Todo el ministerio debe subir al altar&#10;- Quedense con los micrófonos&#10;- Tendremos presentación de niños&#10;- Necesitamos una canción para la ministración"
+                    rows={6}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="priority">Prioridad</Label>
+                  <Select
+                    value={formData.metadata.priority || "normal"}
+                    onValueChange={(value) => setFormData({ ...formData, metadata: { ...formData.metadata, priority: value } })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="high">Alta</SelectItem>
+                      <SelectItem value="urgent">Urgente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            {/* Extraordinary Rehearsal */}
+            {formData.notification_type === "extraordinary_rehearsal" && (
+              <div className="space-y-4 p-4 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                <div className="space-y-2">
+                  <Label htmlFor="activity_name">Nombre de la Actividad</Label>
+                  <Input
+                    id="activity_name"
+                    value={formData.metadata.activity_name || ""}
+                    onChange={(e) => setFormData({ ...formData, metadata: { ...formData.metadata, activity_name: e.target.value } })}
+                    placeholder="Ej: Presentación Especial de Navidad"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="rehearsal_date">Fecha del Ensayo</Label>
+                    <Input
+                      id="rehearsal_date"
+                      type="date"
+                      value={formData.metadata.date || ""}
+                      onChange={(e) => setFormData({ ...formData, metadata: { ...formData.metadata, date: e.target.value } })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="rehearsal_time">Hora del Ensayo</Label>
+                    <Input
+                      id="rehearsal_time"
+                      type="time"
+                      value={formData.metadata.rehearsal_time || ""}
+                      onChange={(e) => setFormData({ ...formData, metadata: { ...formData.metadata, rehearsal_time: e.target.value } })}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="rehearsal_location">Lugar</Label>
+                  <Input
+                    id="rehearsal_location"
+                    value={formData.metadata.location || ""}
+                    onChange={(e) => setFormData({ ...formData, metadata: { ...formData.metadata, location: e.target.value } })}
+                    placeholder="Ej: Templo Principal"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="rehearsal_notes">Notas Adicionales</Label>
+                  <Textarea
+                    id="rehearsal_notes"
+                    value={formData.metadata.additional_notes || ""}
+                    onChange={(e) => setFormData({ ...formData, metadata: { ...formData.metadata, additional_notes: e.target.value } })}
+                    placeholder="Información adicional..."
+                    rows={3}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Blood Donation */}
+            {formData.notification_type === "blood_donation" && (
+              <div className="space-y-4 p-4 bg-red-50 dark:bg-red-950/30 rounded-lg border border-red-200 dark:border-red-800">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="recipient_name">Nombre del Paciente</Label>
+                    <Input
+                      id="recipient_name"
+                      value={formData.metadata.recipient_name || ""}
+                      onChange={(e) => setFormData({ ...formData, metadata: { ...formData.metadata, recipient_name: e.target.value } })}
+                      placeholder="Nombre completo"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="blood_type">Tipo de Sangre</Label>
+                    <Select
+                      value={formData.metadata.blood_type || ""}
+                      onValueChange={(value) => setFormData({ ...formData, metadata: { ...formData.metadata, blood_type: value } })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="O+">O+</SelectItem>
+                        <SelectItem value="O-">O-</SelectItem>
+                        <SelectItem value="A+">A+</SelectItem>
+                        <SelectItem value="A-">A-</SelectItem>
+                        <SelectItem value="B+">B+</SelectItem>
+                        <SelectItem value="B-">B-</SelectItem>
+                        <SelectItem value="AB+">AB+</SelectItem>
+                        <SelectItem value="AB-">AB-</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="medical_center">Centro Médico</Label>
+                  <Input
+                    id="medical_center"
+                    value={formData.metadata.medical_center || ""}
+                    onChange={(e) => setFormData({ ...formData, metadata: { ...formData.metadata, medical_center: e.target.value } })}
+                    placeholder="Ej: Hospital Central"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="contact_phone">Teléfono de Contacto</Label>
+                    <Input
+                      id="contact_phone"
+                      value={formData.metadata.contact_phone || ""}
+                      onChange={(e) => setFormData({ ...formData, metadata: { ...formData.metadata, contact_phone: e.target.value } })}
+                      placeholder="(809) 123-4567"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="family_contact">Familiar Cercano</Label>
+                    <Input
+                      id="family_contact"
+                      value={formData.metadata.family_contact || ""}
+                      onChange={(e) => setFormData({ ...formData, metadata: { ...formData.metadata, family_contact: e.target.value } })}
+                      placeholder="Nombre del familiar"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="urgency_level">Nivel de Urgencia</Label>
+                  <Select
+                    value={formData.metadata.urgency_level || "urgent"}
+                    onValueChange={(value) => setFormData({ ...formData, metadata: { ...formData.metadata, urgency_level: value } })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="normal">Normal</SelectItem>
+                      <SelectItem value="high">Alta</SelectItem>
+                      <SelectItem value="urgent">Urgente</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="additional_info">Información Adicional</Label>
+                  <Textarea
+                    id="additional_info"
+                    value={formData.metadata.additional_info || ""}
+                    onChange={(e) => setFormData({ ...formData, metadata: { ...formData.metadata, additional_info: e.target.value } })}
+                    placeholder="Detalles adicionales..."
+                    rows={3}
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>Días de la Semana</Label>
               <p className="text-sm text-muted-foreground mb-3">
@@ -857,6 +1187,60 @@ const ScheduledNotifications = () => {
           message={testingNotification?.metadata?.advice_message || "La práctica deliberada es más efectiva que simplemente tocar por horas. Enfócate en tus debilidades y establece metas específicas para cada sesión de práctica."}
           onClose={() => {
             setShowAdvicePreview(false);
+            setTestingNotification(null);
+          }}
+        />
+      )}
+
+      {showGeneralAnnouncement && testingNotification && (
+        <GeneralAnnouncementOverlay
+          title={testingNotification.metadata?.title || "Anuncio Importante"}
+          message={testingNotification.metadata?.message || testingNotification.description}
+          announcementType={testingNotification.notification_type as any}
+          onClose={() => {
+            setShowGeneralAnnouncement(false);
+            setTestingNotification(null);
+          }}
+        />
+      )}
+
+      {showMinistryInstructions && testingNotification && (
+        <MinistryInstructionsOverlay
+          title={testingNotification.metadata?.title || "Instrucciones"}
+          instructions={testingNotification.metadata?.instructions || testingNotification.description}
+          priority={testingNotification.metadata?.priority || 'normal'}
+          onClose={() => {
+            setShowMinistryInstructions(false);
+            setTestingNotification(null);
+          }}
+        />
+      )}
+
+      {showExtraordinaryRehearsal && testingNotification && (
+        <ExtraordinaryRehearsalOverlay
+          activityName={testingNotification.metadata?.activity_name || testingNotification.name}
+          date={testingNotification.metadata?.date || new Date().toISOString()}
+          time={testingNotification.metadata?.rehearsal_time || ""}
+          location={testingNotification.metadata?.location}
+          additionalNotes={testingNotification.metadata?.additional_notes}
+          onClose={() => {
+            setShowExtraordinaryRehearsal(false);
+            setTestingNotification(null);
+          }}
+        />
+      )}
+
+      {showBloodDonation && testingNotification && (
+        <BloodDonationOverlay
+          recipientName={testingNotification.metadata?.recipient_name || ""}
+          bloodType={testingNotification.metadata?.blood_type || ""}
+          contactPhone={testingNotification.metadata?.contact_phone || ""}
+          medicalCenter={testingNotification.metadata?.medical_center || ""}
+          familyContact={testingNotification.metadata?.family_contact || ""}
+          urgencyLevel={testingNotification.metadata?.urgency_level || 'urgent'}
+          additionalInfo={testingNotification.metadata?.additional_info}
+          onClose={() => {
+            setShowBloodDonation(false);
             setTestingNotification(null);
           }}
         />
