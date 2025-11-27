@@ -263,6 +263,11 @@ const Index = () => {
           position: relative;
         }
 
+        /* Mobile logo - hidden on desktop by default */
+        .mobile-logo {
+          display: none;
+        }
+
         .options-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
