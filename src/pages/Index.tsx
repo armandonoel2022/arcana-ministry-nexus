@@ -476,24 +476,24 @@ const Index = () => {
             grid-template-columns: repeat(2, 1fr);
             gap: 18px;
             max-width: 100%;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
           }
 
           .option-card {
-            height: 160px !important;
+            height: 185px !important;
           }
 
           .option-content svg {
-            width: 32px;
-            height: 32px;
+            width: 40px;
+            height: 40px;
           }
 
           .option-content h3 {
-            font-size: 13px;
+            font-size: 14px;
           }
 
           .option-content p {
-            font-size: 10px;
+            font-size: 11px;
           }
 
           .stats-cards {
