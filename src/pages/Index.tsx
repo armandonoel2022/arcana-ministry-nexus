@@ -474,13 +474,13 @@ const Index = () => {
 
           .options-grid {
             grid-template-columns: repeat(2, 1fr);
-            gap: 28px;
+            gap: 18px;
             max-width: 100%;
-            margin-bottom: 28px;
+            margin-bottom: 24px;
           }
 
           .option-card {
-            height: 145px !important;
+            height: 160px !important;
           }
 
           .option-content svg {
