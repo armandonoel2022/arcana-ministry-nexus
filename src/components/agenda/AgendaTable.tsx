@@ -457,6 +457,20 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                       <TableCell>
                         <div>
                           <div className="font-medium">{service.title}</div>
+                          {service.worship_groups && (
+                            <div className="lg:hidden text-xs mt-1">
+                              <Badge 
+                                className="text-xs"
+                                style={{ 
+                                  backgroundColor: service.worship_groups.color_theme + '20',
+                                  color: service.worship_groups.color_theme,
+                                  borderColor: service.worship_groups.color_theme + '40'
+                                }}
+                              >
+                                {service.worship_groups.name}
+                              </Badge>
+                            </div>
+                          )}
                           {service.special_activity && (
                             <div className="text-sm text-gray-500 mt-1">
                               {service.special_activity}
