@@ -22,6 +22,16 @@ const ExtraordinaryRehearsalOverlay = ({
   onClose 
 }: ExtraordinaryRehearsalOverlayProps) => {
   const formattedDate = format(new Date(date), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
+  
+  // Convertir hora de formato 24h a 12h con AM/PM
+  const formatTime = (time24: string) => {
+    if (!time24) return "";
+    const [hours, minutes] = time24.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'p.m.' : 'a.m.';
+    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${hour12.toString().padStart(2, '0')}:${minutes} ${ampm}`;
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
@@ -57,7 +67,7 @@ const ExtraordinaryRehearsalOverlay = ({
                 <Clock className="w-6 h-6 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm opacity-80">Hora</p>
-                  <p className="text-xl font-semibold">{time}</p>
+                  <p className="text-xl font-semibold">{formatTime(time)}</p>
                 </div>
               </div>
 
