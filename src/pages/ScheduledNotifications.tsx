@@ -461,7 +461,7 @@ const ScheduledNotifications = () => {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Cumpleaños */}
             <Card className="border-2 border-pink-200 bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-950 dark:to-pink-900">
               <CardContent className="p-6">
@@ -470,10 +470,25 @@ const ScheduledNotifications = () => {
                     <span className="text-4xl">🎁</span>
                   </div>
                   <h3 className="text-2xl font-bold text-pink-800 dark:text-pink-200">Cumpleaños</h3>
-                  <p className="text-sm text-foreground/70">
+                  <p className="text-sm text-foreground/70 min-h-[40px]">
                     Overlay del próximo cumpleaños real del ministerio
                   </p>
                   <div className="flex gap-2 w-full">
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-pink-600 text-pink-600 hover:bg-pink-50"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          notification_type: 'birthday',
+                          days_of_week: [1]
+                        });
+                        setIsDialogOpen(true);
+                      }}
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Editar
+                    </Button>
                     <Button
                       className="flex-1 bg-pink-600 hover:bg-pink-700 text-white"
                       onClick={async () => {
@@ -542,10 +557,25 @@ const ScheduledNotifications = () => {
                     <span className="text-4xl">📖</span>
                   </div>
                   <h3 className="text-2xl font-bold text-blue-800 dark:text-blue-200">Versículo del Día</h3>
-                  <p className="text-sm text-foreground/70">
+                  <p className="text-sm text-foreground/70 min-h-[40px]">
                     Versículo bíblico diario con reflexión espiritual
                   </p>
                   <div className="flex gap-2 w-full">
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-blue-600 text-blue-600 hover:bg-blue-50"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          notification_type: 'daily_verse',
+                          days_of_week: [1,2,3,4,5,6,0]
+                        });
+                        setIsDialogOpen(true);
+                      }}
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Editar
+                    </Button>
                     <Button
                       className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                       onClick={async () => {
@@ -667,10 +697,25 @@ const ScheduledNotifications = () => {
                     <span className="text-4xl">💡</span>
                   </div>
                   <h3 className="text-2xl font-bold text-yellow-800 dark:text-yellow-200">Consejo del Día</h3>
-                  <p className="text-sm text-foreground/70">
+                  <p className="text-sm text-foreground/70 min-h-[40px]">
                     Consejos musicales, vocales y de danza
                   </p>
                   <div className="flex gap-2 w-full">
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-yellow-600 text-yellow-600 hover:bg-yellow-50"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          notification_type: 'daily_advice',
+                          days_of_week: [1,2,3,4,5,6,0]
+                        });
+                        setIsDialogOpen(true);
+                      }}
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Editar
+                    </Button>
                     <Button
                       className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white"
                       onClick={async () => {
@@ -716,13 +761,231 @@ const ScheduledNotifications = () => {
                     <span className="text-4xl">🎵</span>
                   </div>
                   <h3 className="text-2xl font-bold text-green-800 dark:text-green-200">Programa de Servicios</h3>
-                  <p className="text-sm text-foreground/70">
+                  <p className="text-sm text-foreground/70 min-h-[40px]">
                     Detalles del próximo servicio de adoración
                   </p>
                   <div className="flex gap-2 w-full">
                     <Button
+                      variant="outline"
+                      className="flex-1 border-green-600 text-green-600 hover:bg-green-50"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          notification_type: 'service_overlay',
+                          days_of_week: [1]
+                        });
+                        setIsDialogOpen(true);
+                      }}
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Editar
+                    </Button>
+                    <Button
                       className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                       onClick={() => setShowServicePreview(true)}
+                    >
+                      Vista Previa
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Donación de Sangre Urgente */}
+            <Card className="border-2 border-red-200 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950 dark:to-rose-900">
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-rose-600 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-4xl">🩸</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-red-800 dark:text-red-200">Donación de Sangre</h3>
+                  <p className="text-sm text-foreground/70 min-h-[40px]">
+                    Solicitud urgente de donación de sangre
+                  </p>
+                  <div className="flex gap-2 w-full">
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-red-600 text-red-600 hover:bg-red-50"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          notification_type: 'blood_donation',
+                          days_of_week: [0,1,2,3,4,5,6]
+                        });
+                        setIsDialogOpen(true);
+                      }}
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Editar
+                    </Button>
+                    <Button
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                      onClick={() => {
+                        setTestingNotification({
+                          type: 'blood_donation',
+                          title: 'Donación de Sangre Urgente',
+                          message: 'Se necesita donación de sangre con urgencia',
+                          metadata: {
+                            recipient_name: 'Ejemplo de Paciente',
+                            blood_type: 'O+',
+                            contact_phone: '809-555-0100',
+                            medical_center: 'Hospital Ejemplo',
+                            family_contact: 'Familiar del Paciente',
+                            urgency_level: 'urgent'
+                          }
+                        });
+                        setShowBloodDonation(true);
+                      }}
+                    >
+                      Vista Previa
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Ensayo Extraordinario */}
+            <Card className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-900">
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-4xl">🎭</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-indigo-800 dark:text-indigo-200">Ensayo Extraordinario</h3>
+                  <p className="text-sm text-foreground/70 min-h-[40px]">
+                    Convocatoria a ensayo extraordinario
+                  </p>
+                  <div className="flex gap-2 w-full">
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-indigo-600 text-indigo-600 hover:bg-indigo-50"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          notification_type: 'extraordinary_rehearsal',
+                          days_of_week: [0,1,2,3,4,5,6]
+                        });
+                        setIsDialogOpen(true);
+                      }}
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Editar
+                    </Button>
+                    <Button
+                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white"
+                      onClick={() => {
+                        setTestingNotification({
+                          type: 'extraordinary_rehearsal',
+                          title: 'Ensayo Extraordinario',
+                          message: 'Se convoca a ensayo extraordinario',
+                          metadata: {
+                            activity_name: 'Evento Especial Navideño',
+                            date: '2025-12-15',
+                            rehearsal_time: '18:00',
+                            location: 'Templo Principal',
+                            additional_notes: 'Traer partituras actualizadas'
+                          }
+                        });
+                        setShowExtraordinaryRehearsal(true);
+                      }}
+                    >
+                      Vista Previa
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Instrucciones a Integrantes */}
+            <Card className="border-2 border-sky-200 bg-gradient-to-br from-sky-50 to-blue-50 dark:from-sky-950 dark:to-blue-900">
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="w-20 h-20 bg-gradient-to-br from-sky-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-4xl">📋</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-sky-800 dark:text-sky-200">Instrucciones</h3>
+                  <p className="text-sm text-foreground/70 min-h-[40px]">
+                    Instrucciones importantes para el ministerio
+                  </p>
+                  <div className="flex gap-2 w-full">
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-sky-600 text-sky-600 hover:bg-sky-50"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          notification_type: 'ministry_instructions',
+                          days_of_week: [0,1,2,3,4,5,6]
+                        });
+                        setIsDialogOpen(true);
+                      }}
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Editar
+                    </Button>
+                    <Button
+                      className="flex-1 bg-sky-600 hover:bg-sky-700 text-white"
+                      onClick={() => {
+                        setTestingNotification({
+                          type: 'ministry_instructions',
+                          title: 'Instrucciones Ministeriales',
+                          message: 'Instrucciones importantes',
+                          metadata: {
+                            instructions: 'Todo el ministerio debe subir al altar para la ministración especial',
+                            priority: 'high'
+                          }
+                        });
+                        setShowMinistryInstructions(true);
+                      }}
+                    >
+                      Vista Previa
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Anuncios Generales */}
+            <Card className="border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-slate-50 dark:from-gray-950 dark:to-slate-900">
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="w-20 h-20 bg-gradient-to-br from-gray-500 to-slate-600 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-4xl">📢</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Anuncios Generales</h3>
+                  <p className="text-sm text-foreground/70 min-h-[40px]">
+                    Fallecimiento, reunión, servicio especial, oración
+                  </p>
+                  <div className="flex gap-2 w-full">
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-gray-600 text-gray-600 hover:bg-gray-50"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          notification_type: 'death_announcement',
+                          days_of_week: [0,1,2,3,4,5,6]
+                        });
+                        setIsDialogOpen(true);
+                      }}
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Editar
+                    </Button>
+                    <Button
+                      className="flex-1 bg-gray-600 hover:bg-gray-700 text-white"
+                      onClick={() => {
+                        setTestingNotification({
+                          type: 'death_announcement',
+                          title: 'Anuncio Importante',
+                          message: 'Información relevante para el ministerio',
+                          metadata: {
+                            title: 'Convocatoria a Reunión',
+                            message: 'Se convoca a todos los integrantes del ministerio a reunión general'
+                          }
+                        });
+                        setShowGeneralAnnouncement(true);
+                      }}
                     >
                       Vista Previa
                     </Button>
