@@ -427,27 +427,36 @@ const Index = () => {
             right: 0;
             top: 0;
             bottom: 0;
+            display: flex;
           }
 
           .message-panel {
             position: relative;
             width: 100%;
-            height: 20%;
-            min-height: 140px;
+            flex-shrink: 0;
             background: var(--gradient-blue-form);
-            padding: 16px;
+            padding: 20px 16px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .message-content img {
+            border-radius: 16px;
           }
 
           .options-panel {
             position: relative;
             width: 100%;
-            height: 80%;
+            flex: 1;
             background: #fff;
-            padding: 16px;
+            padding: 20px 16px;
             overflow-y: auto;
             overflow-x: hidden;
-            justify-content: flex-start;
-            gap: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 16px;
           }
 
           .options-grid {
@@ -516,13 +525,62 @@ const Index = () => {
             width: 56px;
             height: 56px;
             margin-bottom: 12px;
+            border-radius: 16px;
+          }
+        }
+
+        /* Tablet breakpoint */
+        @media screen and (min-width: 769px) and (max-width: 1024px) {
+          .welcome-container {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            border-radius: 0;
+            margin: 0;
+            flex-direction: column;
+            max-width: 100vw;
+            display: flex;
+          }
+
+          .message-panel {
+            width: 100%;
+            flex-shrink: 0;
+            background: var(--gradient-blue-form);
+            padding: 24px 20px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .message-content img {
+            width: 70px;
+            height: 70px;
+            border-radius: 18px;
+          }
+
+          .options-panel {
+            width: 100%;
+            flex: 1;
+            background: #fff;
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 18px;
+          }
+
+          .toggle-background {
+            display: none;
           }
         }
 
         @media screen and (max-width: 400px) {
-          .message-panel,
+          .message-panel {
+            padding: 18px 15px 15px;
+          }
+
           .options-panel {
-            padding: 15px;
+            padding: 18px 15px;
           }
           
           .message-content h1 {
