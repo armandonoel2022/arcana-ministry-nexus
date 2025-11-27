@@ -392,6 +392,7 @@ async function processGeneralNotification(supabase: any, notification: Scheduled
     }
 
     console.log(`Sending ${notification.notification_type} notification to ${profiles?.length || 0} users`);
+    console.log('Notification metadata:', JSON.stringify(notification.metadata));
 
     // Determine title, message and category based on notification type
     // Use metadata fields if available, otherwise use defaults
@@ -399,6 +400,8 @@ async function processGeneralNotification(supabase: any, notification: Scheduled
     let title = metadata.title || notification.name;
     let message = metadata.message || 'Esta es una notificación programada.';
     let category = 'system';
+    
+    console.log(`Using title: ${title}, message: ${message}`);
 
     switch (notification.notification_type) {
       case 'death_announcement':
@@ -435,17 +438,21 @@ async function processGeneralNotification(supabase: any, notification: Scheduled
 
     // Send notification to all active users
     for (const profile of profiles) {
+      const notificationData = {
+        recipient_id: profile.id,
+        type: notification.notification_type,
+        title: title,
+        message: message,
+        notification_category: category,
+        metadata: notification.metadata || {},
+        priority: 1
+      };
+      
+      console.log(`Creating notification for user ${profile.id}:`, JSON.stringify(notificationData));
+      
       await supabase
         .from('system_notifications')
-        .insert({
-          recipient_id: profile.id,
-          type: notification.notification_type,
-          title: title,
-          message: message,
-          notification_category: category,
-          metadata: notification.metadata || {},
-          priority: 1
-        });
+        .insert(notificationData);
     }
 
     console.log('General notification processed successfully');
