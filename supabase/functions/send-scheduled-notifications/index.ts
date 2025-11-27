@@ -201,31 +201,52 @@ async function processDailyVerseNotification(supabase: any, notification: Schedu
 
     // If no verse for today, create one
     if (!dailyVerse) {
-      // Get a random verse
-      const { data: randomVerse, error: randomError } = await supabase
-        .from('bible_verses')
-        .select('*')
-        .limit(1)
-        .order('id', { ascending: false });
+      // Get a truly random verse using PostgreSQL's random() function
+      const { data: randomVerses, error: randomError } = await supabase
+        .rpc('get_random_verse');
 
-      if (randomError) throw randomError;
-      if (!randomVerse || randomVerse.length === 0) {
-        console.log('No verses available in database');
-        return;
+      // If RPC doesn't exist, fallback to client-side random selection
+      if (randomError || !randomVerses) {
+        const { data: allVerses, error: allVersesError } = await supabase
+          .from('bible_verses')
+          .select('*');
+
+        if (allVersesError) throw allVersesError;
+        if (!allVerses || allVerses.length === 0) {
+          console.log('No verses available in database');
+          return;
+        }
+
+        // Select a random verse
+        const randomIndex = Math.floor(Math.random() * allVerses.length);
+        const selectedVerse = allVerses[randomIndex];
+
+        // Create daily verse entry
+        const { data: newDailyVerse, error: insertError } = await supabase
+          .from('daily_verses')
+          .insert({
+            date: today,
+            verse_id: selectedVerse.id
+          })
+          .select('*, bible_verses (*)')
+          .single();
+
+        if (insertError) throw insertError;
+        dailyVerse = newDailyVerse;
+      } else {
+        // Use the random verse from RPC
+        const { data: newDailyVerse, error: insertError } = await supabase
+          .from('daily_verses')
+          .insert({
+            date: today,
+            verse_id: randomVerses
+          })
+          .select('*, bible_verses (*)')
+          .single();
+
+        if (insertError) throw insertError;
+        dailyVerse = newDailyVerse;
       }
-
-      // Create daily verse entry
-      const { data: newDailyVerse, error: insertError } = await supabase
-        .from('daily_verses')
-        .insert({
-          date: today,
-          verse_id: randomVerse[0].id
-        })
-        .select('*, bible_verses (*)')
-        .single();
-
-      if (insertError) throw insertError;
-      dailyVerse = newDailyVerse;
     }
 
     // Get all active users
@@ -269,15 +290,37 @@ async function processDailyAdviceNotification(supabase: any, notification: Sched
   console.log('Processing daily advice notification...');
   
   try {
-    const adviceMessages = [
-      { title: 'Ensaya con Propósito', message: 'Dedica tiempo de calidad a cada ensayo. La excelencia viene de la práctica constante.' },
-      { title: 'Unidad en el Ministerio', message: 'Recuerda que somos un solo cuerpo. Apoya a tus hermanos en el ministerio.' },
-      { title: 'Preparación Espiritual', message: 'Antes de ministrar, prepara tu corazón. La adoración nace de una vida en comunión con Dios.' },
-      { title: 'Puntualidad es Respeto', message: 'Llegar a tiempo a los ensayos y servicios demuestra compromiso y respeto a tus hermanos.' },
-      { title: 'Cuida tu Voz', message: 'Tu voz es un instrumento. Mantente hidratado y descansa adecuadamente.' }
-    ];
+    // Get all active advice from database
+    const { data: activeAdvice, error: adviceError } = await supabase
+      .from('daily_advice')
+      .select('*')
+      .eq('is_active', true);
 
-    const randomAdvice = adviceMessages[Math.floor(Math.random() * adviceMessages.length)];
+    if (adviceError) throw adviceError;
+
+    // If no advice in database, use fallback messages
+    let selectedAdvice;
+    
+    if (!activeAdvice || activeAdvice.length === 0) {
+      console.log('No active advice in database, using fallback messages');
+      const fallbackMessages = [
+        { title: 'Ensaya con Propósito', message: 'Dedica tiempo de calidad a cada ensayo. La excelencia viene de la práctica constante.' },
+        { title: 'Unidad en el Ministerio', message: 'Recuerda que somos un solo cuerpo. Apoya a tus hermanos en el ministerio.' },
+        { title: 'Preparación Espiritual', message: 'Antes de ministrar, prepara tu corazón. La adoración nace de una vida en comunión con Dios.' },
+        { title: 'Puntualidad es Respeto', message: 'Llegar a tiempo a los ensayos y servicios demuestra compromiso y respeto a tus hermanos.' },
+        { title: 'Cuida tu Voz', message: 'Tu voz es un instrumento. Mantente hidratado y descansa adecuadamente.' }
+      ];
+      selectedAdvice = fallbackMessages[Math.floor(Math.random() * fallbackMessages.length)];
+    } else {
+      // Select a random advice from the database
+      const randomIndex = Math.floor(Math.random() * activeAdvice.length);
+      selectedAdvice = {
+        title: activeAdvice[randomIndex].title,
+        message: activeAdvice[randomIndex].message
+      };
+    }
+
+    console.log(`Selected advice: ${selectedAdvice.title}`);
 
     // Get all active users
     const { data: profiles, error: profilesError } = await supabase
@@ -296,12 +339,12 @@ async function processDailyAdviceNotification(supabase: any, notification: Sched
         .insert({
           recipient_id: profile.id,
           type: 'daily_advice',
-          title: randomAdvice.title,
-          message: randomAdvice.message,
+          title: selectedAdvice.title,
+          message: selectedAdvice.message,
           notification_category: 'general',
           metadata: {
-            advice_title: randomAdvice.title,
-            advice_message: randomAdvice.message,
+            advice_title: selectedAdvice.title,
+            advice_message: selectedAdvice.message,
             advice_type: 'daily',
             date: new Date().toISOString().split('T')[0]
           },
