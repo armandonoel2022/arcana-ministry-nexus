@@ -378,7 +378,73 @@ async function processSpecialEventNotification(supabase: any, notification: Sche
 
 async function processGeneralNotification(supabase: any, notification: ScheduledNotification) {
   console.log(`Processing general notification: ${notification.name}`);
-  console.log('General notification processed');
+  
+  try {
+    // Get all active users to send notification to
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('is_active', true);
+
+    if (profilesError) {
+      console.error('Error fetching profiles:', profilesError);
+      throw profilesError;
+    }
+
+    console.log(`Sending ${notification.notification_type} notification to ${profiles?.length || 0} users`);
+
+    // Determine title and message based on notification type
+    let title = notification.name;
+    let message = 'Esta es una notificación programada.';
+    let category = 'system';
+
+    switch (notification.notification_type) {
+      case 'death_announcement':
+        category = 'general';
+        break;
+      case 'meeting_announcement':
+        category = 'general';
+        break;
+      case 'special_service':
+        category = 'agenda';
+        break;
+      case 'prayer_request':
+        category = 'general';
+        break;
+      case 'blood_donation':
+        category = 'general';
+        break;
+      case 'extraordinary_rehearsal':
+        category = 'agenda';
+        break;
+      case 'ministry_instructions':
+        category = 'general';
+        break;
+      default:
+        category = 'system';
+    }
+
+    // Send notification to all active users
+    for (const profile of profiles) {
+      await supabase
+        .from('system_notifications')
+        .insert({
+          recipient_id: profile.id,
+          type: notification.notification_type,
+          title: title,
+          message: message,
+          notification_category: category,
+          metadata: notification.metadata || {},
+          priority: 1
+        });
+    }
+
+    console.log('General notification processed successfully');
+    
+  } catch (error) {
+    console.error('Error processing general notification:', error);
+    throw error;
+  }
 }
 
 async function getNextWeekendServices(supabase: any) {
