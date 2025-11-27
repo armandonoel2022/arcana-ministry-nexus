@@ -465,46 +465,46 @@ const Index = () => {
             width: 100%;
             height: 80%;
             background: #fff;
-            padding: 16px;
+            padding: 20px 16px;
             overflow-y: auto;
             overflow-x: hidden;
-            justify-content: flex-start;
-            gap: 12px;
+            justify-content: space-between;
+            gap: 0;
           }
 
           .options-grid {
             grid-template-columns: repeat(2, 1fr);
-            gap: 18px;
+            gap: 16px;
             max-width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
           }
 
           .option-card {
-            height: 185px !important;
+            height: 135px !important;
           }
 
           .option-content svg {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
           }
 
           .option-content h3 {
-            font-size: 14px;
+            font-size: 13px;
           }
 
           .option-content p {
-            font-size: 11px;
+            font-size: 10px;
           }
 
           .stats-cards {
             grid-template-columns: repeat(2, 1fr);
-            gap: 18px;
+            gap: 16px;
             max-width: 100%;
             margin-bottom: 0;
           }
 
           .stat-card {
-            height: 75px !important;
+            height: 95px !important;
           }
 
           .stat-number {
