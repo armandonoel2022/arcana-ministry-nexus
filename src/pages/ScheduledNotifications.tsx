@@ -616,6 +616,13 @@ const ScheduledNotifications = () => {
                     >
                       Cambiar
                     </Button>
+                    <Button
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                      onClick={() => setShowVersePreview(true)}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Vista Previa
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -671,6 +678,13 @@ const ScheduledNotifications = () => {
                       }}
                     >
                       Cambiar
+                    </Button>
+                    <Button
+                      className="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white text-sm"
+                      onClick={() => setShowAdvicePreview(true)}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Vista Previa
                     </Button>
                   </div>
                 </div>
