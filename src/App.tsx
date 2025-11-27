@@ -465,7 +465,7 @@ function AppContent() {
           path="/*"
           element={
             <ProtectedRoute>
-              <SidebarProvider>
+              <SidebarProvider defaultOpen={false}>
                 <SidebarLayout />
                 <div className="flex h-screen w-full bg-gray-50">
                   <AppSidebar />

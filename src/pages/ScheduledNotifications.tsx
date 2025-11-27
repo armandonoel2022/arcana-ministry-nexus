@@ -1271,7 +1271,7 @@ const ScheduledNotifications = () => {
 
       {/* ... resto de overlays se mantienen igual */}
 
-      <style jsx>{`
+      <style>{`
         /* Responsive Design - Mismo patrón que index */
         @media screen and (max-width: 768px) {
           body, html {
