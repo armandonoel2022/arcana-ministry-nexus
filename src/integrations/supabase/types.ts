@@ -2095,6 +2095,13 @@ export type Database = {
         | "service_program"
         | "special_event"
         | "service_overlay"
+        | "death_announcement"
+        | "meeting_announcement"
+        | "special_service"
+        | "prayer_request"
+        | "blood_donation"
+        | "extraordinary_rehearsal"
+        | "ministry_instructions"
       song_knowledge: "unknown" | "learning" | "known" | "expert"
       user_role:
         | "admin"
@@ -2293,6 +2300,13 @@ export const Constants = {
         "service_program",
         "special_event",
         "service_overlay",
+        "death_announcement",
+        "meeting_announcement",
+        "special_service",
+        "prayer_request",
+        "blood_donation",
+        "extraordinary_rehearsal",
+        "ministry_instructions",
       ],
       song_knowledge: ["unknown", "learning", "known", "expert"],
       user_role: [

@@ -48,6 +48,10 @@ import SongChangeOverlay from "./components/songs/SongChangeOverlay";
 import { PendingSongNotifications } from "./components/songs/PendingSongNotifications";
 import { DailyVerseOverlay } from "./components/notifications/DailyVerseOverlay";
 import { DailyAdviceOverlay } from "./components/notifications/DailyAdviceOverlay";
+import GeneralAnnouncementOverlay from "./components/notifications/GeneralAnnouncementOverlay";
+import MinistryInstructionsOverlay from "./components/notifications/MinistryInstructionsOverlay";
+import ExtraordinaryRehearsalOverlay from "./components/notifications/ExtraordinaryRehearsalOverlay";
+import BloodDonationOverlay from "./components/notifications/BloodDonationOverlay";
 import { supabase } from "./integrations/supabase/client";
 import "./App.css";
 
@@ -77,6 +81,10 @@ function useSystemNotifications() {
   const [showServiceOverlay, setShowServiceOverlay] = useState(false);
   const [showVerseOverlay, setShowVerseOverlay] = useState(false);
   const [showAdviceOverlay, setShowAdviceOverlay] = useState(false);
+  const [showGeneralAnnouncement, setShowGeneralAnnouncement] = useState(false);
+  const [showMinistryInstructions, setShowMinistryInstructions] = useState(false);
+  const [showExtraordinaryRehearsal, setShowExtraordinaryRehearsal] = useState(false);
+  const [showBloodDonation, setShowBloodDonation] = useState(false);
 
   useEffect(() => {
     console.log("🔔 Configurando listener de notificaciones del sistema...");
@@ -138,6 +146,25 @@ function useSystemNotifications() {
                 console.log("💡 Mostrando overlay de consejo");
                 setShowAdviceOverlay(true);
                 break;
+              case "death_announcement":
+              case "meeting_announcement":
+              case "special_service":
+              case "prayer_request":
+                console.log("📢 Mostrando anuncio general:", notification.type);
+                setShowGeneralAnnouncement(true);
+                break;
+              case "ministry_instructions":
+                console.log("📋 Mostrando instrucciones ministeriales");
+                setShowMinistryInstructions(true);
+                break;
+              case "extraordinary_rehearsal":
+                console.log("🎵 Mostrando ensayo extraordinario");
+                setShowExtraordinaryRehearsal(true);
+                break;
+              case "blood_donation":
+                console.log("🩸 Mostrando solicitud de donación de sangre");
+                setShowBloodDonation(true);
+                break;
               case "general":
               case "reminder":
                 console.log("ℹ️ Notificación general:", notification);
@@ -183,14 +210,46 @@ function useSystemNotifications() {
     setCurrentNotification(null);
   };
 
+  const closeGeneralAnnouncement = () => {
+    console.log("🔒 Cerrando anuncio general");
+    setShowGeneralAnnouncement(false);
+    setCurrentNotification(null);
+  };
+
+  const closeMinistryInstructions = () => {
+    console.log("🔒 Cerrando instrucciones ministeriales");
+    setShowMinistryInstructions(false);
+    setCurrentNotification(null);
+  };
+
+  const closeExtraordinaryRehearsal = () => {
+    console.log("🔒 Cerrando ensayo extraordinario");
+    setShowExtraordinaryRehearsal(false);
+    setCurrentNotification(null);
+  };
+
+  const closeBloodDonation = () => {
+    console.log("🔒 Cerrando donación de sangre");
+    setShowBloodDonation(false);
+    setCurrentNotification(null);
+  };
+
   return {
     showServiceOverlay,
     showVerseOverlay,
     showAdviceOverlay,
+    showGeneralAnnouncement,
+    showMinistryInstructions,
+    showExtraordinaryRehearsal,
+    showBloodDonation,
     currentNotification,
     closeServiceOverlay,
     closeVerseOverlay,
     closeAdviceOverlay,
+    closeGeneralAnnouncement,
+    closeMinistryInstructions,
+    closeExtraordinaryRehearsal,
+    closeBloodDonation,
   };
 }
 
@@ -199,10 +258,18 @@ function AppContent() {
     showServiceOverlay,
     showVerseOverlay,
     showAdviceOverlay,
+    showGeneralAnnouncement,
+    showMinistryInstructions,
+    showExtraordinaryRehearsal,
+    showBloodDonation,
     currentNotification,
     closeServiceOverlay,
     closeVerseOverlay,
     closeAdviceOverlay,
+    closeGeneralAnnouncement,
+    closeMinistryInstructions,
+    closeExtraordinaryRehearsal,
+    closeBloodDonation,
   } = useSystemNotifications();
 
   console.log("🔄 Renderizando AppContent:", {
@@ -239,6 +306,48 @@ function AppContent() {
           title={currentNotification.metadata?.advice_title || ""}
           message={currentNotification.metadata?.advice_message || ""}
           onClose={closeAdviceOverlay}
+        />
+      )}
+
+      {showGeneralAnnouncement && currentNotification && (
+        <GeneralAnnouncementOverlay
+          title={currentNotification.title}
+          message={currentNotification.message}
+          announcementType={currentNotification.type}
+          onClose={closeGeneralAnnouncement}
+        />
+      )}
+
+      {showMinistryInstructions && currentNotification && (
+        <MinistryInstructionsOverlay
+          title={currentNotification.title}
+          instructions={currentNotification.message}
+          priority={currentNotification.metadata?.priority || 'normal'}
+          onClose={closeMinistryInstructions}
+        />
+      )}
+
+      {showExtraordinaryRehearsal && currentNotification && (
+        <ExtraordinaryRehearsalOverlay
+          activityName={currentNotification.metadata?.activity_name || currentNotification.title}
+          date={currentNotification.metadata?.date || new Date().toISOString()}
+          time={currentNotification.metadata?.time || ""}
+          location={currentNotification.metadata?.location}
+          additionalNotes={currentNotification.metadata?.additional_notes}
+          onClose={closeExtraordinaryRehearsal}
+        />
+      )}
+
+      {showBloodDonation && currentNotification && (
+        <BloodDonationOverlay
+          recipientName={currentNotification.metadata?.recipient_name || ""}
+          bloodType={currentNotification.metadata?.blood_type || ""}
+          contactPhone={currentNotification.metadata?.contact_phone || ""}
+          medicalCenter={currentNotification.metadata?.medical_center || ""}
+          familyContact={currentNotification.metadata?.family_contact || ""}
+          urgencyLevel={currentNotification.metadata?.urgency_level || 'urgent'}
+          additionalInfo={currentNotification.metadata?.additional_info}
+          onClose={closeBloodDonation}
         />
       )}
 
