@@ -6,7 +6,6 @@ import {
   Calendar,
   Music,
   Users,
-  BookOpen,
   MessageSquare,
   Settings,
   Heart,
@@ -50,46 +49,11 @@ const Index = () => {
       gradient: "from-green-500 to-emerald-600"
     },
     {
-      title: "Módulo Espiritual",
-      description: "Versículos y reflexiones",
-      icon: BookOpen,
-      url: "/modulo-espiritual",
-      gradient: "from-orange-500 to-red-500"
-    },
-    {
       title: "Comunicación",
       description: "Chat y mensajería",
       icon: MessageSquare,
       url: "/communication",
       gradient: "from-cyan-500 to-blue-500"
-    },
-    {
-      title: "Cumpleaños",
-      description: "Celebraciones del ministerio",
-      icon: Heart,
-      url: "/cumpleanos",
-      gradient: "from-pink-500 to-rose-600"
-    },
-    {
-      title: "Notificaciones",
-      description: "Centro de avisos",
-      icon: Bell,
-      url: "/notificaciones",
-      gradient: "from-indigo-500 to-purple-600"
-    },
-    {
-      title: "Asistente Personal",
-      description: "Ayuda inteligente",
-      icon: Sparkles,
-      url: "/asistente-personal",
-      gradient: "from-amber-500 to-orange-600"
-    },
-    {
-      title: "Configuración",
-      description: "Ajustes del sistema",
-      icon: Settings,
-      url: "/configuracion",
-      gradient: "from-gray-500 to-slate-600"
     }
   ];
 
@@ -174,18 +138,6 @@ const Index = () => {
             <p className="text-white/90 mb-6 text-lg">
               Sistema de Gestión Musical ARCANA
             </p>
-            <div className="flex gap-6 justify-center text-white/80 text-sm">
-              <div className="flex flex-col items-center">
-                <Users className="w-6 h-6 mb-1" />
-                <span className="font-bold text-lg">{memberCount}</span>
-                <span className="text-xs">Miembros</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <Music className="w-6 h-6 mb-1" />
-                <span className="font-bold text-lg">{groupCount}</span>
-                <span className="text-xs">Grupos</span>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -200,6 +152,33 @@ const Index = () => {
             </div>
           )}
           
+          {/* Stats Cards - Clickable */}
+          <div className="stats-cards">
+            <Button
+              onClick={() => handleOptionClick("/integrantes")}
+              className="stat-card"
+              variant="outline"
+            >
+              <div className="stat-content">
+                <Users className="w-8 h-8 mb-2" />
+                <span className="stat-number">{memberCount}</span>
+                <span className="stat-label">Miembros</span>
+              </div>
+            </Button>
+            <Button
+              onClick={() => handleOptionClick("/worship-groups")}
+              className="stat-card"
+              variant="outline"
+            >
+              <div className="stat-content">
+                <Music className="w-8 h-8 mb-2" />
+                <span className="stat-number">{groupCount}</span>
+                <span className="stat-label">Grupos</span>
+              </div>
+            </Button>
+          </div>
+
+          {/* Main Services Grid - 4 buttons */}
           <div className="options-grid">
             {mainServices.map((option, index) => (
               <Button
@@ -213,9 +192,9 @@ const Index = () => {
                 variant="outline"
               >
                 <div className="option-content">
-                  <option.icon className="w-7 h-7 mb-2 group-hover:scale-110 transition-transform duration-200" />
-                  <h3 className="font-semibold text-xs mb-0.5">{option.title}</h3>
-                  <p className="text-[10px]">{option.description}</p>
+                  <option.icon className="w-10 h-10 mb-3 group-hover:scale-110 transition-transform duration-200" />
+                  <h3 className="font-semibold text-sm mb-1">{option.title}</h3>
+                  <p className="text-xs">{option.description}</p>
                 </div>
               </Button>
             ))}
@@ -278,16 +257,65 @@ const Index = () => {
           position: relative;
         }
 
+        .stats-cards {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 15px;
+          width: 100%;
+          max-width: 600px;
+          margin-bottom: 20px;
+        }
+
+        .stat-card {
+          height: 100px !important;
+          border: 2px solid hsl(var(--primary)) !important;
+          border-radius: 16px !important;
+          background: linear-gradient(135deg, hsl(var(--primary)), hsl(217 91% 55%)) !important;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .stat-card:hover {
+          transform: translateY(-4px) !important;
+          box-shadow: var(--shadow-elegant) !important;
+        }
+
+        .stat-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          color: white;
+          text-align: center;
+        }
+
+        .stat-content svg {
+          color: white;
+        }
+
+        .stat-number {
+          font-size: 24px;
+          font-weight: bold;
+          line-height: 1;
+        }
+
+        .stat-label {
+          font-size: 12px;
+          opacity: 0.9;
+        }
+
         .options-grid {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: repeat(2, 1fr);
           gap: 15px;
           width: 100%;
           max-width: 600px;
         }
 
         .option-card {
-          height: 110px !important;
+          height: 140px !important;
           border: 2px solid hsl(var(--border)) !important;
           border-radius: 16px !important;
           background: white !important;
@@ -336,10 +364,12 @@ const Index = () => {
         .option-content h3 {
           color: hsl(var(--foreground));
           font-weight: 600;
+          font-size: 14px;
         }
 
         .option-content p {
           color: hsl(var(--muted-foreground));
+          font-size: 12px;
         }
 
         .option-content svg {
@@ -384,37 +414,80 @@ const Index = () => {
         /* Responsive Design */
         @media screen and (max-width: 768px) {
           .welcome-container {
-            width: 100%;
+            width: 100vw;
             height: 100vh;
+            height: 100dvh;
             border-radius: 0;
             margin: 0;
             flex-direction: column;
+            max-width: 100vw;
           }
 
           .message-panel {
             position: relative;
             width: 100%;
-            height: 25%;
+            height: 20%;
+            min-height: 140px;
             background: var(--gradient-blue-form);
-            padding: 20px;
+            padding: 16px;
           }
 
           .options-panel {
             position: relative;
             width: 100%;
-            height: 75%;
+            height: 80%;
             background: #fff;
-            padding: 20px;
+            padding: 16px;
+            overflow-y: auto;
+            justify-content: flex-start;
+            gap: 16px;
+          }
+
+          .stats-cards {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            max-width: 100%;
+            margin-bottom: 16px;
+          }
+
+          .stat-card {
+            height: 80px !important;
+          }
+
+          .stat-number {
+            font-size: 20px;
+          }
+
+          .stat-label {
+            font-size: 11px;
+          }
+
+          .stat-content svg {
+            width: 28px;
+            height: 28px;
           }
 
           .options-grid {
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
-            max-height: 100%;
+            max-width: 100%;
           }
 
           .option-card {
-            height: 90px !important;
+            height: 120px !important;
+          }
+
+          .option-content svg {
+            width: 32px;
+            height: 32px;
+          }
+
+          .option-content h3 {
+            font-size: 13px;
+          }
+
+          .option-content p {
+            font-size: 10px;
           }
 
           .toggle-background {
@@ -422,24 +495,18 @@ const Index = () => {
           }
 
           .message-content h1 {
-            font-size: 28px;
+            font-size: 24px;
+            margin-bottom: 8px;
           }
 
           .message-content p {
-            font-size: 16px;
+            font-size: 14px;
           }
 
-          .option-content h3 {
-            font-size: 11px;
-          }
-
-          .option-content p {
-            font-size: 9px;
-          }
-
-          .option-content svg {
-            width: 24px;
-            height: 24px;
+          .message-content img {
+            width: 56px;
+            height: 56px;
+            margin-bottom: 12px;
           }
         }
 
