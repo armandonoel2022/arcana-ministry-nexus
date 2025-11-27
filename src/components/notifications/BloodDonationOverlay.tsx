@@ -69,7 +69,7 @@ const BloodDonationOverlay = ({
           </div>
 
           <div className="space-y-4">
-            <div className="p-6 rounded-lg bg-white/10 border border-red-500 backdrop-blur-sm space-y-4">
+            <div className="p-6 rounded-lg bg-white/90 border border-red-500 backdrop-blur-sm space-y-4 text-gray-900">
               <div className="flex items-start gap-3">
                 <User className="w-6 h-6 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
