@@ -87,192 +87,206 @@ function useSystemNotifications() {
   const [showBloodDonation, setShowBloodDonation] = useState(false);
 
   useEffect(() => {
-    console.log("🔔 Configurando listener de notificaciones del sistema...");
+    console.log("🔔 [SYSTEM NOTIFICATIONS] Iniciando configuración del listener...");
 
     let cleanup: (() => void) | null = null;
 
     // Obtener el usuario actual para filtrar solo sus notificaciones
     const setupListener = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.log("❌ No hay usuario autenticado, no se puede configurar listener");
-        return;
+      try {
+        console.log("👤 [SYSTEM NOTIFICATIONS] Obteniendo usuario autenticado...");
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError) {
+          console.error("❌ [SYSTEM NOTIFICATIONS] Error obteniendo usuario:", authError);
+          return;
+        }
+        
+        if (!user) {
+          console.log("❌ [SYSTEM NOTIFICATIONS] No hay usuario autenticado");
+          return;
+        }
+
+        console.log("✅ [SYSTEM NOTIFICATIONS] Usuario autenticado:", user.id);
+        console.log("🔧 [SYSTEM NOTIFICATIONS] Creando canal de Realtime...");
+
+        const channelName = `user-notifications-${user.id}`;
+        console.log("📺 [SYSTEM NOTIFICATIONS] Nombre del canal:", channelName);
+
+        const channel = supabase
+          .channel(channelName, {
+            config: {
+              broadcast: { self: true },
+              presence: { key: user.id }
+            }
+          })
+          .on(
+            "postgres_changes",
+            {
+              event: "INSERT",
+              schema: "public",
+              table: "system_notifications",
+              filter: `recipient_id=eq.${user.id}`,
+            },
+            async (payload) => {
+              console.log("🎯 [SYSTEM NOTIFICATIONS] ¡Nueva notificación recibida!", payload.new);
+              const notification = payload.new;
+
+              // Solo procesar notificaciones no leídas
+              if (notification.is_read) {
+                console.log("📭 [SYSTEM NOTIFICATIONS] Notificación ya leída, ignorando");
+                return;
+              }
+
+              console.log("📋 [SYSTEM NOTIFICATIONS] Procesando notificación tipo:", notification.type);
+              setCurrentNotification(notification);
+
+              // Mostrar el overlay correspondiente según el tipo
+              switch (notification.type) {
+                case "service_overlay":
+                  console.log("📢 [SYSTEM NOTIFICATIONS] Activando overlay de servicios");
+                  setShowServiceOverlay(true);
+                  
+                  // Marcar como leída
+                  try {
+                    await supabase
+                      .from("system_notifications")
+                      .update({ is_read: true })
+                      .eq("id", notification.id);
+                    console.log("✅ [SYSTEM NOTIFICATIONS] Notificación marcada como leída");
+                  } catch (err) {
+                    console.error("❌ [SYSTEM NOTIFICATIONS] Error marcando notificación:", err);
+                  }
+                  break;
+                case "daily_verse":
+                  console.log("📖 [SYSTEM NOTIFICATIONS] Mostrando overlay de versículo");
+                  setShowVerseOverlay(true);
+                  
+                  // Marcar como leída
+                  try {
+                    await supabase
+                      .from("system_notifications")
+                      .update({ is_read: true })
+                      .eq("id", notification.id);
+                    console.log("✅ [SYSTEM NOTIFICATIONS] Notificación de versículo marcada como leída");
+                  } catch (err) {
+                    console.error("❌ [SYSTEM NOTIFICATIONS] Error marcando notificación:", err);
+                  }
+                  break;
+                case "daily_advice":
+                  console.log("💡 [SYSTEM NOTIFICATIONS] Mostrando overlay de consejo");
+                  setShowAdviceOverlay(true);
+                  
+                  // Marcar como leída
+                  try {
+                    await supabase
+                      .from("system_notifications")
+                      .update({ is_read: true })
+                      .eq("id", notification.id);
+                    console.log("✅ [SYSTEM NOTIFICATIONS] Notificación de consejo marcada como leída");
+                  } catch (err) {
+                    console.error("❌ [SYSTEM NOTIFICATIONS] Error marcando notificación:", err);
+                  }
+                  break;
+                case "death_announcement":
+                case "meeting_announcement":
+                case "special_service":
+                case "prayer_request":
+                  console.log("📢 [SYSTEM NOTIFICATIONS] Mostrando anuncio general:", notification.type);
+                  setShowGeneralAnnouncement(true);
+                  
+                  // Marcar como leída
+                  try {
+                    await supabase
+                      .from("system_notifications")
+                      .update({ is_read: true })
+                      .eq("id", notification.id);
+                    console.log("✅ [SYSTEM NOTIFICATIONS] Notificación de anuncio general marcada como leída");
+                  } catch (err) {
+                    console.error("❌ [SYSTEM NOTIFICATIONS] Error marcando notificación:", err);
+                  }
+                  break;
+                case "ministry_instructions":
+                  console.log("📋 [SYSTEM NOTIFICATIONS] Mostrando instrucciones ministeriales");
+                  setShowMinistryInstructions(true);
+                  
+                  // Marcar como leída
+                  try {
+                    await supabase
+                      .from("system_notifications")
+                      .update({ is_read: true })
+                      .eq("id", notification.id);
+                    console.log("✅ [SYSTEM NOTIFICATIONS] Notificación de instrucciones marcada como leída");
+                  } catch (err) {
+                    console.error("❌ [SYSTEM NOTIFICATIONS] Error marcando notificación:", err);
+                  }
+                  break;
+                case "extraordinary_rehearsal":
+                  console.log("🎵 [SYSTEM NOTIFICATIONS] Mostrando ensayo extraordinario");
+                  setShowExtraordinaryRehearsal(true);
+                  
+                  // Marcar como leída
+                  try {
+                    await supabase
+                      .from("system_notifications")
+                      .update({ is_read: true })
+                      .eq("id", notification.id);
+                    console.log("✅ [SYSTEM NOTIFICATIONS] Notificación de ensayo marcada como leída");
+                  } catch (err) {
+                    console.error("❌ [SYSTEM NOTIFICATIONS] Error marcando notificación:", err);
+                  }
+                  break;
+                case "blood_donation":
+                  console.log("🩸 [SYSTEM NOTIFICATIONS] Mostrando solicitud de donación de sangre");
+                  setShowBloodDonation(true);
+                  
+                  // Marcar como leída
+                  try {
+                    await supabase
+                      .from("system_notifications")
+                      .update({ is_read: true })
+                      .eq("id", notification.id);
+                    console.log("✅ [SYSTEM NOTIFICATIONS] Notificación de donación marcada como leída");
+                  } catch (err) {
+                    console.error("❌ [SYSTEM NOTIFICATIONS] Error marcando notificación:", err);
+                  }
+                  break;
+                case "general":
+                case "reminder":
+                  console.log("ℹ️ [SYSTEM NOTIFICATIONS] Notificación general:", notification);
+                  break;
+                default:
+                  console.log("❌ [SYSTEM NOTIFICATIONS] Tipo de notificación no manejado:", notification.type);
+              }
+            },
+          )
+          .subscribe((status) => {
+            console.log("📡 [SYSTEM NOTIFICATIONS] Estado de suscripción:", status);
+            if (status === "SUBSCRIBED") {
+              console.log("✅ [SYSTEM NOTIFICATIONS] ¡Suscripción exitosa! El listener está activo y esperando notificaciones...");
+            } else if (status === "CHANNEL_ERROR") {
+              console.error("❌ [SYSTEM NOTIFICATIONS] Error en la suscripción");
+            } else if (status === "TIMED_OUT") {
+              console.error("⏱️ [SYSTEM NOTIFICATIONS] Timeout en la suscripción");
+            } else if (status === "CLOSED") {
+              console.log("🔒 [SYSTEM NOTIFICATIONS] Canal cerrado");
+            }
+          });
+
+        // Guardar función de cleanup para el canal
+        cleanup = () => {
+          console.log("🧹 [SYSTEM NOTIFICATIONS] Limpiando canal");
+          supabase.removeChannel(channel);
+        };
+      } catch (error) {
+        console.error("❌ [SYSTEM NOTIFICATIONS] Error en setup:", error);
       }
-
-      console.log("👤 Usuario autenticado:", user.id);
-      console.log("🔧 Creando canal de Realtime para notificaciones...");
-
-      const channel = supabase
-        .channel(`user-notifications-${user.id}`, {
-          config: {
-            broadcast: { self: true },
-            presence: { key: user.id }
-          }
-        })
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "system_notifications",
-            filter: `recipient_id=eq.${user.id}`,
-          },
-          async (payload) => {
-            console.log("🎯 Nueva notificación del sistema recibida:", payload.new);
-            const notification = payload.new;
-
-            // Solo procesar notificaciones no leídas
-            if (notification.is_read) {
-              console.log("📭 Notificación ya leída, ignorando");
-              return;
-            }
-
-            setCurrentNotification(notification);
-
-            // Mostrar el overlay correspondiente según el tipo
-            console.log("📋 Tipo de notificación:", notification.type);
-            
-            switch (notification.type) {
-              case "service_overlay":
-                console.log("📢 Activando overlay de servicios");
-                setShowServiceOverlay(true);
-                
-                // Marcar como leída
-                try {
-                  await supabase
-                    .from("system_notifications")
-                    .update({ is_read: true })
-                    .eq("id", notification.id);
-                  console.log("✅ Notificación marcada como leída");
-                } catch (err) {
-                  console.error("❌ Error marcando notificación:", err);
-                }
-                break;
-              case "daily_verse":
-                console.log("📖 Mostrando overlay de versículo");
-                setShowVerseOverlay(true);
-                
-                // Marcar como leída
-                try {
-                  await supabase
-                    .from("system_notifications")
-                    .update({ is_read: true })
-                    .eq("id", notification.id);
-                  console.log("✅ Notificación de versículo marcada como leída");
-                } catch (err) {
-                  console.error("❌ Error marcando notificación:", err);
-                }
-                break;
-              case "daily_advice":
-                console.log("💡 Mostrando overlay de consejo");
-                setShowAdviceOverlay(true);
-                
-                // Marcar como leída
-                try {
-                  await supabase
-                    .from("system_notifications")
-                    .update({ is_read: true })
-                    .eq("id", notification.id);
-                  console.log("✅ Notificación de consejo marcada como leída");
-                } catch (err) {
-                  console.error("❌ Error marcando notificación:", err);
-                }
-                break;
-              case "death_announcement":
-              case "meeting_announcement":
-              case "special_service":
-              case "prayer_request":
-                console.log("📢 Mostrando anuncio general:", notification.type);
-                setShowGeneralAnnouncement(true);
-                
-                // Marcar como leída
-                try {
-                  await supabase
-                    .from("system_notifications")
-                    .update({ is_read: true })
-                    .eq("id", notification.id);
-                  console.log("✅ Notificación de anuncio general marcada como leída");
-                } catch (err) {
-                  console.error("❌ Error marcando notificación:", err);
-                }
-                break;
-              case "ministry_instructions":
-                console.log("📋 Mostrando instrucciones ministeriales");
-                setShowMinistryInstructions(true);
-                
-                // Marcar como leída
-                try {
-                  await supabase
-                    .from("system_notifications")
-                    .update({ is_read: true })
-                    .eq("id", notification.id);
-                  console.log("✅ Notificación de instrucciones marcada como leída");
-                } catch (err) {
-                  console.error("❌ Error marcando notificación:", err);
-                }
-                break;
-              case "extraordinary_rehearsal":
-                console.log("🎵 Mostrando ensayo extraordinario");
-                setShowExtraordinaryRehearsal(true);
-                
-                // Marcar como leída
-                try {
-                  await supabase
-                    .from("system_notifications")
-                    .update({ is_read: true })
-                    .eq("id", notification.id);
-                  console.log("✅ Notificación de ensayo marcada como leída");
-                } catch (err) {
-                  console.error("❌ Error marcando notificación:", err);
-                }
-                break;
-              case "blood_donation":
-                console.log("🩸 Mostrando solicitud de donación de sangre");
-                setShowBloodDonation(true);
-                
-                // Marcar como leída
-                try {
-                  await supabase
-                    .from("system_notifications")
-                    .update({ is_read: true })
-                    .eq("id", notification.id);
-                  console.log("✅ Notificación de donación marcada como leída");
-                } catch (err) {
-                  console.error("❌ Error marcando notificación:", err);
-                }
-                break;
-              case "general":
-              case "reminder":
-                console.log("ℹ️ Notificación general:", notification);
-                break;
-              default:
-                console.log("❌ Tipo de notificación no manejado:", notification.type);
-            }
-          },
-        )
-        .subscribe((status) => {
-          console.log("📡 Estado de suscripción a notificaciones:", status);
-          if (status === "SUBSCRIBED") {
-            console.log("✅ Suscripción exitosa a notificaciones del usuario");
-          } else if (status === "CHANNEL_ERROR") {
-            console.error("❌ Error en la suscripción a notificaciones");
-          } else if (status === "TIMED_OUT") {
-            console.error("⏱️ Timeout en la suscripción a notificaciones");
-          } else if (status === "CLOSED") {
-            console.log("🔒 Canal de notificaciones cerrado");
-          }
-        });
-
-      // Guardar función de cleanup para el canal
-      cleanup = () => {
-        console.log("🧹 Limpiando canal de notificaciones");
-        supabase.removeChannel(channel);
-      };
     };
 
     setupListener();
 
     return () => {
+      console.log("🔚 [SYSTEM NOTIFICATIONS] Desmontando listener");
       if (cleanup) {
         cleanup();
       }
