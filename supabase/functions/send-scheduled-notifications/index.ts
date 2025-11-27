@@ -393,9 +393,11 @@ async function processGeneralNotification(supabase: any, notification: Scheduled
 
     console.log(`Sending ${notification.notification_type} notification to ${profiles?.length || 0} users`);
 
-    // Determine title and message based on notification type
-    let title = notification.name;
-    let message = 'Esta es una notificación programada.';
+    // Determine title, message and category based on notification type
+    // Use metadata fields if available, otherwise use defaults
+    const metadata = notification.metadata || {};
+    let title = metadata.title || notification.name;
+    let message = metadata.message || 'Esta es una notificación programada.';
     let category = 'system';
 
     switch (notification.notification_type) {
@@ -413,12 +415,19 @@ async function processGeneralNotification(supabase: any, notification: Scheduled
         break;
       case 'blood_donation':
         category = 'general';
+        // For blood donation, ensure we have all required metadata
+        title = `Donación de Sangre Urgente: ${metadata.recipient_name || 'Paciente'}`;
+        message = `Se necesita sangre tipo ${metadata.blood_type || 'O+'} para ${metadata.recipient_name || 'paciente'}. Centro: ${metadata.medical_center || 'Hospital'}`;
         break;
       case 'extraordinary_rehearsal':
         category = 'agenda';
+        title = `Ensayo Extraordinario: ${metadata.activity_name || 'Actividad Especial'}`;
+        message = `Fecha: ${metadata.date || ''}, Hora: ${metadata.rehearsal_time || ''}`;
         break;
       case 'ministry_instructions':
         category = 'general';
+        title = metadata.title || 'Instrucciones del Ministerio';
+        message = metadata.instructions || metadata.message || 'Instrucciones importantes para el ministerio';
         break;
       default:
         category = 'system';
