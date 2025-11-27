@@ -2,15 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { 
-  Calendar,
-  Music,
-  Users,
-  MessageSquare,
-  UserCog,
-  Cake,
-  Lightbulb
-} from "lucide-react";
+import { Calendar, Music, Users, MessageSquare, UserCog, Cake, Lightbulb } from "lucide-react";
 import BirthdayNotificationBanner from "@/components/notifications/BirthdayNotificationBanner";
 import { Button } from "@/components/ui/button";
 
@@ -31,78 +23,80 @@ const Index = () => {
       description: "Gestión de servicios y turnos",
       icon: Calendar,
       url: "/agenda",
-      gradient: "from-blue-500 to-blue-600"
+      gradient: "from-blue-500 to-blue-600",
     },
     {
       title: "Repertorio Musical",
       description: "Catálogo de canciones",
       icon: Music,
       url: "/repertorio",
-      gradient: "from-purple-500 to-purple-600"
+      gradient: "from-purple-500 to-purple-600",
     },
     {
       title: "Solicitar Reemplazo",
       description: "Reemplazos de director",
       icon: UserCog,
       url: "/director-replacements",
-      gradient: "from-green-500 to-emerald-600"
+      gradient: "from-green-500 to-emerald-600",
     },
     {
       title: "Comunicación",
       description: "Chat y mensajería",
       icon: MessageSquare,
       url: "/communication",
-      gradient: "from-cyan-500 to-blue-500"
+      gradient: "from-cyan-500 to-blue-500",
     },
     {
       title: "Cumpleaños",
       description: "Fechas especiales",
       icon: Cake,
       url: "/birthday-module",
-      gradient: "from-pink-500 to-rose-600"
+      gradient: "from-pink-500 to-rose-600",
     },
     {
       title: "Recomendaciones",
       description: "Sugerencias y consejos",
       icon: Lightbulb,
       url: "/recomendaciones",
-      gradient: "from-amber-500 to-orange-600"
-    }
+      gradient: "from-amber-500 to-orange-600",
+    },
   ];
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const { count: members } = await supabase
-          .from('members')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_active', true);
+          .from("members")
+          .select("*", { count: "exact", head: true })
+          .eq("is_active", true);
 
         const { count: groups } = await supabase
-          .from('worship_groups')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_active', true);
+          .from("worship_groups")
+          .select("*", { count: "exact", head: true })
+          .eq("is_active", true);
 
         setMemberCount(members || 0);
         setGroupCount(groups || 0);
       } catch (error) {
-        console.error('Error fetching stats:', error);
+        console.error("Error fetching stats:", error);
       } finally {
         setLoading(false);
       }
     };
 
     const checkBirthdayNotifications = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data: notifications } = await supabase
-        .from('system_notifications')
-        .select('*')
-        .eq('recipient_id', user.id)
-        .eq('type', 'birthday')
-        .eq('is_read', false)
-        .order('created_at', { ascending: false })
+        .from("system_notifications")
+        .select("*")
+        .eq("recipient_id", user.id)
+        .eq("type", "birthday")
+        .eq("is_read", false)
+        .order("created_at", { ascending: false })
         .limit(1);
 
       if (notifications && notifications.length > 0) {
@@ -117,10 +111,7 @@ const Index = () => {
   const dismissBirthdayNotification = async () => {
     if (!birthdayNotification) return;
 
-    await supabase
-      .from('system_notifications')
-      .update({ is_read: true })
-      .eq('id', birthdayNotification.id);
+    await supabase.from("system_notifications").update({ is_read: true }).eq("id", birthdayNotification.id);
 
     setBirthdayNotification(null);
   };
@@ -134,23 +125,21 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-         style={{ background: "var(--gradient-primary)", width: "100vw", maxWidth: "100vw" }}>
-      
-      <div className={`welcome-container ${isAnimating ? 'animating' : ''}`}>
-        
+    <div
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
+      style={{ background: "var(--gradient-primary)", width: "100vw", maxWidth: "100vw" }}
+    >
+      <div className={`welcome-container ${isAnimating ? "animating" : ""}`}>
         {/* Welcome Message Panel */}
         <div className="message-panel">
           <div className="message-content">
-            <img 
-              src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" 
-              alt="ARCANA Logo" 
+            <img
+              src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png"
+              alt="ARCANA Logo"
               className="w-20 h-20 mx-auto mb-6 object-contain"
             />
             <h1 className="text-4xl font-bold text-white mb-4">¡Hola, {firstName}!</h1>
-            <p className="text-white/90 mb-6 text-lg">
-              Sistema de Gestión Musical ARCANA
-            </p>
+            <p className="text-white/90 mb-6 text-lg">Sistema de Gestión Musical ARCANA</p>
           </div>
         </div>
 
@@ -158,23 +147,20 @@ const Index = () => {
         <div className="options-panel">
           {birthdayNotification && (
             <div className="mb-4 w-full max-w-[600px]">
-              <BirthdayNotificationBanner
-                notification={birthdayNotification}
-                onDismiss={dismissBirthdayNotification}
-              />
+              <BirthdayNotificationBanner notification={birthdayNotification} onDismiss={dismissBirthdayNotification} />
             </div>
           )}
 
-          {/* Main Services Grid - 4 buttons */}
+          {/* Main Services Grid */}
           <div className="options-grid">
             {mainServices.map((option, index) => (
               <Button
                 key={option.url}
                 onClick={() => handleOptionClick(option.url)}
                 className={`option-card group animate-fade-in`}
-                style={{ 
+                style={{
                   animationDelay: `${index * 50}ms`,
-                  background: `linear-gradient(135deg, var(--primary), var(--accent))`
+                  background: `linear-gradient(135deg, var(--primary), var(--accent))`,
                 }}
                 variant="outline"
               >
@@ -186,25 +172,17 @@ const Index = () => {
               </Button>
             ))}
           </div>
-          
-          {/* Stats Cards - Clickable - BELOW main services */}
+
+          {/* Stats Cards - Clickable */}
           <div className="stats-cards">
-            <Button
-              onClick={() => handleOptionClick("/integrantes")}
-              className="stat-card"
-              variant="outline"
-            >
+            <Button onClick={() => handleOptionClick("/integrantes")} className="stat-card" variant="outline">
               <div className="stat-content">
                 <Users className="w-6 h-6 mb-1" />
                 <span className="stat-number">{memberCount}</span>
                 <span className="stat-label">Miembros</span>
               </div>
             </Button>
-            <Button
-              onClick={() => handleOptionClick("/worship-groups")}
-              className="stat-card"
-              variant="outline"
-            >
+            <Button onClick={() => handleOptionClick("/worship-groups")} className="stat-card" variant="outline">
               <div className="stat-content">
                 <Music className="w-6 h-6 mb-1" />
                 <span className="stat-number">{groupCount}</span>
@@ -430,7 +408,7 @@ const Index = () => {
           transform: translateX(100%);
         }
 
-        /* Responsive Design */
+        /* Responsive Design - CORREGIDO */
         @media screen and (max-width: 768px) {
           body, html {
             overflow-x: hidden;
@@ -468,15 +446,16 @@ const Index = () => {
             padding: 16px 16px 20px 16px;
             overflow-y: auto;
             overflow-x: hidden;
+            /* CAMBIO CLAVE: Eliminar justify-content y usar gap para controlar el espaciado */
             justify-content: flex-start;
-            gap: 0;
+            gap: 16px;
           }
 
           .options-grid {
             grid-template-columns: repeat(2, 1fr);
             gap: 16px;
             max-width: 100%;
-            margin-bottom: 18px;
+            margin-bottom: 0; /* Eliminar margin-bottom ya que usamos gap en el contenedor */
           }
 
           .option-card {
@@ -547,16 +526,41 @@ const Index = () => {
             padding: 15px;
           }
           
+          .options-panel {
+            gap: 12px; /* Reducir gap en pantallas muy pequeñas */
+          }
+          
           .message-content h1 {
             font-size: 24px;
           }
 
           .option-card {
-            height: 80px !important;
+            height: 120px !important; /* Ajustar altura para pantallas pequeñas */
           }
 
           .options-grid {
-            gap: 10px;
+            gap: 12px;
+          }
+
+          .stats-cards {
+            gap: 12px;
+          }
+        }
+
+        /* Asegurar que el contenido ocupe todo el espacio disponible en móvil */
+        @media screen and (max-width: 768px) and (max-height: 700px) {
+          .options-panel {
+            gap: 12px;
+            padding-top: 12px;
+            padding-bottom: 12px;
+          }
+          
+          .option-card {
+            height: 110px !important;
+          }
+          
+          .stat-card {
+            height: 80px !important;
           }
         }
       `}</style>
