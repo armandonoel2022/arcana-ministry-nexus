@@ -426,6 +426,7 @@ const Index = () => {
             overflow-x: hidden;
           }
 
+          /* NUEVO: Fondo azul para todo el contenedor en móvil */
           .welcome-container {
             width: 100vw;
             height: 100vh;
@@ -439,29 +440,32 @@ const Index = () => {
             right: 0;
             top: 0;
             bottom: 0;
+            background: var(--gradient-blue-form); /* Fondo azul para eliminar espacios blancos */
           }
 
           .message-panel {
             position: relative;
             width: 100%;
-            height: 25%; /* Aumentado de 20% a 25% para bajar más el contenido */
-            min-height: 160px; /* Aumentado de 140px a 160px */
+            height: 25%;
+            min-height: 160px;
             background: var(--gradient-blue-form);
-            padding: 20px 16px 16px 16px; /* Aumentado padding-top de 16px a 20px */
-            /* Se añade espacio superior adicional usando margin-top */
-            margin-top: 24px; /* NUEVO: Espacio superior para bajar toda la sección azul */
+            padding: 20px 16px 16px 16px;
+            /* Eliminamos el margin-top y usamos padding-top extendido */
+            padding-top: 40px; /* Aumentado para bajar el contenido */
           }
 
           .options-panel {
             position: relative;
             width: 100%;
-            height: 75%; /* Reducido de 80% a 75% para compensar el aumento del message-panel */
+            height: 75%;
             background: #fff;
             padding: 16px 16px 20px 16px;
             overflow-y: auto;
             overflow-x: hidden;
             justify-content: flex-start;
             gap: 16px;
+            border-top-left-radius: 24px; /* Esquinas redondeadas para transición suave */
+            border-top-right-radius: 24px;
           }
 
           /* AJUSTES DEL LOGO EN MÓVIL */
@@ -469,7 +473,7 @@ const Index = () => {
             width: 70px;
             height: 70px;
             margin-bottom: 16px;
-            border-radius: 16px; /* Esquinas ovaladas más pequeñas en móvil */
+            border-radius: 16px;
             padding: 6px;
           }
 
@@ -543,8 +547,7 @@ const Index = () => {
           }
 
           .message-panel {
-            padding-top: 16px; /* Mantener espacio superior */
-            margin-top: 20px; /* Ajustado para pantallas más pequeñas */
+            padding-top: 35px; /* Ajustado para pantallas más pequeñas */
           }
           
           .options-panel {
@@ -567,7 +570,6 @@ const Index = () => {
             gap: 12px;
           }
 
-          /* Ajuste final del logo en pantallas muy pequeñas */
           .logo-image {
             width: 60px;
             height: 60px;
@@ -592,7 +594,6 @@ const Index = () => {
             height: 80px !important;
           }
 
-          /* Ajustar logo en pantallas con poca altura */
           .logo-image {
             width: 50px;
             height: 50px;
