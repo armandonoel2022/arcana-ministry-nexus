@@ -178,7 +178,10 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar className="border-r-0 shadow-xl" collapsible="icon">
+    <Sidebar 
+      className="border-r-0 shadow-xl transition-all duration-300 ease-in-out" 
+      collapsible="icon"
+    >
       <SidebarContent className="bg-sidebar">
         {/* Header */}
         <div className="p-6 border-b border-sidebar-border">

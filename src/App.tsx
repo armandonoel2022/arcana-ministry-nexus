@@ -472,6 +472,9 @@ function AppContent() {
                 <div className="flex h-screen w-full bg-gray-50">
                   <AppSidebar />
                   <div className="flex-1 flex flex-col">
+                    <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
+                      <AnimatedLogoTrigger />
+                    </header>
                     <main className="flex-1 overflow-auto bg-gray-50">
                       <Routes>
                         <Route path="/" element={<Index />} />
