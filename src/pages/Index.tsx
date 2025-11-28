@@ -50,7 +50,7 @@ const Index = () => {
       title: "Cumpleaños",
       description: "Fechas especiales",
       icon: Cake,
-      url: "/birthday-module",
+      url: "/cumpleanos",
       gradient: "from-pink-500 to-rose-600",
     },
     {
