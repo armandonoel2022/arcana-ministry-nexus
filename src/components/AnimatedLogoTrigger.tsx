@@ -15,9 +15,9 @@ export function AnimatedLogoTrigger() {
         aria-label="Toggle sidebar"
       >
         <img 
-          src="/lovable-uploads/a58d8d74-4ced-444f-b402-8a028fc7f65e.png" 
+          src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" 
           alt="ARCANA Logo" 
-          className={`h-8 w-8 object-cover rounded-full transition-all duration-500 ${
+          className={`h-8 w-8 object-cover rounded-2xl transition-all duration-500 ${
             open 
               ? 'opacity-100 scale-100 rotate-0' 
               : 'opacity-90 scale-95 group-hover:scale-110 group-hover:rotate-12'
