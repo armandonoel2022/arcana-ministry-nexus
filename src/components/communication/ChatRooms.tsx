@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Users, Lock, Globe, Search, MoreVertical } from "lucide-react";
+import { MessageCircle, Users, Globe, Search } from "lucide-react";
 import { ChatRoom } from "./ChatRoom";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -12,14 +12,10 @@ interface ChatRoomData {
   name: string;
   description?: string;
   room_type: string;
-  department?: string;
   is_moderated: boolean;
   is_active: boolean;
   member_count?: number;
   is_member?: boolean;
-  last_message?: string;
-  last_message_time?: string;
-  unread_count?: number;
 }
 
 export const ChatRooms = () => {
@@ -44,28 +40,17 @@ export const ChatRooms = () => {
 
   const fetchRooms = async () => {
     try {
-      console.log("Fetching chat rooms...");
-
       // Get all active rooms
       const { data: roomsData, error: roomsError } = await supabase
         .from("chat_rooms")
         .select("*")
         .eq("is_active", true);
 
-      if (roomsError) {
-        console.error("Error fetching rooms:", roomsError);
-        throw roomsError;
-      }
+      if (roomsError) throw roomsError;
 
-      // Get member counts for each room
-      const { data: memberCounts, error: membersError } = await supabase.from("chat_room_members").select("room_id");
+      // Get member counts
+      const { data: memberCounts } = await supabase.from("chat_room_members").select("room_id");
 
-      if (membersError) {
-        console.error("Error fetching member counts:", membersError);
-        throw membersError;
-      }
-
-      // Count members per room
       const memberCountMap =
         memberCounts?.reduce(
           (acc, member) => {
@@ -82,33 +67,13 @@ export const ChatRooms = () => {
       let userMemberships: string[] = [];
 
       if (user) {
-        const { data: userMemberData, error: userMemberError } = await supabase
+        const { data: userMemberData } = await supabase
           .from("chat_room_members")
           .select("room_id")
           .eq("user_id", user.id);
 
-        if (userMemberError) {
-          console.error("Error fetching user memberships:", userMemberError);
-        } else {
-          userMemberships = userMemberData?.map((m) => m.room_id) || [];
-        }
+        userMemberships = userMemberData?.map((m) => m.room_id) || [];
       }
-
-      // Get last messages for each room
-      const { data: lastMessages, error: messagesError } = await supabase
-        .from("chat_messages")
-        .select("room_id, content, created_at")
-        .order("created_at", { ascending: false });
-
-      const lastMessageMap: Record<string, { content: string; created_at: string }> = {};
-      lastMessages?.forEach((msg) => {
-        if (!lastMessageMap[msg.room_id]) {
-          lastMessageMap[msg.room_id] = {
-            content: msg.content,
-            created_at: msg.created_at,
-          };
-        }
-      });
 
       // Combine data
       const roomsWithCount =
@@ -116,19 +81,9 @@ export const ChatRooms = () => {
           ...room,
           member_count: memberCountMap[room.id] || 0,
           is_member: userMemberships.includes(room.id),
-          last_message: lastMessageMap[room.id]?.content,
-          last_message_time: lastMessageMap[room.id]?.created_at,
-          unread_count: 0, // Podrías implementar un contador de mensajes no leídos
         })) || [];
 
-      console.log("Final rooms data:", roomsWithCount);
       setRooms(roomsWithCount);
-
-      // Seleccionar automáticamente la sala principal si no hay una sala seleccionada
-      if (!selectedRoom && roomsWithCount.length > 0) {
-        const mainRoom = roomsWithCount.find((r) => r.room_type === "general") || roomsWithCount[0];
-        setSelectedRoom(mainRoom);
-      }
     } catch (error) {
       console.error("Error in fetchRooms:", error);
       toast({
@@ -152,17 +107,12 @@ export const ChatRooms = () => {
         return;
       }
 
-      console.log("Joining room:", roomId, "User:", currentUser.id);
-
       const { error } = await supabase.from("chat_room_members").upsert({
         room_id: roomId,
         user_id: currentUser.id,
       });
 
-      if (error) {
-        console.error("Error joining room:", error);
-        throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: "Éxito",
@@ -180,39 +130,21 @@ export const ChatRooms = () => {
     }
   };
 
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (days === 0) {
-      return date.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
-    } else if (days === 1) {
-      return "Ayer";
-    } else {
-      return date.toLocaleDateString("es-ES", { day: "numeric", month: "short" });
-    }
-  };
-
   const filteredRooms = rooms.filter(
     (room) =>
       room.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       room.description?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
+  // Si hay una sala seleccionada, mostrar el chat
   if (selectedRoom) {
-    return (
-      <div className="h-screen flex flex-col">
-        <ChatRoom room={selectedRoom} onBack={() => setSelectedRoom(null)} />
-      </div>
-    );
+    return <ChatRoom room={selectedRoom} onBack={() => setSelectedRoom(null)} />;
   }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-32">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-arcana-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -246,7 +178,7 @@ export const ChatRooms = () => {
               onClick={() => room.is_member && setSelectedRoom(room)}
             >
               {/* Avatar del chat */}
-              <div className="flex-shrink-0 w-12 h-12 bg-arcana-blue-gradient rounded-full flex items-center justify-center mr-3">
+              <div className="flex-shrink-0 w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mr-3">
                 {room.room_type === "general" ? (
                   <Globe className="w-6 h-6 text-white" />
                 ) : (
@@ -258,47 +190,32 @@ export const ChatRooms = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
                   <h3 className="font-semibold text-gray-900 truncate">{room.name}</h3>
-                  {room.last_message_time && (
-                    <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
-                      {formatTime(room.last_message_time)}
-                    </span>
-                  )}
+                  <Badge variant="secondary" className="text-xs">
+                    {room.member_count} miembros
+                  </Badge>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <p className="text-sm text-gray-600 truncate">
                     {room.is_member ? (
-                      room.last_message || "No hay mensajes aún"
+                      room.description || "Toca para abrir el chat"
                     ) : (
-                      <span className="text-arcana-blue-600">Toca para unirte</span>
+                      <span className="text-blue-600">Toca para unirte</span>
                     )}
                   </p>
 
-                  <div className="flex items-center gap-1 ml-2">
-                    {room.unread_count > 0 && (
-                      <Badge className="bg-arcana-blue-600 text-white text-xs h-5 min-w-5 flex items-center justify-center">
-                        {room.unread_count}
-                      </Badge>
-                    )}
-                    {!room.is_member && (
-                      <Button
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          joinRoom(room.id);
-                        }}
-                        className="bg-arcana-blue-gradient hover:opacity-90 text-white text-xs h-6 px-2"
-                      >
-                        Unirse
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Información adicional */}
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-xs text-gray-500">{room.member_count} miembros</span>
-                  {room.is_moderated && <Lock className="w-3 h-3 text-gray-400" />}
+                  {!room.is_member && (
+                    <Button
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        joinRoom(room.id);
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-6 px-2"
+                    >
+                      Unirse
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
