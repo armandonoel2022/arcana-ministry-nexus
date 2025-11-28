@@ -7,7 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import ConfettiEffect from "@/components/birthday/ConfettiEffect";
 import BirthdayNotificationBanner from "./BirthdayNotificationBanner";
 
 interface Notification {
@@ -28,7 +27,6 @@ const NotificationCenter = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "unread" | "agenda" | "repertory" | "director_replacement">("all");
-  const [showConfetti, setShowConfetti] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -51,13 +49,6 @@ const NotificationCenter = () => {
           supabase.auth.getUser().then(({ data: { user } }) => {
             if (user && newNotification.recipient_id === user.id) {
               setNotifications((prev) => [newNotification, ...prev]);
-
-              // Check if it's a birthday notification that should trigger confetti and sound
-              if (newNotification.metadata?.show_confetti) {
-                console.log("Triggering confetti for birthday notification");
-                setShowConfetti(true);
-                playBirthdaySound();
-              }
 
               toast({
                 title: newNotification.title,
@@ -152,45 +143,6 @@ const NotificationCenter = () => {
     }
   };
 
-  const playBirthdaySound = () => {
-    try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-
-      const notes = [
-        { freq: 261.63, duration: 0.3 }, // C
-        { freq: 261.63, duration: 0.2 }, // C
-        { freq: 293.66, duration: 0.4 }, // D
-        { freq: 261.63, duration: 0.4 }, // C
-        { freq: 349.23, duration: 0.4 }, // F
-        { freq: 329.63, duration: 0.8 }, // E
-      ];
-
-      let currentTime = audioContext.currentTime;
-
-      notes.forEach((note) => {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-
-        oscillator.frequency.setValueAtTime(note.freq, currentTime);
-        oscillator.type = "sine";
-
-        gainNode.gain.setValueAtTime(0, currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.1, currentTime + 0.05);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, currentTime + note.duration);
-
-        oscillator.start(currentTime);
-        oscillator.stop(currentTime + note.duration);
-
-        currentTime += note.duration + 0.1;
-      });
-    } catch (error) {
-      console.log("No se pudo reproducir el sonido de cumpleaños:", error);
-    }
-  };
-
   const markAllAsRead = async () => {
     try {
       const {
@@ -278,35 +230,40 @@ const NotificationCenter = () => {
 
   if (isLoading) {
     return (
-      <div className="text-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600">Cargando notificaciones...</p>
+      <div className="flex justify-center items-center py-12 min-h-[200px] w-full px-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando notificaciones...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <>
-      <ConfettiEffect trigger={showConfetti} onComplete={() => setShowConfetti(false)} />
-      <div className="container mx-auto p-3 sm:p-6 max-w-4xl">
-        <div className="space-y-4 sm:space-y-6">
+    <div className="w-full min-h-screen bg-white">
+      <div className="w-full px-4 sm:px-6 max-w-4xl mx-auto">
+        <div className="space-y-4 sm:space-y-6 w-full py-4">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="flex flex-col items-center sm:items-start sm:flex-row sm:justify-between gap-3 text-center sm:text-left w-full">
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-center sm:justify-start">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-arcana-gradient rounded-full flex items-center justify-center flex-shrink-0">
                 <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold arcana-gradient-text truncate">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold arcana-gradient-text">
                   Centro de Notificaciones
                 </h1>
-                <p className="text-xs sm:text-sm text-gray-600 truncate">
+                <p className="text-xs sm:text-sm text-gray-600">
                   {unreadCount > 0 ? `${unreadCount} notificaciones sin leer` : "Todas las notificaciones están al día"}
                 </p>
               </div>
             </div>
             {unreadCount > 0 && (
-              <Button onClick={markAllAsRead} className="flex items-center gap-2 w-full sm:w-auto" size="sm">
+              <Button
+                onClick={markAllAsRead}
+                className="flex items-center gap-2 w-full sm:w-auto justify-center mt-2 sm:mt-0"
+                size="sm"
+              >
                 <Check className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span className="text-xs sm:text-sm">Marcar todas como leídas</span>
               </Button>
@@ -314,7 +271,7 @@ const NotificationCenter = () => {
           </div>
 
           {/* Filters */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 justify-center sm:justify-start w-full px-2 sm:px-0">
             <Button variant={filter === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("all")}>
               Todas ({notifications.length})
             </Button>
@@ -344,9 +301,9 @@ const NotificationCenter = () => {
           </div>
 
           {/* Notifications List */}
-          <div className="space-y-2 sm:space-y-3">
+          <div className="space-y-2 sm:space-y-3 w-full">
             {filteredNotifications.length === 0 ? (
-              <div className="text-center py-8 sm:py-12">
+              <div className="text-center py-8 sm:py-12 w-full">
                 <Bell className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3 sm:mb-4" />
                 <h3 className="text-base sm:text-lg font-semibold text-gray-600 mb-2">No hay notificaciones</h3>
                 <p className="text-sm sm:text-base text-gray-500">
@@ -359,36 +316,38 @@ const NotificationCenter = () => {
                   key={notification.id}
                   className={`border-l-4 ${getPriorityColor(notification.priority)} ${
                     !notification.is_read ? "ring-2 ring-blue-100" : ""
-                  } hover:shadow-md transition-shadow cursor-pointer`}
+                  } hover:shadow-md transition-shadow cursor-pointer w-full mx-0`}
                   onClick={() => !notification.is_read && markAsRead(notification.id)}
                 >
-                  <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-3">
-                    <div className="flex items-start justify-between gap-2">
+                  <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-3">
+                    <div className="flex items-start justify-between gap-2 w-full">
                       <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
                         <div className="flex-shrink-0 mt-0.5">{getNotificationIcon(notification.type)}</div>
                         <div className="min-w-0 flex-1">
-                          <CardTitle className="text-sm sm:text-lg flex flex-wrap items-center gap-1 sm:gap-2">
-                            <span className="break-words">{notification.title}</span>
-                            {!notification.is_read && (
-                              <Badge variant="secondary" className="text-xs flex-shrink-0">
-                                Nuevo
+                          <CardTitle className="text-sm sm:text-lg flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                            <span className="break-words text-center sm:text-left w-full">{notification.title}</span>
+                            <div className="flex justify-center sm:justify-start gap-1">
+                              {!notification.is_read && (
+                                <Badge variant="secondary" className="text-xs flex-shrink-0">
+                                  Nuevo
+                                </Badge>
+                              )}
+                              <Badge variant="outline" className="text-xs flex-shrink-0 hidden sm:inline-flex">
+                                {getPriorityLabel(notification.priority)}
                               </Badge>
-                            )}
-                            <Badge variant="outline" className="text-xs flex-shrink-0 hidden sm:inline-flex">
-                              {getPriorityLabel(notification.priority)}
-                            </Badge>
+                            </div>
                           </CardTitle>
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-gray-500 mt-1">
-                            <div className="flex items-center gap-1 flex-shrink-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-gray-500 mt-1 justify-center sm:justify-start">
+                            <div className="flex items-center gap-1 flex-shrink-0 justify-center sm:justify-start">
                               <Clock className="w-3 h-3 flex-shrink-0" />
-                              <span className="truncate">
+                              <span>
                                 {format(new Date(notification.created_at), "dd/MM/yyyy HH:mm", { locale: es })}
                               </span>
                             </div>
                             {notification.scheduled_for && (
-                              <div className="flex items-center gap-1 min-w-0">
+                              <div className="flex items-center gap-1 justify-center sm:justify-start">
                                 <Settings className="w-3 h-3 flex-shrink-0" />
-                                <span className="truncate">
+                                <span>
                                   Programada:{" "}
                                   {format(new Date(notification.scheduled_for), "dd/MM/yyyy HH:mm", { locale: es })}
                                 </span>
@@ -412,8 +371,8 @@ const NotificationCenter = () => {
                       )}
                     </div>
                   </CardHeader>
-                  <CardContent className="p-3 sm:p-6 pt-2">
-                    <div className="text-xs sm:text-sm text-gray-700 leading-relaxed mb-3 break-words whitespace-pre-wrap">
+                  <CardContent className="p-4 sm:p-6 pt-2">
+                    <div className="text-xs sm:text-sm text-gray-700 leading-relaxed mb-3 break-words whitespace-pre-wrap text-center sm:text-left">
                       {notification.message}
                     </div>
 
@@ -422,7 +381,7 @@ const NotificationCenter = () => {
                       notification.type === "birthday_monthly" ||
                       (notification.type === "general" && notification.metadata?.birthday)) &&
                       notification.metadata && (
-                        <div className="mt-4">
+                        <div className="mt-4 flex justify-center sm:justify-start">
                           <BirthdayNotificationBanner
                             notification={notification}
                             onDismiss={() => markAsRead(notification.id)}
@@ -432,7 +391,7 @@ const NotificationCenter = () => {
 
                     {/* Show metadata if available */}
                     {notification.metadata && (
-                      <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded break-words">
+                      <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded break-words text-center sm:text-left">
                         {notification.type === "song_selection" && notification.metadata.song_title && (
                           <div className="break-words">
                             Canción: <span className="font-medium break-words">{notification.metadata.song_title}</span>
@@ -459,7 +418,7 @@ const NotificationCenter = () => {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
