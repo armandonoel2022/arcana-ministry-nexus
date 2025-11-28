@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Users, Bot, Smile, Paperclip, ArrowLeft, MoreVertical } from "lucide-react";
+import { Send, Users, Bot, Smile, Paperclip, AtSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ArcanaBot, BotAction } from "./ArcanaBot";
 import { ArcanaAvatar } from "./ArcanaAvatar";
@@ -42,10 +43,9 @@ interface Message {
 
 interface ChatRoomProps {
   room: ChatRoomData;
-  onBack?: () => void;
 }
 
-export const ChatRoom = ({ room, onBack }: ChatRoomProps) => {
+export const ChatRoom = ({ room }: ChatRoomProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -415,7 +415,7 @@ export const ChatRoom = ({ room, onBack }: ChatRoomProps) => {
     return message.is_bot === true || message.user_id === null;
   };
 
-  const getBotDisplayName = () => "ARCANA";
+  const getBotDisplayName = () => "ARCANA Asistente";
 
   const getUserDisplayName = (message: Message) => {
     if (isBot(message)) {
@@ -712,15 +712,11 @@ export const ChatRoom = ({ room, onBack }: ChatRoomProps) => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-arcana-blue-600"></div>
-      </div>
-    );
+    return <div className="text-center py-8">Cargando mensajes...</div>;
   }
 
   return (
-    <div className="h-screen flex flex-col bg-white">
+    <div className="space-y-4 relative">
       {/* Song Limit Overlay */}
       {showSongLimitOverlay && songLimitData && (
         <SongLimitOverlay
@@ -735,248 +731,253 @@ export const ChatRoom = ({ room, onBack }: ChatRoomProps) => {
 
       {/* Avatar animado de ARCANA */}
       <ArcanaAvatar isActive={arcanaActive} expression={arcanaExpression} position="bottom-right" />
-
-      {/* WhatsApp-like Header */}
-      <div className="bg-arcana-blue-gradient px-4 py-3 flex items-center gap-3 border-b border-blue-600">
-        {onBack && (
-          <Button variant="ghost" size="sm" onClick={onBack} className="text-white hover:bg-white/20 p-2 h-auto">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-        )}
-
-        <Avatar className="w-10 h-10 border-2 border-white/30">
-          <AvatarFallback className="bg-white/20 text-white">
-            <Users className="w-5 h-5" />
-          </AvatarFallback>
-        </Avatar>
-
-        <div className="flex-1 min-w-0">
-          <h1 className="text-white font-semibold text-lg truncate">{room.name}</h1>
-          <p className="text-white/80 text-sm truncate">{room.description || "Sala de chat ARCANA"}</p>
-        </div>
-
-        <Button variant="ghost" size="sm" className="text-white hover:bg-white/20 p-2 h-auto">
-          <MoreVertical className="w-5 h-5" />
-        </Button>
-      </div>
+      {/* Room Header */}
+      <Card className="bg-gradient-to-r from-arcana-blue-50 to-arcana-gold-50">
+        <CardHeader className="pb-2 sm:pb-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-arcana-blue-gradient rounded-full flex items-center justify-center flex-shrink-0">
+              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <CardTitle className="text-base sm:text-xl truncate">{room.name}</CardTitle>
+              {room.description && <p className="text-xs sm:text-sm text-gray-600 truncate">{room.description}</p>}
+              <p className="text-[10px] sm:text-xs text-arcana-blue-600 mt-1">
+                💡 Escribe "ARCANA" o "@ARCANA" seguido de tu consulta sobre turnos, ensayos y canciones
+              </p>
+              {currentUser?.member && (
+                <p className="text-[10px] sm:text-xs text-arcana-gold-600 mt-1">
+                  👋 Hola {currentUser.member.nombres} - {currentUser.member.cargo}
+                </p>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
 
       {/* Messages Area */}
-      <div
-        ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto bg-gray-100 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23e5e7eb%22%20fill-opacity%3D%220.3%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"
-      >
-        <div className="p-4 space-y-2 min-h-full">
-          {messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center text-gray-500">
-                <div className="w-16 h-16 bg-arcana-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <MessageCircle className="w-8 h-8 text-arcana-blue-600" />
-                </div>
-                <p className="text-sm">No hay mensajes aún</p>
-                <p className="text-xs text-gray-400 mt-1">¡Sé el primero en escribir!</p>
-              </div>
-            </div>
-          ) : (
-            messages.map((message) => {
-              const isOwnMessage = message.user_id === currentUser?.id;
-              const isBotMessage = isBot(message);
-
-              return (
-                <div
-                  key={message.id}
-                  className={`flex gap-2 ${isOwnMessage && !isBotMessage ? "justify-end" : "justify-start"}`}
-                >
-                  {(!isOwnMessage || isBotMessage) && (
-                    <Avatar className="w-8 h-8 flex-shrink-0">
-                      {!isBotMessage && message.profiles?.photo_url && (
-                        <AvatarImage
-                          src={message.profiles.photo_url}
-                          alt={getUserDisplayName(message)}
-                          className="object-cover"
-                        />
-                      )}
-                      <AvatarFallback
-                        className={`text-xs ${isBotMessage ? "bg-purple-500 text-white" : "bg-arcana-blue-500 text-white"}`}
-                      >
-                        {isBotMessage ? <Bot className="w-4 h-4" /> : getInitials(getUserDisplayName(message))}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-
-                  <div className={`max-w-xs ${isOwnMessage && !isBotMessage ? "order-first" : ""}`}>
-                    {(!isOwnMessage || isBotMessage) && (
-                      <p className="text-xs text-gray-600 mb-1 ml-1">{getUserDisplayName(message)}</p>
-                    )}
-
-                    <div
-                      className={`p-3 rounded-2xl ${
-                        isBotMessage
-                          ? "bg-purple-500 text-white"
-                          : isOwnMessage
-                            ? "bg-arcana-blue-500 text-white rounded-br-md"
-                            : "bg-white text-gray-900 rounded-bl-md shadow-sm"
-                      }`}
-                    >
-                      <div
-                        className="text-sm whitespace-pre-wrap"
-                        dangerouslySetInnerHTML={{
-                          __html: message.message
-                            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                            .replace(
-                              /\[(.*?)\]\((.*?)\)/g,
-                              '<a href="$2" target="_blank" rel="noopener noreferrer" class="underline">$1</a>',
-                            ),
-                        }}
-                      />
-
-                      {/* Multimedia */}
-                      {message.media_url && (
-                        <div className="mt-2">
-                          {message.media_type === "image" && (
-                            <img
-                              src={message.media_url}
-                              alt="Imagen"
-                              className="max-w-full rounded-lg max-h-64 object-contain"
-                              loading="lazy"
-                            />
-                          )}
-                          {message.media_type === "video" && (
-                            <video controls className="max-w-full rounded-lg max-h-64">
-                              <source src={message.media_url} type="video/mp4" />
-                            </video>
-                          )}
-                          {(message.media_type === "audio" || message.media_type === "voice") && (
-                            <VoiceMessagePlayer audioUrl={message.media_url} />
-                          )}
-                        </div>
-                      )}
-
-                      {/* Render action buttons if available */}
-                      {message.actions && message.actions.length > 0 && (
-                        <div className="mt-3 flex flex-col gap-2">
-                          {message.actions.map((action, idx) => (
-                            <Button
-                              key={idx}
-                              onClick={() => handleActionClick(action)}
-                              size="sm"
-                              className={`${
-                                isBotMessage
-                                  ? "bg-white text-purple-600 hover:bg-gray-100"
-                                  : "bg-arcana-gold-500 hover:bg-arcana-gold-600"
-                              } font-medium shadow-md`}
-                            >
-                              ➕ Agregar "{action.songName}"
-                            </Button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <p
-                      className={`text-xs text-gray-500 mt-1 ${isOwnMessage && !isBotMessage ? "text-right" : "text-left"}`}
-                    >
-                      {formatTime(message.created_at)}
-                    </p>
-                  </div>
-
-                  {isOwnMessage && !isBotMessage && (
-                    <Avatar className="w-8 h-8 flex-shrink-0">
-                      {(currentUser?.profile?.photo_url || currentUser?.member?.photo_url) && (
-                        <AvatarImage
-                          src={currentUser?.profile?.photo_url || currentUser?.member?.photo_url}
-                          alt="Tu foto"
-                          className="object-cover"
-                        />
-                      )}
-                      <AvatarFallback className="text-xs bg-arcana-gold-500 text-white">
-                        {currentUser?.profile?.full_name ? getInitials(currentUser.profile.full_name) : "Tú"}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                </div>
-              );
-            })
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
-
-      {/* Message Input - WhatsApp Style */}
-      <div className="border-t bg-white p-3">
-        {attachedMedia && (
-          <div className="mb-2 p-2 bg-blue-50 rounded-lg flex items-center justify-between">
-            <span className="text-sm truncate flex-1">📎 {attachedMedia.name}</span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setAttachedMedia(null)}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              ✕
-            </Button>
-          </div>
-        )}
-
-        <div className="flex gap-2 items-center">
-          {/* Toolbar para emoticones y archivos */}
-          <div className="flex gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowEmoticons(!showEmoticons)}
-              title="Emoticones"
-              className="text-gray-500 hover:text-arcana-blue-600"
-            >
-              <Smile className="w-5 h-5" />
-            </Button>
-
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => inputRef.current?.click()}
-              disabled={uploading}
-              title="Adjuntar archivo"
-              className="text-gray-500 hover:text-arcana-blue-600"
-            >
-              <Paperclip className="w-5 h-5" />
-            </Button>
-
-            <input ref={inputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleFileSelect} />
-
-            <EmoticonPicker
-              visible={showEmoticons}
-              onClose={() => setShowEmoticons(false)}
-              onSelect={(emoticon) => {
-                setNewMessage((prev) => prev + emoticon);
-                setShowEmoticons(false);
-              }}
-            />
-
-            <BuzzButton currentUserId={currentUser?.id || ""} />
-          </div>
-
-          <Input
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Escribe un mensaje..."
-            className="flex-1 border-0 bg-gray-100 focus-visible:ring-0 focus-visible:ring-offset-0 rounded-full"
-          />
-
-          <VoiceNoteRecorder onVoiceNote={handleVoiceNote} roomId={room.id} userId={currentUser?.id || ""} />
-
-          <Button
-            onClick={() => sendMessage()}
-            disabled={!newMessage.trim() && !attachedMedia}
-            className="bg-arcana-blue-gradient hover:opacity-90 rounded-full w-10 h-10 p-0"
+      <Card className="h-[60vh] sm:h-[70vh]">
+        <CardContent className="p-0 h-full flex flex-col">
+          <div
+            ref={messagesContainerRef}
+            className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth"
           >
-            <Send className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
+            {messages.length === 0 ? (
+              <div className="text-center text-gray-500 py-8">No hay mensajes aún. ¡Sé el primero en escribir!</div>
+            ) : (
+              messages.map((message) => {
+                const isOwnMessage = message.user_id === currentUser?.id;
+                const isBotMessage = isBot(message);
+
+                return (
+                  <div
+                    key={message.id}
+                    className={`flex gap-3 ${isOwnMessage && !isBotMessage ? "justify-end" : "justify-start"}`}
+                  >
+                    {(!isOwnMessage || isBotMessage) && (
+                      <Avatar className="w-8 h-8 flex-shrink-0">
+                        {!isBotMessage && message.profiles?.photo_url && (
+                          <AvatarImage
+                            src={message.profiles.photo_url}
+                            alt={getUserDisplayName(message)}
+                            className="object-cover"
+                          />
+                        )}
+                        <AvatarFallback className={`text-xs ${isBotMessage ? "bg-purple-100" : "bg-arcana-blue-100"}`}>
+                          {isBotMessage ? (
+                            <Bot className="w-4 h-4 text-purple-600" />
+                          ) : (
+                            getInitials(getUserDisplayName(message))
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div className={`max-w-xs ${isOwnMessage && !isBotMessage ? "order-first" : ""}`}>
+                      <div
+                        className={`p-3 rounded-lg ${
+                          isBotMessage
+                            ? "bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300"
+                            : isOwnMessage
+                              ? "bg-blue-500 text-white"
+                              : "bg-gray-100 text-gray-900"
+                        }`}
+                      >
+                        {(!isOwnMessage || isBotMessage) && (
+                          <p className="text-xs font-medium mb-1 text-left">{getUserDisplayName(message)}</p>
+                        )}
+                        <div
+                          className="text-sm whitespace-pre-wrap text-left"
+                          dangerouslySetInnerHTML={{
+                            __html: message.message
+                              .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                              .replace(
+                                /\[(.*?)\]\((.*?)\)/g,
+                                '<a href="$2" target="_blank" rel="noopener noreferrer" class="underline text-purple-900 hover:text-purple-700">$1</a>',
+                              ),
+                          }}
+                        />
+
+                        {/* Multimedia */}
+                        {message.media_url && (
+                          <div className="mt-2">
+                            {message.media_type === "image" && (
+                              <img
+                                src={message.media_url}
+                                alt="Imagen"
+                                className="max-w-full rounded-lg max-h-64 object-contain"
+                                loading="lazy"
+                              />
+                            )}
+                            {message.media_type === "video" && (
+                              <video controls className="max-w-full rounded-lg max-h-64">
+                                <source src={message.media_url} type="video/mp4" />
+                              </video>
+                            )}
+                            {(message.media_type === "audio" || message.media_type === "voice") && (
+                              <VoiceMessagePlayer audioUrl={message.media_url} />
+                            )}
+                          </div>
+                        )}
+
+                        {/* Render action buttons if available */}
+                        {message.actions && message.actions.length > 0 && (
+                          <div className="mt-3 flex flex-col gap-2">
+                            {message.actions.map((action, idx) => (
+                              <Button
+                                key={idx}
+                                onClick={() => handleActionClick(action)}
+                                size="sm"
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-md"
+                              >
+                                ➕ Agregar "{action.songName}"
+                              </Button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <p
+                        className={`text-xs text-gray-500 mt-1 ${isOwnMessage && !isBotMessage ? "text-right" : "text-left"}`}
+                      >
+                        {formatTime(message.created_at)}
+                      </p>
+                    </div>
+                    {isOwnMessage && !isBotMessage && (
+                      <Avatar className="w-8 h-8 flex-shrink-0">
+                        {(currentUser?.profile?.photo_url || currentUser?.member?.photo_url) && (
+                          <AvatarImage
+                            src={currentUser?.profile?.photo_url || currentUser?.member?.photo_url}
+                            alt="Tu foto"
+                            className="object-cover"
+                          />
+                        )}
+                        <AvatarFallback className="text-xs bg-arcana-gold-100">
+                          {currentUser?.profile?.full_name ? getInitials(currentUser.profile.full_name) : "Tú"}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                  </div>
+                );
+              })
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Message Input */}
+          <div className="border-t p-4 sticky bottom-0 bg-white/95 backdrop-blur">
+            {/* Toolbar para emoticones y archivos */}
+            <div className="flex gap-2 mb-2 relative">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowEmoticons(!showEmoticons)}
+                title="Emoticones"
+              >
+                <Smile className="w-4 h-4" />
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => inputRef.current?.click()}
+                disabled={uploading}
+                title="Adjuntar archivo"
+              >
+                <Paperclip className="w-4 h-4" />
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setNewMessage((prev) => prev + " @");
+                  document.querySelector("input")?.focus();
+                }}
+                title="Mencionar usuario"
+              >
+                <AtSign className="w-4 h-4" />
+              </Button>
+
+              <BuzzButton currentUserId={currentUser?.id || ""} />
+
+              <input
+                ref={inputRef}
+                type="file"
+                accept="image/*,video/*"
+                className="hidden"
+                onChange={handleFileSelect}
+              />
+
+              <EmoticonPicker
+                visible={showEmoticons}
+                onClose={() => setShowEmoticons(false)}
+                onSelect={(emoticon) => {
+                  setNewMessage((prev) => prev + emoticon);
+                  setShowEmoticons(false);
+                }}
+              />
+
+              {uploading && (
+                <div className="absolute left-0 bottom-full mb-2 bg-white p-2 rounded-lg shadow-md">
+                  <div className="text-xs text-muted-foreground">Subiendo... {progress.toFixed(0)}%</div>
+                  <div className="w-32 h-1 bg-secondary rounded-full mt-1">
+                    <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {attachedMedia && (
+              <div className="mb-2 p-2 bg-secondary rounded-lg flex items-center justify-between">
+                <span className="text-sm truncate flex-1">📎 {attachedMedia.name}</span>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setAttachedMedia(null)}>
+                  ✕
+                </Button>
+              </div>
+            )}
+
+            <div className="flex gap-2 items-end">
+              <VoiceNoteRecorder onVoiceNote={handleVoiceNote} roomId={room.id} userId={currentUser?.id || ""} />
+              <Input
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                onFocus={() => setTimeout(scrollToBottom, 50)}
+                placeholder="Escribe... (usa :) para emoticones, @ para mencionar)"
+                className="flex-1"
+              />
+              <Button
+                onClick={() => sendMessage()}
+                disabled={!newMessage.trim() && !attachedMedia}
+                className="bg-arcana-blue-gradient hover:opacity-90"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
