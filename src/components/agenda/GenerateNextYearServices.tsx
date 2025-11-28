@@ -150,7 +150,7 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
           })
           .filter(Boolean);
 
-        const allGroups = ["ALEIDA", "KEYLA", "MASSY"];
+        const allGroups: ("ALEIDA" | "KEYLA" | "MASSY")[] = ["ALEIDA", "KEYLA", "MASSY"];
         const restedGroup = allGroups.find((g) => !lastGroups.includes(g));
 
         if (restedGroup === "ALEIDA") return rotation[0];
@@ -179,7 +179,7 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
       const usedDirectorsToday = new Set<string>();
 
       // Asignar director para servicio 8:00 AM
-      let director1 = this.getAvailableDirector(
+      let director1 = getAvailableDirector(
         monthlyDirectorPool,
         usedDirectorsThisMonth,
         usedDirectorsToday,
@@ -192,7 +192,7 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
       usedDirectorsThisMonth.add(director1);
 
       // Asignar director para servicio 10:45 AM
-      let director2 = this.getAvailableDirector(
+      let director2 = getAvailableDirector(
         monthlyDirectorPool,
         usedDirectorsThisMonth,
         usedDirectorsToday,
@@ -226,7 +226,7 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
       if (
         !usedDirectorsThisMonth.has(director) &&
         !usedDirectorsToday.has(director) &&
-        this.isDirectorAvailableForService(director, serviceTime, groupName, groupRotation)
+        isDirectorAvailableForService(director, serviceTime, groupName, groupRotation)
       ) {
         return director;
       }
@@ -236,7 +236,7 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
     for (const director of directorPool) {
       if (
         !usedDirectorsToday.has(director) &&
-        this.isDirectorAvailableForService(director, serviceTime, groupName, groupRotation)
+        isDirectorAvailableForService(director, serviceTime, groupName, groupRotation)
       ) {
         return director;
       }
@@ -529,46 +529,33 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
     }
   };
 
+  // Calcular años disponibles para generar (años sin datos)
+  const yearsToGenerate = availableYears.filter((year) => !existingYears.includes(year));
+
   return (
     <div className="space-y-4">
-      {/* Años personalizados */}
-      <div className="flex gap-2 items-end">
-        <div className="flex-1">
-          <label className="text-sm font-medium text-gray-700 mb-2 block">Agregar año personalizado:</label>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              value={customYear}
-              onChange={(e) => setCustomYear(e.target.value)}
-              placeholder="Ej: 2026"
-              className="flex-1 p-2 border border-gray-300 rounded-md"
-              min="2000"
-              max="2100"
-            />
-            <Button onClick={addCustomYear} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Agregar
-            </Button>
+      {/* Lista de años con datos */}
+      {existingYears.length > 0 && (
+        <div>
+          <label className="text-sm font-medium text-gray-700 mb-2 block">Años con servicios generados:</label>
+          <div className="flex flex-wrap gap-2">
+            {existingYears.map((year) => (
+              <div key={year} className="flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                <span>{year}</span>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Lista de años disponibles */}
-      {availableYears.length > 0 && (
+      {/* Años disponibles para generar */}
+      {yearsToGenerate.length > 0 && (
         <div>
           <label className="text-sm font-medium text-gray-700 mb-2 block">Años disponibles para generar:</label>
           <div className="flex flex-wrap gap-2">
-            {availableYears.map((year) => (
+            {yearsToGenerate.map((year) => (
               <div key={year} className="flex items-center gap-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
                 <span>{year}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeYear(year)}
-                  className="h-4 w-4 p-0 hover:bg-blue-200"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
               </div>
             ))}
           </div>
@@ -579,7 +566,7 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
       <div className="flex gap-2 flex-wrap">
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="default" className="gap-2" disabled={isGenerating || !selectedYear}>
+            <Button variant="default" className="gap-2" disabled={isGenerating || yearsToGenerate.length === 0}>
               {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calendar className="h-4 w-4" />}
               Generar Año
             </Button>
@@ -595,14 +582,14 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
                     onChange={(e) => setSelectedYear(Number(e.target.value))}
                     className="w-full p-2 border border-gray-300 rounded-md"
                   >
-                    {availableYears.length > 0 ? (
-                      availableYears.map((year) => (
+                    {yearsToGenerate.length > 0 ? (
+                      yearsToGenerate.map((year) => (
                         <option key={year} value={year}>
                           {year}
                         </option>
                       ))
                     ) : (
-                      <option value="">No hay años disponibles</option>
+                      <option value="">No hay años disponibles para generar</option>
                     )}
                   </select>
                 </div>
@@ -635,9 +622,9 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
             <Button
               variant="destructive"
               className="gap-2"
-              disabled={isGenerating || !selectedYear || !existingYears.includes(selectedYear)}
+              disabled={isGenerating || existingYears.length === 0}
             >
-              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calendar className="h-4 w-4" />}
+              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
               Eliminar Año
             </Button>
           </AlertDialogTrigger>
@@ -696,7 +683,7 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
             <Button
               variant="outline"
               className="gap-2"
-              disabled={isGenerating || !selectedYear || !existingYears.includes(selectedYear)}
+              disabled={isGenerating || existingYears.length === 0}
             >
               Recalcular Orden
             </Button>
