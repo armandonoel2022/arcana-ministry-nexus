@@ -172,21 +172,21 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
   };
 
   const getDirectorForService = (
-    sundayIndex: number, 
+    serviceIndex: number, 
     serviceTime: '08:00' | '10:45',
     groupName: string,
-    currentMonthIndex: number,
     usedDirectorsToday: Set<string>,
     groupRotation: { service1: string; service2: string; rest: string }
   ) => {
-    // Usar la rotación normal de los 9 directores basada en el índice del mes
-    let selectedDirector = DIRECTORS.ROTATION[currentMonthIndex % DIRECTORS.ROTATION.length];
+    // Usar la rotación de los 9 directores basada en el índice de SERVICIO (no domingo)
+    // Esto distribuye mejor los directores a lo largo del mes
+    let selectedDirector = DIRECTORS.ROTATION[serviceIndex % DIRECTORS.ROTATION.length];
     
     // Verificar restricciones de horario para el director seleccionado
     if (serviceTime === '10:45' && DIRECTORS.ONLY_8AM.includes(selectedDirector)) {
       // Este director solo puede a las 8 AM, buscar el siguiente disponible
       for (let i = 1; i < DIRECTORS.ROTATION.length; i++) {
-        const nextIndex = (currentMonthIndex + i) % DIRECTORS.ROTATION.length;
+        const nextIndex = (serviceIndex + i) % DIRECTORS.ROTATION.length;
         const nextDirector = DIRECTORS.ROTATION[nextIndex];
         
         if (!DIRECTORS.ONLY_8AM.includes(nextDirector) && !usedDirectorsToday.has(nextDirector)) {
@@ -200,7 +200,7 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
     if (usedDirectorsToday.has(selectedDirector)) {
       // Buscar siguiente director disponible
       for (let i = 1; i < DIRECTORS.ROTATION.length; i++) {
-        const nextIndex = (currentMonthIndex + i) % DIRECTORS.ROTATION.length;
+        const nextIndex = (serviceIndex + i) % DIRECTORS.ROTATION.length;
         const nextDirector = DIRECTORS.ROTATION[nextIndex];
         
         const isAvailableForTime = serviceTime === '08:00' || !DIRECTORS.ONLY_8AM.includes(nextDirector);
@@ -233,7 +233,7 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
           // Intentar encontrar otro director para este servicio
           // Pero solo si hay alguien disponible
           for (let i = 1; i < DIRECTORS.ROTATION.length; i++) {
-            const nextIndex = (currentMonthIndex + i) % DIRECTORS.ROTATION.length;
+            const nextIndex = (serviceIndex + i) % DIRECTORS.ROTATION.length;
             const alternateDirector = DIRECTORS.ROTATION[nextIndex];
             
             const isAvailableForTime = serviceTime === '08:00' || !DIRECTORS.ONLY_8AM.includes(alternateDirector);
@@ -338,16 +338,16 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
     try {
       const sundays = getAllSundaysOfYear(selectedYear);
       const services = [];
-      let currentMonthIndex = 0; // Índice para rotación de directores (resetea cada mes)
+      let currentServiceIndex = 0; // Índice de servicio que se resetea cada mes
       let lastMonth = -1;
 
       for (let i = 0; i < sundays.length; i++) {
         const sunday = sundays[i];
         const currentMonth = sunday.getMonth();
         
-        // Resetear el índice de rotación al inicio de cada mes
+        // Resetear el índice de servicio al inicio de cada mes
         if (currentMonth !== lastMonth) {
-          currentMonthIndex = 0;
+          currentServiceIndex = 0;
           lastMonth = currentMonth;
         }
         
@@ -356,9 +356,9 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
         // Conjunto de directores ya usados en este domingo
         const usedDirectorsToday = new Set<string>();
         
-        // Servicio 8:00 AM
+        // Servicio 8:00 AM - Usar currentServiceIndex para la rotación
         const service1Group = rotation.service1;
-        const director1 = getDirectorForService(i, '08:00', service1Group, currentMonthIndex, usedDirectorsToday, rotation);
+        const director1 = getDirectorForService(currentServiceIndex, '08:00', service1Group, usedDirectorsToday, rotation);
         usedDirectorsToday.add(director1);
         
         // Obtener el mes en español
@@ -381,10 +381,13 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
           month_name: monthName,
           month_order: monthOrder
         });
+        
+        // Incrementar índice para el siguiente servicio
+        currentServiceIndex++;
 
-        // Servicio 10:45 AM
+        // Servicio 10:45 AM - Usar el nuevo índice
         const service2Group = rotation.service2;
-        const director2 = getDirectorForService(i, '10:45', service2Group, currentMonthIndex, usedDirectorsToday, rotation);
+        const director2 = getDirectorForService(currentServiceIndex, '10:45', service2Group, usedDirectorsToday, rotation);
         
         services.push({
           title: '10:45 a.m.',
@@ -398,8 +401,8 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
           month_order: monthOrder
         });
         
-        // Avanzar al siguiente director en la rotación para el próximo domingo
-        currentMonthIndex++;
+        // Incrementar índice para el próximo domingo
+        currentServiceIndex++;
       }
 
       const { error } = await supabase
