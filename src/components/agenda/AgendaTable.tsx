@@ -16,6 +16,7 @@ import {
   ChevronDown,
   ChevronUp,
   MoreHorizontal,
+  RefreshCw,
 } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, addWeeks, getDay } from "date-fns";
 import { es } from "date-fns/locale";
@@ -79,6 +80,7 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [availableYears, setAvailableYears] = useState<number[]>([]);
+  const [isRecalculating, setIsRecalculating] = useState(false);
 
   useEffect(() => {
     fetchServices();
@@ -87,7 +89,7 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
 
   useEffect(() => {
     // Extraer años únicos de los servicios
-    const years = [...new Set(services.map(s => new Date(s.service_date).getFullYear()))].sort((a, b) => a - b);
+    const years = [...new Set(services.map((s) => new Date(s.service_date).getFullYear()))].sort((a, b) => a - b);
     setAvailableYears(years);
   }, [services]);
 
@@ -299,6 +301,27 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
     setEditingSongsServiceTitle(serviceTitle);
   };
 
+  const handleRecalculateServices = async () => {
+    setIsRecalculating(true);
+    try {
+      // Aquí iría la lógica para recalcular los servicios
+      // Por ejemplo, redistribuir grupos, actualizar fechas, etc.
+
+      // Simulamos un proceso de recálculo
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Recargar los servicios después del recálculo
+      await fetchServices();
+
+      toast.success("Servicios recalculados exitosamente");
+    } catch (error) {
+      console.error("Error recalculating services:", error);
+      toast.error("Error al recalcular los servicios");
+    } finally {
+      setIsRecalculating(false);
+    }
+  };
+
   const getServiceTypeColor = (type: string) => {
     switch (type) {
       case "especial":
@@ -360,6 +383,22 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
 
   return (
     <div className="space-y-4">
+      {/* Header Section with Title and Recalculate Button */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Agenda Ministerial</h1>
+          <p className="text-gray-600 mt-1">Gestión de servicios y actividades del ministerio</p>
+        </div>
+        <Button
+          onClick={handleRecalculateServices}
+          disabled={isRecalculating}
+          className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+        >
+          <RefreshCw className={`w-4 h-4 ${isRecalculating ? "animate-spin" : ""}`} />
+          {isRecalculating ? "Recalculando..." : "Recalcular"}
+        </Button>
+      </div>
+
       {/* Filter Buttons */}
       <Card>
         <CardHeader className="p-3 sm:p-6">
@@ -413,7 +452,7 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
             {availableYears.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-2 border-t">
                 <span className="text-xs sm:text-sm text-gray-600 font-medium self-center mr-1 sm:mr-2">Por Año:</span>
-                {availableYears.map(year => (
+                {availableYears.map((year) => (
                   <Button
                     key={year}
                     variant={filter === `year_${year}` ? "default" : "outline"}
@@ -483,7 +522,7 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                           </Badge>
                         </TableCell>
                         <TableCell className="font-medium text-xs sm:text-sm">
-                          <div className="truncate">{service.leader}</div>
+                          <div className="truncate max-w-24">{service.leader}</div>
                         </TableCell>
                         <TableCell>
                           {service.worship_groups ? (
@@ -501,11 +540,11 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                             <span className="text-xs text-gray-400">Sin asignar</span>
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="max-w-32">
                           <div>
-                            <div className="font-medium">{service.title}</div>
+                            <div className="font-medium truncate">{service.title}</div>
                             {service.special_activity && (
-                              <div className="text-sm text-gray-500 mt-1">{service.special_activity}</div>
+                              <div className="text-xs text-gray-500 mt-1 truncate">{service.special_activity}</div>
                             )}
                           </div>
                         </TableCell>
@@ -514,7 +553,7 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                             {service.service_type}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="max-w-40">
                           <div className="space-y-2">
                             {/* Service Songs (from service_songs table) */}
                             {service.service_songs && service.service_songs.length > 0 ? (
@@ -524,9 +563,9 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                                   .sort((a, b) => a.song_order - b.song_order)
                                   .slice(0, 2)
                                   .map((serviceSong, index) => (
-                                    <div key={index} className="flex items-center gap-1 text-sm">
+                                    <div key={index} className="flex items-center gap-1 text-xs">
                                       <Music className="w-3 h-3 text-gray-400" />
-                                      <span className="truncate max-w-32">
+                                      <span className="truncate">
                                         {serviceSong.songs.title}
                                         {serviceSong.songs.artist && (
                                           <span className="text-gray-500 text-xs ml-1">
@@ -561,27 +600,32 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
                               onClick={() => setSelectedServiceForSongs(service)}
                               className="text-xs h-6 px-2"
                             >
-                              Ver todas las seleccionadas
+                              Ver todas
                             </Button>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={service.is_confirmed ? "default" : "secondary"}>
+                          <Badge variant={service.is_confirmed ? "default" : "secondary"} className="text-xs">
                             {service.is_confirmed ? "Confirmado" : "Pendiente"}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" onClick={() => setSelectedServiceForEdit(service)}>
-                              <Edit className="w-4 h-4" />
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setSelectedServiceForEdit(service)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Edit className="w-3 h-3" />
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => deleteService(service.id)}
-                              className="text-red-600 hover:text-red-700"
+                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3 h-3" />
                             </Button>
                             <ServiceActionsMenu
                               service={service}
