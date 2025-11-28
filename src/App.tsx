@@ -96,16 +96,13 @@ function useSystemNotifications() {
     const setupListener = async () => {
       try {
         console.log("👤 [SYSTEM NOTIFICATIONS] Obteniendo usuario autenticado...");
-        const {
-          data: { user },
-          error: authError,
-        } = await supabase.auth.getUser();
-
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        
         if (authError) {
           console.error("❌ [SYSTEM NOTIFICATIONS] Error obteniendo usuario:", authError);
           return;
         }
-
+        
         if (!user) {
           console.log("❌ [SYSTEM NOTIFICATIONS] No hay usuario autenticado");
           return;
@@ -121,8 +118,8 @@ function useSystemNotifications() {
           .channel(channelName, {
             config: {
               broadcast: { self: true },
-              presence: { key: user.id },
-            },
+              presence: { key: user.id }
+            }
           })
           .on(
             "postgres_changes",
@@ -150,10 +147,13 @@ function useSystemNotifications() {
                 case "service_overlay":
                   console.log("📢 [SYSTEM NOTIFICATIONS] Activando overlay de servicios");
                   setShowServiceOverlay(true);
-
+                  
                   // Marcar como leída
                   try {
-                    await supabase.from("system_notifications").update({ is_read: true }).eq("id", notification.id);
+                    await supabase
+                      .from("system_notifications")
+                      .update({ is_read: true })
+                      .eq("id", notification.id);
                     console.log("✅ [SYSTEM NOTIFICATIONS] Notificación marcada como leída");
                   } catch (err) {
                     console.error("❌ [SYSTEM NOTIFICATIONS] Error marcando notificación:", err);
@@ -162,10 +162,13 @@ function useSystemNotifications() {
                 case "daily_verse":
                   console.log("📖 [SYSTEM NOTIFICATIONS] Mostrando overlay de versículo");
                   setShowVerseOverlay(true);
-
+                  
                   // Marcar como leída
                   try {
-                    await supabase.from("system_notifications").update({ is_read: true }).eq("id", notification.id);
+                    await supabase
+                      .from("system_notifications")
+                      .update({ is_read: true })
+                      .eq("id", notification.id);
                     console.log("✅ [SYSTEM NOTIFICATIONS] Notificación de versículo marcada como leída");
                   } catch (err) {
                     console.error("❌ [SYSTEM NOTIFICATIONS] Error marcando notificación:", err);
@@ -174,10 +177,13 @@ function useSystemNotifications() {
                 case "daily_advice":
                   console.log("💡 [SYSTEM NOTIFICATIONS] Mostrando overlay de consejo");
                   setShowAdviceOverlay(true);
-
+                  
                   // Marcar como leída
                   try {
-                    await supabase.from("system_notifications").update({ is_read: true }).eq("id", notification.id);
+                    await supabase
+                      .from("system_notifications")
+                      .update({ is_read: true })
+                      .eq("id", notification.id);
                     console.log("✅ [SYSTEM NOTIFICATIONS] Notificación de consejo marcada como leída");
                   } catch (err) {
                     console.error("❌ [SYSTEM NOTIFICATIONS] Error marcando notificación:", err);
@@ -189,10 +195,13 @@ function useSystemNotifications() {
                 case "prayer_request":
                   console.log("📢 [SYSTEM NOTIFICATIONS] Mostrando anuncio general:", notification.type);
                   setShowGeneralAnnouncement(true);
-
+                  
                   // Marcar como leída
                   try {
-                    await supabase.from("system_notifications").update({ is_read: true }).eq("id", notification.id);
+                    await supabase
+                      .from("system_notifications")
+                      .update({ is_read: true })
+                      .eq("id", notification.id);
                     console.log("✅ [SYSTEM NOTIFICATIONS] Notificación de anuncio general marcada como leída");
                   } catch (err) {
                     console.error("❌ [SYSTEM NOTIFICATIONS] Error marcando notificación:", err);
@@ -201,10 +210,13 @@ function useSystemNotifications() {
                 case "ministry_instructions":
                   console.log("📋 [SYSTEM NOTIFICATIONS] Mostrando instrucciones ministeriales");
                   setShowMinistryInstructions(true);
-
+                  
                   // Marcar como leída
                   try {
-                    await supabase.from("system_notifications").update({ is_read: true }).eq("id", notification.id);
+                    await supabase
+                      .from("system_notifications")
+                      .update({ is_read: true })
+                      .eq("id", notification.id);
                     console.log("✅ [SYSTEM NOTIFICATIONS] Notificación de instrucciones marcada como leída");
                   } catch (err) {
                     console.error("❌ [SYSTEM NOTIFICATIONS] Error marcando notificación:", err);
@@ -213,10 +225,13 @@ function useSystemNotifications() {
                 case "extraordinary_rehearsal":
                   console.log("🎵 [SYSTEM NOTIFICATIONS] Mostrando ensayo extraordinario");
                   setShowExtraordinaryRehearsal(true);
-
+                  
                   // Marcar como leída
                   try {
-                    await supabase.from("system_notifications").update({ is_read: true }).eq("id", notification.id);
+                    await supabase
+                      .from("system_notifications")
+                      .update({ is_read: true })
+                      .eq("id", notification.id);
                     console.log("✅ [SYSTEM NOTIFICATIONS] Notificación de ensayo marcada como leída");
                   } catch (err) {
                     console.error("❌ [SYSTEM NOTIFICATIONS] Error marcando notificación:", err);
@@ -225,10 +240,13 @@ function useSystemNotifications() {
                 case "blood_donation":
                   console.log("🩸 [SYSTEM NOTIFICATIONS] Mostrando solicitud de donación de sangre");
                   setShowBloodDonation(true);
-
+                  
                   // Marcar como leída
                   try {
-                    await supabase.from("system_notifications").update({ is_read: true }).eq("id", notification.id);
+                    await supabase
+                      .from("system_notifications")
+                      .update({ is_read: true })
+                      .eq("id", notification.id);
                     console.log("✅ [SYSTEM NOTIFICATIONS] Notificación de donación marcada como leída");
                   } catch (err) {
                     console.error("❌ [SYSTEM NOTIFICATIONS] Error marcando notificación:", err);
@@ -246,9 +264,7 @@ function useSystemNotifications() {
           .subscribe((status) => {
             console.log("📡 [SYSTEM NOTIFICATIONS] Estado de suscripción:", status);
             if (status === "SUBSCRIBED") {
-              console.log(
-                "✅ [SYSTEM NOTIFICATIONS] ¡Suscripción exitosa! El listener está activo y esperando notificaciones...",
-              );
+              console.log("✅ [SYSTEM NOTIFICATIONS] ¡Suscripción exitosa! El listener está activo y esperando notificaciones...");
             } else if (status === "CHANNEL_ERROR") {
               console.error("❌ [SYSTEM NOTIFICATIONS] Error en la suscripción");
             } else if (status === "TIMED_OUT") {
@@ -408,7 +424,7 @@ function AppContent() {
         <MinistryInstructionsOverlay
           title={currentNotification.metadata?.title || currentNotification.title}
           instructions={currentNotification.metadata?.instructions || currentNotification.message}
-          priority={currentNotification.metadata?.priority || "normal"}
+          priority={currentNotification.metadata?.priority || 'normal'}
           onClose={closeMinistryInstructions}
         />
       )}
@@ -431,7 +447,7 @@ function AppContent() {
           contactPhone={currentNotification.metadata?.contact_phone || ""}
           medicalCenter={currentNotification.metadata?.medical_center || ""}
           familyContact={currentNotification.metadata?.family_contact || ""}
-          urgencyLevel={currentNotification.metadata?.urgency_level || "urgent"}
+          urgencyLevel={currentNotification.metadata?.urgency_level || 'urgent'}
           additionalInfo={currentNotification.metadata?.additional_info}
           onClose={closeBloodDonation}
         />
@@ -454,19 +470,8 @@ function AppContent() {
                 <SidebarLayout />
                 <SwipeIndicator />
                 <div className="flex h-screen w-full bg-gray-50">
-                  {/* Sidebar - Se oculta automáticamente en móviles */}
                   <AppSidebar />
-
-                  {/* Contenido principal */}
-                  <div className="flex-1 flex flex-col min-w-0">
-                    {/* Header fijo */}
-                    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6 lg:ml-0">
-                      <AnimatedLogoTrigger />
-                      <div className="flex-1" />
-                      {/* Aquí puedes agregar otros elementos del header si los necesitas */}
-                    </header>
-
-                    {/* Contenido principal con scroll */}
+                  <div className="flex-1 flex flex-col">
                     <main className="flex-1 overflow-auto bg-gray-50">
                       <Routes>
                         <Route path="/" element={<Index />} />
