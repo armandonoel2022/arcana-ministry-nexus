@@ -50,7 +50,7 @@ const Index = () => {
       title: "Cumpleaños",
       description: "Fechas especiales",
       icon: Cake,
-      url: "/birthday-module",
+      url: "/cumpleanos",
       gradient: "from-pink-500 to-rose-600",
     },
     {
@@ -125,76 +125,79 @@ const Index = () => {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-      style={{ background: "var(--gradient-primary)", width: "100vw", maxWidth: "100vw" }}
-    >
-      <div className={`welcome-container ${isAnimating ? "animating" : ""}`}>
-        {/* Welcome Message Panel */}
-        <div className="message-panel">
-          <div className="message-content">
-            <img
-              src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png"
-              alt="ARCANA Logo"
-              className="logo-image"
-            />
-            <h1 className="text-4xl font-bold text-white mb-4">¡Hola, {firstName}!</h1>
-            <p className="text-white/90 mb-6 text-lg">Sistema de Gestión Musical ARCANA</p>
-          </div>
-        </div>
-
-        {/* Menu Options Panel */}
-        <div className="options-panel">
-          {birthdayNotification && (
-            <div className="mb-4 w-full max-w-[600px]">
-              <BirthdayNotificationBanner notification={birthdayNotification} onDismiss={dismissBirthdayNotification} />
+    <div className="flex-1 overflow-auto bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500">
+      {/* Contenedor principal que respeta el header */}
+      <div className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center p-4">
+        <div className={`welcome-container ${isAnimating ? "animating" : ""}`}>
+          {/* Welcome Message Panel */}
+          <div className="message-panel">
+            <div className="message-content">
+              <img
+                src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png"
+                alt="ARCANA Logo"
+                className="logo-image"
+              />
+              <h1 className="text-4xl font-bold text-white mb-4">¡Hola, {firstName}!</h1>
+              <p className="text-white/90 mb-6 text-lg">Sistema de Gestión Musical ARCANA</p>
             </div>
-          )}
+          </div>
 
-          {/* Main Services Grid */}
-          <div className="options-grid">
-            {mainServices.map((option, index) => (
-              <Button
-                key={option.url}
-                onClick={() => handleOptionClick(option.url)}
-                className={`option-card group animate-fade-in`}
-                style={{
-                  animationDelay: `${index * 50}ms`,
-                  background: `linear-gradient(135deg, var(--primary), var(--accent))`,
-                }}
-                variant="outline"
-              >
-                <div className="option-content">
-                  <option.icon className="w-10 h-10 mb-3 group-hover:scale-110 transition-transform duration-200" />
-                  <h3 className="font-semibold text-sm mb-1">{option.title}</h3>
-                  <p className="text-xs">{option.description}</p>
+          {/* Menu Options Panel */}
+          <div className="options-panel">
+            {birthdayNotification && (
+              <div className="mb-4 w-full max-w-[600px]">
+                <BirthdayNotificationBanner
+                  notification={birthdayNotification}
+                  onDismiss={dismissBirthdayNotification}
+                />
+              </div>
+            )}
+
+            {/* Main Services Grid */}
+            <div className="options-grid">
+              {mainServices.map((option, index) => (
+                <Button
+                  key={option.url}
+                  onClick={() => handleOptionClick(option.url)}
+                  className={`option-card group animate-fade-in`}
+                  style={{
+                    animationDelay: `${index * 50}ms`,
+                    background: `linear-gradient(135deg, var(--primary), var(--accent))`,
+                  }}
+                  variant="outline"
+                >
+                  <div className="option-content">
+                    <option.icon className="w-10 h-10 mb-3 group-hover:scale-110 transition-transform duration-200" />
+                    <h3 className="font-semibold text-sm mb-1">{option.title}</h3>
+                    <p className="text-xs">{option.description}</p>
+                  </div>
+                </Button>
+              ))}
+            </div>
+
+            {/* Stats Cards - Clickable */}
+            <div className="stats-cards">
+              <Button onClick={() => handleOptionClick("/integrantes")} className="stat-card" variant="outline">
+                <div className="stat-content">
+                  <Users className="w-6 h-6 mb-1" />
+                  <span className="stat-number">{memberCount}</span>
+                  <span className="stat-label">Miembros</span>
                 </div>
               </Button>
-            ))}
+              <Button onClick={() => handleOptionClick("/worship-groups")} className="stat-card" variant="outline">
+                <div className="stat-content">
+                  <Music className="w-6 h-6 mb-1" />
+                  <span className="stat-number">{groupCount}</span>
+                  <span className="stat-label">Grupos</span>
+                </div>
+              </Button>
+            </div>
           </div>
 
-          {/* Stats Cards - Clickable */}
-          <div className="stats-cards">
-            <Button onClick={() => handleOptionClick("/integrantes")} className="stat-card" variant="outline">
-              <div className="stat-content">
-                <Users className="w-6 h-6 mb-1" />
-                <span className="stat-number">{memberCount}</span>
-                <span className="stat-label">Miembros</span>
-              </div>
-            </Button>
-            <Button onClick={() => handleOptionClick("/worship-groups")} className="stat-card" variant="outline">
-              <div className="stat-content">
-                <Music className="w-6 h-6 mb-1" />
-                <span className="stat-number">{groupCount}</span>
-                <span className="stat-label">Grupos</span>
-              </div>
-            </Button>
+          {/* Toggle Background */}
+          <div className="toggle-box">
+            <div className="toggle-background"></div>
           </div>
-        </div>
-
-        {/* Toggle Background */}
-        <div className="toggle-box">
-          <div className="toggle-background"></div>
         </div>
       </div>
 
@@ -422,44 +425,34 @@ const Index = () => {
 
         /* Responsive Design */
         @media screen and (max-width: 768px) {
-          body, html {
-            overflow-x: hidden;
-          }
-
           .welcome-container {
-            width: 100vw;
-            height: 100vh;
-            height: 100dvh;
-            border-radius: 0;
+            width: 100%;
+            height: auto;
+            min-height: 500px;
+            border-radius: 20px;
             margin: 0;
             flex-direction: column;
-            max-width: 100vw;
-            position: fixed;
-            left: 0;
-            right: 0;
-            top: 0;
-            bottom: 0;
+            max-width: 100%;
           }
 
           .message-panel {
             position: relative;
             width: 100%;
-            height: 20%;
-            min-height: 140px;
+            height: 180px;
             background: var(--gradient-blue-form);
-            padding: 16px;
-            /* Añadir espacio superior en móvil */
-            padding-top: 24px;
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
           }
 
           .options-panel {
             position: relative;
             width: 100%;
-            height: 80%;
+            height: auto;
+            min-height: 400px;
             background: #fff;
-            padding: 16px 16px 20px 16px;
-            overflow-y: auto;
-            overflow-x: hidden;
+            padding: 20px 16px;
+            border-radius: 0 0 20px 20px;
+            overflow-y: visible;
             justify-content: flex-start;
             gap: 16px;
           }
@@ -469,7 +462,7 @@ const Index = () => {
             width: 70px;
             height: 70px;
             margin-bottom: 16px;
-            border-radius: 16px; /* Esquinas ovaladas más pequeñas en móvil */
+            border-radius: 16px;
             padding: 6px;
           }
 
@@ -481,16 +474,16 @@ const Index = () => {
           }
 
           .option-card {
-            height: 135px !important;
+            height: 120px !important;
           }
 
           .option-content svg {
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
           }
 
           .option-content h3 {
-            font-size: 13px;
+            font-size: 12px;
           }
 
           .option-content p {
@@ -505,7 +498,7 @@ const Index = () => {
           }
 
           .stat-card {
-            height: 95px !important;
+            height: 80px !important;
           }
 
           .stat-number {
@@ -541,21 +534,17 @@ const Index = () => {
           .options-panel {
             padding: 15px;
           }
-
-          .message-panel {
-            padding-top: 20px; /* Mantener espacio superior en pantallas pequeñas */
-          }
           
           .options-panel {
             gap: 12px;
           }
           
           .message-content h1 {
-            font-size: 24px;
+            font-size: 22px;
           }
 
           .option-card {
-            height: 120px !important;
+            height: 110px !important;
           }
 
           .options-grid {
@@ -566,12 +555,10 @@ const Index = () => {
             gap: 12px;
           }
 
-          /* Ajuste final del logo en pantallas muy pequeñas */
           .logo-image {
             width: 60px;
             height: 60px;
             margin-bottom: 12px;
-            border-radius: 14px;
           }
         }
 
@@ -584,14 +571,13 @@ const Index = () => {
           }
           
           .option-card {
-            height: 110px !important;
+            height: 100px !important;
           }
           
           .stat-card {
-            height: 80px !important;
+            height: 70px !important;
           }
 
-          /* Ajustar logo en pantallas con poca altura */
           .logo-image {
             width: 50px;
             height: 50px;
