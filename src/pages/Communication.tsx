@@ -1,5 +1,4 @@
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChatRooms } from "@/components/communication/ChatRooms";
 import { ChatRoomAutoAdd } from "@/components/communication/ChatRoomAutoAdd";
@@ -8,60 +7,61 @@ import { MessageCircle, Radio } from "lucide-react";
 
 const Communication = () => {
   return (
-    <div className="container mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
-      {/* Componente invisible que auto-agrega miembros a sala General */}
-      <ChatRoomAutoAdd />
-      <div className="text-center space-y-1 sm:space-y-2 px-2">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
-          Centro de Comunicación
-        </h1>
-        <p className="text-xs sm:text-sm text-gray-600">
-          Mantente conectado con tu equipo a través de chats grupales y walkie-talkie
-        </p>
+    <div className="w-full min-h-screen bg-gray-50 fixed left-0 right-0 top-0 bottom-0 overflow-y-auto">
+      <div className="w-full px-0 max-w-none sm:max-w-4xl sm:mx-auto">
+        {/* Componente invisible que auto-agrega miembros a sala General */}
+        <ChatRoomAutoAdd />
+
+        {/* Header similar a WhatsApp */}
+        <div className="bg-arcana-blue-gradient px-4 py-3 sm:py-4 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                <MessageCircle className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-lg sm:text-xl font-bold text-white">Mensajes ARCANA</h1>
+                <p className="text-white/80 text-xs sm:text-sm">Comunicación del ministerio</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <Tabs defaultValue="chat" className="w-full">
+          <TabsList className="w-full grid grid-cols-2 bg-white px-4 py-2 border-b">
+            <TabsTrigger
+              value="chat"
+              className="flex items-center gap-2 text-sm data-[state=active]:text-arcana-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-arcana-blue-600 rounded-none"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>Chat</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="walkie"
+              className="flex items-center gap-2 text-sm data-[state=active]:text-arcana-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-arcana-blue-600 rounded-none"
+            >
+              <Radio className="w-4 h-4" />
+              <span>Walkie</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="chat" className="m-0">
+            <Card className="border-0 shadow-none rounded-none">
+              <CardContent className="p-0">
+                <ChatRooms />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="walkie" className="m-0">
+            <Card className="border-0 shadow-none rounded-none">
+              <CardContent className="p-0">
+                <WalkieTalkie />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
-
-      <Tabs defaultValue="chat" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="chat" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
-            <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">Chats Grupales</span>
-            <span className="sm:hidden">Chat</span>
-          </TabsTrigger>
-          <TabsTrigger value="walkie" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
-            <Radio className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline">Walkie-Talkie</span>
-            <span className="sm:hidden">Walkie</span>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="chat" className="mt-4 sm:mt-6">
-          <Card>
-            <CardHeader className="pb-3 sm:pb-4">
-              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-arcana-blue-600" />
-                Salas de Chat
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ChatRooms />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="walkie" className="mt-4 sm:mt-6">
-          <Card>
-            <CardHeader className="pb-3 sm:pb-4">
-              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                <Radio className="w-4 h-4 sm:w-5 sm:h-5 text-arcana-gold-600" />
-                Walkie-Talkie
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <WalkieTalkie />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };
