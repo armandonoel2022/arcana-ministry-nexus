@@ -230,8 +230,8 @@ const NotificationCenter = () => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-12 min-h-[200px] w-full px-4">
-        <div className="text-center">
+      <div className="flex justify-center items-center py-12 min-h-[200px] w-full px-0">
+        <div className="text-center w-full">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Cargando notificaciones...</p>
         </div>
@@ -240,8 +240,8 @@ const NotificationCenter = () => {
   }
 
   return (
-    <div className="w-full min-h-screen bg-white">
-      <div className="w-full px-4 sm:px-6 max-w-4xl mx-auto">
+    <div className="w-full min-h-screen bg-white fixed left-0 right-0 top-0 bottom-0 overflow-y-auto">
+      <div className="w-full px-4 max-w-none sm:max-w-4xl sm:mx-auto sm:px-6">
         <div className="space-y-4 sm:space-y-6 w-full py-4">
           {/* Header */}
           <div className="flex flex-col items-center sm:items-start sm:flex-row sm:justify-between gap-3 text-center sm:text-left w-full">
@@ -271,7 +271,7 @@ const NotificationCenter = () => {
           </div>
 
           {/* Filters */}
-          <div className="flex flex-wrap gap-2 justify-center sm:justify-start w-full px-2 sm:px-0">
+          <div className="flex flex-wrap gap-2 justify-center sm:justify-start w-full">
             <Button variant={filter === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("all")}>
               Todas ({notifications.length})
             </Button>
