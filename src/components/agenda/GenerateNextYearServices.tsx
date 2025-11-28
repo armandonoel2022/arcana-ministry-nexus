@@ -115,7 +115,7 @@ const GenerateNextYearServices = () => {
     return sundays;
   };
 
-  const getGroupRotation = (sundayIndex: number) => {
+  const getGroupRotation = async (sundayIndex: number, year: number) => {
     // Rotación: Aleida → Keyla → Massy
     // Cada domingo, un grupo descansa
     const rotation = [
@@ -123,6 +123,36 @@ const GenerateNextYearServices = () => {
       { service1: 'MASSY', service2: 'ALEIDA', rest: 'KEYLA' },
       { service1: 'KEYLA', service2: 'MASSY', rest: 'ALEIDA' }
     ];
+    
+    // Si es el primer domingo del año, verificar último domingo del año anterior
+    if (sundayIndex === 0) {
+      const { data: lastYearServices } = await supabase
+        .from('services')
+        .select('assigned_group_id, service_date')
+        .gte('service_date', `${year - 1}-12-01`)
+        .lt('service_date', `${year}-01-01`)
+        .order('service_date', { ascending: false })
+        .limit(2);
+
+      if (lastYearServices && lastYearServices.length === 2) {
+        // Identificar qué grupos cantaron en el último domingo del año anterior
+        const lastGroups = lastYearServices.map(s => {
+          if (s.assigned_group_id === GROUPS.ALEIDA) return 'ALEIDA';
+          if (s.assigned_group_id === GROUPS.KEYLA) return 'KEYLA';
+          if (s.assigned_group_id === GROUPS.MASSY) return 'MASSY';
+          return null;
+        }).filter(Boolean);
+
+        // Determinar cuál grupo descansó
+        const allGroups: ('ALEIDA' | 'KEYLA' | 'MASSY')[] = ['ALEIDA', 'KEYLA', 'MASSY'];
+        const restedGroup = allGroups.find(g => !lastGroups.includes(g));
+
+        // El que descansó ahora va al servicio 1, continuar rotación
+        if (restedGroup === 'ALEIDA') return rotation[0]; // Aleida + Keyla
+        if (restedGroup === 'KEYLA') return rotation[2]; // Keyla + Massy
+        if (restedGroup === 'MASSY') return rotation[1]; // Massy + Aleida
+      }
+    }
     
     return rotation[sundayIndex % 3];
   };
@@ -132,18 +162,27 @@ const GenerateNextYearServices = () => {
     serviceTime: '08:00' | '10:45',
     groupName: string,
     currentMonthIndex: number,
-    usedDirectorsToday: Set<string>
+    usedDirectorsToday: Set<string>,
+    groupRotation: { service1: string; service2: string; rest: string }
   ) => {
     const groupKey = groupName.toUpperCase() as keyof typeof GROUPS;
     
     // Verificar si el líder del grupo debe dirigir este servicio
+    // Solo si su grupo está cantando ese día (no descansa)
     const groupLeader = Object.entries(DIRECTORS.GROUP_LEADERS)
       .find(([_, group]) => group === groupKey)?.[0];
     
     if (groupLeader) {
-      // Si el líder puede dirigir a esta hora, asignarlo
-      if (serviceTime === '08:00' || !DIRECTORS.ONLY_8AM.includes(groupLeader)) {
-        return groupLeader;
+      // Verificar si el grupo del líder está descansando este domingo
+      const leaderGroupName = DIRECTORS.GROUP_LEADERS[groupLeader as keyof typeof DIRECTORS.GROUP_LEADERS] as 'ALEIDA' | 'KEYLA' | 'MASSY';
+      const isGroupResting = groupRotation.rest === leaderGroupName;
+      
+      // Solo asignar al líder con su grupo si el grupo NO está descansando
+      if (!isGroupResting) {
+        // Si el líder puede dirigir a esta hora, asignarlo
+        if (serviceTime === '08:00' || !DIRECTORS.ONLY_8AM.includes(groupLeader)) {
+          return groupLeader;
+        }
       }
     }
 
@@ -283,14 +322,14 @@ const GenerateNextYearServices = () => {
           lastMonth = currentMonth;
         }
         
-        const rotation = getGroupRotation(i);
+        const rotation = await getGroupRotation(i, selectedYear);
         
         // Conjunto de directores ya usados en este domingo
         const usedDirectorsToday = new Set<string>();
         
         // Servicio 8:00 AM
         const service1Group = rotation.service1;
-        const director1 = getDirectorForService(i, '08:00', service1Group, currentMonthIndex, usedDirectorsToday);
+        const director1 = getDirectorForService(i, '08:00', service1Group, currentMonthIndex, usedDirectorsToday, rotation);
         usedDirectorsToday.add(director1);
         
         // Obtener el mes en español
@@ -316,7 +355,7 @@ const GenerateNextYearServices = () => {
 
         // Servicio 10:45 AM
         const service2Group = rotation.service2;
-        const director2 = getDirectorForService(i, '10:45', service2Group, currentMonthIndex, usedDirectorsToday);
+        const director2 = getDirectorForService(i, '10:45', service2Group, currentMonthIndex, usedDirectorsToday, rotation);
         
         services.push({
           title: '10:45 a.m.',
@@ -419,9 +458,13 @@ const GenerateNextYearServices = () => {
                 onChange={(e) => setSelectedYear(Number(e.target.value))}
                 className="w-full p-2 border border-gray-300 rounded-md"
               >
-                {availableYears.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
+                {availableYears.length > 0 ? (
+                  availableYears.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))
+                ) : (
+                  <option value="">No hay años con servicios</option>
+                )}
               </select>
             </div>
             
