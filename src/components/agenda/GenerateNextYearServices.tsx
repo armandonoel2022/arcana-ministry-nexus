@@ -164,61 +164,45 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
 
   const getDirectorAssignmentForMonth = (sundaysInMonth: Date[], groupRotations: any[]) => {
     const assignments = [];
-    const directorUsage = new Map();
     const monthlyDirectorPool = [...DIRECTORS.ALL_DIRECTORS];
+    const usedDirectorsThisMonth = new Set<string>();
 
-    // Mezclar los directores para evitar patrones fijos
+    // Mezclar los directores para el mes
     for (let i = monthlyDirectorPool.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [monthlyDirectorPool[i], monthlyDirectorPool[j]] = [monthlyDirectorPool[j], monthlyDirectorPool[i]];
     }
 
-    let directorIndex = 0;
-
+    // Para cada domingo del mes
     for (let i = 0; i < sundaysInMonth.length; i++) {
       const rotation = groupRotations[i];
-      const usedDirectorsToday = new Set();
+      const usedDirectorsToday = new Set<string>();
 
       // Asignar director para servicio 8:00 AM
-      let director1 = monthlyDirectorPool[directorIndex % monthlyDirectorPool.length];
-
-      // Verificar restricciones y optimizar asignación
-      director1 = optimizeDirectorAssignment(
-        director1,
+      let director1 = this.getAvailableDirector(
+        monthlyDirectorPool,
+        usedDirectorsThisMonth,
+        usedDirectorsToday,
         "08:00",
         rotation.service1,
-        usedDirectorsToday,
         rotation,
-        directorUsage,
-        i,
       );
 
       usedDirectorsToday.add(director1);
-      updateDirectorUsage(directorUsage, director1, i);
-      directorIndex++;
+      usedDirectorsThisMonth.add(director1);
 
       // Asignar director para servicio 10:45 AM
-      let director2 = monthlyDirectorPool[directorIndex % monthlyDirectorPool.length];
-
-      // Si es el mismo director, tomar el siguiente
-      if (director2 === director1) {
-        directorIndex++;
-        director2 = monthlyDirectorPool[directorIndex % monthlyDirectorPool.length];
-      }
-
-      director2 = optimizeDirectorAssignment(
-        director2,
+      let director2 = this.getAvailableDirector(
+        monthlyDirectorPool,
+        usedDirectorsThisMonth,
+        usedDirectorsToday,
         "10:45",
         rotation.service2,
-        usedDirectorsToday,
         rotation,
-        directorUsage,
-        i,
       );
 
       usedDirectorsToday.add(director2);
-      updateDirectorUsage(directorUsage, director2, i);
-      directorIndex++;
+      usedDirectorsThisMonth.add(director2);
 
       assignments.push({
         service1: { director: director1, group: rotation.service1 },
@@ -229,32 +213,62 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
     return assignments;
   };
 
-  const optimizeDirectorAssignment = (
+  const getAvailableDirector = (
+    directorPool: string[],
+    usedDirectorsThisMonth: Set<string>,
+    usedDirectorsToday: Set<string>,
+    serviceTime: "08:00" | "10:45",
+    groupName: string,
+    groupRotation: any,
+  ) => {
+    // Primero buscar directores que no se han usado este mes
+    for (const director of directorPool) {
+      if (
+        !usedDirectorsThisMonth.has(director) &&
+        !usedDirectorsToday.has(director) &&
+        this.isDirectorAvailableForService(director, serviceTime, groupName, groupRotation)
+      ) {
+        return director;
+      }
+    }
+
+    // Si no hay disponibles que no se hayan usado este mes, buscar cualquier disponible
+    for (const director of directorPool) {
+      if (
+        !usedDirectorsToday.has(director) &&
+        this.isDirectorAvailableForService(director, serviceTime, groupName, groupRotation)
+      ) {
+        return director;
+      }
+    }
+
+    // Último recurso: cualquier director que no se haya usado hoy
+    for (const director of directorPool) {
+      if (!usedDirectorsToday.has(director)) {
+        return director;
+      }
+    }
+
+    // Si todo falla, devolver el primero de la lista
+    return directorPool[0];
+  };
+
+  const isDirectorAvailableForService = (
     director: string,
     serviceTime: "08:00" | "10:45",
     groupName: string,
-    usedDirectorsToday: Set<string>,
     groupRotation: any,
-    directorUsage: Map<string, number[]>,
-    sundayIndex: number,
   ) => {
-    let optimizedDirector = director;
-
-    // 1. Verificar restricción de horario (solo 8:00 AM)
-    if (serviceTime === "10:45" && DIRECTORS.ONLY_8AM.includes(optimizedDirector)) {
-      optimizedDirector = findAlternativeDirector(optimizedDirector, usedDirectorsToday, serviceTime);
+    // 1. Verificar restricción de horario
+    if (serviceTime === "10:45" && DIRECTORS.ONLY_8AM.includes(director)) {
+      return false;
     }
 
-    // 2. Verificar si el director ya fue usado hoy
-    if (usedDirectorsToday.has(optimizedDirector)) {
-      optimizedDirector = findAlternativeDirector(optimizedDirector, usedDirectorsToday, serviceTime);
-    }
-
-    // 3. Optimizar líderes de grupo con sus grupos
-    const isGroupLeader = Object.keys(DIRECTORS.GROUP_LEADERS).includes(optimizedDirector);
+    // 2. Verificar optimización para líderes de grupo
+    const isGroupLeader = Object.keys(DIRECTORS.GROUP_LEADERS).includes(director);
 
     if (isGroupLeader) {
-      const leaderGroup = DIRECTORS.GROUP_LEADERS[optimizedDirector as keyof typeof DIRECTORS.GROUP_LEADERS];
+      const leaderGroup = DIRECTORS.GROUP_LEADERS[director as keyof typeof DIRECTORS.GROUP_LEADERS];
       const isGroupResting = groupRotation.rest === leaderGroup;
 
       if (!isGroupResting) {
@@ -263,106 +277,12 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
 
         // Si hay conflicto (líder asignado a hora diferente de su grupo)
         if ((serviceTime === "08:00" && groupSingsAt1045AM) || (serviceTime === "10:45" && groupSingsAt8AM)) {
-          // Buscar intercambio con otro director que no tenga conflicto
-          const alternative = findAlternativeDirectorForGroupConflict(
-            optimizedDirector,
-            usedDirectorsToday,
-            serviceTime,
-            groupRotation,
-            directorUsage,
-            sundayIndex,
-          );
-
-          if (alternative) {
-            optimizedDirector = alternative;
-          }
+          return false; // Este director no es ideal para este servicio
         }
       }
     }
 
-    // 4. Evitar que un director repita muy seguido
-    const lastUsage = directorUsage.get(optimizedDirector) || [];
-    if (lastUsage.length > 0) {
-      const lastUsedSunday = Math.max(...lastUsage);
-      if (sundayIndex - lastUsedSunday < 2) {
-        // Mínimo 2 domingos de separación
-        optimizedDirector = findAlternativeDirector(optimizedDirector, usedDirectorsToday, serviceTime);
-      }
-    }
-
-    return optimizedDirector;
-  };
-
-  const findAlternativeDirector = (
-    currentDirector: string,
-    usedDirectorsToday: Set<string>,
-    serviceTime: "08:00" | "10:45",
-  ) => {
-    const availableDirectors = DIRECTORS.ALL_DIRECTORS.filter(
-      (dir) =>
-        dir !== currentDirector &&
-        !usedDirectorsToday.has(dir) &&
-        (serviceTime === "08:00" || !DIRECTORS.ONLY_8AM.includes(dir)),
-    );
-
-    if (availableDirectors.length > 0) {
-      // Preferir directores que no tengan restricciones
-      const unrestricted = availableDirectors.filter((dir) => !DIRECTORS.ONLY_8AM.includes(dir));
-      return unrestricted.length > 0 ? unrestricted[0] : availableDirectors[0];
-    }
-
-    return currentDirector; // Si no hay alternativa, mantener el actual
-  };
-
-  const findAlternativeDirectorForGroupConflict = (
-    currentDirector: string,
-    usedDirectorsToday: Set<string>,
-    serviceTime: "08:00" | "10:45",
-    groupRotation: any,
-    directorUsage: Map<string, number[]>,
-    sundayIndex: number,
-  ) => {
-    const availableDirectors = DIRECTORS.ALL_DIRECTORS.filter(
-      (dir) =>
-        dir !== currentDirector &&
-        !usedDirectorsToday.has(dir) &&
-        (serviceTime === "08:00" || !DIRECTORS.ONLY_8AM.includes(dir)),
-    );
-
-    for (const altDirector of availableDirectors) {
-      const isAltGroupLeader = Object.keys(DIRECTORS.GROUP_LEADERS).includes(altDirector);
-
-      if (!isAltGroupLeader) {
-        return altDirector; // Preferir directores que no son líderes
-      }
-
-      // Verificar si el director alternativo también tendría conflicto
-      const altLeaderGroup = DIRECTORS.GROUP_LEADERS[altDirector as keyof typeof DIRECTORS.GROUP_LEADERS];
-      const isAltGroupResting = groupRotation.rest === altLeaderGroup;
-
-      if (!isAltGroupResting) {
-        const altGroupSingsAt8AM = groupRotation.service1 === altLeaderGroup;
-        const altGroupSingsAt1045AM = groupRotation.service2 === altLeaderGroup;
-
-        const wouldAltHaveConflict =
-          (serviceTime === "08:00" && altGroupSingsAt1045AM) || (serviceTime === "10:45" && altGroupSingsAt8AM);
-
-        if (!wouldAltHaveConflict) {
-          return altDirector;
-        }
-      } else {
-        return altDirector; // Si su grupo descansa, no hay conflicto
-      }
-    }
-
-    return null;
-  };
-
-  const updateDirectorUsage = (directorUsage: Map<string, number[]>, director: string, sundayIndex: number) => {
-    if (!directorUsage.has(director)) {
-      directorUsage.set(director, []);
-    }
-    directorUsage.get(director)!.push(sundayIndex);
+    return true;
   };
 
   const recalculateMonthOrders = async (year: number) => {
@@ -575,6 +495,12 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
       return;
     }
 
+    // Verificar que el año realmente existe en la base de datos
+    if (!existingYears.includes(selectedYear)) {
+      toast.error(`No existen servicios para el año ${selectedYear}`);
+      return;
+    }
+
     setIsGenerating(true);
 
     try {
@@ -684,11 +610,11 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
                 <div className="space-y-2">
                   <p>Esta acción generará automáticamente todos los domingos del {selectedYear} con:</p>
                   <ul className="list-disc list-inside space-y-1 text-sm">
-                    <li>Distribución equitativa de los 9 directores</li>
-                    <li>Rotación de grupos: Aleida → Keyla → Massy</li>
-                    <li>Coordinación de líderes con sus grupos</li>
-                    <li>Respeto a restricciones de horario</li>
-                    <li>Mínimo 2 domingos entre asignaciones</li>
+                    <li>✅ Cada director solo aparece UNA VEZ por mes</li>
+                    <li>✅ Distribución equitativa de los 9 directores</li>
+                    <li>✅ Rotación de grupos: Aleida → Keyla → Massy</li>
+                    <li>✅ Coordinación de líderes con sus grupos</li>
+                    <li>✅ Respeto a restricciones de horario</li>
                   </ul>
                   <p className="text-amber-600 font-medium mt-4">
                     Se crearán aproximadamente {getAllSundaysOfYear(selectedYear!).length * 2} servicios. ¿Desea
@@ -706,7 +632,11 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="destructive" className="gap-2" disabled={isGenerating || !selectedYear}>
+            <Button
+              variant="destructive"
+              className="gap-2"
+              disabled={isGenerating || !selectedYear || !existingYears.includes(selectedYear)}
+            >
               {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calendar className="h-4 w-4" />}
               Eliminar Año
             </Button>
@@ -734,26 +664,40 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
                   </select>
                 </div>
 
-                <div className="space-y-2">
-                  <p className="text-red-600 font-medium">
-                    ⚠️ Esta acción eliminará permanentemente todos los servicios del año {selectedYear}.
-                  </p>
-                  <p>Esta operación no se puede deshacer. ¿Está seguro que desea continuar?</p>
-                </div>
+                {existingYears.includes(selectedYear!) ? (
+                  <div className="space-y-2">
+                    <p className="text-red-600 font-medium">
+                      ⚠️ Esta acción eliminará permanentemente todos los servicios del año {selectedYear}.
+                    </p>
+                    <p>Esta operación no se puede deshacer. ¿Está seguro que desea continuar?</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-amber-600 font-medium">
+                      No existen servicios para el año {selectedYear} en la base de datos.
+                    </p>
+                  </div>
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={deleteYear} className="bg-red-600 hover:bg-red-700">
-                Eliminar
-              </AlertDialogAction>
+              {existingYears.includes(selectedYear!) && (
+                <AlertDialogAction onClick={deleteYear} className="bg-red-600 hover:bg-red-700">
+                  Eliminar
+                </AlertDialogAction>
+              )}
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
 
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="outline" className="gap-2" disabled={isGenerating}>
+            <Button
+              variant="outline"
+              className="gap-2"
+              disabled={isGenerating || !selectedYear || !existingYears.includes(selectedYear)}
+            >
               Recalcular Orden
             </Button>
           </AlertDialogTrigger>
@@ -782,22 +726,32 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
                   </select>
                 </div>
 
-                <div className="space-y-2">
-                  <p>
-                    Esta acción recalculará el número de orden (1º, 2º, 3º, 4º, 5º domingo) para todos los servicios del{" "}
-                    {selectedYear}.
-                  </p>
-                  <p className="text-amber-600 font-medium mt-4">
-                    Esto es útil si los servicios fueron generados con un algoritmo anterior. ¿Desea continuar?
-                  </p>
-                </div>
+                {existingYears.includes(selectedYear!) ? (
+                  <div className="space-y-2">
+                    <p>
+                      Esta acción recalculará el número de orden (1º, 2º, 3º, 4º, 5º domingo) para todos los servicios
+                      del {selectedYear}.
+                    </p>
+                    <p className="text-amber-600 font-medium mt-4">
+                      Esto es útil si los servicios fueron generados con un algoritmo anterior. ¿Desea continuar?
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-amber-600 font-medium">
+                      No existen servicios para el año {selectedYear} en la base de datos.
+                    </p>
+                  </div>
+                )}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={() => selectedYear && recalculateMonthOrders(selectedYear)}>
-                Recalcular
-              </AlertDialogAction>
+              {existingYears.includes(selectedYear!) && (
+                <AlertDialogAction onClick={() => selectedYear && recalculateMonthOrders(selectedYear)}>
+                  Recalcular
+                </AlertDialogAction>
+              )}
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
