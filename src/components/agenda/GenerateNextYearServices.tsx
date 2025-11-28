@@ -179,46 +179,25 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
     usedDirectorsToday: Set<string>,
     groupRotation: { service1: string; service2: string; rest: string }
   ) => {
-    const groupKey = groupName.toUpperCase() as keyof typeof GROUPS;
+    // Usar la rotación normal de los 9 directores basada en el índice del mes
+    let selectedDirector = DIRECTORS.ROTATION[currentMonthIndex % DIRECTORS.ROTATION.length];
     
-    // Verificar si el líder del grupo debe dirigir este servicio
-    // Solo si su grupo está cantando ese día (no descansa)
-    const groupLeader = Object.entries(DIRECTORS.GROUP_LEADERS)
-      .find(([_, group]) => group === groupKey)?.[0];
-    
-    if (groupLeader) {
-      // Verificar si el grupo del líder está descansando este domingo
-      const leaderGroupName = DIRECTORS.GROUP_LEADERS[groupLeader as keyof typeof DIRECTORS.GROUP_LEADERS] as 'ALEIDA' | 'KEYLA' | 'MASSY';
-      const isGroupResting = groupRotation.rest === leaderGroupName;
-      
-      // Solo asignar al líder con su grupo si el grupo NO está descansando
-      if (!isGroupResting) {
-        // Si el líder puede dirigir a esta hora, asignarlo
-        if (serviceTime === '08:00' || !DIRECTORS.ONLY_8AM.includes(groupLeader)) {
-          return groupLeader;
-        }
-      }
-    }
-
-    // Usar la rotación basada en el índice del mes
-    // Cada mes empieza desde el primer director de la rotación
-    const director = DIRECTORS.ROTATION[currentMonthIndex % DIRECTORS.ROTATION.length];
-    
-    // Verificar restricciones de horario
-    if (serviceTime === '10:45' && DIRECTORS.ONLY_8AM.includes(director)) {
-      // Buscar el siguiente director disponible que no tenga restricción de 8 AM
+    // Verificar restricciones de horario para el director seleccionado
+    if (serviceTime === '10:45' && DIRECTORS.ONLY_8AM.includes(selectedDirector)) {
+      // Este director solo puede a las 8 AM, buscar el siguiente disponible
       for (let i = 1; i < DIRECTORS.ROTATION.length; i++) {
         const nextIndex = (currentMonthIndex + i) % DIRECTORS.ROTATION.length;
         const nextDirector = DIRECTORS.ROTATION[nextIndex];
         
         if (!DIRECTORS.ONLY_8AM.includes(nextDirector) && !usedDirectorsToday.has(nextDirector)) {
-          return nextDirector;
+          selectedDirector = nextDirector;
+          break;
         }
       }
     }
     
-    // Verificar si ya fue usado hoy
-    if (usedDirectorsToday.has(director)) {
+    // Verificar si el director ya fue usado hoy (evitar duplicados en el mismo día)
+    if (usedDirectorsToday.has(selectedDirector)) {
       // Buscar siguiente director disponible
       for (let i = 1; i < DIRECTORS.ROTATION.length; i++) {
         const nextIndex = (currentMonthIndex + i) % DIRECTORS.ROTATION.length;
@@ -226,12 +205,48 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
         
         const isAvailableForTime = serviceTime === '08:00' || !DIRECTORS.ONLY_8AM.includes(nextDirector);
         if (!usedDirectorsToday.has(nextDirector) && isAvailableForTime) {
-          return nextDirector;
+          selectedDirector = nextDirector;
+          break;
         }
       }
     }
     
-    return director;
+    // OPTIMIZACIÓN: Si el director seleccionado es líder de un grupo
+    // Y su grupo está cantando HOY (no descansa)
+    // Intentar asignarlo al mismo servicio que su grupo para evitar doble turno
+    const isGroupLeader = Object.keys(DIRECTORS.GROUP_LEADERS).includes(selectedDirector);
+    
+    if (isGroupLeader) {
+      const leaderGroupName = DIRECTORS.GROUP_LEADERS[selectedDirector as keyof typeof DIRECTORS.GROUP_LEADERS] as 'ALEIDA' | 'KEYLA' | 'MASSY';
+      const isGroupResting = groupRotation.rest === leaderGroupName;
+      
+      // Si el grupo NO está descansando, verificar en qué servicio canta
+      if (!isGroupResting) {
+        // Si el grupo canta en service1 (08:00) y estamos asignando 10:45, o viceversa
+        // Intentar cambiar al director por otro para que coincida con su grupo
+        const groupSingsAt8AM = groupRotation.service1 === leaderGroupName;
+        const groupSingsAt1045AM = groupRotation.service2 === leaderGroupName;
+        
+        // Si hay conflicto de horario (líder asignado a hora diferente de su grupo)
+        if ((serviceTime === '08:00' && groupSingsAt1045AM) || 
+            (serviceTime === '10:45' && groupSingsAt8AM)) {
+          // Intentar encontrar otro director para este servicio
+          // Pero solo si hay alguien disponible
+          for (let i = 1; i < DIRECTORS.ROTATION.length; i++) {
+            const nextIndex = (currentMonthIndex + i) % DIRECTORS.ROTATION.length;
+            const alternateDirector = DIRECTORS.ROTATION[nextIndex];
+            
+            const isAvailableForTime = serviceTime === '08:00' || !DIRECTORS.ONLY_8AM.includes(alternateDirector);
+            if (!usedDirectorsToday.has(alternateDirector) && isAvailableForTime) {
+              selectedDirector = alternateDirector;
+              break;
+            }
+          }
+        }
+      }
+    }
+    
+    return selectedDirector;
   };
 
   const recalculateMonthOrders = async (year: number) => {
