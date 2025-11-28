@@ -34,7 +34,7 @@ const MinisterialAgenda = () => {
               Gestión de servicios y actividades del ministerio
             </p>
           </div>
-          <GenerateNextYearServices />
+          <GenerateNextYearServices onDataUpdate={handleDataUpdate} />
         </div>
 
         {/* Panel de Contenido Principal */}

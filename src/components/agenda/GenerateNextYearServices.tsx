@@ -15,11 +15,16 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-const GenerateNextYearServices = () => {
+interface GenerateNextYearServicesProps {
+  onDataUpdate?: () => void;
+}
+
+const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onDataUpdate }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [nextYear, setNextYear] = useState<number | null>(null);
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
+  const [existingYears, setExistingYears] = useState<number[]>([]);
 
   useEffect(() => {
     detectNextYearAndAvailable();
@@ -27,37 +32,45 @@ const GenerateNextYearServices = () => {
 
   const detectNextYearAndAvailable = async () => {
     try {
-      const { data, error } = await supabase
+      // Obtener todos los servicios para determinar años existentes
+      const { data: allServices, error: servicesError } = await supabase
         .from('services')
         .select('service_date')
-        .order('service_date', { ascending: false })
-        .limit(1);
+        .order('service_date', { ascending: false });
 
-      if (error) throw error;
+      if (servicesError) throw servicesError;
 
-      if (data && data.length > 0) {
-        const lastYear = new Date(data[0].service_date).getFullYear();
+      // Extraer años únicos que realmente existen
+      const yearsInDb = [...new Set(
+        (allServices || []).map(s => new Date(s.service_date).getFullYear())
+      )].sort((a, b) => a - b);
+      
+      setExistingYears(yearsInDb);
+
+      // Determinar el próximo año a generar
+      if (allServices && allServices.length > 0) {
+        const lastYear = new Date(allServices[0].service_date).getFullYear();
         const next = lastYear + 1;
         setNextYear(next);
         setSelectedYear(next);
         
-        // Generar lista de años disponibles (último año + próximos 5 años)
-        const years = [];
+        // Lista de años para generar: próximos 5 años desde el último
+        const futureYears = [];
         for (let i = 0; i <= 5; i++) {
-          years.push(next + i);
+          futureYears.push(next + i);
         }
-        setAvailableYears(years);
+        setAvailableYears(futureYears);
       } else {
         const currentYear = new Date().getFullYear();
         setNextYear(currentYear);
         setSelectedYear(currentYear);
         
-        // Generar lista desde el año actual
-        const years = [];
+        // Si no hay datos, empezar desde el año actual
+        const futureYears = [];
         for (let i = 0; i <= 5; i++) {
-          years.push(currentYear + i);
+          futureYears.push(currentYear + i);
         }
-        setAvailableYears(years);
+        setAvailableYears(futureYears);
       }
     } catch (error) {
       console.error('Error detecting next year:', error);
@@ -65,6 +78,7 @@ const GenerateNextYearServices = () => {
       setNextYear(currentYear);
       setSelectedYear(currentYear);
       setAvailableYears([currentYear, currentYear + 1, currentYear + 2]);
+      setExistingYears([]);
     }
   };
 
@@ -385,6 +399,11 @@ const GenerateNextYearServices = () => {
 
       // Actualizar los años disponibles
       await detectNextYearAndAvailable();
+      
+      // Notificar al componente padre para refrescar la tabla
+      if (onDataUpdate) {
+        onDataUpdate();
+      }
 
     } catch (error: any) {
       console.error('Error generando servicios:', error);
@@ -417,6 +436,11 @@ const GenerateNextYearServices = () => {
 
       // Actualizar los años disponibles
       await detectNextYearAndAvailable();
+      
+      // Notificar al componente padre para refrescar la tabla
+      if (onDataUpdate) {
+        onDataUpdate();
+      }
 
     } catch (error: any) {
       console.error('Error eliminando servicios:', error);
@@ -519,9 +543,13 @@ const GenerateNextYearServices = () => {
                 onChange={(e) => setSelectedYear(Number(e.target.value))}
                 className="w-full p-2 border border-gray-300 rounded-md"
               >
-                {availableYears.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
+                {existingYears.length > 0 ? (
+                  existingYears.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))
+                ) : (
+                  <option value="">No hay años con servicios</option>
+                )}
               </select>
             </div>
             
@@ -565,9 +593,13 @@ const GenerateNextYearServices = () => {
                 onChange={(e) => setSelectedYear(Number(e.target.value))}
                 className="w-full p-2 border border-gray-300 rounded-md"
               >
-                {availableYears.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
+                {existingYears.length > 0 ? (
+                  existingYears.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))
+                ) : (
+                  <option value="">No hay años con servicios</option>
+                )}
               </select>
             </div>
             
