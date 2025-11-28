@@ -1,24 +1,48 @@
-import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
-import { Menu, X } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function AnimatedLogoTrigger() {
-  const { open, setOpen, isMobile } = useSidebar();
+  const { toggleSidebar, open, state } = useSidebar();
+  const { userProfile } = useAuth();
+  const isMobile = useIsMobile();
+
+  const isExpanded = state === "expanded";
 
   return (
-    <div className="relative">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="relative h-9 w-9 rounded-lg bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 z-10"
-        onClick={() => setOpen(!open)}
-        aria-label={open ? "Cerrar menú" : "Abrir menú"}
+    <div className="flex items-center gap-3 p-2">
+      <button
+        onClick={toggleSidebar}
+        className="group relative p-2 hover:bg-primary/5 rounded-lg transition-all duration-300 animate-scale-in"
+        aria-label="Toggle sidebar"
+        title={isExpanded ? "Minimizar menú" : "Expandir menú"}
       >
-        {open ? <X className="h-4 w-4 text-gray-700" /> : <Menu className="h-4 w-4 text-gray-700" />}
-      </Button>
+        <img
+          src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png"
+          alt="ARCANA Logo"
+          className={`h-8 w-8 object-cover rounded-2xl transition-all duration-500 ${
+            isExpanded
+              ? "opacity-100 scale-100 rotate-0"
+              : "opacity-90 scale-95 group-hover:scale-110 group-hover:rotate-12"
+          } group-hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]`}
+        />
 
-      {/* Efecto que se expande fuera del botón pero con containimiento */}
-      <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-pink-500/5 opacity-0 hover:opacity-100 transition-opacity duration-300 -inset-1 blur-sm -z-10" />
+        {/* Glow effect on hover */}
+        <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500/0 via-blue-500/10 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl" />
+
+        {/* Ripple effect on click */}
+        <div className="absolute inset-0 rounded-lg bg-primary/20 scale-0 group-active:scale-100 transition-transform duration-200" />
+      </button>
+
+      {!isMobile && (
+        <span
+          className={`text-sm font-medium text-foreground transition-all duration-300 ${
+            isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"
+          }`}
+        >
+          {userProfile?.full_name?.split(" ")[0] || "Usuario"}
+        </span>
+      )}
     </div>
   );
 }
