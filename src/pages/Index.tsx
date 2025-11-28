@@ -444,18 +444,18 @@ const Index = () => {
           .message-panel {
             position: relative;
             width: 100%;
-            height: 20%;
-            min-height: 140px;
+            height: 25%; /* Aumentado de 20% a 25% para bajar más el contenido */
+            min-height: 160px; /* Aumentado de 140px a 160px */
             background: var(--gradient-blue-form);
-            padding: 16px;
-            /* Añadir espacio superior en móvil */
-            padding-top: 24px;
+            padding: 20px 16px 16px 16px; /* Aumentado padding-top de 16px a 20px */
+            /* Se añade espacio superior adicional usando margin-top */
+            margin-top: 24px; /* NUEVO: Espacio superior para bajar toda la sección azul */
           }
 
           .options-panel {
             position: relative;
             width: 100%;
-            height: 80%;
+            height: 75%; /* Reducido de 80% a 75% para compensar el aumento del message-panel */
             background: #fff;
             padding: 16px 16px 20px 16px;
             overflow-y: auto;
@@ -543,7 +543,8 @@ const Index = () => {
           }
 
           .message-panel {
-            padding-top: 20px; /* Mantener espacio superior en pantallas pequeñas */
+            padding-top: 16px; /* Mantener espacio superior */
+            margin-top: 20px; /* Ajustado para pantallas más pequeñas */
           }
           
           .options-panel {
