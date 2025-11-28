@@ -167,14 +167,14 @@ const menuCategories = [
 ]
 
 export function AppSidebar() {
-  const { setOpenMobile } = useSidebar()
+  const { setOpen } = useSidebar()
   const location = useLocation()
   const unreadCount = useUnreadNotifications()
   const { signOut, user, userProfile } = useAuth()
-
+  
   const handleLinkClick = () => {
-    // Close sidebar on mobile when a link is clicked
-    setOpenMobile(false)
+    // Close sidebar when a link is clicked (both mobile and desktop)
+    setOpen(false)
   }
 
   return (
@@ -183,19 +183,16 @@ export function AppSidebar() {
         {/* Header */}
         <div className="p-6 border-b border-sidebar-border">
           <div className="flex items-center gap-3">
-            <SidebarTrigger className="w-10 h-10 bg-sidebar-accent/50 rounded-xl flex items-center justify-center hover:bg-sidebar-accent transition-all duration-200 hover:scale-105 group hidden md:flex shadow-sm">
-              <Menu className="w-6 h-6 text-sidebar-primary transition-transform duration-300 group-hover:rotate-90" />
-            </SidebarTrigger>
-            <div className="md:hidden flex-shrink-0">
+            <div className="flex-shrink-0">
               <img 
-                src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" 
+                src="/lovable-uploads/a58d8d74-4ced-444f-b402-8a028fc7f65e.png" 
                 alt="ARCANA Logo" 
-                className="w-10 h-10 object-cover rounded-xl shadow-sm"
+                className="w-10 h-10 object-cover rounded-full shadow-sm"
               />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-sidebar-foreground">ARCANA</h1>
-              <p className="text-sm text-sidebar-muted-foreground">{userProfile?.full_name?.split(' ')[0] || 'Usuario'}</p>
+              <p className="text-sm font-medium text-sidebar-foreground">{userProfile?.full_name || 'Usuario'}</p>
+              <p className="text-xs text-sidebar-muted-foreground">{user?.email}</p>
             </div>
           </div>
         </div>
@@ -277,11 +274,6 @@ export function AppSidebar() {
             <LogOut className="w-4 h-4 mr-3" />
             Cerrar Sesión
           </Button>
-          {user && (
-            <p className="text-xs text-gray-500 mt-2 px-3">
-              {user.email}
-            </p>
-          )}
         </div>
       </SidebarContent>
     </Sidebar>
