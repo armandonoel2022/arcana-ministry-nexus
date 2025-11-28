@@ -78,12 +78,13 @@ const GenerateNextYearServices = () => {
   // Directores con sus restricciones
   const DIRECTORS = {
     ONLY_8AM: ['Guarionex García', 'Maria del A. Pérez Santana'],
-    WITH_GROUP: {
+    GROUP_LEADERS: {
       'Damaris Castillo Jimenez': 'MASSY',
       'Keyla Yanira Medrano Medrano': 'KEYLA',
       'Eliabi Joana Sierra Castillo': 'ALEIDA'
     },
-    ALL: [
+    // Orden de rotación según la imagen
+    ROTATION: [
       'Armando Noel Charle',
       'Damaris Castillo Jimenez',
       'Maria del A. Pérez Santana',
@@ -130,69 +131,54 @@ const GenerateNextYearServices = () => {
     sundayIndex: number, 
     serviceTime: '08:00' | '10:45',
     groupName: string,
-    directorIndex: { value: number },
+    currentMonthIndex: number,
     usedDirectorsToday: Set<string>
   ) => {
     const groupKey = groupName.toUpperCase() as keyof typeof GROUPS;
     
-    // Buscar directores que pertenecen al grupo actual
-    const directorsInGroup = Object.entries(DIRECTORS.WITH_GROUP)
-      .filter(([_, group]) => group === groupKey)
-      .map(([name, _]) => name);
+    // Verificar si el líder del grupo debe dirigir este servicio
+    const groupLeader = Object.entries(DIRECTORS.GROUP_LEADERS)
+      .find(([_, group]) => group === groupKey)?.[0];
+    
+    if (groupLeader) {
+      // Si el líder puede dirigir a esta hora, asignarlo
+      if (serviceTime === '08:00' || !DIRECTORS.ONLY_8AM.includes(groupLeader)) {
+        return groupLeader;
+      }
+    }
 
-    // Si hay un director del grupo disponible, priorizarlo
-    if (directorsInGroup.length > 0) {
-      for (const director of directorsInGroup) {
-        // Verificar si el director tiene restricción de horario
-        if (serviceTime === '10:45' && DIRECTORS.ONLY_8AM.includes(director)) {
-          continue; // Este director no puede a las 10:45
+    // Usar la rotación basada en el índice del mes
+    // Cada mes empieza desde el primer director de la rotación
+    const director = DIRECTORS.ROTATION[currentMonthIndex % DIRECTORS.ROTATION.length];
+    
+    // Verificar restricciones de horario
+    if (serviceTime === '10:45' && DIRECTORS.ONLY_8AM.includes(director)) {
+      // Buscar el siguiente director disponible que no tenga restricción de 8 AM
+      for (let i = 1; i < DIRECTORS.ROTATION.length; i++) {
+        const nextIndex = (currentMonthIndex + i) % DIRECTORS.ROTATION.length;
+        const nextDirector = DIRECTORS.ROTATION[nextIndex];
+        
+        if (!DIRECTORS.ONLY_8AM.includes(nextDirector) && !usedDirectorsToday.has(nextDirector)) {
+          return nextDirector;
         }
-        // Si pasa las restricciones, usar este director
-        return director;
       }
-    }
-
-    // Si no hay director del grupo disponible, usar rotación general
-    // excluyendo directores que tienen grupo O que ya fueron usados hoy
-    let attempts = 0;
-    const directorsWithGroup = Object.keys(DIRECTORS.WITH_GROUP);
-    
-    while (attempts < DIRECTORS.ALL.length * 2) {
-      const director = DIRECTORS.ALL[directorIndex.value % DIRECTORS.ALL.length];
-      directorIndex.value++;
-      attempts++;
-      
-      // Saltar directores que tienen grupo asignado
-      if (directorsWithGroup.includes(director)) {
-        continue;
-      }
-      
-      // Saltar directores ya usados hoy
-      if (usedDirectorsToday.has(director)) {
-        continue;
-      }
-      
-      // Verificar restricciones de horario
-      if (serviceTime === '10:45' && DIRECTORS.ONLY_8AM.includes(director)) {
-        continue;
-      }
-      
-      return director;
-    }
-
-    // Fallback - buscar cualquier director disponible que no haya sido usado hoy
-    for (const director of DIRECTORS.ALL) {
-      if (usedDirectorsToday.has(director)) {
-        continue;
-      }
-      if (serviceTime === '10:45' && DIRECTORS.ONLY_8AM.includes(director)) {
-        continue;
-      }
-      return director;
     }
     
-    // Último recurso si todos fueron usados
-    return DIRECTORS.ALL[0];
+    // Verificar si ya fue usado hoy
+    if (usedDirectorsToday.has(director)) {
+      // Buscar siguiente director disponible
+      for (let i = 1; i < DIRECTORS.ROTATION.length; i++) {
+        const nextIndex = (currentMonthIndex + i) % DIRECTORS.ROTATION.length;
+        const nextDirector = DIRECTORS.ROTATION[nextIndex];
+        
+        const isAvailableForTime = serviceTime === '08:00' || !DIRECTORS.ONLY_8AM.includes(nextDirector);
+        if (!usedDirectorsToday.has(nextDirector) && isAvailableForTime) {
+          return nextDirector;
+        }
+      }
+    }
+    
+    return director;
   };
 
   const recalculateMonthOrders = async (year: number) => {
@@ -284,10 +270,19 @@ const GenerateNextYearServices = () => {
     try {
       const sundays = getAllSundaysOfYear(selectedYear);
       const services = [];
-      const directorIndex = { value: 0 };
+      let currentMonthIndex = 0; // Índice para rotación de directores (resetea cada mes)
+      let lastMonth = -1;
 
       for (let i = 0; i < sundays.length; i++) {
         const sunday = sundays[i];
+        const currentMonth = sunday.getMonth();
+        
+        // Resetear el índice de rotación al inicio de cada mes
+        if (currentMonth !== lastMonth) {
+          currentMonthIndex = 0;
+          lastMonth = currentMonth;
+        }
+        
         const rotation = getGroupRotation(i);
         
         // Conjunto de directores ya usados en este domingo
@@ -295,7 +290,7 @@ const GenerateNextYearServices = () => {
         
         // Servicio 8:00 AM
         const service1Group = rotation.service1;
-        const director1 = getDirectorForService(i, '08:00', service1Group, directorIndex, usedDirectorsToday);
+        const director1 = getDirectorForService(i, '08:00', service1Group, currentMonthIndex, usedDirectorsToday);
         usedDirectorsToday.add(director1);
         
         // Obtener el mes en español
@@ -321,7 +316,7 @@ const GenerateNextYearServices = () => {
 
         // Servicio 10:45 AM
         const service2Group = rotation.service2;
-        const director2 = getDirectorForService(i, '10:45', service2Group, directorIndex, usedDirectorsToday);
+        const director2 = getDirectorForService(i, '10:45', service2Group, currentMonthIndex, usedDirectorsToday);
         
         services.push({
           title: '10:45 a.m.',
@@ -334,6 +329,9 @@ const GenerateNextYearServices = () => {
           month_name: monthName,
           month_order: monthOrder
         });
+        
+        // Avanzar al siguiente director en la rotación para el próximo domingo
+        currentMonthIndex++;
       }
 
       const { error } = await supabase
@@ -352,6 +350,38 @@ const GenerateNextYearServices = () => {
     } catch (error: any) {
       console.error('Error generando servicios:', error);
       toast.error('Error al generar servicios', {
+        description: error.message
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const deleteYear = async () => {
+    if (!selectedYear) {
+      toast.error('No se pudo determinar el año a eliminar');
+      return;
+    }
+
+    setIsGenerating(true);
+    
+    try {
+      const { error } = await supabase
+        .from('services')
+        .delete()
+        .gte('service_date', `${selectedYear}-01-01`)
+        .lt('service_date', `${selectedYear + 1}-01-01`);
+
+      if (error) throw error;
+
+      toast.success(`Se eliminaron todos los servicios del año ${selectedYear}`);
+
+      // Actualizar los años disponibles
+      await detectNextYearAndAvailable();
+
+    } catch (error: any) {
+      console.error('Error eliminando servicios:', error);
+      toast.error('Error al eliminar servicios', {
         description: error.message
       });
     } finally {
@@ -413,6 +443,57 @@ const GenerateNextYearServices = () => {
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <AlertDialogAction onClick={generateServices}>
             Generar Servicios
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button 
+          variant="destructive" 
+          className="gap-2"
+          disabled={isGenerating || !selectedYear}
+        >
+          {isGenerating ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Calendar className="h-4 w-4" />
+          )}
+          Eliminar Año
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Eliminar Servicios del Año</AlertDialogTitle>
+          <AlertDialogDescription className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Selecciona el año a eliminar:
+              </label>
+              <select
+                value={selectedYear || ''}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              >
+                {availableYears.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="space-y-2">
+              <p className="text-red-600 font-medium">
+                ⚠️ Esta acción eliminará permanentemente todos los servicios del año {selectedYear}.
+              </p>
+              <p>Esta operación no se puede deshacer. ¿Está seguro que desea continuar?</p>
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={deleteYear} className="bg-red-600 hover:bg-red-700">
+            Eliminar
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
