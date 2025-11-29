@@ -44,13 +44,11 @@ serve(async (req) => {
     const currentMinute = rdNow.getMinutes();
     
     // Format time as HH:MM:00 for exact comparison
-    // The database stores time in HH:MM:SS format, so we need to match exactly
     const currentTime = `${String(currentHour).padStart(2,'0')}:${String(currentMinute).padStart(2,'0')}:00`;
     
     console.log(`Current day: ${currentDay}, current time: ${currentTime}`);
 
     // Find scheduled notifications for current day and time
-    // Match exact time (HH:MM:00) to ensure reliable triggering
     const { data: scheduledNotifications, error: scheduledError } = await supabase
       .from('scheduled_notifications')
       .select('*')
@@ -176,6 +174,14 @@ async function processServiceOverlayNotification(supabase: any, notification: Sc
           metadata: servicesMetadata,
           priority: 2
         });
+      
+      // Send native push notification
+      await sendPushNotification(supabase, profile.id, {
+        title: 'Programa de Servicios - Fin de Semana',
+        body: `Servicios programados para el próximo fin de semana`,
+        url: '/ministerial-agenda',
+        type: 'service_overlay'
+      });
     }
 
     console.log('Service overlay notification sent successfully');
@@ -201,52 +207,32 @@ async function processDailyVerseNotification(supabase: any, notification: Schedu
 
     // If no verse for today, create one
     if (!dailyVerse) {
-      // Get a truly random verse using PostgreSQL's random() function
-      const { data: randomVerses, error: randomError } = await supabase
-        .rpc('get_random_verse');
+      const { data: allVerses, error: allVersesError } = await supabase
+        .from('bible_verses')
+        .select('*');
 
-      // If RPC doesn't exist, fallback to client-side random selection
-      if (randomError || !randomVerses) {
-        const { data: allVerses, error: allVersesError } = await supabase
-          .from('bible_verses')
-          .select('*');
-
-        if (allVersesError) throw allVersesError;
-        if (!allVerses || allVerses.length === 0) {
-          console.log('No verses available in database');
-          return;
-        }
-
-        // Select a random verse
-        const randomIndex = Math.floor(Math.random() * allVerses.length);
-        const selectedVerse = allVerses[randomIndex];
-
-        // Create daily verse entry
-        const { data: newDailyVerse, error: insertError } = await supabase
-          .from('daily_verses')
-          .insert({
-            date: today,
-            verse_id: selectedVerse.id
-          })
-          .select('*, bible_verses (*)')
-          .single();
-
-        if (insertError) throw insertError;
-        dailyVerse = newDailyVerse;
-      } else {
-        // Use the random verse from RPC
-        const { data: newDailyVerse, error: insertError } = await supabase
-          .from('daily_verses')
-          .insert({
-            date: today,
-            verse_id: randomVerses
-          })
-          .select('*, bible_verses (*)')
-          .single();
-
-        if (insertError) throw insertError;
-        dailyVerse = newDailyVerse;
+      if (allVersesError) throw allVersesError;
+      if (!allVerses || allVerses.length === 0) {
+        console.log('No verses available in database');
+        return;
       }
+
+      // Select a random verse
+      const randomIndex = Math.floor(Math.random() * allVerses.length);
+      const selectedVerse = allVerses[randomIndex];
+
+      // Create daily verse entry
+      const { data: newDailyVerse, error: insertError } = await supabase
+        .from('daily_verses')
+        .insert({
+          date: today,
+          verse_id: selectedVerse.id
+        })
+        .select('*, bible_verses (*)')
+        .single();
+
+      if (insertError) throw insertError;
+      dailyVerse = newDailyVerse;
     }
 
     // Get all active users
@@ -276,6 +262,14 @@ async function processDailyVerseNotification(supabase: any, notification: Schedu
           },
           priority: 1
         });
+      
+      // Send native push notification
+      await sendPushNotification(supabase, profile.id, {
+        title: 'Versículo del Día',
+        body: `${dailyVerse.bible_verses.book} ${dailyVerse.bible_verses.chapter}:${dailyVerse.bible_verses.verse}`,
+        url: '/spiritual-module',
+        type: 'daily_verse'
+      });
     }
 
     console.log('Daily verse notification sent successfully');
@@ -350,6 +344,14 @@ async function processDailyAdviceNotification(supabase: any, notification: Sched
           },
           priority: 1
         });
+      
+      // Send native push notification
+      await sendPushNotification(supabase, profile.id, {
+        title: selectedAdvice.title,
+        body: selectedAdvice.message,
+        url: '/',
+        type: 'daily_advice'
+      });
     }
 
     console.log('Daily advice notification sent successfully');
@@ -438,7 +440,6 @@ async function processGeneralNotification(supabase: any, notification: Scheduled
     console.log('Notification metadata:', JSON.stringify(notification.metadata));
 
     // Determine title, message and category based on notification type
-    // Use metadata fields if available, otherwise use defaults
     const metadata = notification.metadata || {};
     let title = metadata.title || notification.name;
     let message = metadata.message || 'Esta es una notificación programada.';
@@ -461,7 +462,6 @@ async function processGeneralNotification(supabase: any, notification: Scheduled
         break;
       case 'blood_donation':
         category = 'general';
-        // For blood donation, ensure we have all required metadata
         title = `Donación de Sangre Urgente: ${metadata.recipient_name || 'Paciente'}`;
         message = `Se necesita sangre tipo ${metadata.blood_type || 'O+'} para ${metadata.recipient_name || 'paciente'}. Centro: ${metadata.medical_center || 'Hospital'}`;
         break;
@@ -496,6 +496,14 @@ async function processGeneralNotification(supabase: any, notification: Scheduled
       await supabase
         .from('system_notifications')
         .insert(notificationData);
+      
+      // Send native push notification
+      await sendPushNotification(supabase, profile.id, {
+        title: title,
+        body: message,
+        url: '/notificaciones',
+        type: notification.notification_type
+      });
     }
 
     console.log('General notification processed successfully');
@@ -565,4 +573,68 @@ function getServiceTime(serviceTitle: string): string {
     return '10:45 AM';
   }
   return '';
+}
+
+// Function to send native push notifications
+async function sendPushNotification(
+  supabase: any,
+  userId: string,
+  notification: { title: string; body: string; url: string; type: string }
+) {
+  try {
+    // Get user's push subscriptions
+    const { data: subscriptions, error: subError } = await supabase
+      .from('user_push_subscriptions')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (subError) {
+      console.error(`Error fetching subscriptions for user ${userId}:`, subError);
+      return;
+    }
+
+    if (!subscriptions || subscriptions.length === 0) {
+      console.log(`No push subscriptions found for user ${userId}`);
+      return;
+    }
+
+    // Send push notification to all user's subscriptions
+    for (const sub of subscriptions) {
+      try {
+        const pushSubscription = sub.subscription;
+        
+        // Call the send-push-notification edge function
+        const response = await fetch(
+          `${Deno.env.get('SUPABASE_URL')}/functions/v1/send-push-notification`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+            },
+            body: JSON.stringify({
+              subscription: pushSubscription,
+              payload: {
+                title: notification.title,
+                body: notification.body,
+                icon: '/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png',
+                url: notification.url,
+                type: notification.type
+              }
+            })
+          }
+        );
+
+        if (!response.ok) {
+          console.error(`Failed to send push notification to user ${userId}:`, await response.text());
+        } else {
+          console.log(`Push notification sent successfully to user ${userId}`);
+        }
+      } catch (pushError) {
+        console.error(`Error sending push to subscription:`, pushError);
+      }
+    }
+  } catch (error) {
+    console.error(`Error in sendPushNotification for user ${userId}:`, error);
+  }
 }

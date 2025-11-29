@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Settings as SettingsIcon } from "lucide-react";
 import { ThemeSelector } from "@/components/ThemeSelector";
 import { BiometricSetup } from "@/components/BiometricSetup";
+import { PushNotificationSettings } from "@/components/settings/PushNotificationSettings";
 
 const Settings = () => {
   return (
@@ -22,6 +23,9 @@ const Settings = () => {
 
         {/* Settings Cards */}
         <div className="space-y-6">
+          {/* Push Notifications */}
+          <PushNotificationSettings />
+
           {/* Theme Selector */}
           <Card className="bg-white shadow-xl">
             <CardHeader>

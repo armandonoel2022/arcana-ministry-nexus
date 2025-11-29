@@ -43,6 +43,7 @@ interface Message {
 
 interface ChatRoomProps {
   room: ChatRoomData;
+  onBack?: () => void;
 }
 
 export const ChatRoom = ({ room }: ChatRoomProps) => {
