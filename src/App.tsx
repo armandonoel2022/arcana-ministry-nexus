@@ -63,12 +63,12 @@ function HeaderTrigger() {
 }
 
 function SidebarLayout() {
-  const { setOpenMobile, isMobile } = useSidebar();
+  const { setOpen, isMobile } = useSidebar();
 
   useSwipeGesture({
     onSwipeRight: () => {
       if (isMobile) {
-        setOpenMobile(true);
+        setOpen(true);
       }
     },
   });
@@ -356,6 +356,10 @@ function AppContent() {
                 <div className="flex h-screen w-full bg-gray-50">
                   <AppSidebar />
                   <div className="flex-1 flex flex-col">
+                    {/* Header fijo con logo trigger */}
+                    <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+                      <HeaderTrigger />
+                    </header>
                     <main className="flex-1 overflow-auto bg-gray-50">
                       <Routes>
                         <Route path="/" element={<Index />} />
