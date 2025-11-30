@@ -167,7 +167,7 @@ const menuCategories = [
 ]
 
 export function AppSidebar() {
-  const { setOpen } = useSidebar()
+  const { setOpen, open, isMobile } = useSidebar()
   const location = useLocation()
   const unreadCount = useUnreadNotifications()
   const { signOut, user, userProfile } = useAuth()
@@ -180,8 +180,15 @@ export function AppSidebar() {
   return (
     <Sidebar className="border-r-0 shadow-xl" collapsible="icon">
       <SidebarContent className="bg-sidebar">
-        {/* Header */}
-        <div className="p-6 border-b border-sidebar-border">
+        {/* Hamburger Toggle - Always visible */}
+        <div className="flex items-center justify-center p-4 border-b border-sidebar-border">
+          <SidebarTrigger className="group-data-[collapsible=icon]:!p-2">
+            <Menu className="w-5 h-5" />
+          </SidebarTrigger>
+        </div>
+
+        {/* Header - Only visible when expanded */}
+        <div className="p-6 border-b border-sidebar-border group-data-[collapsible=icon]:hidden">
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0">
               <img 
@@ -200,34 +207,52 @@ export function AppSidebar() {
         {/* Navigation Categories */}
         {menuCategories.map((category) => (
           <SidebarGroup key={category.label} className="px-3 py-2">
-            <SidebarGroupLabel className="text-xs uppercase tracking-wider text-sidebar-muted-foreground font-semibold mb-2">
+            <SidebarGroupLabel className="text-xs uppercase tracking-wider text-sidebar-muted-foreground font-semibold mb-2 group-data-[collapsible=icon]:hidden">
               {category.label}
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu className="space-y-1">
-                {category.items.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton 
-                      asChild 
-                      className="h-10 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200 data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:shadow-lg"
-                      data-active={location.pathname === item.url}
-                    >
-                      <Link 
-                        to={item.url} 
-                        className="flex items-center gap-3 px-3"
-                        onClick={handleLinkClick}
+                {category.items.map((item) => {
+                  const isActive = location.pathname === item.url;
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton 
+                        asChild 
+                        className={`
+                          h-12 rounded-lg transition-all duration-200
+                          group-data-[collapsible=icon]:justify-center
+                          group-data-[collapsible=icon]:w-12
+                          group-data-[collapsible=icon]:h-12
+                          ${isActive 
+                            ? 'bg-primary text-primary-foreground shadow-lg group-data-[collapsible=icon]:bg-primary' 
+                            : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                          }
+                        `}
+                        tooltip={item.title}
                       >
-                        <item.icon className="w-4 h-4" />
-                        <span className="font-medium text-sm">{item.title}</span>
-                        {item.title === "Notificaciones" && unreadCount > 0 && (
-                          <span className="ml-auto bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center font-bold">
-                            {unreadCount > 99 ? "99+" : unreadCount}
-                          </span>
-                        )}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                        <Link 
+                          to={item.url} 
+                          className="flex items-center gap-3 px-3 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center"
+                          onClick={handleLinkClick}
+                        >
+                          <item.icon className={`w-5 h-5 ${isActive ? 'group-data-[collapsible=icon]:scale-110' : ''}`} />
+                          <span className="font-medium text-sm group-data-[collapsible=icon]:hidden">{item.title}</span>
+                          {item.title === "Notificaciones" && unreadCount > 0 && (
+                            <span className="ml-auto bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center font-bold group-data-[collapsible=icon]:hidden">
+                              {unreadCount > 99 ? "99+" : unreadCount}
+                            </span>
+                          )}
+                          {/* Badge indicator for collapsed state */}
+                          {item.title === "Notificaciones" && unreadCount > 0 && (
+                            <span className="hidden group-data-[collapsible=icon]:flex absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full min-w-[16px] h-4 px-1 items-center justify-center font-bold">
+                              {unreadCount > 9 ? "9+" : unreadCount}
+                            </span>
+                          )}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -236,7 +261,7 @@ export function AppSidebar() {
         {/* Admin-only section for Scheduled Notifications */}
         {userProfile?.role === 'administrator' && (
           <SidebarGroup className="px-3 py-2 border-t border-sidebar-border">
-            <SidebarGroupLabel className="text-xs uppercase tracking-wider text-sidebar-muted-foreground font-semibold mb-2">
+            <SidebarGroupLabel className="text-xs uppercase tracking-wider text-sidebar-muted-foreground font-semibold mb-2 group-data-[collapsible=icon]:hidden">
               Administración Avanzada
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -244,16 +269,25 @@ export function AppSidebar() {
                 <SidebarMenuItem>
                   <SidebarMenuButton 
                     asChild 
-                    className="h-10 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200 data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:shadow-lg"
-                    data-active={location.pathname === '/scheduled-notifications'}
+                    className={`
+                      h-12 rounded-lg transition-all duration-200
+                      group-data-[collapsible=icon]:justify-center
+                      group-data-[collapsible=icon]:w-12
+                      group-data-[collapsible=icon]:h-12
+                      ${location.pathname === '/scheduled-notifications'
+                        ? 'bg-primary text-primary-foreground shadow-lg group-data-[collapsible=icon]:bg-primary' 
+                        : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                      }
+                    `}
+                    tooltip="Notificaciones Programadas"
                   >
                     <Link 
                       to="/scheduled-notifications" 
-                      className="flex items-center gap-3 px-3"
+                      className="flex items-center gap-3 px-3 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center"
                       onClick={handleLinkClick}
                     >
-                      <Calendar className="w-4 h-4" />
-                      <span className="font-medium text-sm">Notificaciones Programadas</span>
+                      <Calendar className="w-5 h-5" />
+                      <span className="font-medium text-sm group-data-[collapsible=icon]:hidden">Notificaciones Programadas</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -263,16 +297,19 @@ export function AppSidebar() {
         )}
         
         {/* Theme Selector, Push Notifications and Logout Button */}
-        <div className="mt-auto p-4 border-t border-sidebar-border space-y-2">
-          <PushNotificationPermission />
-          <ThemeSelector />
+        <div className="mt-auto p-4 border-t border-sidebar-border space-y-2 group-data-[collapsible=icon]:p-2">
+          <div className="group-data-[collapsible=icon]:hidden">
+            <PushNotificationPermission />
+            <ThemeSelector />
+          </div>
           <Button
             onClick={signOut}
             variant="ghost"
-            className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+            className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:w-12 group-data-[collapsible=icon]:h-12"
+            title="Cerrar Sesión"
           >
-            <LogOut className="w-4 h-4 mr-3" />
-            Cerrar Sesión
+            <LogOut className="w-4 h-4 group-data-[collapsible=icon]:mr-0 mr-3" />
+            <span className="group-data-[collapsible=icon]:hidden">Cerrar Sesión</span>
           </Button>
         </div>
       </SidebarContent>
