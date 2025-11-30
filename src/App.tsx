@@ -52,14 +52,15 @@ import GeneralAnnouncementOverlay from "./components/notifications/GeneralAnnoun
 import MinistryInstructionsOverlay from "./components/notifications/MinistryInstructionsOverlay";
 import ExtraordinaryRehearsalOverlay from "./components/notifications/ExtraordinaryRehearsalOverlay";
 import BloodDonationOverlay from "./components/notifications/BloodDonationOverlay";
-import { SwipeIndicator } from "./components/SwipeIndicator";
+// SwipeIndicator removed - persistent sidebar icons replace it
 import { supabase } from "./integrations/supabase/client";
 import "./App.css";
 
 const queryClient = new QueryClient();
 
 function HeaderTrigger() {
-  return <AnimatedLogoTrigger />;
+  // Logo trigger removed - hamburger menu is now in sidebar
+  return null;
 }
 
 function SidebarLayout() {
@@ -352,7 +353,6 @@ function AppContent() {
             <ProtectedRoute>
               <SidebarProvider defaultOpen={false}>
                 <SidebarLayout />
-                <SwipeIndicator />
                 <div className="flex h-screen w-full bg-gray-50">
                   <AppSidebar />
                   <div className="flex-1 flex flex-col">
