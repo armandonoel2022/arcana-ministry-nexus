@@ -875,7 +875,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
           </div>
 
           {/* Message Input */}
-          <div className="border-t p-2 sm:p-3 sticky bottom-0 bg-white/95 backdrop-blur">
+          <div className="border-t p-2 sm:p-3 pb-0 sticky bottom-0 bg-white/95 backdrop-blur">
             {/* Toolbar para emoticones y archivos */}
             <div className="flex gap-2 mb-2 relative">
               <Button
@@ -950,7 +950,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
               </div>
             )}
 
-            <div className="flex gap-2 items-end">
+            <div className="flex gap-2 items-end pb-2">
               <VoiceNoteRecorder onVoiceNote={handleVoiceNote} roomId={room.id} userId={currentUser?.id || ""} />
               <Input
                 value={newMessage}
