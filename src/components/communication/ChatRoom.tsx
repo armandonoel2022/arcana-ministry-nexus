@@ -742,14 +742,6 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
             <div className="min-w-0 flex-1">
               <CardTitle className="text-base sm:text-xl truncate">{room.name}</CardTitle>
               {room.description && <p className="text-xs sm:text-sm text-gray-600 truncate">{room.description}</p>}
-              <p className="text-[10px] sm:text-xs text-arcana-blue-600 mt-1">
-                💡 Escribe "ARCANA" o "@ARCANA" seguido de tu consulta sobre turnos, ensayos y canciones
-              </p>
-              {currentUser?.member && (
-                <p className="text-[10px] sm:text-xs text-arcana-gold-600 mt-1">
-                  👋 Hola {currentUser.member.nombres} - {currentUser.member.cargo}
-                </p>
-              )}
             </div>
           </div>
         </CardHeader>
@@ -883,7 +875,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
           </div>
 
           {/* Message Input */}
-          <div className="border-t p-4 sticky bottom-0 bg-white/95 backdrop-blur">
+          <div className="border-t p-2 sm:p-3 sticky bottom-0 bg-white/95 backdrop-blur">
             {/* Toolbar para emoticones y archivos */}
             <div className="flex gap-2 mb-2 relative">
               <Button
