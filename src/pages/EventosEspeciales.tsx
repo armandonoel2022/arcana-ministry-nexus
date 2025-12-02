@@ -6,13 +6,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar, Clock, MapPin, Plus, Save, Trash2, FileText, Download } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Calendar, Clock, MapPin, Plus, Save, Trash2, FileText, Download, Music } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import WorshipSetsManager from '@/components/events/WorshipSetsManager';
 
 interface SpecialEvent {
   id: string;
@@ -385,7 +387,7 @@ const EventosEspeciales = () => {
         {/* Programa del evento */}
         <Card className="md:col-span-2">
           <CardHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
               <div>
                 <CardTitle>
                   {selectedEvent ? selectedEvent.title : 'Selecciona un evento'}
@@ -398,71 +400,94 @@ const EventosEspeciales = () => {
                 )}
               </div>
               {selectedEvent && (
-                <div className="flex gap-2">
-                  <Button 
-                    variant="default" 
-                    onClick={generatePDF}
-                    disabled={programItems.length === 0}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Descargar PDF
-                  </Button>
-                  <Button onClick={() => setIsCreatingItem(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Agregar Item
-                  </Button>
-                </div>
+                <Button 
+                  variant="default" 
+                  onClick={generatePDF}
+                  disabled={programItems.length === 0}
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Descargar PDF
+                </Button>
               )}
             </div>
           </CardHeader>
           <CardContent>
             {selectedEvent ? (
-              <div className="space-y-4">
-                {programItems.map((item) => (
-                  <Card key={item.id}>
-                    <CardContent className="pt-6">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Clock className="w-4 h-4 text-muted-foreground" />
-                            <span className="font-semibold text-lg">{item.time_slot}</span>
-                            <span className="text-sm text-muted-foreground">
-                              ({item.duration_minutes} minutos)
-                            </span>
+              <Tabs defaultValue="sets" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="sets" className="flex items-center gap-1">
+                    <Music className="w-4 h-4" />
+                    Sets de Adoración
+                  </TabsTrigger>
+                  <TabsTrigger value="program" className="flex items-center gap-1">
+                    <FileText className="w-4 h-4" />
+                    Programa General
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="sets">
+                  <WorshipSetsManager 
+                    eventId={selectedEvent.id} 
+                    eventTitle={selectedEvent.title} 
+                  />
+                </TabsContent>
+                
+                <TabsContent value="program">
+                  <div className="space-y-4">
+                    <div className="flex justify-end">
+                      <Button onClick={() => setIsCreatingItem(true)} size="sm">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Agregar Item
+                      </Button>
+                    </div>
+                    {programItems.map((item) => (
+                      <Card key={item.id}>
+                        <CardContent className="pt-4">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Clock className="w-4 h-4 text-muted-foreground" />
+                                <span className="font-semibold">{item.time_slot}</span>
+                                <span className="text-sm text-muted-foreground">
+                                  ({item.duration_minutes} min)
+                                </span>
+                              </div>
+                              <h3 className="font-bold">{item.title}</h3>
+                              {item.description && (
+                                <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
+                              )}
+                              {item.responsible_person && (
+                                <p className="text-sm mt-2">
+                                  <span className="font-medium">Responsable:</span> {item.responsible_person}
+                                </p>
+                              )}
+                              {item.notes && (
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  <span className="font-medium">Notas:</span> {item.notes}
+                                </p>
+                              )}
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteItem(item.id)}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
                           </div>
-                          <h3 className="text-lg font-bold">{item.title}</h3>
-                          {item.description && (
-                            <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
-                          )}
-                          {item.responsible_person && (
-                            <p className="text-sm mt-2">
-                              <span className="font-medium">Responsable:</span> {item.responsible_person}
-                            </p>
-                          )}
-                          {item.notes && (
-                            <p className="text-sm text-muted-foreground mt-1">
-                              <span className="font-medium">Observaciones:</span> {item.notes}
-                            </p>
-                          )}
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteItem(item.id)}
-                        >
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                {programItems.length === 0 && (
-                  <p className="text-center text-muted-foreground py-8">
-                    No hay items en el programa. Agrega el primero.
-                  </p>
-                )}
-              </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    {programItems.length === 0 && (
+                      <p className="text-center text-muted-foreground py-8">
+                        No hay items en el programa general.
+                      </p>
+                    )}
+                  </div>
+                </TabsContent>
+              </Tabs>
             ) : (
               <p className="text-center text-muted-foreground py-8">
                 Selecciona un evento de la lista para ver su programa
