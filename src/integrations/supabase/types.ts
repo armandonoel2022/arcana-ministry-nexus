@@ -544,6 +544,111 @@ export type Database = {
           },
         ]
       }
+      event_set_songs: {
+        Row: {
+          created_at: string | null
+          id: string
+          notes: string | null
+          responsible_id: string | null
+          responsible_person: string | null
+          set_id: string
+          song_id: string | null
+          song_order: number
+          song_title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          responsible_id?: string | null
+          responsible_person?: string | null
+          set_id: string
+          song_id?: string | null
+          song_order?: number
+          song_title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          responsible_id?: string | null
+          responsible_person?: string | null
+          set_id?: string
+          song_id?: string | null
+          song_order?: number
+          song_title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_set_songs_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_set_songs_set_id_fkey"
+            columns: ["set_id"]
+            isOneToOne: false
+            referencedRelation: "event_worship_sets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_set_songs_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_worship_sets: {
+        Row: {
+          created_at: string | null
+          duration_minutes: number | null
+          event_id: string
+          id: string
+          notes: string | null
+          set_name: string
+          set_order: number
+          set_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration_minutes?: number | null
+          event_id: string
+          id?: string
+          notes?: string | null
+          set_name: string
+          set_order?: number
+          set_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duration_minutes?: number | null
+          event_id?: string
+          id?: string
+          notes?: string | null
+          set_name?: string
+          set_order?: number
+          set_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_worship_sets_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "special_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_members: {
         Row: {
           created_at: string | null
