@@ -36,9 +36,10 @@ interface CatalogSong {
   artist: string | null;
 }
 
-interface Profile {
+interface Member {
   id: string;
-  full_name: string;
+  nombres: string;
+  apellidos: string;
 }
 
 interface WorshipSetsManagerProps {
@@ -58,7 +59,7 @@ const WorshipSetsManager: React.FC<WorshipSetsManagerProps> = ({ eventId, eventT
   const [worshipSets, setWorshipSets] = useState<WorshipSet[]>([]);
   const [songsMap, setSongsMap] = useState<Record<string, SetSong[]>>({});
   const [catalogSongs, setCatalogSongs] = useState<CatalogSong[]>([]);
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddingSet, setIsAddingSet] = useState(false);
   const [addingSongToSet, setAddingSongToSet] = useState<string | null>(null);
@@ -114,13 +115,13 @@ const WorshipSetsManager: React.FC<WorshipSetsManagerProps> = ({ eventId, eventT
         .order('title');
       setCatalogSongs(catalogData || []);
 
-      // Fetch profiles for responsible selection
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('id, full_name')
+      // Fetch members for responsible selection (all members, not just registered users)
+      const { data: membersData } = await supabase
+        .from('members')
+        .select('id, nombres, apellidos')
         .eq('is_active', true)
-        .order('full_name');
-      setProfiles(profilesData || []);
+        .order('nombres');
+      setMembers(membersData || []);
 
     } catch (error: any) {
       toast.error('Error al cargar datos: ' + error.message);
@@ -412,9 +413,9 @@ const WorshipSetsManager: React.FC<WorshipSetsManagerProps> = ({ eventId, eventT
                             <SelectValue placeholder="Seleccionar responsable..." />
                           </SelectTrigger>
                           <SelectContent>
-                            {profiles.map(profile => (
-                              <SelectItem key={profile.id} value={profile.full_name}>
-                                {profile.full_name}
+                            {members.map(member => (
+                              <SelectItem key={member.id} value={`${member.nombres} ${member.apellidos}`}>
+                                {member.nombres} {member.apellidos}
                               </SelectItem>
                             ))}
                           </SelectContent>
