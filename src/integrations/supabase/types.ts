@@ -507,6 +507,7 @@ export type Database = {
           time_slot: string | null
           title: string
           updated_at: string | null
+          worship_set_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -520,6 +521,7 @@ export type Database = {
           time_slot?: string | null
           title: string
           updated_at?: string | null
+          worship_set_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -533,6 +535,7 @@ export type Database = {
           time_slot?: string | null
           title?: string
           updated_at?: string | null
+          worship_set_id?: string | null
         }
         Relationships: [
           {
@@ -540,6 +543,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "special_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_program_items_worship_set_id_fkey"
+            columns: ["worship_set_id"]
+            isOneToOne: false
+            referencedRelation: "event_worship_sets"
             referencedColumns: ["id"]
           },
         ]
