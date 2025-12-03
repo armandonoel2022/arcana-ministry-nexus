@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, Clock, MapPin, Plus, Save, Trash2, FileText, Download, Music } from 'lucide-react';
+import { Calendar, Clock, MapPin, Plus, Save, Trash2, FileText, Download, Music, Pencil, Target } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -23,6 +23,7 @@ interface SpecialEvent {
   location: string;
   description: string;
   event_type: string;
+  objectives: string;
   created_at: string;
 }
 
@@ -52,7 +53,10 @@ const EventosEspeciales = () => {
     location: 'Templo Principal',
     description: '',
     event_type: 'special',
+    objectives: '',
   });
+
+  const [isEditingEvent, setIsEditingEvent] = useState(false);
 
   const [itemForm, setItemForm] = useState({
     start_time: '',
@@ -126,11 +130,59 @@ const EventosEspeciales = () => {
         location: 'Templo Principal',
         description: '',
         event_type: 'special',
+        objectives: '',
       });
       fetchEvents();
     } catch (error: any) {
       toast.error('Error al crear evento: ' + error.message);
     }
+  };
+
+  const updateEvent = async () => {
+    if (!selectedEvent) return;
+    
+    try {
+      const { error } = await supabase
+        .from('special_events')
+        .update({
+          title: eventForm.title,
+          event_date: eventForm.event_date,
+          location: eventForm.location,
+          description: eventForm.description,
+          objectives: eventForm.objectives,
+        })
+        .eq('id', selectedEvent.id);
+
+      if (error) throw error;
+
+      toast.success('Evento actualizado');
+      setIsEditingEvent(false);
+      fetchEvents();
+      // Update selectedEvent with new data
+      setSelectedEvent({
+        ...selectedEvent,
+        title: eventForm.title,
+        event_date: eventForm.event_date,
+        location: eventForm.location,
+        description: eventForm.description,
+        objectives: eventForm.objectives,
+      });
+    } catch (error: any) {
+      toast.error('Error al actualizar: ' + error.message);
+    }
+  };
+
+  const openEditEvent = () => {
+    if (!selectedEvent) return;
+    setEventForm({
+      title: selectedEvent.title,
+      event_date: selectedEvent.event_date,
+      location: selectedEvent.location || '',
+      description: selectedEvent.description || '',
+      event_type: selectedEvent.event_type || 'special',
+      objectives: selectedEvent.objectives || '',
+    });
+    setIsEditingEvent(true);
   };
 
   const calculateDuration = (startTime: string, endTime: string): number => {
@@ -388,15 +440,31 @@ const EventosEspeciales = () => {
         <Card className="md:col-span-2">
           <CardHeader>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-              <div>
-                <CardTitle>
+              <div className="flex-1">
+                <CardTitle className="flex items-center gap-2">
                   {selectedEvent ? selectedEvent.title : 'Selecciona un evento'}
+                  {selectedEvent && (
+                    <Button variant="ghost" size="sm" onClick={openEditEvent}>
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                  )}
                 </CardTitle>
                 {selectedEvent && (
-                  <CardDescription>
-                    <MapPin className="w-4 h-4 inline mr-1" />
-                    {selectedEvent.location} • {format(new Date(selectedEvent.event_date), "d 'de' MMMM, yyyy", { locale: es })}
-                  </CardDescription>
+                  <>
+                    <CardDescription>
+                      <MapPin className="w-4 h-4 inline mr-1" />
+                      {selectedEvent.location} • {format(new Date(selectedEvent.event_date), "d 'de' MMMM, yyyy", { locale: es })}
+                    </CardDescription>
+                    {selectedEvent.objectives && (
+                      <div className="mt-3 p-3 bg-muted rounded-lg">
+                        <div className="flex items-center gap-2 text-sm font-medium mb-1">
+                          <Target className="w-4 h-4" />
+                          Objetivos Principales
+                        </div>
+                        <p className="text-sm text-muted-foreground whitespace-pre-line">{selectedEvent.objectives}</p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
               {selectedEvent && (
@@ -543,9 +611,77 @@ const EventosEspeciales = () => {
                 Puedes incluir el subtítulo y detalles adicionales del evento
               </p>
             </div>
+            <div>
+              <Label>Objetivos Principales</Label>
+              <Textarea
+                value={eventForm.objectives}
+                onChange={(e) => setEventForm({ ...eventForm, objectives: e.target.value })}
+                placeholder="Ej: Motivar a los jóvenes, Presentar el evangelio, Fortalecer la comunión..."
+                rows={4}
+              />
+            </div>
             <Button onClick={createEvent} className="w-full">
               <Save className="w-4 h-4 mr-2" />
               Crear Evento
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para editar evento */}
+      <Dialog open={isEditingEvent} onOpenChange={setIsEditingEvent}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Evento</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Título del Evento</Label>
+              <Input
+                value={eventForm.title}
+                onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
+                placeholder="Ej: Aniversario Iglesia Arca de Noé"
+                required
+              />
+            </div>
+            <div>
+              <Label>Fecha y Hora</Label>
+              <Input
+                type="datetime-local"
+                value={eventForm.event_date}
+                onChange={(e) => setEventForm({ ...eventForm, event_date: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <Label>Ubicación</Label>
+              <Input
+                value={eventForm.location}
+                onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
+                placeholder="Templo Principal"
+              />
+            </div>
+            <div>
+              <Label>Descripción / Subtítulo</Label>
+              <Textarea
+                value={eventForm.description}
+                onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
+                placeholder="Ej: 70 años de Gracia y Fidelidad"
+                rows={2}
+              />
+            </div>
+            <div>
+              <Label>Objetivos Principales</Label>
+              <Textarea
+                value={eventForm.objectives}
+                onChange={(e) => setEventForm({ ...eventForm, objectives: e.target.value })}
+                placeholder="Ej: Motivar a los jóvenes, Presentar el evangelio..."
+                rows={4}
+              />
+            </div>
+            <Button onClick={updateEvent} className="w-full">
+              <Save className="w-4 h-4 mr-2" />
+              Guardar Cambios
             </Button>
           </div>
         </DialogContent>
