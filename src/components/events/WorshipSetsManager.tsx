@@ -413,6 +413,7 @@ const WorshipSetsManager: React.FC<WorshipSetsManagerProps> = ({ eventId, eventT
                             <SelectValue placeholder="Seleccionar responsable..." />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="TODOS">TODOS</SelectItem>
                             {members.map(member => (
                               <SelectItem key={member.id} value={`${member.nombres} ${member.apellidos}`}>
                                 {member.nombres} {member.apellidos}

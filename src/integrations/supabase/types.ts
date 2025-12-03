@@ -1604,6 +1604,7 @@ export type Database = {
           event_type: string | null
           id: string
           location: string | null
+          objectives: string | null
           title: string
           updated_at: string | null
         }
@@ -1615,6 +1616,7 @@ export type Database = {
           event_type?: string | null
           id?: string
           location?: string | null
+          objectives?: string | null
           title: string
           updated_at?: string | null
         }
@@ -1626,6 +1628,7 @@ export type Database = {
           event_type?: string | null
           id?: string
           location?: string | null
+          objectives?: string | null
           title?: string
           updated_at?: string | null
         }
