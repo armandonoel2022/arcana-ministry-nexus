@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, Clock, MapPin, Plus, Save, Trash2, FileText, Download, Music, Pencil, Target } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -37,6 +38,25 @@ interface ProgramItem {
   duration_minutes: number;
   item_order: number;
   notes: string;
+  worship_set_id: string | null;
+  worship_set?: {
+    id: string;
+    set_name: string;
+    set_type: string;
+  };
+}
+
+interface WorshipSet {
+  id: string;
+  set_name: string;
+  set_type: string;
+}
+
+interface SetSong {
+  id: string;
+  song_title: string;
+  responsible_person: string | null;
+  song_order: number;
 }
 
 const EventosEspeciales = () => {
@@ -65,7 +85,11 @@ const EventosEspeciales = () => {
     description: '',
     responsible_person: '',
     notes: '',
+    worship_set_id: '',
   });
+
+  const [availableWorshipSets, setAvailableWorshipSets] = useState<WorshipSet[]>([]);
+  const [setSongsMap, setSetSongsMap] = useState<Record<string, SetSong[]>>({});
 
   useEffect(() => {
     fetchEvents();
@@ -74,6 +98,7 @@ const EventosEspeciales = () => {
   useEffect(() => {
     if (selectedEvent) {
       fetchProgramItems(selectedEvent.id);
+      fetchWorshipSets(selectedEvent.id);
     }
   }, [selectedEvent]);
 
@@ -97,14 +122,54 @@ const EventosEspeciales = () => {
     try {
       const { data, error } = await supabase
         .from('event_program_items')
-        .select('*')
+        .select(`
+          *,
+          worship_set:event_worship_sets(id, set_name, set_type)
+        `)
         .eq('event_id', eventId)
         .order('item_order', { ascending: true });
 
       if (error) throw error;
       setProgramItems(data || []);
+      
+      // Fetch songs for worship sets that are linked
+      const worshipSetIds = (data || [])
+        .filter(item => item.worship_set_id)
+        .map(item => item.worship_set_id);
+      
+      if (worshipSetIds.length > 0) {
+        const { data: songsData } = await supabase
+          .from('event_set_songs')
+          .select('*')
+          .in('set_id', worshipSetIds)
+          .order('song_order', { ascending: true });
+        
+        const songsMap: Record<string, SetSong[]> = {};
+        (songsData || []).forEach(song => {
+          if (!songsMap[song.set_id]) {
+            songsMap[song.set_id] = [];
+          }
+          songsMap[song.set_id].push(song);
+        });
+        setSetSongsMap(songsMap);
+      }
     } catch (error: any) {
       toast.error('Error al cargar programa: ' + error.message);
+    }
+  };
+
+  const fetchWorshipSets = async (eventId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('event_worship_sets')
+        .select('id, set_name, set_type')
+        .eq('event_id', eventId)
+        .order('set_order', { ascending: true });
+
+      if (error) throw error;
+      setAvailableWorshipSets(data || []);
+    } catch (error: any) {
+      console.error('Error al cargar sets:', error.message);
     }
   };
 
@@ -221,6 +286,7 @@ const EventosEspeciales = () => {
           duration_minutes: duration,
           item_order: nextOrder,
           notes: itemForm.notes,
+          worship_set_id: itemForm.worship_set_id || null,
         }]);
 
       if (error) throw error;
@@ -234,6 +300,7 @@ const EventosEspeciales = () => {
         description: '',
         responsible_person: '',
         notes: '',
+        worship_set_id: '',
       });
       fetchProgramItems(selectedEvent.id);
     } catch (error: any) {
@@ -536,6 +603,28 @@ const EventosEspeciales = () => {
                                   <span className="font-medium">Notas:</span> {item.notes}
                                 </p>
                               )}
+                              {/* Mostrar canciones del worship set enlazado */}
+                              {item.worship_set_id && setSongsMap[item.worship_set_id] && (
+                                <div className="mt-3 p-3 bg-muted/50 rounded-lg">
+                                  <div className="flex items-center gap-2 text-sm font-medium mb-2">
+                                    <Music className="w-4 h-4" />
+                                    Canciones ({item.worship_set?.set_name})
+                                  </div>
+                                  <div className="space-y-1">
+                                    {setSongsMap[item.worship_set_id].map((song, idx) => (
+                                      <div key={song.id} className="text-sm flex items-center gap-2">
+                                        <span className="w-5 h-5 bg-primary/20 rounded-full flex items-center justify-center text-xs">
+                                          {idx + 1}
+                                        </span>
+                                        <span className="font-medium">{song.song_title}</span>
+                                        {song.responsible_person && (
+                                          <span className="text-muted-foreground">- {song.responsible_person}</span>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                             <Button
                               variant="ghost"
@@ -744,6 +833,30 @@ const EventosEspeciales = () => {
                 placeholder="Nombre del responsable"
               />
             </div>
+            {availableWorshipSets.length > 0 && (
+              <div>
+                <Label>Enlazar Set de Adoración (opcional)</Label>
+                <Select
+                  value={itemForm.worship_set_id}
+                  onValueChange={(v) => setItemForm({ ...itemForm, worship_set_id: v === 'none' ? '' : v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar set de adoración..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sin enlazar</SelectItem>
+                    {availableWorshipSets.map(set => (
+                      <SelectItem key={set.id} value={set.id}>
+                        {set.set_name} ({set.set_type})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Si enlazas un set, las canciones aparecerán en el programa
+                </p>
+              </div>
+            )}
             <div>
               <Label>Observaciones (opcional)</Label>
               <Textarea
