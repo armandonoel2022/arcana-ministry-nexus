@@ -39,12 +39,24 @@ interface ProgramItem {
   item_order: number;
   notes: string;
   worship_set_id: string | null;
+  highlight_color: string | null;
   worship_set?: {
     id: string;
     set_name: string;
     set_type: string;
   };
 }
+
+const HIGHLIGHT_COLORS = [
+  { value: '', label: 'Sin color', color: 'transparent' },
+  { value: '#2980b9', label: 'Azul', color: '#2980b9' },
+  { value: '#27ae60', label: 'Verde', color: '#27ae60' },
+  { value: '#e74c3c', label: 'Rojo', color: '#e74c3c' },
+  { value: '#f39c12', label: 'Naranja', color: '#f39c12' },
+  { value: '#9b59b6', label: 'Morado', color: '#9b59b6' },
+  { value: '#1abc9c', label: 'Turquesa', color: '#1abc9c' },
+  { value: '#34495e', label: 'Gris oscuro', color: '#34495e' },
+];
 
 interface WorshipSet {
   id: string;
@@ -86,6 +98,7 @@ const EventosEspeciales = () => {
     responsible_person: '',
     notes: '',
     worship_set_id: '',
+    highlight_color: '',
   });
 
   const [availableWorshipSets, setAvailableWorshipSets] = useState<WorshipSet[]>([]);
@@ -287,6 +300,7 @@ const EventosEspeciales = () => {
           item_order: nextOrder,
           notes: itemForm.notes,
           worship_set_id: itemForm.worship_set_id || null,
+          highlight_color: itemForm.highlight_color || null,
         }]);
 
       if (error) throw error;
@@ -301,6 +315,7 @@ const EventosEspeciales = () => {
         responsible_person: '',
         notes: '',
         worship_set_id: '',
+        highlight_color: '',
       });
       fetchProgramItems(selectedEvent.id);
     } catch (error: any) {
@@ -394,14 +409,33 @@ const EventosEspeciales = () => {
         yPosition += 6;
       }
       
-      // Tabla de programa
+      // Helper to convert hex color to RGB array
+      const hexToRgb = (hex: string): [number, number, number] => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result 
+          ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)]
+          : [255, 255, 255];
+      };
+
+      // Tabla de programa con canciones incluidas
       const tableData = programItems.map(item => {
         const timeRange = item.time_slot || 'N/A';
         const durationText = `${item.duration_minutes} minutos`;
         
+        // Build activity text with songs if linked
+        let activityText = item.title;
+        if (item.worship_set_id && setSongsMap[item.worship_set_id]) {
+          const songs = setSongsMap[item.worship_set_id];
+          if (songs.length > 0) {
+            activityText += '\n\nCanciones:\n' + songs.map((s, i) => 
+              `${i + 1}. ${s.song_title}${s.responsible_person ? ` (${s.responsible_person})` : ''}`
+            ).join('\n');
+          }
+        }
+        
         return [
           `${timeRange}\n${durationText}`,
-          item.title,
+          activityText,
           item.responsible_person || '',
           item.notes || item.description || ''
         ];
@@ -430,7 +464,22 @@ const EventosEspeciales = () => {
           2: { cellWidth: 40 },
           3: { cellWidth: 'auto' }
         },
-        margin: { left: 15, right: 15 }
+        margin: { left: 15, right: 15 },
+        // Apply row colors based on highlight_color
+        didParseCell: (data) => {
+          if (data.section === 'body') {
+            const item = programItems[data.row.index];
+            if (item?.highlight_color) {
+              const rgb = hexToRgb(item.highlight_color);
+              data.cell.styles.fillColor = rgb;
+              // Use white text for dark backgrounds
+              const brightness = (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000;
+              if (brightness < 150) {
+                data.cell.styles.textColor = [255, 255, 255];
+              }
+            }
+          }
+        }
       });
       
       // Footer
@@ -578,7 +627,11 @@ const EventosEspeciales = () => {
                       </Button>
                     </div>
                     {programItems.map((item) => (
-                      <Card key={item.id}>
+                      <Card 
+                        key={item.id}
+                        className="relative overflow-hidden"
+                        style={item.highlight_color ? { borderLeftWidth: '4px', borderLeftColor: item.highlight_color } : {}}
+                      >
                         <CardContent className="pt-4">
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
@@ -588,6 +641,13 @@ const EventosEspeciales = () => {
                                 <span className="text-sm text-muted-foreground">
                                   ({item.duration_minutes} min)
                                 </span>
+                                {item.highlight_color && (
+                                  <div 
+                                    className="w-3 h-3 rounded-full border"
+                                    style={{ backgroundColor: item.highlight_color }}
+                                    title="Color de resaltado en PDF"
+                                  />
+                                )}
                               </div>
                               <h3 className="font-bold">{item.title}</h3>
                               {item.description && (
@@ -857,6 +917,43 @@ const EventosEspeciales = () => {
                 </p>
               </div>
             )}
+            <div>
+              <Label>Color de Resaltado (opcional)</Label>
+              <Select
+                value={itemForm.highlight_color}
+                onValueChange={(v) => setItemForm({ ...itemForm, highlight_color: v === 'none' ? '' : v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sin color">
+                    {itemForm.highlight_color ? (
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-4 h-4 rounded border"
+                          style={{ backgroundColor: itemForm.highlight_color }}
+                        />
+                        {HIGHLIGHT_COLORS.find(c => c.value === itemForm.highlight_color)?.label || 'Color'}
+                      </div>
+                    ) : 'Sin color'}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {HIGHLIGHT_COLORS.map(color => (
+                    <SelectItem key={color.value || 'none'} value={color.value || 'none'}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-4 h-4 rounded border"
+                          style={{ backgroundColor: color.color }}
+                        />
+                        {color.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                El color resaltará esta fila en el PDF impreso
+              </p>
+            </div>
             <div>
               <Label>Observaciones (opcional)</Label>
               <Textarea
