@@ -912,7 +912,7 @@ const EventosEspeciales = () => {
 
       {/* Dialog para crear item del programa */}
       <Dialog open={isCreatingItem} onOpenChange={setIsCreatingItem}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Agregar Item al Programa</DialogTitle>
           </DialogHeader>
@@ -1061,7 +1061,7 @@ const EventosEspeciales = () => {
           });
         }
       }}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar Item del Programa</DialogTitle>
           </DialogHeader>
