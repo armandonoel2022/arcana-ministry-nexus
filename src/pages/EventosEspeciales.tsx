@@ -77,6 +77,8 @@ const EventosEspeciales = () => {
   const [programItems, setProgramItems] = useState<ProgramItem[]>([]);
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const [isCreatingItem, setIsCreatingItem] = useState(false);
+  const [isEditingItem, setIsEditingItem] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [eventForm, setEventForm] = useState({
@@ -320,6 +322,69 @@ const EventosEspeciales = () => {
       fetchProgramItems(selectedEvent.id);
     } catch (error: any) {
       toast.error('Error al agregar item: ' + error.message);
+    }
+  };
+
+  const openEditItem = (item: ProgramItem) => {
+    // Parse time_slot to get start and end times
+    const times = item.time_slot?.split(' - ') || ['', ''];
+    setItemForm({
+      start_time: times[0] || '',
+      end_time: times[1] || '',
+      title: item.title || '',
+      description: item.description || '',
+      responsible_person: item.responsible_person || '',
+      notes: item.notes || '',
+      worship_set_id: item.worship_set_id || '',
+      highlight_color: item.highlight_color || '',
+    });
+    setEditingItemId(item.id);
+    setIsEditingItem(true);
+  };
+
+  const updateProgramItem = async () => {
+    if (!selectedEvent || !editingItemId) return;
+
+    try {
+      const duration = calculateDuration(itemForm.start_time, itemForm.end_time);
+      
+      if (duration <= 0) {
+        toast.error('La hora de finalización debe ser posterior a la hora de inicio');
+        return;
+      }
+      
+      const { error } = await supabase
+        .from('event_program_items')
+        .update({
+          time_slot: `${itemForm.start_time} - ${itemForm.end_time}`,
+          title: itemForm.title,
+          description: itemForm.description,
+          responsible_person: itemForm.responsible_person,
+          duration_minutes: duration,
+          notes: itemForm.notes,
+          worship_set_id: itemForm.worship_set_id || null,
+          highlight_color: itemForm.highlight_color || null,
+        })
+        .eq('id', editingItemId);
+
+      if (error) throw error;
+
+      toast.success('Item actualizado');
+      setIsEditingItem(false);
+      setEditingItemId(null);
+      setItemForm({
+        start_time: '',
+        end_time: '',
+        title: '',
+        description: '',
+        responsible_person: '',
+        notes: '',
+        worship_set_id: '',
+        highlight_color: '',
+      });
+      fetchProgramItems(selectedEvent.id);
+    } catch (error: any) {
+      toast.error('Error al actualizar: ' + error.message);
     }
   };
 
@@ -686,13 +751,22 @@ const EventosEspeciales = () => {
                                 </div>
                               )}
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => deleteItem(item.id)}
-                            >
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
+                            <div className="flex gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openEditItem(item)}
+                              >
+                                <Pencil className="w-4 h-4 text-muted-foreground" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deleteItem(item.id)}
+                              >
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -965,6 +1039,152 @@ const EventosEspeciales = () => {
             <Button onClick={createProgramItem} className="w-full">
               <Save className="w-4 h-4 mr-2" />
               Agregar al Programa
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para editar item del programa */}
+      <Dialog open={isEditingItem} onOpenChange={(open) => {
+        setIsEditingItem(open);
+        if (!open) {
+          setEditingItemId(null);
+          setItemForm({
+            start_time: '',
+            end_time: '',
+            title: '',
+            description: '',
+            responsible_person: '',
+            notes: '',
+            worship_set_id: '',
+            highlight_color: '',
+          });
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Item del Programa</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Hora de Inicio</Label>
+                <Input
+                  type="time"
+                  value={itemForm.start_time}
+                  onChange={(e) => setItemForm({ ...itemForm, start_time: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <Label>Hora de Finalización</Label>
+                <Input
+                  type="time"
+                  value={itemForm.end_time}
+                  onChange={(e) => setItemForm({ ...itemForm, end_time: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+            {itemForm.start_time && itemForm.end_time && (
+              <div className="text-sm text-muted-foreground">
+                Duración: {calculateDuration(itemForm.start_time, itemForm.end_time)} minutos
+              </div>
+            )}
+            <div>
+              <Label>Título</Label>
+              <Input
+                value={itemForm.title}
+                onChange={(e) => setItemForm({ ...itemForm, title: e.target.value })}
+                placeholder="Ej: Adoración y Alabanzas"
+                required
+              />
+            </div>
+            <div>
+              <Label>Descripción (opcional)</Label>
+              <Textarea
+                value={itemForm.description}
+                onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
+                placeholder="Detalles del item..."
+              />
+            </div>
+            <div>
+              <Label>Responsable</Label>
+              <Input
+                value={itemForm.responsible_person}
+                onChange={(e) => setItemForm({ ...itemForm, responsible_person: e.target.value })}
+                placeholder="Nombre del responsable"
+              />
+            </div>
+            {availableWorshipSets.length > 0 && (
+              <div>
+                <Label>Enlazar Set de Adoración (opcional)</Label>
+                <Select
+                  value={itemForm.worship_set_id}
+                  onValueChange={(v) => setItemForm({ ...itemForm, worship_set_id: v === 'none' ? '' : v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar set de adoración..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sin enlazar</SelectItem>
+                    {availableWorshipSets.map(set => (
+                      <SelectItem key={set.id} value={set.id}>
+                        {set.set_name} ({set.set_type})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div>
+              <Label>Color de Resaltado (opcional)</Label>
+              <Select
+                value={itemForm.highlight_color}
+                onValueChange={(v) => setItemForm({ ...itemForm, highlight_color: v === 'none' ? '' : v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sin color">
+                    {itemForm.highlight_color ? (
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-4 h-4 rounded border"
+                          style={{ backgroundColor: itemForm.highlight_color }}
+                        />
+                        {HIGHLIGHT_COLORS.find(c => c.value === itemForm.highlight_color)?.label || 'Color'}
+                      </div>
+                    ) : 'Sin color'}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {HIGHLIGHT_COLORS.map(color => (
+                    <SelectItem key={color.value || 'none'} value={color.value || 'none'}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-4 h-4 rounded border"
+                          style={{ backgroundColor: color.color }}
+                        />
+                        {color.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                El color resaltará esta fila en el PDF impreso
+              </p>
+            </div>
+            <div>
+              <Label>Observaciones (opcional)</Label>
+              <Textarea
+                value={itemForm.notes}
+                onChange={(e) => setItemForm({ ...itemForm, notes: e.target.value })}
+                placeholder="Notas adicionales..."
+              />
+            </div>
+            <Button onClick={updateProgramItem} className="w-full">
+              <Save className="w-4 h-4 mr-2" />
+              Guardar Cambios
             </Button>
           </div>
         </DialogContent>
