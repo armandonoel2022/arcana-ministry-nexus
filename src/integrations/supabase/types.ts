@@ -500,6 +500,7 @@ export type Database = {
           description: string | null
           duration_minutes: number | null
           event_id: string
+          highlight_color: string | null
           id: string
           item_order: number | null
           notes: string | null
@@ -514,6 +515,7 @@ export type Database = {
           description?: string | null
           duration_minutes?: number | null
           event_id: string
+          highlight_color?: string | null
           id?: string
           item_order?: number | null
           notes?: string | null
@@ -528,6 +530,7 @@ export type Database = {
           description?: string | null
           duration_minutes?: number | null
           event_id?: string
+          highlight_color?: string | null
           id?: string
           item_order?: number | null
           notes?: string | null
