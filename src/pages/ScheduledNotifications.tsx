@@ -28,7 +28,7 @@ import GeneralAnnouncementOverlay from "@/components/notifications/GeneralAnnoun
 import MinistryInstructionsOverlay from "@/components/notifications/MinistryInstructionsOverlay";
 import ExtraordinaryRehearsalOverlay from "@/components/notifications/ExtraordinaryRehearsalOverlay";
 import BloodDonationOverlay from "@/components/notifications/BloodDonationOverlay";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -77,15 +77,7 @@ const ScheduledNotifications = () => {
   const [notifications, setNotifications] = useState<ScheduledNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [showServicePreview, setShowServicePreview] = useState(false);
-  const [showVersePreview, setShowVersePreview] = useState(false);
-  const [showAdvicePreview, setShowAdvicePreview] = useState(false);
-  const [showGeneralAnnouncement, setShowGeneralAnnouncement] = useState(false);
-  const [showMinistryInstructions, setShowMinistryInstructions] = useState(false);
-  const [showExtraordinaryRehearsal, setShowExtraordinaryRehearsal] = useState(false);
-  const [showBloodDonation, setShowBloodDonation] = useState(false);
   const [editingNotification, setEditingNotification] = useState<ScheduledNotification | null>(null);
-  const [testingNotification, setTestingNotification] = useState<any>(null);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [loadingTest, setLoadingTest] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -323,73 +315,30 @@ const ScheduledNotifications = () => {
     return colors[type as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
 
+  // Dispatch overlay event via OverlayManager
+  const dispatchOverlayEvent = (notification: ScheduledNotification) => {
+    const metadata = notification.metadata || {};
+    
+    const overlayData = {
+      id: `preview-${notification.id || Date.now()}`,
+      type: notification.notification_type,
+      title: notification.name,
+      message: notification.description || '',
+      metadata: metadata
+    };
+
+    console.log('📱 [ScheduledNotifications] Disparando overlay:', overlayData);
+    window.dispatchEvent(new CustomEvent('showOverlay', { detail: overlayData }));
+  };
+
   const handlePreview = (notification: ScheduledNotification) => {
-    setTestingNotification(notification);
-    switch (notification.notification_type) {
-      case "service_overlay":
-        setShowServicePreview(true);
-        break;
-      case "daily_verse":
-        setShowVersePreview(true);
-        break;
-      case "daily_advice":
-        setShowAdvicePreview(true);
-        break;
-      case "death_announcement":
-      case "meeting_announcement":
-      case "special_service":
-      case "prayer_request":
-        setShowGeneralAnnouncement(true);
-        break;
-      case "ministry_instructions":
-        setShowMinistryInstructions(true);
-        break;
-      case "extraordinary_rehearsal":
-        setShowExtraordinaryRehearsal(true);
-        break;
-      case "blood_donation":
-        setShowBloodDonation(true);
-        break;
-      default:
-        toast.info("Vista previa no disponible para este tipo de notificación");
-    }
+    dispatchOverlayEvent(notification);
   };
 
   const handleTestNotification = async (notification: ScheduledNotification) => {
     try {
-      // Guardar la notificación que se está probando
-      setTestingNotification(notification);
-
-      // Mostrar el overlay directamente (igual que preview)
-      switch (notification.notification_type) {
-        case "service_overlay":
-          setShowServicePreview(true);
-          break;
-        case "daily_verse":
-          setShowVersePreview(true);
-          break;
-        case "daily_advice":
-          setShowAdvicePreview(true);
-          break;
-        case "death_announcement":
-        case "meeting_announcement":
-        case "special_service":
-        case "prayer_request":
-          setShowGeneralAnnouncement(true);
-          break;
-        case "ministry_instructions":
-          setShowMinistryInstructions(true);
-          break;
-        case "extraordinary_rehearsal":
-          setShowExtraordinaryRehearsal(true);
-          break;
-        case "blood_donation":
-          setShowBloodDonation(true);
-          break;
-        default:
-          toast.info("Vista previa no disponible para este tipo de notificación");
-          return;
-      }
+      // Mostrar el overlay a través del OverlayManager
+      dispatchOverlayEvent(notification);
 
       // También crear la notificación en system_notifications para registro
       const { error } = await supabase.from("system_notifications").insert({
@@ -653,15 +602,19 @@ const ScheduledNotifications = () => {
                                   reflection: "Reflexión generada automáticamente",
                                 });
 
-                                // Actualizar el estado para mostrar el nuevo versículo
-                                setTestingNotification({
-                                  type: "daily_verse",
-                                  title: "Versículo del Día",
-                                  message: newVerse.text,
-                                  metadata: {
-                                    verse_reference: `${newVerse.book} ${newVerse.chapter}:${newVerse.verse}`,
-                                  },
-                                });
+                              // Disparar overlay a través del OverlayManager
+                                window.dispatchEvent(new CustomEvent('showOverlay', {
+                                  detail: {
+                                    id: `preview-verse-${Date.now()}`,
+                                    type: 'daily_verse',
+                                    title: 'Versículo del Día',
+                                    message: newVerse.text,
+                                    metadata: {
+                                      verse_text: newVerse.text,
+                                      verse_reference: `${newVerse.book} ${newVerse.chapter}:${newVerse.verse}`,
+                                    },
+                                  }
+                                }));
 
                                 toast.success(
                                   `Versículo cambiado: ${newVerse.book} ${newVerse.chapter}:${newVerse.verse}`,
@@ -697,15 +650,18 @@ const ScheduledNotifications = () => {
 
                               if (dailyVerse && dailyVerse.bible_verses) {
                                 const verse = dailyVerse.bible_verses as any;
-                                setTestingNotification({
-                                  type: "daily_verse",
-                                  title: "Versículo del Día",
-                                  message: verse.text,
-                                  metadata: {
-                                    verse_reference: `${verse.book} ${verse.chapter}:${verse.verse}`,
-                                  },
-                                });
-                                setShowVersePreview(true);
+                                window.dispatchEvent(new CustomEvent('showOverlay', {
+                                  detail: {
+                                    id: `preview-verse-${Date.now()}`,
+                                    type: 'daily_verse',
+                                    title: 'Versículo del Día',
+                                    message: verse.text,
+                                    metadata: {
+                                      verse_text: verse.text,
+                                      verse_reference: `${verse.book} ${verse.chapter}:${verse.verse}`,
+                                    },
+                                  }
+                                }));
                               } else {
                                 toast.error("No hay versículo del día configurado");
                               }
@@ -767,16 +723,19 @@ const ScheduledNotifications = () => {
                               if (adviceList && adviceList.length > 0) {
                                 const randomAdvice = adviceList[Math.floor(Math.random() * adviceList.length)];
 
-                                // Actualizar el estado para mostrar el nuevo consejo
-                                setTestingNotification({
-                                  type: "daily_advice",
-                                  title: "Consejo del Día",
-                                  message: randomAdvice.message,
-                                  metadata: {
-                                    advice_title: randomAdvice.title,
-                                    advice_message: randomAdvice.message,
-                                  },
-                                });
+                                // Disparar overlay a través del OverlayManager
+                                window.dispatchEvent(new CustomEvent('showOverlay', {
+                                  detail: {
+                                    id: `preview-advice-${Date.now()}`,
+                                    type: 'daily_advice',
+                                    title: 'Consejo del Día',
+                                    message: randomAdvice.message,
+                                    metadata: {
+                                      advice_title: randomAdvice.title,
+                                      advice_message: randomAdvice.message,
+                                    },
+                                  }
+                                }));
 
                                 toast.success(`Consejo actualizado: ${randomAdvice.title}`);
                               } else {
@@ -804,17 +763,18 @@ const ScheduledNotifications = () => {
 
                               if (adviceList && adviceList.length > 0) {
                                 const randomAdvice = adviceList[Math.floor(Math.random() * adviceList.length)];
-
-                                setTestingNotification({
-                                  type: "daily_advice",
-                                  title: "Consejo del Día",
-                                  message: randomAdvice.message,
-                                  metadata: {
-                                    advice_title: randomAdvice.title,
-                                    advice_message: randomAdvice.message,
-                                  },
-                                });
-                                setShowAdvicePreview(true);
+                                window.dispatchEvent(new CustomEvent('showOverlay', {
+                                  detail: {
+                                    id: `preview-advice-${Date.now()}`,
+                                    type: 'daily_advice',
+                                    title: 'Consejo del Día',
+                                    message: randomAdvice.message,
+                                    metadata: {
+                                      advice_title: randomAdvice.title,
+                                      advice_message: randomAdvice.message,
+                                    },
+                                  }
+                                }));
                               } else {
                                 toast.error("No hay consejos disponibles");
                               }
@@ -866,7 +826,15 @@ const ScheduledNotifications = () => {
                         <Button
                           size="sm"
                           className="w-full bg-green-600 hover:bg-green-700 text-white text-xs h-8"
-                          onClick={() => setShowServicePreview(true)}
+                          onClick={() => window.dispatchEvent(new CustomEvent('showOverlay', {
+                            detail: {
+                              id: `preview-service-${Date.now()}`,
+                              type: 'service_overlay',
+                              title: 'Programa de Servicios',
+                              message: '',
+                              metadata: {}
+                            }
+                          }))}
                         >
                           <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                           Vista Previa
@@ -909,22 +877,22 @@ const ScheduledNotifications = () => {
                         <Button
                           size="sm"
                           className="w-full bg-red-600 hover:bg-red-700 text-white text-xs h-8"
-                          onClick={() => {
-                            setTestingNotification({
-                              type: "blood_donation",
-                              title: "Donación de Sangre Urgente",
-                              message: "Se necesita donación de sangre con urgencia",
+                          onClick={() => window.dispatchEvent(new CustomEvent('showOverlay', {
+                            detail: {
+                              id: `preview-blood-${Date.now()}`,
+                              type: 'blood_donation',
+                              title: 'Donación de Sangre Urgente',
+                              message: 'Se necesita donación de sangre con urgencia',
                               metadata: {
-                                recipient_name: "Ejemplo de Paciente",
-                                blood_type: "O+",
-                                contact_phone: "809-555-0100",
-                                medical_center: "Hospital Ejemplo",
-                                family_contact: "Familiar del Paciente",
-                                urgency_level: "urgent",
+                                recipient_name: 'Ejemplo de Paciente',
+                                blood_type: 'O+',
+                                contact_phone: '809-555-0100',
+                                medical_center: 'Hospital Ejemplo',
+                                family_contact: 'Familiar del Paciente',
+                                urgency_level: 'urgent',
                               },
-                            });
-                            setShowBloodDonation(true);
-                          }}
+                            }
+                          }))}
                         >
                           <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                           Vista Previa
@@ -967,21 +935,21 @@ const ScheduledNotifications = () => {
                         <Button
                           size="sm"
                           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-8"
-                          onClick={() => {
-                            setTestingNotification({
-                              type: "extraordinary_rehearsal",
-                              title: "Ensayo Extraordinario",
-                              message: "Se convoca a ensayo extraordinario",
+                          onClick={() => window.dispatchEvent(new CustomEvent('showOverlay', {
+                            detail: {
+                              id: `preview-rehearsal-${Date.now()}`,
+                              type: 'extraordinary_rehearsal',
+                              title: 'Ensayo Extraordinario',
+                              message: 'Se convoca a ensayo extraordinario',
                               metadata: {
-                                activity_name: "Evento Especial Navideño",
-                                date: "2025-12-15",
-                                rehearsal_time: "18:00",
-                                location: "Templo Principal",
-                                additional_notes: "Traer partituras actualizadas",
+                                activity_name: 'Evento Especial Navideño',
+                                date: '2025-12-15',
+                                rehearsal_time: '18:00',
+                                location: 'Templo Principal',
+                                additional_notes: 'Traer partituras actualizadas',
                               },
-                            });
-                            setShowExtraordinaryRehearsal(true);
-                          }}
+                            }
+                          }))}
                         >
                           <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                           Vista Previa
@@ -1024,18 +992,19 @@ const ScheduledNotifications = () => {
                         <Button
                           size="sm"
                           className="w-full bg-sky-600 hover:bg-sky-700 text-white text-xs h-8"
-                          onClick={() => {
-                            setTestingNotification({
-                              type: "ministry_instructions",
-                              title: "Instrucciones Ministeriales",
-                              message: "Instrucciones importantes",
+                          onClick={() => window.dispatchEvent(new CustomEvent('showOverlay', {
+                            detail: {
+                              id: `preview-instructions-${Date.now()}`,
+                              type: 'ministry_instructions',
+                              title: 'Instrucciones Ministeriales',
+                              message: 'Instrucciones importantes',
                               metadata: {
-                                instructions: "Todo el ministerio debe subir al altar para la ministración especial",
-                                priority: "high",
+                                title: 'Instrucciones Ministeriales',
+                                instructions: 'Todo el ministerio debe subir al altar para la ministración especial',
+                                priority: 'high',
                               },
-                            });
-                            setShowMinistryInstructions(true);
-                          }}
+                            }
+                          }))}
                         >
                           <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                           Vista Previa
@@ -1078,18 +1047,18 @@ const ScheduledNotifications = () => {
                         <Button
                           size="sm"
                           className="w-full bg-gray-600 hover:bg-gray-700 text-white text-xs h-8"
-                          onClick={() => {
-                            setTestingNotification({
-                              type: "death_announcement",
-                              title: "Anuncio Importante",
-                              message: "Información relevante para el ministerio",
+                          onClick={() => window.dispatchEvent(new CustomEvent('showOverlay', {
+                            detail: {
+                              id: `preview-announcement-${Date.now()}`,
+                              type: 'meeting_announcement',
+                              title: 'Anuncio Importante',
+                              message: 'Información relevante para el ministerio',
                               metadata: {
-                                title: "Convocatoria a Reunión",
-                                message: "Se convoca a todos los integrantes del ministerio a reunión general",
+                                title: 'Convocatoria a Reunión',
+                                message: 'Se convoca a todos los integrantes del ministerio a reunión general',
                               },
-                            });
-                            setShowGeneralAnnouncement(true);
-                          }}
+                            }
+                          }))}
                         >
                           <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                           Vista Previa
@@ -1262,6 +1231,9 @@ const ScheduledNotifications = () => {
             <DialogTitle>
               {editingNotification ? "Editar Notificación Programada" : "Nueva Notificación Programada"}
             </DialogTitle>
+            <DialogDescription>
+              Configura los detalles de la notificación que se mostrará como overlay.
+            </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -1682,100 +1654,6 @@ const ScheduledNotifications = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Overlays de Preview y Test */}
-      {showServicePreview && (
-        <ServiceNotificationOverlay
-          forceShow={true}
-          onClose={() => {
-            setShowServicePreview(false);
-            setTestingNotification(null);
-          }}
-          onNavigate={(path) => {
-            setShowServicePreview(false);
-            setTestingNotification(null);
-            navigate(path);
-          }}
-        />
-      )}
-
-      {showVersePreview && testingNotification && (
-        <DailyVerseOverlay
-          verseText={testingNotification.message || "Cargando versículo..."}
-          verseReference={testingNotification.metadata?.verse_reference || ""}
-          onClose={() => {
-            setShowVersePreview(false);
-            setTestingNotification(null);
-          }}
-        />
-      )}
-
-      {showAdvicePreview && (
-        <DailyAdviceOverlay
-          title={testingNotification?.metadata?.advice_title || "Practica con Propósito"}
-          message={
-            testingNotification?.metadata?.advice_message ||
-            "La práctica deliberada es más efectiva que simplemente tocar por horas. Enfócate en tus debilidades y establece metas específicas para cada sesión de práctica."
-          }
-          onClose={() => {
-            setShowAdvicePreview(false);
-            setTestingNotification(null);
-          }}
-        />
-      )}
-
-      {showGeneralAnnouncement && testingNotification && (
-        <GeneralAnnouncementOverlay
-          title={testingNotification.metadata?.title || "Anuncio Importante"}
-          message={testingNotification.metadata?.message || testingNotification.description}
-          announcementType={testingNotification.notification_type as any}
-          onClose={() => {
-            setShowGeneralAnnouncement(false);
-            setTestingNotification(null);
-          }}
-        />
-      )}
-
-      {showMinistryInstructions && testingNotification && (
-        <MinistryInstructionsOverlay
-          title={testingNotification.metadata?.title || "Instrucciones"}
-          instructions={testingNotification.metadata?.instructions || testingNotification.description}
-          priority={testingNotification.metadata?.priority || "normal"}
-          onClose={() => {
-            setShowMinistryInstructions(false);
-            setTestingNotification(null);
-          }}
-        />
-      )}
-
-      {showExtraordinaryRehearsal && testingNotification && (
-        <ExtraordinaryRehearsalOverlay
-          activityName={testingNotification.metadata?.activity_name || testingNotification.name}
-          date={testingNotification.metadata?.date || new Date().toISOString()}
-          time={testingNotification.metadata?.rehearsal_time || ""}
-          location={testingNotification.metadata?.location}
-          additionalNotes={testingNotification.metadata?.additional_notes}
-          onClose={() => {
-            setShowExtraordinaryRehearsal(false);
-            setTestingNotification(null);
-          }}
-        />
-      )}
-
-      {showBloodDonation && testingNotification && (
-        <BloodDonationOverlay
-          recipientName={testingNotification.metadata?.recipient_name || ""}
-          bloodType={testingNotification.metadata?.blood_type || ""}
-          contactPhone={testingNotification.metadata?.contact_phone || ""}
-          medicalCenter={testingNotification.metadata?.medical_center || ""}
-          familyContact={testingNotification.metadata?.family_contact || ""}
-          urgencyLevel={testingNotification.metadata?.urgency_level || "urgent"}
-          additionalInfo={testingNotification.metadata?.additional_info}
-          onClose={() => {
-            setShowBloodDonation(false);
-            setTestingNotification(null);
-          }}
-        />
-      )}
     </div>
   );
 };
