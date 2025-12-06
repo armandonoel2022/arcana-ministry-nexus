@@ -34,10 +34,15 @@ const SongChangeOverlay = () => {
         { 
           event: 'INSERT', 
           schema: 'public', 
-          table: 'system_notifications',
-          filter: 'type=eq.song_change'
+          table: 'system_notifications'
         },
-        () => checkForNewNotifications()
+        (payload) => {
+          // Check if notification is a song change by looking at metadata
+          const notification = payload.new as any;
+          if (notification.metadata?.old_song_id && notification.metadata?.new_song_id) {
+            checkForNewNotifications();
+          }
+        }
       )
       .subscribe();
 
@@ -51,12 +56,14 @@ const SongChangeOverlay = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Query notifications that have song change metadata instead of filtering by type
       const { data, error } = await supabase
         .from('system_notifications')
         .select('*')
         .eq('recipient_id', user.id)
-        .eq('type', 'song_change')
         .eq('is_read', false)
+        .not('metadata->old_song_id', 'is', null)
+        .not('metadata->new_song_id', 'is', null)
         .order('created_at', { ascending: false })
         .limit(1);
 

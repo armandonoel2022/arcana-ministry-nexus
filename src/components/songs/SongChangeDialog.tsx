@@ -120,7 +120,7 @@ export const SongChangeDialog: React.FC<SongChangeDialogProps> = ({
       if (allMembers && allMembers.length > 0 && service) {
         const notifications = allMembers.map(member => ({
           recipient_id: member.id,
-          type: 'song_change',
+          type: 'general' as const,  // Use valid enum type
           title: '🔄 Cambio de Canción',
           message: `${profile?.full_name || 'Un integrante'} ha cambiado una canción en "${service.title}"`,
           notification_category: 'repertory',

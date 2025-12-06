@@ -2316,6 +2316,15 @@ export type Database = {
         }
         Returns: Json
       }
+      send_push_notification_compat: {
+        Args: {
+          message: string
+          notification_type?: string
+          title: string
+          user_id: string
+        }
+        Returns: Json
+      }
       text_to_bytea: { Args: { data: string }; Returns: string }
       urlencode:
         | { Args: { data: Json }; Returns: string }

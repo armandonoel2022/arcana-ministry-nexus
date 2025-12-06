@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import BirthdayNotificationBanner from "./BirthdayNotificationBanner";
+// BirthdayNotificationBanner removed - birthdays now handled by OverlayManager and BirthdayOverlay
 
 interface Notification {
   id: string;
@@ -376,16 +376,16 @@ const NotificationCenter = () => {
                       {notification.message}
                     </div>
 
-                    {/* Special rendering for birthday notifications */}
+                    {/* Birthday notifications show a simple indicator - overlay handled separately */}
                     {(notification.type === "birthday_daily" ||
                       notification.type === "birthday_monthly" ||
                       (notification.type === "general" && notification.metadata?.birthday)) &&
                       notification.metadata && (
-                        <div className="mt-4 flex justify-center sm:justify-start">
-                          <BirthdayNotificationBanner
-                            notification={notification}
-                            onDismiss={() => markAsRead(notification.id)}
-                          />
+                        <div className="mt-2 text-center sm:text-left">
+                          <span className="text-2xl">🎂🎉🎈</span>
+                          <p className="text-sm text-pink-600 font-medium mt-1">
+                            {notification.metadata.birthday_member_name || notification.metadata.member_name}
+                          </p>
                         </div>
                       )}
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import ServiceNotificationOverlay from './ServiceNotificationOverlay';
@@ -8,6 +8,7 @@ import GeneralAnnouncementOverlay from './GeneralAnnouncementOverlay';
 import MinistryInstructionsOverlay from './MinistryInstructionsOverlay';
 import ExtraordinaryRehearsalOverlay from './ExtraordinaryRehearsalOverlay';
 import BloodDonationOverlay from './BloodDonationOverlay';
+import { toast } from 'sonner';
 
 interface OverlayData {
   id: string;
@@ -35,6 +36,8 @@ const OverlayManager: React.FC = () => {
   const navigate = useNavigate();
   const [activeOverlay, setActiveOverlay] = useState<OverlayData | null>(null);
   const [overlayType, setOverlayType] = useState<string | null>(null);
+  const hasInitialized = useRef(false);
+  const currentUserId = useRef<string | null>(null);
 
   // Function to show overlay
   const showOverlay = useCallback((notification: OverlayData) => {
@@ -61,8 +64,14 @@ const OverlayManager: React.FC = () => {
     setOverlayType(null);
   }, [activeOverlay]);
 
-  // Check for pending overlays when component mounts
+  // Check for pending overlays when component mounts - only show ONE pending overlay
   const checkPendingOverlays = useCallback(async () => {
+    // Prevent multiple initializations
+    if (hasInitialized.current) {
+      console.log('📱 [OverlayManager] Ya inicializado, ignorando');
+      return;
+    }
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -70,25 +79,31 @@ const OverlayManager: React.FC = () => {
         return;
       }
 
+      currentUserId.current = user.id;
+      hasInitialized.current = true;
       console.log('📱 [OverlayManager] Verificando overlays pendientes para usuario:', user.id);
+
+      // Only get overlay types that should show as modal overlays (NOT regular notifications)
+      const overlayTypes = [
+        'service_overlay',
+        'daily_verse',
+        'daily_advice',
+        'death_announcement',
+        'meeting_announcement',
+        'special_service',
+        'prayer_request',
+        'blood_donation',
+        'extraordinary_rehearsal',
+        'ministry_instructions'
+      ];
 
       const { data: pendingNotifications, error } = await supabase
         .from('system_notifications')
         .select('*')
         .or(`recipient_id.eq.${user.id},recipient_id.is.null`)
         .eq('is_read', false)
-        .in('type', [
-          'service_overlay',
-          'daily_verse',
-          'daily_advice',
-          'death_announcement',
-          'meeting_announcement',
-          'special_service',
-          'prayer_request',
-          'blood_donation',
-          'extraordinary_rehearsal',
-          'ministry_instructions'
-        ])
+        .in('type', overlayTypes)
+        .order('priority', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(1);
 
@@ -101,12 +116,12 @@ const OverlayManager: React.FC = () => {
         const notification = pendingNotifications[0];
         console.log('📱 [OverlayManager] Overlay pendiente encontrado:', notification);
         
-        // Check if this notification was already shown today
-        const shownToday = localStorage.getItem(`overlay_shown_${notification.id}`);
-        const today = new Date().toDateString();
+        // Check if this notification was already shown in this session
+        const sessionKey = `overlay_shown_session_${notification.id}`;
+        const shownInSession = sessionStorage.getItem(sessionKey);
         
-        if (shownToday !== today) {
-          localStorage.setItem(`overlay_shown_${notification.id}`, today);
+        if (!shownInSession) {
+          sessionStorage.setItem(sessionKey, 'true');
           showOverlay({
             id: notification.id,
             type: notification.type,
@@ -114,6 +129,8 @@ const OverlayManager: React.FC = () => {
             message: notification.message,
             metadata: notification.metadata || {}
           });
+        } else {
+          console.log('📱 [OverlayManager] Overlay ya mostrado en esta sesión');
         }
       }
     } catch (error) {
