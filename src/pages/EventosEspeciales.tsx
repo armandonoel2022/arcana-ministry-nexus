@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -16,6 +15,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import WorshipSetsManager from '@/components/events/WorshipSetsManager';
+import EventModeSelector from '@/components/events/EventModeSelector';
+import LiveEventController from '@/components/events/LiveEventController';
 
 interface SpecialEvent {
   id: string;
@@ -72,6 +73,7 @@ interface SetSong {
 }
 
 const EventosEspeciales = () => {
+  const [mode, setMode] = useState<'selector' | 'live' | 'programming'>('selector');
   const [events, setEvents] = useState<SpecialEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<SpecialEvent | null>(null);
   const [programItems, setProgramItems] = useState<ProgramItem[]>([]);
@@ -569,7 +571,16 @@ const EventosEspeciales = () => {
     }
   };
 
-  if (loading) {
+  // Handle switching from Live mode to Programming mode with a specific event
+  const handleSwitchToProgramming = async (eventId: string) => {
+    const event = events.find(e => e.id === eventId);
+    if (event) {
+      setSelectedEvent(event);
+    }
+    setMode('programming');
+  };
+
+  if (loading && mode === 'programming') {
     return (
       <div className="p-8">
         <p>Cargando eventos...</p>
@@ -577,12 +588,33 @@ const EventosEspeciales = () => {
     );
   }
 
+  // Mode Selector View
+  if (mode === 'selector') {
+    return <EventModeSelector onSelectMode={setMode} />;
+  }
+
+  // Live Mode View
+  if (mode === 'live') {
+    return (
+      <LiveEventController 
+        onBack={() => setMode('selector')}
+        onSwitchToProgramming={handleSwitchToProgramming}
+      />
+    );
+  }
+
+  // Programming Mode View
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Eventos Especiales</h1>
-          <p className="text-muted-foreground">Gestión de programas para eventos especiales</p>
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" onClick={() => setMode('selector')}>
+            ← Volver
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">Modo Programación</h1>
+            <p className="text-muted-foreground">Gestión de programas para eventos especiales</p>
+          </div>
         </div>
         <Button onClick={() => setIsCreatingEvent(true)}>
           <Plus className="w-4 h-4 mr-2" />
