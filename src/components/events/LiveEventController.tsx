@@ -298,37 +298,39 @@ const LiveEventController: React.FC<LiveEventControllerProps> = ({ onBack, onSwi
 
   // Live Control View
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b p-4">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => setSelectedEvent(null)}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Cambiar Evento
+    <div className="min-h-screen bg-background overflow-x-hidden">
+      {/* Header - Mobile Optimized */}
+      <div className="border-b p-3 sm:p-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Button variant="ghost" size="sm" onClick={() => setSelectedEvent(null)} className="shrink-0 px-2 sm:px-3">
+              <ArrowLeft className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Cambiar</span>
             </Button>
-            <div>
-              <h1 className="font-bold">{selectedEvent.title}</h1>
-              <p className="text-sm text-muted-foreground">
-                Progreso: {timerState.completedItems.length}/{programItems.length} secciones
+            <div className="min-w-0 flex-1">
+              <h1 className="font-bold text-sm sm:text-base truncate">{selectedEvent.title}</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                {timerState.completedItems.length}/{programItems.length} secciones
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 justify-end">
             <Button 
               variant="outline" 
               size="sm"
               onClick={() => onSwitchToProgramming(selectedEvent.id)}
+              className="text-xs px-2 sm:px-3"
             >
-              Ir a Programación
+              <span className="hidden sm:inline">Ir a </span>Programación
             </Button>
             <Button 
               variant="outline" 
               size="sm"
               onClick={() => setShowStats(true)}
+              className="px-2 sm:px-3"
             >
-              <BarChart3 className="w-4 h-4 mr-2" />
-              Ver Estadísticas
+              <BarChart3 className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Estadísticas</span>
             </Button>
           </div>
         </div>
@@ -342,123 +344,133 @@ const LiveEventController: React.FC<LiveEventControllerProps> = ({ onBack, onSwi
         />
       </div>
 
-      {/* Main Timer Display */}
-      <div className="container mx-auto p-6">
-        <div className="flex flex-col items-center justify-center py-8">
+      {/* Main Timer Display - Mobile Optimized */}
+      <div className="px-4 py-4 sm:p-6">
+        <div className="flex flex-col items-center justify-center py-4 sm:py-8">
           {timerState.isPreparationPhase ? (
             <>
-              <p className="text-xl text-muted-foreground mb-4">Preparación para siguiente sección</p>
-              <div className="text-8xl md:text-9xl font-mono font-bold text-yellow-500 mb-4">
+              <p className="text-base sm:text-xl text-muted-foreground mb-3 sm:mb-4 text-center">
+                Preparación para siguiente sección
+              </p>
+              <div className="text-6xl sm:text-8xl md:text-9xl font-mono font-bold text-yellow-500 mb-3 sm:mb-4">
                 {formatTime(timerState.preparationSeconds)}
               </div>
-              <p className="text-lg text-muted-foreground">
+              <p className="text-sm sm:text-lg text-muted-foreground text-center px-4">
                 Siguiente: {programItems[timerState.currentItemIndex + 1]?.title || 'Fin del evento'}
               </p>
             </>
           ) : currentItem ? (
             <>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="px-3 py-1 rounded-full bg-primary/20 text-sm">
+              <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
+                <span className="px-2 sm:px-3 py-1 rounded-full bg-primary/20 text-xs sm:text-sm">
                   Sección {timerState.currentItemIndex + 1} de {programItems.length}
                 </span>
                 {isOvertime && (
-                  <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-500 text-sm flex items-center gap-1">
+                  <span className="px-2 sm:px-3 py-1 rounded-full bg-red-500/20 text-red-500 text-xs sm:text-sm flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3" />
-                    Tiempo excedido
+                    Excedido
                   </span>
                 )}
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-center mb-4">{currentItem.title}</h2>
+              <h2 className="text-lg sm:text-2xl md:text-3xl font-bold text-center mb-3 sm:mb-4 px-4 leading-tight">
+                {currentItem.title}
+              </h2>
               <div className={cn(
-                "text-8xl md:text-9xl font-mono font-bold mb-4 transition-colors",
+                "text-6xl sm:text-8xl md:text-9xl font-mono font-bold mb-3 sm:mb-4 transition-colors",
                 isOvertime ? "text-red-500" : timerState.isRunning ? "text-green-500" : "text-foreground"
               )}>
                 {isOvertime ? '+' : ''}{formatTime(timerState.isRunning ? (isOvertime ? Math.abs(timeRemaining) : timerState.elapsedSeconds) : 0)}
               </div>
-              <div className="flex items-center gap-4 text-muted-foreground">
-                <span>Planificado: {formatTime(plannedSeconds)}</span>
+              <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-sm sm:text-base text-muted-foreground">
+                <span>Plan: {formatTime(plannedSeconds)}</span>
                 {timerState.isRunning && !isOvertime && (
                   <span>Restante: {formatTime(timeRemaining)}</span>
                 )}
               </div>
               {currentItem.responsible_person && (
-                <p className="mt-4 text-lg">
+                <p className="mt-3 sm:mt-4 text-sm sm:text-lg text-center">
                   <span className="text-muted-foreground">Responsable:</span> {currentItem.responsible_person}
                 </p>
               )}
             </>
           ) : (
-            <p className="text-xl text-muted-foreground">No hay secciones en el programa</p>
+            <p className="text-lg sm:text-xl text-muted-foreground">No hay secciones en el programa</p>
           )}
         </div>
 
-        {/* Controls */}
+        {/* Controls - Mobile Optimized */}
         {currentItem && (
-          <div className="flex justify-center gap-4 mb-8">
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-6 sm:mb-8">
             {!timerState.isRunning ? (
               <Button 
                 size="lg" 
-                className="bg-green-500 hover:bg-green-600 text-white px-8"
+                className="bg-green-500 hover:bg-green-600 text-white px-6 sm:px-8"
                 onClick={startTimer}
               >
-                <Play className="w-6 h-6 mr-2" />
-                {timerState.isPreparationPhase ? 'Iniciar Siguiente' : 'Iniciar'}
+                <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+                {timerState.isPreparationPhase ? 'Iniciar' : 'Iniciar'}
               </Button>
             ) : (
               <>
                 <Button 
-                  size="lg" 
+                  size="default"
                   variant="outline"
                   onClick={togglePause}
+                  className="px-4 sm:px-6"
                 >
                   {timerState.isPaused ? (
                     <>
-                      <Play className="w-6 h-6 mr-2" />
-                      Continuar
+                      <Play className="w-5 h-5 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Continuar</span>
+                      <span className="sm:hidden">Play</span>
                     </>
                   ) : (
                     <>
-                      <Pause className="w-6 h-6 mr-2" />
+                      <Pause className="w-5 h-5 mr-1 sm:mr-2" />
                       Pausar
                     </>
                   )}
                 </Button>
                 <Button 
-                  size="lg" 
+                  size="default"
                   variant="destructive"
                   onClick={stopSection}
+                  className="px-4 sm:px-6"
                 >
-                  <Square className="w-6 h-6 mr-2" />
-                  Finalizar Sección
+                  <Square className="w-5 h-5 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Finalizar Sección</span>
+                  <span className="sm:hidden">Finalizar</span>
                 </Button>
               </>
             )}
             {timerState.isPreparationPhase && (
               <Button 
-                size="lg" 
+                size="default"
                 variant="outline"
                 onClick={nextSection}
+                className="px-4 sm:px-6"
               >
-                <SkipForward className="w-6 h-6 mr-2" />
-                Saltar Preparación
+                <SkipForward className="w-5 h-5 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Saltar Preparación</span>
+                <span className="sm:hidden">Saltar</span>
               </Button>
             )}
           </div>
         )}
 
-        {/* Pending Items List */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
+        {/* Pending Items List - Mobile Optimized */}
+        <Card className="mx-0">
+          <CardHeader className="py-3 sm:py-6">
+            <CardTitle className="flex items-center justify-between text-base sm:text-lg">
               <span>Secciones Pendientes</span>
-              <span className="text-sm font-normal text-muted-foreground">
+              <span className="text-xs sm:text-sm font-normal text-muted-foreground">
                 {pendingItems.length} restantes
               </span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {pendingItems.map((item, idx) => {
+          <CardContent className="pt-0 pb-4">
+            <div className="space-y-2 max-h-[40vh] overflow-y-auto">
+              {pendingItems.map((item) => {
                 const isCurrentItem = item.id === currentItem?.id;
                 const realIndex = programItems.findIndex(p => p.id === item.id);
                 
@@ -466,7 +478,7 @@ const LiveEventController: React.FC<LiveEventControllerProps> = ({ onBack, onSwi
                   <div 
                     key={item.id}
                     className={cn(
-                      "flex items-center gap-4 p-3 rounded-lg transition-colors cursor-pointer",
+                      "flex items-center gap-2 sm:gap-4 p-2 sm:p-3 rounded-lg transition-colors cursor-pointer",
                       isCurrentItem 
                         ? "bg-green-500/20 border-2 border-green-500" 
                         : "bg-muted/50 hover:bg-muted"
@@ -474,29 +486,32 @@ const LiveEventController: React.FC<LiveEventControllerProps> = ({ onBack, onSwi
                     onClick={() => !timerState.isRunning && skipToSection(realIndex)}
                   >
                     <span className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
+                      "w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium shrink-0",
                       isCurrentItem ? "bg-green-500 text-white" : "bg-muted-foreground/20"
                     )}>
                       {realIndex + 1}
                     </span>
-                    <div className="flex-1">
-                      <p className={cn("font-medium", isCurrentItem && "text-green-700 dark:text-green-300")}>
+                    <div className="flex-1 min-w-0">
+                      <p className={cn(
+                        "font-medium text-sm sm:text-base truncate",
+                        isCurrentItem && "text-green-700 dark:text-green-300"
+                      )}>
                         {item.title}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">
                         {item.time_slot} • {item.duration_minutes} min
                       </p>
                     </div>
                     {isCurrentItem && (
-                      <span className="px-2 py-1 text-xs bg-green-500 text-white rounded">
-                        En curso
+                      <span className="px-2 py-0.5 text-xs bg-green-500 text-white rounded shrink-0">
+                        Actual
                       </span>
                     )}
                   </div>
                 );
               })}
               {pendingItems.length === 0 && (
-                <p className="text-center text-muted-foreground py-4">
+                <p className="text-center text-muted-foreground py-4 text-sm">
                   ¡Todas las secciones completadas!
                 </p>
               )}
