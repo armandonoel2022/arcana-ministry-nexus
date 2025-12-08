@@ -618,6 +618,53 @@ export type Database = {
           },
         ]
       }
+      event_statistics: {
+        Row: {
+          completed_at: string
+          created_at: string
+          created_by: string | null
+          event_id: string
+          id: string
+          item_stats: Json
+          recommendations: string[] | null
+          total_actual_duration: number
+          total_planned_duration: number
+          total_preparation_time: number
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          created_by?: string | null
+          event_id: string
+          id?: string
+          item_stats?: Json
+          recommendations?: string[] | null
+          total_actual_duration: number
+          total_planned_duration: number
+          total_preparation_time: number
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          created_by?: string | null
+          event_id?: string
+          id?: string
+          item_stats?: Json
+          recommendations?: string[] | null
+          total_actual_duration?: number
+          total_planned_duration?: number
+          total_preparation_time?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_statistics_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "special_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_worship_sets: {
         Row: {
           created_at: string | null
@@ -781,6 +828,68 @@ export type Database = {
           video_url?: string | null
         }
         Relationships: []
+      }
+      live_event_sessions: {
+        Row: {
+          completed_items: number[]
+          created_at: string
+          current_item_index: number
+          elapsed_seconds: number
+          event_end_time: string | null
+          event_id: string
+          event_start_time: string | null
+          id: string
+          is_paused: boolean
+          is_preparation_phase: boolean
+          is_running: boolean
+          item_actual_times: Json
+          last_updated_at: string
+          last_updated_by: string | null
+          preparation_seconds: number
+        }
+        Insert: {
+          completed_items?: number[]
+          created_at?: string
+          current_item_index?: number
+          elapsed_seconds?: number
+          event_end_time?: string | null
+          event_id: string
+          event_start_time?: string | null
+          id?: string
+          is_paused?: boolean
+          is_preparation_phase?: boolean
+          is_running?: boolean
+          item_actual_times?: Json
+          last_updated_at?: string
+          last_updated_by?: string | null
+          preparation_seconds?: number
+        }
+        Update: {
+          completed_items?: number[]
+          created_at?: string
+          current_item_index?: number
+          elapsed_seconds?: number
+          event_end_time?: string | null
+          event_id?: string
+          event_start_time?: string | null
+          id?: string
+          is_paused?: boolean
+          is_preparation_phase?: boolean
+          is_running?: boolean
+          item_actual_times?: Json
+          last_updated_at?: string
+          last_updated_by?: string | null
+          preparation_seconds?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_event_sessions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "special_events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       members: {
         Row: {
