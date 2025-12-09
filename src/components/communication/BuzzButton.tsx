@@ -23,7 +23,12 @@ export const BuzzButton = ({ currentUserId }: BuzzButtonProps) => {
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const { toast } = useToast();
-  const { playSound, vibrate } = useSounds();
+  const { playSound, vibrate, preloadSounds } = useSounds();
+
+  // Precargar sonidos al montar el componente
+  useEffect(() => {
+    preloadSounds();
+  }, [preloadSounds]);
 
   useEffect(() => {
     if (open) {
