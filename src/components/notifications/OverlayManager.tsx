@@ -259,31 +259,28 @@ const OverlayManager: React.FC = () => {
 
     // Setup Supabase Realtime listener for new notifications
     let channel: ReturnType<typeof supabase.channel> | null = null;
+    let pollInterval: NodeJS.Timeout | null = null;
 
     const setupRealtimeListener = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      console.log('📱 [OverlayManager] Configurando listener de Realtime...');
+      console.log('📱 [OverlayManager] Configurando listener de Realtime para usuario:', user.id);
+      currentUserId.current = user.id;
 
       channel = supabase
-        .channel(`overlay-manager-${user.id}`)
+        .channel(`overlay-manager-${user.id}-${Date.now()}`)
         .on(
           'postgres_changes',
           {
             event: 'INSERT',
             schema: 'public',
-            table: 'system_notifications'
+            table: 'system_notifications',
+            filter: `recipient_id=eq.${user.id}`
           },
           (payload) => {
             const notification = payload.new as any;
             console.log('📱 [OverlayManager] Nueva notificación recibida via Realtime:', notification);
-
-            // Check if this notification is for this user or is global
-            if (notification.recipient_id !== user.id && notification.recipient_id !== null) {
-              console.log('📱 [OverlayManager] Notificación no es para este usuario, ignorando');
-              return;
-            }
 
             // Check if notification type requires overlay
             const overlayTypes = [
@@ -300,7 +297,7 @@ const OverlayManager: React.FC = () => {
             ];
 
             if (overlayTypes.includes(notification.type)) {
-              console.log('📱 [OverlayManager] Mostrando overlay automáticamente');
+              console.log('📱 [OverlayManager] Mostrando overlay automáticamente para tipo:', notification.type);
               showOverlay({
                 id: notification.id,
                 type: notification.type,
@@ -313,7 +310,60 @@ const OverlayManager: React.FC = () => {
         )
         .subscribe((status) => {
           console.log('📱 [OverlayManager] Estado de suscripción Realtime:', status);
+          if (status === 'SUBSCRIBED') {
+            console.log('📱 [OverlayManager] ✅ Realtime conectado correctamente');
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            console.error('📱 [OverlayManager] ❌ Error en Realtime, activando polling de respaldo');
+            startPolling(user.id);
+          }
         });
+    };
+
+    // Fallback polling mechanism in case Realtime fails
+    const startPolling = (userId: string) => {
+      if (pollInterval) return;
+      
+      console.log('📱 [OverlayManager] Iniciando polling de respaldo cada 30 segundos');
+      
+      const checkForNewNotifications = async () => {
+        if (!isMounted.current) return;
+        
+        const overlayTypes = [
+          'service_overlay', 'daily_verse', 'daily_advice',
+          'death_announcement', 'meeting_announcement', 'special_service',
+          'prayer_request', 'blood_donation', 'extraordinary_rehearsal', 'ministry_instructions'
+        ];
+        
+        const { data: notifications } = await supabase
+          .from('system_notifications')
+          .select('*')
+          .eq('recipient_id', userId)
+          .eq('is_read', false)
+          .in('type', overlayTypes)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        
+        if (notifications && notifications.length > 0) {
+          const notification = notifications[0];
+          const sessionKey = `overlay_shown_session_${notification.id}`;
+          
+          if (!sessionStorage.getItem(sessionKey)) {
+            sessionStorage.setItem(sessionKey, 'true');
+            console.log('📱 [OverlayManager] Overlay encontrado via polling:', notification);
+            showOverlay({
+              id: notification.id,
+              type: notification.type,
+              title: notification.title,
+              message: notification.message,
+              metadata: notification.metadata || {}
+            });
+          }
+        }
+      };
+      
+      pollInterval = setInterval(checkForNewNotifications, 30000);
+      // Check immediately on first poll
+      checkForNewNotifications();
     };
 
     setupRealtimeListener();
@@ -333,6 +383,9 @@ const OverlayManager: React.FC = () => {
       
       if (channel) {
         supabase.removeChannel(channel);
+      }
+      if (pollInterval) {
+        clearInterval(pollInterval);
       }
     };
   }, [showOverlay, checkPendingOverlays]);
