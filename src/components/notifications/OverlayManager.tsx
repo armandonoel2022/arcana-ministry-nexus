@@ -38,12 +38,19 @@ const OverlayManager: React.FC = () => {
   const [overlayType, setOverlayType] = useState<string | null>(null);
   const hasInitialized = useRef(false);
   const currentUserId = useRef<string | null>(null);
+  const isMounted = useRef(true);
 
-  // Function to show overlay
+  // Function to show overlay with safety check
   const showOverlay = useCallback((notification: OverlayData) => {
+    if (!isMounted.current) return;
     console.log('📱 [OverlayManager] Mostrando overlay:', notification.type, notification);
-    setActiveOverlay(notification);
-    setOverlayType(notification.type);
+    // Force a small delay to ensure DOM is ready
+    setTimeout(() => {
+      if (isMounted.current) {
+        setActiveOverlay(notification);
+        setOverlayType(notification.type);
+      }
+    }, 100);
   }, []);
 
   // Function to dismiss overlay and mark as read
@@ -314,6 +321,7 @@ const OverlayManager: React.FC = () => {
     // Cleanup
     return () => {
       console.log('📱 [OverlayManager] Limpiando listeners...');
+      isMounted.current = false;
       window.removeEventListener('showOverlay', handleShowOverlay as EventListener);
       window.removeEventListener('showServiceOverlay', handleShowServiceOverlay as EventListener);
       window.removeEventListener('showVerseOverlay', handleShowVerseOverlay as EventListener);
@@ -421,7 +429,16 @@ const OverlayManager: React.FC = () => {
     }
   };
 
-  return renderOverlay();
+  // Render overlay in a portal-like manner at the top level
+  if (!activeOverlay || !overlayType) return null;
+
+  return (
+    <div className="overlay-manager-root" style={{ position: 'fixed', inset: 0, zIndex: 9999, pointerEvents: 'none' }}>
+      <div style={{ pointerEvents: 'auto' }}>
+        {renderOverlay()}
+      </div>
+    </div>
+  );
 };
 
 export default OverlayManager;

@@ -73,9 +73,6 @@ function SidebarLayout() {
 function AppContent() {
   return (
     <BrowserRouter>
-      {/* OverlayManager centralizado - maneja TODOS los overlays de notificaciones */}
-      <OverlayManager />
-
       {/* Overlays específicos que funcionan independientemente */}
       <BirthdayOverlay />
       <DirectorReplacementRequestOverlay />
@@ -92,6 +89,8 @@ function AppContent() {
               <SidebarProvider defaultOpen={false}>
                 <SidebarLayout />
                 <SwipeIndicator />
+                {/* OverlayManager dentro de la zona protegida para acceder al usuario */}
+                <OverlayManager />
                 <div className="flex h-screen w-full bg-gray-50">
                   <AppSidebar />
                   <div className="flex-1 flex flex-col">
