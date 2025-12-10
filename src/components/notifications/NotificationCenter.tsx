@@ -28,6 +28,10 @@ import {
   AlertCircle,
   Users as UsersIcon,
   Megaphone,
+  User,
+  MapPin,
+  Users as GroupIcon,
+  Clock as TimeIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -210,7 +214,7 @@ const NotificationCenter = () => {
   const getNotificationIcon = (type: string, category?: string) => {
     // Iconos para notificaciones de overlays
     const overlayIcons: Record<string, JSX.Element> = {
-      service_overlay: <Video className="w-5 h-5 text-blue-600" />,
+      service_overlay: <Calendar className="w-5 h-5 text-blue-600" />,
       daily_verse: <Book className="w-5 h-5 text-green-600" />,
       daily_advice: <Lightbulb className="w-5 h-5 text-yellow-600" />,
       death_announcement: <AlertCircle className="w-5 h-5 text-gray-600" />,
@@ -300,7 +304,8 @@ const NotificationCenter = () => {
   const filteredNotifications = notifications.filter((notification) => {
     if (filter === "unread") return !notification.is_read;
     if (filter === "overlay") return isOverlayNotification(notification);
-    if (filter === "agenda") return notification.notification_category === "agenda";
+    if (filter === "agenda")
+      return notification.notification_category === "agenda" || notification.type === "service_overlay";
     if (filter === "repertory") return notification.notification_category === "repertory";
     if (filter === "director_replacement") return notification.type === "director_replacement_request";
     return true;
@@ -472,10 +477,131 @@ const NotificationCenter = () => {
                       {notification.message}
                     </div>
 
-                    {/* Mostrar información específica de overlays */}
+                    {/* Mostrar información específica de overlays - AGENDA DE SERVICIOS */}
                     {isOverlayNotification(notification) && notification.metadata && (
                       <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                        <div className="space-y-4">
+                          {/* Información para service_overlay (agenda de presentaciones) */}
+                          {notification.type === "service_overlay" && notification.metadata.services_info && (
+                            <>
+                              <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                                <Calendar className="w-4 h-4" />
+                                Detalles de la Agenda
+                              </h4>
+
+                              {/* Información general */}
+                              <div className="grid grid-cols-2 gap-2 text-sm mb-4">
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="w-3 h-3 text-gray-500" />
+                                  <span className="font-medium">Fecha:</span>
+                                </div>
+                                <div>
+                                  {notification.metadata.service_date
+                                    ? format(new Date(notification.metadata.service_date), "EEEE, dd 'de' MMMM", {
+                                        locale: es,
+                                      })
+                                    : "No especificada"}
+                                </div>
+
+                                <div className="flex items-center gap-1">
+                                  <GroupIcon className="w-3 h-3 text-gray-500" />
+                                  <span className="font-medium">Servicios:</span>
+                                </div>
+                                <div>{notification.metadata.total_services || 0} servicio(s)</div>
+                              </div>
+
+                              {/* Lista detallada de servicios */}
+                              {Array.isArray(notification.metadata.services_info) &&
+                                notification.metadata.services_info.length > 0 && (
+                                  <div className="space-y-3">
+                                    <h5 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                      DESGLOSE POR SERVICIO
+                                    </h5>
+
+                                    {notification.metadata.services_info.map((service: any, index: number) => (
+                                      <div
+                                        key={service.id || index}
+                                        className="p-3 bg-white rounded border border-gray-100 shadow-sm"
+                                      >
+                                        <div className="flex items-center justify-between mb-2">
+                                          <div className="flex items-center gap-2">
+                                            <div
+                                              className="w-3 h-3 rounded-full"
+                                              style={{ backgroundColor: service.group_color || "#3B82F6" }}
+                                            />
+                                            <span className="font-medium text-sm">Servicio {index + 1}</span>
+                                          </div>
+                                          <Badge variant="outline" className="text-xs">
+                                            {service.service_type || "Regular"}
+                                          </Badge>
+                                        </div>
+
+                                        <div className="space-y-2 text-sm">
+                                          <div className="flex items-center gap-1">
+                                            <TimeIcon className="w-3 h-3 text-gray-400" />
+                                            <span className="font-medium">Hora:</span>
+                                            <span>{service.time || "No especificada"}</span>
+                                          </div>
+
+                                          <div className="flex items-center gap-1">
+                                            <User className="w-3 h-3 text-gray-400" />
+                                            <span className="font-medium">Dirige:</span>
+                                            <span className="font-semibold">{service.director || "No asignado"}</span>
+                                          </div>
+
+                                          <div className="flex items-center gap-1">
+                                            <GroupIcon className="w-3 h-3 text-gray-400" />
+                                            <span className="font-medium">Grupo:</span>
+                                            <span>{service.group_name || "No especificado"}</span>
+                                          </div>
+
+                                          {service.location && service.location !== "Templo Principal" && (
+                                            <div className="flex items-center gap-1">
+                                              <MapPin className="w-3 h-3 text-gray-400" />
+                                              <span className="font-medium">Lugar:</span>
+                                              <span>{service.location}</span>
+                                            </div>
+                                          )}
+
+                                          {service.special_activity && (
+                                            <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
+                                              <span className="font-medium">Actividad especial:</span>{" "}
+                                              {service.special_activity}
+                                            </div>
+                                          )}
+
+                                          {/* Canciones del servicio */}
+                                          {Array.isArray(service.songs) && service.songs.length > 0 && (
+                                            <div className="mt-2 pt-2 border-t border-gray-100">
+                                              <div className="flex items-center gap-1 mb-1">
+                                                <Music className="w-3 h-3 text-green-500" />
+                                                <span className="text-xs font-medium">
+                                                  Canciones ({service.songs.length}):
+                                                </span>
+                                              </div>
+                                              <div className="text-xs text-gray-600 space-y-1">
+                                                {service.songs.slice(0, 3).map((song: any, songIndex: number) => (
+                                                  <div key={song.id || songIndex} className="flex items-start gap-1">
+                                                    <span className="text-green-600">•</span>
+                                                    <span className="truncate">{song.title || "Sin título"}</span>
+                                                  </div>
+                                                ))}
+                                                {service.songs.length > 3 && (
+                                                  <div className="text-gray-500 text-xs">
+                                                    +{service.songs.length - 3} más...
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                            </>
+                          )}
+
                           {/* Información para daily_verse */}
                           {notification.type === "daily_verse" && notification.metadata.verse_reference && (
                             <>
@@ -595,6 +721,9 @@ const NotificationCenter = () => {
                                 "priority",
                                 "title",
                                 "instructions",
+                                "service_date",
+                                "total_services",
+                                "services_info",
                               ].includes(key)
                             ) {
                               return (
