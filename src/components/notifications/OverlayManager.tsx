@@ -257,113 +257,120 @@ const OverlayManager: React.FC = () => {
     // Check for pending overlays on mount
     checkPendingOverlays();
 
-    // Setup Supabase Realtime listener for new notifications
-    let channel: ReturnType<typeof supabase.channel> | null = null;
+    // POLLING APPROACH - More reliable than Realtime filters
     let pollInterval: NodeJS.Timeout | null = null;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
+    const overlayTypes = [
+      'service_overlay', 'daily_verse', 'daily_advice',
+      'death_announcement', 'meeting_announcement', 'special_service',
+      'prayer_request', 'blood_donation', 'extraordinary_rehearsal', 'ministry_instructions'
+    ];
+
+    const checkForNewNotifications = async () => {
+      if (!isMounted.current) return;
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      currentUserId.current = user.id;
+      
+      // Check for notifications for this user OR broadcast notifications (recipient_id is null)
+      const { data: notifications, error } = await supabase
+        .from('system_notifications')
+        .select('*')
+        .or(`recipient_id.eq.${user.id},recipient_id.is.null`)
+        .eq('is_read', false)
+        .in('type', overlayTypes)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      if (error) {
+        console.error('📱 [OverlayManager] Error al verificar notificaciones:', error);
+        return;
+      }
+      
+      if (notifications && notifications.length > 0) {
+        const notification = notifications[0];
+        const sessionKey = `overlay_shown_session_${notification.id}`;
+        
+        if (!sessionStorage.getItem(sessionKey)) {
+          sessionStorage.setItem(sessionKey, 'true');
+          console.log('📱 [OverlayManager] ✅ Overlay encontrado via polling:', notification.type, notification);
+          showOverlay({
+            id: notification.id,
+            type: notification.type,
+            title: notification.title,
+            message: notification.message,
+            metadata: notification.metadata || {}
+          });
+        }
+      }
+    };
+
+    // Start aggressive polling every 10 seconds for reliability
+    const startPolling = () => {
+      if (pollInterval) return;
+      console.log('📱 [OverlayManager] Iniciando polling cada 10 segundos');
+      pollInterval = setInterval(checkForNewNotifications, 10000);
+      // Check immediately
+      checkForNewNotifications();
+    };
+
+    // Also setup Realtime for instant notifications (without filter for better reliability)
     const setupRealtimeListener = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      console.log('📱 [OverlayManager] Configurando listener de Realtime para usuario:', user.id);
+      console.log('📱 [OverlayManager] Configurando Realtime + Polling para usuario:', user.id);
       currentUserId.current = user.id;
 
+      // Use Realtime WITHOUT filter - check recipient client-side
       channel = supabase
-        .channel(`overlay-manager-${user.id}-${Date.now()}`)
+        .channel(`overlay-manager-${Date.now()}`)
         .on(
           'postgres_changes',
           {
             event: 'INSERT',
             schema: 'public',
-            table: 'system_notifications',
-            filter: `recipient_id=eq.${user.id}`
+            table: 'system_notifications'
           },
           (payload) => {
             const notification = payload.new as any;
-            console.log('📱 [OverlayManager] Nueva notificación recibida via Realtime:', notification);
+            console.log('📱 [OverlayManager] Notificación recibida via Realtime:', notification);
+
+            // Check if notification is for this user or broadcast
+            if (notification.recipient_id && notification.recipient_id !== user.id) {
+              console.log('📱 [OverlayManager] Notificación no es para este usuario');
+              return;
+            }
 
             // Check if notification type requires overlay
-            const overlayTypes = [
-              'service_overlay',
-              'daily_verse',
-              'daily_advice',
-              'death_announcement',
-              'meeting_announcement',
-              'special_service',
-              'prayer_request',
-              'blood_donation',
-              'extraordinary_rehearsal',
-              'ministry_instructions'
-            ];
-
             if (overlayTypes.includes(notification.type)) {
-              console.log('📱 [OverlayManager] Mostrando overlay automáticamente para tipo:', notification.type);
-              showOverlay({
-                id: notification.id,
-                type: notification.type,
-                title: notification.title,
-                message: notification.message,
-                metadata: notification.metadata || {}
-              });
+              const sessionKey = `overlay_shown_session_${notification.id}`;
+              if (!sessionStorage.getItem(sessionKey)) {
+                sessionStorage.setItem(sessionKey, 'true');
+                console.log('📱 [OverlayManager] ✅ Mostrando overlay via Realtime:', notification.type);
+                showOverlay({
+                  id: notification.id,
+                  type: notification.type,
+                  title: notification.title,
+                  message: notification.message,
+                  metadata: notification.metadata || {}
+                });
+              }
             }
           }
         )
         .subscribe((status) => {
-          console.log('📱 [OverlayManager] Estado de suscripción Realtime:', status);
+          console.log('📱 [OverlayManager] Estado Realtime:', status);
           if (status === 'SUBSCRIBED') {
-            console.log('📱 [OverlayManager] ✅ Realtime conectado correctamente');
-          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-            console.error('📱 [OverlayManager] ❌ Error en Realtime, activando polling de respaldo');
-            startPolling(user.id);
+            console.log('📱 [OverlayManager] ✅ Realtime conectado');
           }
         });
-    };
 
-    // Fallback polling mechanism in case Realtime fails
-    const startPolling = (userId: string) => {
-      if (pollInterval) return;
-      
-      console.log('📱 [OverlayManager] Iniciando polling de respaldo cada 30 segundos');
-      
-      const checkForNewNotifications = async () => {
-        if (!isMounted.current) return;
-        
-        const overlayTypes = [
-          'service_overlay', 'daily_verse', 'daily_advice',
-          'death_announcement', 'meeting_announcement', 'special_service',
-          'prayer_request', 'blood_donation', 'extraordinary_rehearsal', 'ministry_instructions'
-        ];
-        
-        const { data: notifications } = await supabase
-          .from('system_notifications')
-          .select('*')
-          .eq('recipient_id', userId)
-          .eq('is_read', false)
-          .in('type', overlayTypes)
-          .order('created_at', { ascending: false })
-          .limit(1);
-        
-        if (notifications && notifications.length > 0) {
-          const notification = notifications[0];
-          const sessionKey = `overlay_shown_session_${notification.id}`;
-          
-          if (!sessionStorage.getItem(sessionKey)) {
-            sessionStorage.setItem(sessionKey, 'true');
-            console.log('📱 [OverlayManager] Overlay encontrado via polling:', notification);
-            showOverlay({
-              id: notification.id,
-              type: notification.type,
-              title: notification.title,
-              message: notification.message,
-              metadata: notification.metadata || {}
-            });
-          }
-        }
-      };
-      
-      pollInterval = setInterval(checkForNewNotifications, 30000);
-      // Check immediately on first poll
-      checkForNewNotifications();
+      // Always start polling as backup
+      startPolling();
     };
 
     setupRealtimeListener();
