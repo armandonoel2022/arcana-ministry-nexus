@@ -2,12 +2,37 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Bell, Check, Clock, Music, Calendar, UserCheck, MessageSquare, Settings, Gift } from "lucide-react";
+import {
+  Bell,
+  Check,
+  Clock,
+  Music,
+  Calendar,
+  UserCheck,
+  MessageSquare,
+  Settings,
+  Gift,
+  BookOpen,
+  Lightbulb,
+  Heart,
+  AlertTriangle,
+  Users,
+  Mic,
+  Church,
+  Droplets,
+  Volume2,
+  Info,
+  Book,
+  Video,
+  FileText,
+  AlertCircle,
+  Users as UsersIcon,
+  Megaphone,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-// BirthdayNotificationBanner removed - birthdays now handled by OverlayManager and BirthdayOverlay
 
 interface Notification {
   id: string;
@@ -26,7 +51,9 @@ interface Notification {
 const NotificationCenter = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "unread" | "agenda" | "repertory" | "director_replacement">("all");
+  const [filter, setFilter] = useState<"all" | "unread" | "overlay" | "agenda" | "repertory" | "director_replacement">(
+    "all",
+  );
   const { toast } = useToast();
 
   useEffect(() => {
@@ -45,15 +72,19 @@ const NotificationCenter = () => {
           console.log("New notification received:", payload);
           const newNotification = payload.new as Notification;
 
-          // Solo agregar si es para el usuario actual
+          // Solo agregar si es para el usuario actual o es broadcast (recipient_id null)
           supabase.auth.getUser().then(({ data: { user } }) => {
-            if (user && newNotification.recipient_id === user.id) {
+            if (user && (newNotification.recipient_id === user.id || newNotification.recipient_id === null)) {
               setNotifications((prev) => [newNotification, ...prev]);
 
-              toast({
-                title: newNotification.title,
-                description: newNotification.message,
-              });
+              // Solo mostrar toast si no es una notificación programada
+              if (newNotification.notification_category !== "scheduled") {
+                toast({
+                  title: newNotification.title,
+                  description: newNotification.message,
+                  duration: 3000,
+                });
+              }
             }
           });
         },
@@ -97,12 +128,13 @@ const NotificationCenter = () => {
         return;
       }
 
+      // Obtener notificaciones para el usuario actual Y notificaciones broadcast (recipient_id null)
       const { data, error } = await supabase
         .from("system_notifications")
         .select("*")
-        .eq("recipient_id", user.id)
+        .or(`recipient_id.eq.${user.id},recipient_id.is.null`)
         .order("created_at", { ascending: false })
-        .limit(50);
+        .limit(100); // Aumentar límite para incluir más notificaciones
 
       console.log("Notifications query result:", { data, error });
 
@@ -174,22 +206,51 @@ const NotificationCenter = () => {
     }
   };
 
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case "agenda_notification":
-        return <Calendar className="w-5 h-5 text-blue-600" />;
-      case "song_selection":
-        return <Music className="w-5 h-5 text-green-600" />;
-      case "director_replacement_request":
-        return <UserCheck className="w-5 h-5 text-orange-600" />;
-      case "birthday_daily":
-      case "birthday_monthly":
-        return <Gift className="w-5 h-5 text-pink-600" />;
-      case "general":
-        return <MessageSquare className="w-5 h-5 text-gray-600" />;
-      default:
-        return <Bell className="w-5 h-5 text-gray-600" />;
+  // Función mejorada para obtener iconos según el tipo de notificación
+  const getNotificationIcon = (type: string, category?: string) => {
+    // Iconos para notificaciones de overlays
+    const overlayIcons: Record<string, JSX.Element> = {
+      service_overlay: <Video className="w-5 h-5 text-blue-600" />,
+      daily_verse: <Book className="w-5 h-5 text-green-600" />,
+      daily_advice: <Lightbulb className="w-5 h-5 text-yellow-600" />,
+      death_announcement: <AlertCircle className="w-5 h-5 text-gray-600" />,
+      meeting_announcement: <UsersIcon className="w-5 h-5 text-blue-600" />,
+      special_service: <Church className="w-5 h-5 text-purple-600" />,
+      prayer_request: <Heart className="w-5 h-5 text-pink-600" />,
+      blood_donation: <Droplets className="w-5 h-5 text-red-600" />,
+      extraordinary_rehearsal: <Volume2 className="w-5 h-5 text-indigo-600" />,
+      ministry_instructions: <FileText className="w-5 h-5 text-sky-600" />,
+      birthday: <Gift className="w-5 h-5 text-pink-600" />,
+    };
+
+    // Iconos para notificaciones del sistema (categorías específicas)
+    const systemIcons: Record<string, JSX.Element> = {
+      agenda_notification: <Calendar className="w-5 h-5 text-blue-600" />,
+      song_selection: <Music className="w-5 h-5 text-green-600" />,
+      director_replacement_request: <UserCheck className="w-5 h-5 text-orange-600" />,
+      birthday_daily: <Gift className="w-5 h-5 text-pink-600" />,
+      birthday_monthly: <Gift className="w-5 h-5 text-pink-600" />,
+      general: <MessageSquare className="w-5 h-5 text-gray-600" />,
+      scheduled: <Clock className="w-5 h-5 text-gray-600" />,
+    };
+
+    // Primero verificar si es un tipo de overlay
+    if (overlayIcons[type]) {
+      return overlayIcons[type];
     }
+
+    // Luego verificar si es un tipo del sistema
+    if (systemIcons[type]) {
+      return systemIcons[type];
+    }
+
+    // Para notificaciones programadas (category = 'scheduled')
+    if (category === "scheduled") {
+      return <Clock className="w-5 h-5 text-blue-600" />;
+    }
+
+    // Por defecto
+    return <Bell className="w-5 h-5 text-gray-600" />;
   };
 
   const getPriorityColor = (priority: number) => {
@@ -218,8 +279,27 @@ const NotificationCenter = () => {
     }
   };
 
+  // Determinar si una notificación es de tipo overlay
+  const isOverlayNotification = (notification: Notification): boolean => {
+    const overlayTypes = [
+      "service_overlay",
+      "daily_verse",
+      "daily_advice",
+      "death_announcement",
+      "meeting_announcement",
+      "special_service",
+      "prayer_request",
+      "blood_donation",
+      "extraordinary_rehearsal",
+      "ministry_instructions",
+      "birthday",
+    ];
+    return overlayTypes.includes(notification.type) || notification.notification_category === "scheduled";
+  };
+
   const filteredNotifications = notifications.filter((notification) => {
     if (filter === "unread") return !notification.is_read;
+    if (filter === "overlay") return isOverlayNotification(notification);
     if (filter === "agenda") return notification.notification_category === "agenda";
     if (filter === "repertory") return notification.notification_category === "repertory";
     if (filter === "director_replacement") return notification.type === "director_replacement_request";
@@ -227,6 +307,7 @@ const NotificationCenter = () => {
   });
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const overlayCount = notifications.filter(isOverlayNotification).length;
 
   if (isLoading) {
     return (
@@ -270,13 +351,21 @@ const NotificationCenter = () => {
             )}
           </div>
 
-          {/* Filters */}
+          {/* Filters - Mejorados para incluir overlays */}
           <div className="flex flex-wrap gap-2 justify-center sm:justify-start w-full">
             <Button variant={filter === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("all")}>
               Todas ({notifications.length})
             </Button>
             <Button variant={filter === "unread" ? "default" : "outline"} size="sm" onClick={() => setFilter("unread")}>
               Sin leer ({unreadCount})
+            </Button>
+            <Button
+              variant={filter === "overlay" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilter("overlay")}
+            >
+              <Megaphone className="w-4 h-4 mr-1" />
+              Overlays ({overlayCount})
             </Button>
             <Button variant={filter === "agenda" ? "default" : "outline"} size="sm" onClick={() => setFilter("agenda")}>
               <Calendar className="w-4 h-4 mr-1" />
@@ -322,7 +411,9 @@ const NotificationCenter = () => {
                   <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-3">
                     <div className="flex items-start justify-between gap-2 w-full">
                       <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
-                        <div className="flex-shrink-0 mt-0.5">{getNotificationIcon(notification.type)}</div>
+                        <div className="flex-shrink-0 mt-0.5">
+                          {getNotificationIcon(notification.type, notification.notification_category)}
+                        </div>
                         <div className="min-w-0 flex-1">
                           <CardTitle className="text-sm sm:text-lg flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                             <span className="break-words text-center sm:text-left w-full">{notification.title}</span>
@@ -330,6 +421,11 @@ const NotificationCenter = () => {
                               {!notification.is_read && (
                                 <Badge variant="secondary" className="text-xs flex-shrink-0">
                                   Nuevo
+                                </Badge>
+                              )}
+                              {notification.notification_category === "scheduled" && (
+                                <Badge variant="outline" className="text-xs flex-shrink-0 bg-blue-50">
+                                  Programado
                                 </Badge>
                               )}
                               <Badge variant="outline" className="text-xs flex-shrink-0 hidden sm:inline-flex">
@@ -376,7 +472,145 @@ const NotificationCenter = () => {
                       {notification.message}
                     </div>
 
-                    {/* Birthday notifications show a simple indicator - overlay handled separately */}
+                    {/* Mostrar información específica de overlays */}
+                    {isOverlayNotification(notification) && notification.metadata && (
+                      <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                          {/* Información para daily_verse */}
+                          {notification.type === "daily_verse" && notification.metadata.verse_reference && (
+                            <>
+                              <div className="font-medium">Referencia:</div>
+                              <div>{notification.metadata.verse_reference}</div>
+                              {notification.metadata.verse_text && (
+                                <>
+                                  <div className="font-medium">Versículo:</div>
+                                  <div className="italic">{notification.metadata.verse_text}</div>
+                                </>
+                              )}
+                            </>
+                          )}
+
+                          {/* Información para daily_advice */}
+                          {notification.type === "daily_advice" && (
+                            <>
+                              {notification.metadata.advice_title && (
+                                <>
+                                  <div className="font-medium">Título:</div>
+                                  <div>{notification.metadata.advice_title}</div>
+                                </>
+                              )}
+                            </>
+                          )}
+
+                          {/* Información para blood_donation */}
+                          {notification.type === "blood_donation" && (
+                            <>
+                              {notification.metadata.recipient_name && (
+                                <>
+                                  <div className="font-medium">Paciente:</div>
+                                  <div>{notification.metadata.recipient_name}</div>
+                                </>
+                              )}
+                              {notification.metadata.blood_type && (
+                                <>
+                                  <div className="font-medium">Tipo de sangre:</div>
+                                  <div>{notification.metadata.blood_type}</div>
+                                </>
+                              )}
+                              {notification.metadata.medical_center && (
+                                <>
+                                  <div className="font-medium">Centro médico:</div>
+                                  <div>{notification.metadata.medical_center}</div>
+                                </>
+                              )}
+                            </>
+                          )}
+
+                          {/* Información para extraordinary_rehearsal */}
+                          {notification.type === "extraordinary_rehearsal" && (
+                            <>
+                              {notification.metadata.activity_name && (
+                                <>
+                                  <div className="font-medium">Actividad:</div>
+                                  <div>{notification.metadata.activity_name}</div>
+                                </>
+                              )}
+                              {notification.metadata.date && (
+                                <>
+                                  <div className="font-medium">Fecha:</div>
+                                  <div>{notification.metadata.date}</div>
+                                </>
+                              )}
+                              {notification.metadata.rehearsal_time && (
+                                <>
+                                  <div className="font-medium">Hora:</div>
+                                  <div>{notification.metadata.rehearsal_time}</div>
+                                </>
+                              )}
+                            </>
+                          )}
+
+                          {/* Información para ministry_instructions */}
+                          {notification.type === "ministry_instructions" && (
+                            <>
+                              {notification.metadata.priority && (
+                                <>
+                                  <div className="font-medium">Prioridad:</div>
+                                  <div className="capitalize">{notification.metadata.priority}</div>
+                                </>
+                              )}
+                            </>
+                          )}
+
+                          {/* Información para anuncios generales */}
+                          {["death_announcement", "meeting_announcement", "special_service", "prayer_request"].includes(
+                            notification.type,
+                          ) && (
+                            <>
+                              {notification.metadata.title && (
+                                <>
+                                  <div className="font-medium">Título del anuncio:</div>
+                                  <div>{notification.metadata.title}</div>
+                                </>
+                              )}
+                            </>
+                          )}
+
+                          {/* Mostrar metadata general si existe */}
+                          {Object.entries(notification.metadata).map(([key, value]) => {
+                            if (
+                              typeof value === "string" &&
+                              value &&
+                              ![
+                                "verse_reference",
+                                "verse_text",
+                                "advice_title",
+                                "advice_message",
+                                "recipient_name",
+                                "blood_type",
+                                "medical_center",
+                                "activity_name",
+                                "date",
+                                "rehearsal_time",
+                                "priority",
+                                "title",
+                                "instructions",
+                              ].includes(key)
+                            ) {
+                              return (
+                                <React.Fragment key={key}>
+                                  <div className="font-medium">{key.replace(/_/g, " ")}:</div>
+                                  <div>{String(value)}</div>
+                                </React.Fragment>
+                              );
+                            }
+                            return null;
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Birthday notifications */}
                     {(notification.type === "birthday_daily" ||
                       notification.type === "birthday_monthly" ||
                       (notification.type === "general" && notification.metadata?.birthday)) &&
@@ -389,8 +623,8 @@ const NotificationCenter = () => {
                         </div>
                       )}
 
-                    {/* Show metadata if available */}
-                    {notification.metadata && (
+                    {/* Mostrar metadata del sistema (no overlay) */}
+                    {!isOverlayNotification(notification) && notification.metadata && (
                       <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded break-words text-center sm:text-left">
                         {notification.type === "song_selection" && notification.metadata.song_title && (
                           <div className="break-words">
