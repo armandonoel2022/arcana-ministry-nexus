@@ -17,6 +17,8 @@ import {
   MessageCircle,
   Mic,
   BookOpen,
+  User,
+  MapPin as MapPinIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays, startOfWeek, endOfWeek, getDay, isWithinInterval, parseISO } from "date-fns";
@@ -232,6 +234,95 @@ const GROUP_CONFIG = {
   "Grupo de Massy": {
     color_theme: "#EC4899",
   },
+};
+
+// Función para crear notificación en el centro de notificaciones
+const createServiceAgendaNotification = async (services: WeekendService[]) => {
+  try {
+    console.log("🎯 Creando notificación de agenda para", services.length, "servicios");
+
+    const title = `Agenda de Presentaciones - ${format(new Date(services[0].service_date), "EEEE, dd 'de' MMMM", { locale: es })}`;
+
+    // Crear mensaje estructurado
+    let message = "📅 PROGRAMA DE SERVICIOS DEL FIN DE SEMANA\n\n";
+
+    services.forEach((service, index) => {
+      const serviceTime = getServiceTime(service.title);
+      const groupName = service.worship_groups?.name || "Grupo de Alabanza";
+      const director = service.leader || "Por asignar";
+
+      message += `🎵 SERVICIO ${index + 1} - ${serviceTime}\n`;
+      message += `   Dirige: ${director}\n`;
+      message += `   Grupo: ${groupName}\n`;
+      message += `   Hora: ${serviceTime}\n`;
+
+      if (service.selected_songs && service.selected_songs.length > 0) {
+        message += `   Canciones: ${service.selected_songs.map((s) => s.title).join(", ")}\n`;
+      }
+
+      message += "\n";
+    });
+
+    // Crear metadata detallada
+    const metadata = {
+      service_date: services[0].service_date,
+      total_services: services.length,
+      services_info: services.map((service) => ({
+        id: service.id,
+        time: getServiceTime(service.title),
+        director: service.leader,
+        group_name: service.worship_groups?.name || "Grupo de Alabanza",
+        group_color: service.worship_groups?.color_theme || "#3B82F6",
+        service_type: service.service_type || "regular",
+        location: service.location || "Templo Principal",
+        special_activity: service.special_activity,
+        songs:
+          service.selected_songs?.map((song) => ({
+            id: song.id,
+            title: song.title,
+            artist: song.artist,
+            order: song.song_order,
+          })) || [],
+        members:
+          service.group_members?.map((member) => ({
+            id: member.user_id,
+            name: member.profiles?.full_name,
+            role: member.instrument,
+            is_leader: member.is_leader,
+          })) || [],
+      })),
+    };
+
+    // Insertar la notificación en system_notifications
+    const { data, error } = await supabase
+      .from("system_notifications")
+      .insert({
+        type: "service_overlay",
+        title: title,
+        message: message,
+        recipient_id: null, // Para todos los usuarios
+        notification_category: "agenda",
+        priority: 2, // Prioridad media
+        metadata: metadata,
+        is_read: false,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("❌ Error creando notificación de agenda:", error);
+      toast.error("No se pudo crear el registro de la agenda");
+      return null;
+    } else {
+      console.log("✅ Notificación de agenda creada exitosamente:", data.id);
+      toast.success("Agenda registrada en notificaciones");
+      return data;
+    }
+  } catch (error) {
+    console.error("❌ Error en createServiceAgendaNotification:", error);
+    toast.error("Error al crear registro de agenda");
+    return null;
+  }
 };
 
 // Función COMPLEJA para determinar miembros del grupo basado en todas las reglas
@@ -604,40 +695,42 @@ const ServiceNotificationOverlay = ({
   const [confirmedServices, setConfirmedServices] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<"services" | "preparations">("services");
   const serviceCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const [notificationCreated, setNotificationCreated] = useState(false);
 
   useEffect(() => {
     console.log("🎯 ServiceNotificationOverlay mounted with forceShow:", forceShow);
-    
+
     // Si forceShow es true, cargar servicios inmediatamente
     if (forceShow) {
       console.log("⚡ ForceShow activado - cargando servicios del fin de semana");
       setIsLoading(true);
       setIsVisible(true);
-      
+
       // Cargar servicios
-      fetchWeekendServices().then(() => {
-        setIsLoading(false);
-        // Pequeño delay para la animación
-        setTimeout(() => {
-          setIsAnimating(true);
-          console.log("✅ Overlay activado y animado");
-        }, 100);
-      }).catch((error) => {
-        console.error("❌ Error cargando servicios:", error);
-        setIsLoading(false);
-      });
+      fetchWeekendServices()
+        .then(() => {
+          setIsLoading(false);
+          // Pequeño delay para la animación
+          setTimeout(() => {
+            setIsAnimating(true);
+            console.log("✅ Overlay activado y animado");
+          }, 100);
+        })
+        .catch((error) => {
+          console.error("❌ Error cargando servicios:", error);
+          setIsLoading(false);
+        });
     }
   }, [forceShow]);
 
-  // Debugging adicional: monitorear cambios de estado
+  // Cuando los servicios se cargan, crear la notificación automáticamente
   useEffect(() => {
-    console.log("🔍 Overlay state:", {
-      isVisible,
-      isLoading,
-      isAnimating,
-      forceShow,
-    });
-  }, [isVisible, isLoading, isAnimating, forceShow]);
+    if (services.length > 0 && !notificationCreated && forceShow) {
+      console.log("📱 Servicios cargados, creando notificación de agenda...");
+      createServiceAgendaNotification(services);
+      setNotificationCreated(true);
+    }
+  }, [services, notificationCreated, forceShow]);
 
   const showServiceProgramOverlay = (metadata: ServiceProgramNotification) => {
     if (metadata.services && Array.isArray(metadata.services)) {
@@ -985,56 +1078,18 @@ const ServiceNotificationOverlay = ({
 
   const saveToNotifications = async () => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
       if (services.length === 0) {
         toast.error("No hay servicios para guardar");
         return;
       }
 
-      const servicesList = services
-        .map((service) => {
-          const time = getServiceTime(service.title);
-          const songsText =
-            service.selected_songs && service.selected_songs.length > 0
-              ? `\nCanciones: ${service.selected_songs.map((s) => s.title).join(", ")}`
-              : "";
-          return `${time} - ${service.leader}${songsText}`;
-        })
-        .join("\n\n• ");
+      // Usar la función para crear notificación
+      const notification = await createServiceAgendaNotification(services);
 
-      await supabase.from("system_notifications").insert({
-        recipient_id: user.id,
-        type: "service_program",
-        title: "Programa de Servicios - Fin de Semana",
-        message: `Servicios programados para ${format(new Date(services[0].service_date), "EEEE, dd 'de' MMMM", { locale: es })}:\n\n• ${servicesList}`,
-        notification_category: "agenda",
-        metadata: {
-          service_date: services[0].service_date,
-          services: services.map((s) => ({
-            id: s.id,
-            date: s.service_date,
-            title: s.title,
-            leader: s.leader,
-            group: s.worship_groups?.name,
-            time: getServiceTime(s.title),
-            director: {
-              name: s.leader,
-              photo: s.group_members.find((m) => m.is_leader)?.profiles?.photo_url,
-            },
-            voices: getResponsibleVoices(s.group_members).map((v) => ({
-              name: v.profiles?.full_name,
-              photo: v.profiles?.photo_url,
-            })),
-            songs: s.selected_songs || [],
-          })),
-        },
-      });
+      if (notification) {
+        toast.success("Programa guardado en notificaciones");
+      }
 
-      toast.success("Programa guardado en notificaciones");
       closeOverlay();
     } catch (error) {
       console.error("Error saving notification:", error);
@@ -1979,7 +2034,7 @@ const ServiceNotificationOverlay = ({
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" onClick={saveToNotifications} className="flex items-center gap-2">
                     <Save className="w-4 h-4" />
-                    Guardar
+                    Guardar en Notificaciones
                   </Button>
                   <Button
                     variant="ghost"
