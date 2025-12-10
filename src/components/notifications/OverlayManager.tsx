@@ -39,17 +39,12 @@ const OverlayManager: React.FC = () => {
   const hasInitialized = useRef(false);
   const currentUserId = useRef<string | null>(null);
   const isMounted = useRef(true);
-  const lastScheduledCheck = useRef<number>(0);
-  const scheduledNotificationsChecked = useRef<Set<string>>(new Set());
+  const lastMinuteChecked = useRef<string>("");
 
   // Function to show overlay with safety check
   const showOverlay = useCallback((notification: OverlayData) => {
     if (!isMounted.current) return;
     console.log("📱 [OverlayManager] Mostrando overlay:", notification.type, notification);
-
-    // Clear any existing overlay first
-    setActiveOverlay(null);
-    setOverlayType(null);
 
     // Force a small delay to ensure DOM is ready
     setTimeout(() => {
@@ -57,7 +52,7 @@ const OverlayManager: React.FC = () => {
         setActiveOverlay(notification);
         setOverlayType(notification.type);
       }
-    }, 50);
+    }, 100);
   }, []);
 
   // Function to dismiss overlay and mark as read
@@ -82,26 +77,18 @@ const OverlayManager: React.FC = () => {
 
   // Check for pending overlays when component mounts - only show ONE pending overlay
   const checkPendingOverlays = useCallback(async () => {
-    // Prevent multiple initializations
-    if (hasInitialized.current) {
-      console.log("📱 [OverlayManager] Ya inicializado, ignorando");
-      return;
-    }
+    if (hasInitialized.current) return;
 
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) {
-        console.log("📱 [OverlayManager] No hay usuario autenticado");
-        return;
-      }
+      if (!user) return;
 
       currentUserId.current = user.id;
       hasInitialized.current = true;
       console.log("📱 [OverlayManager] Verificando overlays pendientes para usuario:", user.id);
 
-      // Only get overlay types that should show as modal overlays (NOT regular notifications)
       const overlayTypes = [
         "service_overlay",
         "daily_verse",
@@ -125,20 +112,14 @@ const OverlayManager: React.FC = () => {
         .order("created_at", { ascending: false })
         .limit(1);
 
-      if (error) {
-        console.error("Error checking pending overlays:", error);
-        return;
-      }
+      if (error) return;
 
       if (pendingNotifications && pendingNotifications.length > 0) {
         const notification = pendingNotifications[0];
         console.log("📱 [OverlayManager] Overlay pendiente encontrado:", notification);
 
-        // Check if this notification was already shown in this session
         const sessionKey = `overlay_shown_session_${notification.id}`;
-        const shownInSession = sessionStorage.getItem(sessionKey);
-
-        if (!shownInSession) {
+        if (!sessionStorage.getItem(sessionKey)) {
           sessionStorage.setItem(sessionKey, "true");
           showOverlay({
             id: notification.id,
@@ -147,8 +128,6 @@ const OverlayManager: React.FC = () => {
             message: notification.message,
             metadata: notification.metadata || {},
           });
-        } else {
-          console.log("📱 [OverlayManager] Overlay ya mostrado en esta sesión");
         }
       }
     } catch (error) {
@@ -156,17 +135,9 @@ const OverlayManager: React.FC = () => {
     }
   }, [showOverlay]);
 
-  // Función mejorada para verificar notificaciones programadas
+  // Función SIMPLE para verificar notificaciones programadas - DISPARA EXACTAMENTE LO MISMO QUE PREVIEW
   const checkScheduledNotifications = useCallback(async () => {
     if (!isMounted.current) return;
-
-    const now = Date.now();
-    // Evitar verificar demasiado frecuentemente (mínimo 10 segundos)
-    if (now - lastScheduledCheck.current < 10000) {
-      return;
-    }
-
-    lastScheduledCheck.current = now;
 
     try {
       // Get current time in Dominican Republic
@@ -176,91 +147,237 @@ const OverlayManager: React.FC = () => {
       const currentDay = dominicanTime.getDay();
       const currentHour = dominicanTime.getHours();
       const currentMinute = dominicanTime.getMinutes();
+      const currentSecond = dominicanTime.getSeconds();
 
-      // Formato HH:MM para comparación flexible
+      // Verificar solo en el segundo 0 de cada minuto (para evitar múltiples ejecuciones)
+      if (currentSecond !== 0) return;
+
+      const currentMinuteKey = `${currentDay}-${currentHour}:${currentMinute}`;
+      if (lastMinuteChecked.current === currentMinuteKey) return;
+
+      lastMinuteChecked.current = currentMinuteKey;
+
       const currentTimeFormatted = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
       const currentTimeWithSeconds = `${currentTimeFormatted}:00`;
 
-      console.log(
-        "📱 [OverlayManager] Verificando notificaciones programadas - Día:",
-        currentDay,
-        "Hora:",
-        currentTimeFormatted,
-      );
+      console.log("📱 [OverlayManager] Verificando notificaciones programadas:", currentTimeFormatted);
 
-      // Primero, verificar con hora exacta (HH:MM:00)
-      const { data: exactTimeNotifications, error: exactError } = await supabase
+      // Buscar notificaciones programadas para ESTE minuto exacto
+      const { data: scheduledNotifications, error } = await supabase
         .from("scheduled_notifications")
         .select("*")
         .contains("days_of_week", [currentDay])
         .eq("time", currentTimeWithSeconds)
         .eq("is_active", true);
 
-      if (exactError) {
-        console.error("📱 [OverlayManager] Error verificando notificaciones exactas:", exactError);
+      if (error) {
+        console.error("Error verificando notificaciones programadas:", error);
+        return;
       }
 
-      // También verificar con formato HH:MM (sin segundos)
-      const { data: hourMinuteNotifications, error: hmError } = await supabase
-        .from("scheduled_notifications")
-        .select("*")
-        .contains("days_of_week", [currentDay])
-        .eq("is_active", true);
+      if (scheduledNotifications && scheduledNotifications.length > 0) {
+        console.log("📱 [OverlayManager] ✅ Notificaciones programadas encontradas:", scheduledNotifications.length);
 
-      if (hmError) {
-        console.error("📱 [OverlayManager] Error verificando notificaciones por hora/minuto:", hmError);
-      }
+        for (const notification of scheduledNotifications) {
+          console.log("📱 [OverlayManager] 🚀 Disparando overlay programado:", notification.notification_type);
 
-      // Combinar resultados
-      const allNotifications = [
-        ...(exactTimeNotifications || []),
-        ...(hourMinuteNotifications || []).filter((notification) => notification.time.startsWith(currentTimeFormatted)),
-      ];
+          // DISPARAR EXACTAMENTE LO MISMO QUE SE DISPARA EN EL PREVIEW
+          switch (notification.notification_type) {
+            case "service_overlay":
+              window.dispatchEvent(
+                new CustomEvent("showOverlay", {
+                  detail: {
+                    id: `scheduled-service-${Date.now()}`,
+                    type: "service_overlay",
+                    title: notification.name || "Programa de Servicios",
+                    message: notification.description || "",
+                    metadata: notification.metadata || {},
+                  },
+                }),
+              );
+              break;
 
-      // Eliminar duplicados
-      const uniqueNotifications = Array.from(new Map(allNotifications.map((item) => [item.id, item])).values());
+            case "daily_verse":
+              try {
+                // Cargar versículo actual del día
+                const today = new Date().toISOString().split("T")[0];
+                const { data: dailyVerse } = await supabase
+                  .from("daily_verses")
+                  .select(`*, bible_verses (*)`)
+                  .eq("date", today)
+                  .single();
 
-      if (uniqueNotifications.length > 0) {
-        console.log("📱 [OverlayManager] ✅ Notificaciones programadas encontradas:", uniqueNotifications.length);
+                if (dailyVerse && dailyVerse.bible_verses) {
+                  const verse = dailyVerse.bible_verses as any;
+                  window.dispatchEvent(
+                    new CustomEvent("showOverlay", {
+                      detail: {
+                        id: `scheduled-verse-${Date.now()}`,
+                        type: "daily_verse",
+                        title: "Versículo del Día",
+                        message: verse.text,
+                        metadata: {
+                          verse_text: verse.text,
+                          verse_reference: `${verse.book} ${verse.chapter}:${verse.verse}`,
+                        },
+                      },
+                    }),
+                  );
+                } else {
+                  // Fallback: usar versículo por defecto
+                  window.dispatchEvent(
+                    new CustomEvent("showOverlay", {
+                      detail: {
+                        id: `scheduled-verse-${Date.now()}`,
+                        type: "daily_verse",
+                        title: "Versículo del Día",
+                        message:
+                          "Porque de tal manera amó Dios al mundo, que ha dado a su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna.",
+                        metadata: {
+                          verse_text:
+                            "Porque de tal manera amó Dios al mundo, que ha dado a su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna.",
+                          verse_reference: "Juan 3:16",
+                        },
+                      },
+                    }),
+                  );
+                }
+              } catch (error) {
+                console.error("Error cargando versículo:", error);
+                // Usar fallback
+                window.dispatchEvent(
+                  new CustomEvent("showOverlay", {
+                    detail: {
+                      id: `scheduled-verse-${Date.now()}`,
+                      type: "daily_verse",
+                      title: "Versículo del Día",
+                      message:
+                        "Porque de tal manera amó Dios al mundo, que ha dado a su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna.",
+                      metadata: {
+                        verse_text:
+                          "Porque de tal manera amó Dios al mundo, que ha dado a su Hijo unigénito, para que todo aquel que en él cree, no se pierda, mas tenga vida eterna.",
+                        verse_reference: "Juan 3:16",
+                      },
+                    },
+                  }),
+                );
+              }
+              break;
 
-        for (const notification of uniqueNotifications) {
-          // Crear clave única para esta ejecución específica
-          const executionKey = `scheduled_exec_${notification.id}_${currentDay}_${currentTimeFormatted}`;
+            case "daily_advice":
+              try {
+                // Cargar consejo aleatorio
+                const { data: adviceList } = await supabase.from("daily_advice").select("*").eq("is_active", true);
 
-          // Verificar si ya se ejecutó esta notificación en este minuto específico
-          if (!scheduledNotificationsChecked.current.has(executionKey)) {
-            scheduledNotificationsChecked.current.add(executionKey);
+                if (adviceList && adviceList.length > 0) {
+                  const randomAdvice = adviceList[Math.floor(Math.random() * adviceList.length)];
+                  window.dispatchEvent(
+                    new CustomEvent("showOverlay", {
+                      detail: {
+                        id: `scheduled-advice-${Date.now()}`,
+                        type: "daily_advice",
+                        title: "Consejo del Día",
+                        message: randomAdvice.message,
+                        metadata: {
+                          advice_title: randomAdvice.title,
+                          advice_message: randomAdvice.message,
+                        },
+                      },
+                    }),
+                  );
+                } else {
+                  // Fallback
+                  window.dispatchEvent(
+                    new CustomEvent("showOverlay", {
+                      detail: {
+                        id: `scheduled-advice-${Date.now()}`,
+                        type: "daily_advice",
+                        title: "Consejo del Día",
+                        message: "La excelencia viene de la práctica constante. Dedica tiempo a ensayar.",
+                        metadata: {
+                          advice_title: "Consejo del Día",
+                          advice_message: "La excelencia viene de la práctica constante. Dedica tiempo a ensayar.",
+                        },
+                      },
+                    }),
+                  );
+                }
+              } catch (error) {
+                console.error("Error cargando consejo:", error);
+                // Fallback
+                window.dispatchEvent(
+                  new CustomEvent("showOverlay", {
+                    detail: {
+                      id: `scheduled-advice-${Date.now()}`,
+                      type: "daily_advice",
+                      title: "Consejo del Día",
+                      message: "La excelencia viene de la práctica constante. Dedica tiempo a ensayar.",
+                      metadata: {
+                        advice_title: "Consejo del Día",
+                        advice_message: "La excelencia viene de la práctica constante. Dedica tiempo a ensayar.",
+                      },
+                    },
+                  }),
+                );
+              }
+              break;
 
-            console.log("📱 [OverlayManager] 🚀 Disparando overlay programado:", notification.notification_type);
+            case "blood_donation":
+              window.dispatchEvent(
+                new CustomEvent("showOverlay", {
+                  detail: {
+                    id: `scheduled-blood-${Date.now()}`,
+                    type: "blood_donation",
+                    title: notification.metadata?.title || notification.name || "Donación de Sangre Urgente",
+                    message: notification.description || "",
+                    metadata: notification.metadata || {},
+                  },
+                }),
+              );
+              break;
 
-            // Crear system_notification correspondiente
-            const { data: userData } = await supabase.auth.getUser();
-            const userId = userData?.user?.id;
+            case "extraordinary_rehearsal":
+              window.dispatchEvent(
+                new CustomEvent("showOverlay", {
+                  detail: {
+                    id: `scheduled-rehearsal-${Date.now()}`,
+                    type: "extraordinary_rehearsal",
+                    title: notification.metadata?.title || notification.name || "Ensayo Extraordinario",
+                    message: notification.description || "",
+                    metadata: notification.metadata || {},
+                  },
+                }),
+              );
+              break;
 
-            // Insertar en system_notifications para que sea procesado por el sistema normal
-            const { error: insertError } = await supabase.from("system_notifications").insert({
-              type: notification.notification_type,
-              title: notification.name,
-              message: notification.description || "Notificación programada",
-              recipient_id: userId, // Para usuario específico, o null para todos
-              notification_category: "scheduled",
-              priority: 1,
-              metadata: notification.metadata || {},
-              created_at: new Date().toISOString(),
-              is_read: false,
-            });
+            case "ministry_instructions":
+              window.dispatchEvent(
+                new CustomEvent("showOverlay", {
+                  detail: {
+                    id: `scheduled-instructions-${Date.now()}`,
+                    type: "ministry_instructions",
+                    title: notification.metadata?.title || notification.name || "Instrucciones",
+                    message: notification.description || notification.metadata?.instructions || "",
+                    metadata: notification.metadata || {},
+                  },
+                }),
+              );
+              break;
 
-            if (insertError) {
-              console.error("📱 [OverlayManager] Error insertando notificación:", insertError);
-            } else {
-              console.log("📱 [OverlayManager] ✅ Notificación programada insertada en system_notifications");
-            }
+            default:
+              // Para announcements (death_announcement, meeting_announcement, etc.)
+              window.dispatchEvent(
+                new CustomEvent("showOverlay", {
+                  detail: {
+                    id: `scheduled-${notification.notification_type}-${Date.now()}`,
+                    type: notification.notification_type,
+                    title: notification.metadata?.title || notification.name || "Anuncio",
+                    message: notification.description || notification.metadata?.message || "",
+                    metadata: notification.metadata || {},
+                  },
+                }),
+              );
           }
-        }
-
-        // Limpiar el set periódicamente para evitar acumulación excesiva
-        if (scheduledNotificationsChecked.current.size > 100) {
-          scheduledNotificationsChecked.current.clear();
         }
       }
     } catch (error) {
@@ -380,144 +497,19 @@ const OverlayManager: React.FC = () => {
     // Check for pending overlays on mount
     checkPendingOverlays();
 
-    // Configurar verificación de notificaciones programadas
+    // Configurar verificación de notificaciones programadas - MUCHO MÁS SIMPLE
     let scheduledCheckInterval: NodeJS.Timeout | null = null;
-    let pollInterval: NodeJS.Timeout | null = null;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-    const overlayTypes = [
-      "service_overlay",
-      "daily_verse",
-      "daily_advice",
-      "death_announcement",
-      "meeting_announcement",
-      "special_service",
-      "prayer_request",
-      "blood_donation",
-      "extraordinary_rehearsal",
-      "ministry_instructions",
-    ];
-
-    const checkForNewNotifications = async () => {
-      if (!isMounted.current) return;
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      currentUserId.current = user.id;
-
-      // Check for notifications for this user OR broadcast notifications (recipient_id is null)
-      const { data: notifications, error } = await supabase
-        .from("system_notifications")
-        .select("*")
-        .or(`recipient_id.eq.${user.id},recipient_id.is.null`)
-        .eq("is_read", false)
-        .in("type", overlayTypes)
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      if (error) {
-        console.error("📱 [OverlayManager] Error al verificar notificaciones:", error);
-        return;
-      }
-
-      if (notifications && notifications.length > 0) {
-        const notification = notifications[0];
-        const sessionKey = `overlay_shown_session_${notification.id}`;
-
-        if (!sessionStorage.getItem(sessionKey)) {
-          sessionStorage.setItem(sessionKey, "true");
-          console.log("📱 [OverlayManager] ✅ Overlay encontrado via polling:", notification.type, notification);
-          showOverlay({
-            id: notification.id,
-            type: notification.type,
-            title: notification.title,
-            message: notification.message,
-            metadata: notification.metadata || {},
-          });
-        }
-      }
-    };
-
-    // Start checking scheduled notifications every 30 seconds
+    // Start checking scheduled notifications every 10 seconds
     const startScheduledCheck = () => {
       if (scheduledCheckInterval) return;
-      console.log("📱 [OverlayManager] Iniciando verificación de notificaciones programadas cada 30 segundos");
-      scheduledCheckInterval = setInterval(checkScheduledNotifications, 30000);
+      console.log("📱 [OverlayManager] Iniciando verificación de notificaciones programadas cada 10 segundos");
+      scheduledCheckInterval = setInterval(checkScheduledNotifications, 10000);
       // Check immediately
       setTimeout(() => checkScheduledNotifications(), 2000);
     };
 
-    // Start polling for system_notifications as backup
-    const startPolling = () => {
-      if (pollInterval) return;
-      console.log("📱 [OverlayManager] Iniciando polling de system_notifications cada 15 segundos");
-      pollInterval = setInterval(checkForNewNotifications, 15000);
-      checkForNewNotifications();
-    };
-
-    // Setup Realtime for instant notifications
-    const setupRealtimeListener = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      console.log("📱 [OverlayManager] Configurando sistema de overlays para usuario:", user.id);
-      currentUserId.current = user.id;
-
-      // Use Realtime WITHOUT filter - check recipient client-side
-      channel = supabase
-        .channel(`overlay-manager-${Date.now()}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "system_notifications",
-          },
-          (payload) => {
-            const notification = payload.new as any;
-            console.log("📱 [OverlayManager] Notificación recibida via Realtime:", notification);
-
-            // Check if notification is for this user or broadcast
-            if (notification.recipient_id && notification.recipient_id !== user.id) {
-              console.log("📱 [OverlayManager] Notificación no es para este usuario");
-              return;
-            }
-
-            // Check if notification type requires overlay
-            if (overlayTypes.includes(notification.type)) {
-              const sessionKey = `overlay_shown_session_${notification.id}`;
-              if (!sessionStorage.getItem(sessionKey)) {
-                sessionStorage.setItem(sessionKey, "true");
-                console.log("📱 [OverlayManager] ✅ Mostrando overlay via Realtime:", notification.type);
-                showOverlay({
-                  id: notification.id,
-                  type: notification.type,
-                  title: notification.title,
-                  message: notification.message,
-                  metadata: notification.metadata || {},
-                });
-              }
-            }
-          },
-        )
-        .subscribe((status) => {
-          console.log("📱 [OverlayManager] Estado Realtime:", status);
-          if (status === "SUBSCRIBED") {
-            console.log("📱 [OverlayManager] ✅ Realtime conectado");
-          }
-        });
-
-      // Start all checks
-      startScheduledCheck();
-      startPolling();
-    };
-
-    setupRealtimeListener();
+    startScheduledCheck();
 
     // Cleanup
     return () => {
@@ -532,12 +524,6 @@ const OverlayManager: React.FC = () => {
       window.removeEventListener("showInstructionsOverlay", handleShowInstructionsOverlay as EventListener);
       window.removeEventListener("showAnnouncementOverlay", handleShowAnnouncementOverlay as EventListener);
 
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
-      if (pollInterval) {
-        clearInterval(pollInterval);
-      }
       if (scheduledCheckInterval) {
         clearInterval(scheduledCheckInterval);
       }
