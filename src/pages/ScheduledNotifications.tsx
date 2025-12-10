@@ -315,10 +315,91 @@ const ScheduledNotifications = () => {
     return colors[type as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
 
-  // Dispatch overlay event via OverlayManager
-  const dispatchOverlayEvent = (notification: ScheduledNotification) => {
+  // Dispatch overlay event via OverlayManager - loads real data from DB
+  const dispatchOverlayEvent = async (notification: ScheduledNotification, loadRealData: boolean = false) => {
     const metadata = notification.metadata || {};
     
+    // For preview, load real data from database for certain types
+    if (loadRealData) {
+      try {
+        switch (notification.notification_type) {
+          case 'daily_verse': {
+            const today = new Date().toISOString().split("T")[0];
+            const { data: dailyVerse } = await supabase
+              .from("daily_verses")
+              .select(`*, bible_verses (*)`)
+              .eq("date", today)
+              .single();
+
+            if (dailyVerse && dailyVerse.bible_verses) {
+              const verse = dailyVerse.bible_verses as any;
+              window.dispatchEvent(new CustomEvent('showOverlay', {
+                detail: {
+                  id: `preview-verse-${Date.now()}`,
+                  type: 'daily_verse',
+                  title: 'Versículo del Día',
+                  message: verse.text,
+                  metadata: {
+                    verse_text: verse.text,
+                    verse_reference: `${verse.book} ${verse.chapter}:${verse.verse}`,
+                  },
+                }
+              }));
+              return;
+            } else {
+              toast.error("No hay versículo del día configurado. Use el botón 'Cambiar' en Gestión de Overlays.");
+              return;
+            }
+          }
+          
+          case 'daily_advice': {
+            const { data: adviceList } = await supabase
+              .from("daily_advice")
+              .select("*")
+              .eq("is_active", true);
+
+            if (adviceList && adviceList.length > 0) {
+              const randomAdvice = adviceList[Math.floor(Math.random() * adviceList.length)];
+              window.dispatchEvent(new CustomEvent('showOverlay', {
+                detail: {
+                  id: `preview-advice-${Date.now()}`,
+                  type: 'daily_advice',
+                  title: 'Consejo del Día',
+                  message: randomAdvice.message,
+                  metadata: {
+                    advice_title: randomAdvice.title,
+                    advice_message: randomAdvice.message,
+                  },
+                }
+              }));
+              return;
+            } else {
+              toast.error("No hay consejos disponibles en la base de datos.");
+              return;
+            }
+          }
+          
+          case 'service_overlay': {
+            window.dispatchEvent(new CustomEvent('showOverlay', {
+              detail: {
+                id: `preview-service-${Date.now()}`,
+                type: 'service_overlay',
+                title: 'Programa de Servicios',
+                message: '',
+                metadata: {},
+              }
+            }));
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error loading real data for preview:', error);
+        toast.error("Error al cargar datos para la vista previa");
+        return;
+      }
+    }
+    
+    // For non-special types or when not loading real data, use metadata
     const overlayData = {
       id: `preview-${notification.id || Date.now()}`,
       type: notification.notification_type,
@@ -331,14 +412,21 @@ const ScheduledNotifications = () => {
     window.dispatchEvent(new CustomEvent('showOverlay', { detail: overlayData }));
   };
 
-  const handlePreview = (notification: ScheduledNotification) => {
-    dispatchOverlayEvent(notification);
+  const handlePreview = async (notification: ScheduledNotification) => {
+    // Types that need to load real data from DB
+    const typesNeedingRealData = ['daily_verse', 'daily_advice', 'service_overlay'];
+    const needsRealData = typesNeedingRealData.includes(notification.notification_type);
+    await dispatchOverlayEvent(notification, needsRealData);
   };
 
   const handleTestNotification = async (notification: ScheduledNotification) => {
     try {
-      // Mostrar el overlay a través del OverlayManager
-      dispatchOverlayEvent(notification);
+      // Types that need to load real data from DB
+      const typesNeedingRealData = ['daily_verse', 'daily_advice', 'service_overlay'];
+      const needsRealData = typesNeedingRealData.includes(notification.notification_type);
+      
+      // Mostrar el overlay a través del OverlayManager con datos reales
+      await dispatchOverlayEvent(notification, needsRealData);
 
       // También crear la notificación en system_notifications para registro
       const { error } = await supabase.from("system_notifications").insert({
