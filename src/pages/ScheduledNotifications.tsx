@@ -645,66 +645,31 @@ const ScheduledNotifications = () => {
             advice_message: randomAdvice.message,
           };
         }
-      } else if (notification.notification_type === "birthday") {
-        // Buscar cumpleaños de hoy
-        const { data: members, error: membersError } = await supabase
-          .from("members")
-          .select("*")
-          .eq("is_active", true)
-          .not("fecha_nacimiento", "is", null);
-
-        if (!membersError && members && members.length > 0) {
-          const today = new Date();
-          const dominicanToday = new Date(today.toLocaleString("en-US", { timeZone: "America/Santo_Domingo" }));
-          const todayMonth = dominicanToday.getMonth() + 1;
-          const todayDay = dominicanToday.getDate();
-
-          const todaysBirthdays = members.filter((member) => {
-            if (!member.fecha_nacimiento) return false;
-            const birthDate = new Date(member.fecha_nacimiento);
-            const birthMonth = birthDate.getMonth() + 1;
-            const birthDay = birthDate.getDate();
-            return birthMonth === todayMonth && birthDay === todayDay;
-          });
-
-          if (todaysBirthdays.length > 0) {
-            const birthdayMember = todaysBirthdays[0];
-            finalMetadata = {
-              ...finalMetadata,
-              birthday_member_id: birthdayMember.id,
-              birthday_member_name: `${birthdayMember.nombres} ${birthdayMember.apellidos}`,
-              birthday_member_photo: birthdayMember.photo_url,
-              member_role: birthdayMember.cargo,
-              birthday_date: member.fecha_nacimiento,
-              show_confetti: true,
-              play_birthday_sound: true,
-            };
-          }
-        }
       }
 
       // Usar el servicio unificado de notificaciones
       const notificationService = await import("@/services/notificationService");
 
-      const result = await notificationService.createBroadcastNotification({
+      // Usar createNotification en lugar de createBroadcastNotification para Lovable
+      const result = await notificationService.createNotification({
         type: notification.notification_type as any,
         title: `[PRUEBA] ${notification.name}`,
         message: notification.description || "Esta es una notificación de prueba",
         category: "scheduled",
         priority: 1,
         showOverlay: true,
-        sendNativePush: false, // En pruebas no enviar push
+        sendNativePush: false, // IMPORTANTE: deshabilitar para Lovable
         metadata: finalMetadata,
       });
 
       if (result.success) {
-        toast.success("Notificación de prueba enviada correctamente");
+        toast.success("✅ Notificación de prueba enviada correctamente");
       } else {
-        throw new Error(result.error);
+        toast.error(`❌ Error: ${result.error}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error testing notification:", error);
-      toast.error("Error al enviar notificación de prueba");
+      toast.error(`❌ Error: ${error.message || "Error desconocido"}`);
     } finally {
       setLoadingTest(null);
     }
@@ -746,34 +711,35 @@ const ScheduledNotifications = () => {
   }, [formData.notification_type, formData.days_of_week]);
 
   // Función de diagnóstico MEJORADA - CORREGIDA para usar RPC correctamente
+  // Función de diagnóstico MEJORADA - Versión Lovable SIN Edge Functions
   const testNotificationSystem = async () => {
     try {
       console.log("🔧 [Diagnóstico] Probando sistema de notificaciones...");
 
-      // Primero verificar conexión a Supabase
       const {
         data: { user },
+        error: authError,
       } = await supabase.auth.getUser();
-      if (!user) {
+      if (authError || !user) {
         toast.error("No hay usuario autenticado");
         return;
       }
 
       console.log("🔧 [Diagnóstico] Usuario:", user.id);
 
-      // Probar insertar una notificación simple directamente
+      // PRUEBA DIRECTA - Sin Edge Functions
       const testNotification = {
-        type: "service_overlay",
-        title: "🔧 Prueba de diagnóstico",
-        message: "Esta es una prueba del sistema de notificaciones",
+        type: "test_overlay",
+        title: "🔧 Prueba del Sistema",
+        message: "Esta es una prueba del sistema de notificaciones en Lovable",
         recipient_id: user.id,
-        sender_id: user.id, // <-- ¡ESTO ES LO QUE FALTABA!
-        notification_category: "overlay",
+        sender_id: user.id,
+        notification_category: "general",
         priority: 2,
         metadata: {
           test: true,
           timestamp: new Date().toISOString(),
-          diagnostic: "direct_insert_test",
+          diagnostic: "direct_test",
         },
         is_read: false,
         created_at: new Date().toISOString(),
@@ -788,70 +754,67 @@ const ScheduledNotifications = () => {
         .single();
 
       if (insertError) {
-        console.error("🔧 [Diagnóstico] Error directo:", insertError);
-        toast.error(`❌ Error directo: ${insertError.message}`);
+        console.error("🔧 [Diagnóstico] ❌ Error directo:", insertError);
+        toast.error(`❌ Error DB: ${insertError.message}`);
+
+        // Fallback: intentar con el servicio
+        try {
+          const notificationService = await import("@/services/notificationService");
+          const result = await notificationService.createNotification({
+            type: "test_overlay",
+            title: "🔧 Prueba via Servicio",
+            message: "Esta es una prueba usando el servicio de notificaciones",
+            recipientId: user.id,
+            category: "general",
+            priority: 1,
+            showOverlay: true,
+            sendNativePush: false,
+            metadata: {
+              test: true,
+              timestamp: new Date().toISOString(),
+              diagnostic: "service_test",
+            },
+          });
+
+          if (result.success) {
+            console.log("🔧 [Diagnóstico] ✅ Servicio funcionó, ID:", result.notificationId);
+            toast.success("✅ Servicio funcionó correctamente.");
+          } else {
+            console.error("🔧 [Diagnóstico] ❌ Servicio falló:", result.error);
+            toast.error(`❌ Servicio: ${result.error}`);
+          }
+        } catch (serviceError) {
+          console.error("🔧 [Diagnóstico] ❌ Error con servicio:", serviceError);
+          toast.error(`❌ Error servicio: ${serviceError}`);
+        }
       } else {
         console.log("🔧 [Diagnóstico] ✅ Insertado directamente con ID:", data.id);
-        toast.success("✅ Prueba exitosa. Notificación insertada directamente.");
-      }
+        toast.success("✅ Prueba exitosa. Notificación creada.");
 
-      // También probar con el servicio
-      try {
-        const notificationService = await import("@/services/notificationService");
-
-        const result = await notificationService.createBroadcastNotification({
-          type: "service_overlay",
-          title: "🔧 Prueba via servicio",
-          message: "Esta es una prueba usando el servicio de notificaciones",
-          category: "overlay",
-          priority: 2,
-          showOverlay: true,
-          sendNativePush: false,
-          metadata: {
-            test: true,
-            timestamp: new Date().toISOString(),
-            diagnostic: "service_test",
-          },
-        });
-
-        if (result.success) {
-          console.log("🔧 [Diagnóstico] ✅ Servicio funcionó, ID:", result.notificationId);
-          toast.success("✅ Servicio funcionó correctamente.");
-        } else {
-          console.error("🔧 [Diagnóstico] ❌ Servicio falló:", result.error);
-          toast.error(`❌ Servicio: ${result.error}`);
-        }
-      } catch (serviceError) {
-        console.error("🔧 [Diagnóstico] ❌ Error con servicio:", serviceError);
-        toast.error(`❌ Error servicio: ${serviceError}`);
-      }
-
-      // Probar la función send_push_notification usando RPC correctamente
-      try {
-        console.log("🔧 [Diagnóstico] Probando send_push_notification...");
-
-        // CORRECCIÓN: Usar los parámetros correctos según la definición de la función
-        const { data: rpcResult, error: rpcError } = await supabase.rpc("send_push_notification", {
-          p_user_id: user.id,
-          p_title: "Prueba push",
-          p_message: "Este es un mensaje de prueba para push", // <-- CORREGIDO: p_message en lugar de p_body
-          p_type: "test", // <-- CORREGIDO: p_type en lugar de p_notification_type
-        });
-
-        if (rpcError) {
-          console.error("🔧 [Diagnóstico] ❌ RPC falló:", rpcError);
-          toast.error(`❌ RPC: ${rpcError.message}`);
-        } else {
-          console.log("🔧 [Diagnóstico] ✅ RPC funcionó:", rpcResult);
-          toast.success("✅ Función RPC funcionó correctamente.");
-        }
-      } catch (rpcError) {
-        console.error("🔧 [Diagnóstico] ❌ Error en RPC:", rpcError);
-        toast.error(`❌ Error RPC: ${rpcError}`);
+        // Intentar disparar overlay después de un breve delay
+        setTimeout(() => {
+          try {
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(
+                new CustomEvent("showOverlay", {
+                  detail: {
+                    id: data.id,
+                    type: "test_overlay",
+                    title: testNotification.title,
+                    message: testNotification.message,
+                    metadata: testNotification.metadata,
+                  },
+                }),
+              );
+            }
+          } catch (e) {
+            console.log("⚠️  No se pudo disparar overlay automáticamente");
+          }
+        }, 300);
       }
     } catch (error) {
       console.error("🔧 [Diagnóstico] ❌ Error general:", error);
-      toast.error(`❌ Error general: ${error}`);
+      toast.error(`❌ Error: ${error}`);
     }
   };
 
