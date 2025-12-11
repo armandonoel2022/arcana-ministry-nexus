@@ -29,6 +29,7 @@ declare global {
     showRehearsalOverlay: CustomEvent<any>;
     showInstructionsOverlay: CustomEvent<any>;
     showAnnouncementOverlay: CustomEvent<any>;
+    testBirthdayOverlay: CustomEvent<any>;
   }
 }
 
@@ -43,26 +44,29 @@ const OverlayManager: React.FC = () => {
   const scheduledNotificationsChecked = useRef<Set<string>>(new Set());
 
   // Function to show overlay with safety check
-  const showOverlay = useCallback((notification: OverlayData) => {
+  const showOverlay = useCallback(async (notification: OverlayData) => {
     if (!isMounted.current) return;
+
     console.log("📱 [OverlayManager] Mostrando overlay:", notification.type, notification);
 
     // Special handling for birthday overlays - dispatch to BirthdayOverlay component
-    if (notification.type === 'birthday' || notification.type === 'birthday_daily') {
+    if (notification.type === "birthday" || notification.type === "birthday_daily") {
       const memberData = notification.metadata || {};
-      window.dispatchEvent(new CustomEvent('testBirthdayOverlay', {
-        detail: {
-          id: memberData.birthday_member_id || memberData.member_id || notification.id,
-          nombres: memberData.birthday_member_name?.split(' ')[0] || 'Cumpleañero',
-          apellidos: memberData.birthday_member_name?.split(' ').slice(1).join(' ') || '',
-          photo_url: memberData.birthday_member_photo,
-          cargo: memberData.member_role || 'Integrante',
-          fecha_nacimiento: memberData.birthday_date || new Date().toISOString().split('T')[0],
-        }
-      }));
+      window.dispatchEvent(
+        new CustomEvent("testBirthdayOverlay", {
+          detail: {
+            id: memberData.birthday_member_id || memberData.member_id || notification.id,
+            nombres: memberData.birthday_member_name?.split(" ")[0] || "Cumpleañero",
+            apellidos: memberData.birthday_member_name?.split(" ").slice(1).join(" ") || "",
+            photo_url: memberData.birthday_member_photo,
+            cargo: memberData.member_role || "Integrante",
+            fecha_nacimiento: memberData.birthday_date || new Date().toISOString().split("T")[0],
+          },
+        }),
+      );
       // Mark as read if it has a real ID
-      if (notification.id && !notification.id.startsWith('preview-') && !notification.id.startsWith('test-')) {
-        supabase.from('system_notifications').update({ is_read: true }).eq('id', notification.id);
+      if (notification.id && !notification.id.startsWith("preview-") && !notification.id.startsWith("test-")) {
+        await supabase.from("system_notifications").update({ is_read: true }).eq("id", notification.id);
       }
       return; // Don't show in generic overlay, BirthdayOverlay handles it
     }
@@ -71,7 +75,37 @@ const OverlayManager: React.FC = () => {
     setActiveOverlay(null);
     setOverlayType(null);
 
-    // Force a small delay to ensure DOM is ready
+    // Si no tiene ID o es un preview, crear en BD usando el servicio unificado
+    if (
+      !notification.id ||
+      notification.id.startsWith("preview-") ||
+      notification.id.startsWith("test-") ||
+      notification.id.startsWith("scheduled-")
+    ) {
+      try {
+        const notificationService = await import("@/services/notificationService");
+
+        const result = await notificationService.createBroadcastNotification({
+          type: notification.type as any,
+          title: notification.title,
+          message: notification.message || "",
+          category: "overlay",
+          priority: 2,
+          showOverlay: false, // Ya estamos mostrando el overlay, no disparar otro
+          sendNativePush: false,
+          metadata: notification.metadata,
+        });
+
+        if (result.success && result.notificationId) {
+          console.log("📱 [OverlayManager] Notificación guardada en BD con ID:", result.notificationId);
+          notification.id = result.notificationId;
+        }
+      } catch (error) {
+        console.error("📱 [OverlayManager] Error creando notificación en BD:", error);
+      }
+    }
+
+    // Mostrar overlay
     setTimeout(() => {
       if (isMounted.current) {
         setActiveOverlay(notification);
@@ -242,7 +276,7 @@ const OverlayManager: React.FC = () => {
               console.log("⏰ [OverlayManager] 🚀 Ejecutando como backup:", notification.notification_type);
 
               // DISPARAR DIRECTAMENTE USANDO showOverlay
-              showOverlay({
+              await showOverlay({
                 id: `scheduled-backup-${notification.id}-${Date.now()}`,
                 type: notification.notification_type,
                 title: notification.name || getDefaultTitle(notification.notification_type),
@@ -276,6 +310,7 @@ const OverlayManager: React.FC = () => {
       blood_donation: "Donación de Sangre Urgente",
       extraordinary_rehearsal: "Ensayo Extraordinario",
       ministry_instructions: "Instrucciones a Integrantes",
+      birthday: "🎂 ¡Feliz Cumpleaños!",
     };
     return titles[type] || "Notificación";
   }, []);
@@ -379,6 +414,12 @@ const OverlayManager: React.FC = () => {
       });
     };
 
+    // Event handler for birthday overlay test
+    const handleTestBirthdayOverlay = (event: CustomEvent<any>) => {
+      console.log("📱 [OverlayManager] Evento testBirthdayOverlay recibido:", event.detail);
+      // Este evento es manejado por BirthdayOverlay component directamente
+    };
+
     // Register all event listeners
     window.addEventListener("showOverlay", handleShowOverlay as EventListener);
     window.addEventListener("showServiceOverlay", handleShowServiceOverlay as EventListener);
@@ -388,6 +429,7 @@ const OverlayManager: React.FC = () => {
     window.addEventListener("showRehearsalOverlay", handleShowRehearsalOverlay as EventListener);
     window.addEventListener("showInstructionsOverlay", handleShowInstructionsOverlay as EventListener);
     window.addEventListener("showAnnouncementOverlay", handleShowAnnouncementOverlay as EventListener);
+    window.addEventListener("testBirthdayOverlay", handleTestBirthdayOverlay as EventListener);
 
     // Check for pending overlays on mount
     checkPendingOverlays();
@@ -545,6 +587,7 @@ const OverlayManager: React.FC = () => {
       window.removeEventListener("showRehearsalOverlay", handleShowRehearsalOverlay as EventListener);
       window.removeEventListener("showInstructionsOverlay", handleShowInstructionsOverlay as EventListener);
       window.removeEventListener("showAnnouncementOverlay", handleShowAnnouncementOverlay as EventListener);
+      window.removeEventListener("testBirthdayOverlay", handleTestBirthdayOverlay as EventListener);
 
       if (channel) {
         supabase.removeChannel(channel);
