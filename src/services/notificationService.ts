@@ -9,7 +9,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-// Tipos de notificación definidos en el sistema
+// Tipos de notificación definidos en el sistema - ALINEADO CON LA BASE DE DATOS
 export type NotificationType =
   | "service_overlay"
   | "daily_verse"
@@ -47,6 +47,7 @@ export interface CreateNotificationParams {
   title: string;
   message: string;
   recipientId?: string | null; // null = broadcast a todos
+  senderId?: string | null; // ID del usuario que envía
   metadata?: Record<string, any>;
   category?: NotificationCategory;
   priority?: NotificationPriority;
@@ -108,12 +109,22 @@ export async function createNotification(params: CreateNotificationParams): Prom
     // Determinar la categoría basada en el tipo
     const category = params.category || typeToCategory[params.type] || "general";
 
+    // Obtener usuario actual como sender si no se especifica
+    let senderId = params.senderId;
+    if (!senderId) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      senderId = user?.id || null;
+    }
+
     // Preparar datos para insertar
     const notificationData = {
       type: params.type,
       title: params.title,
       message: params.message,
       recipient_id: params.recipientId,
+      sender_id: senderId, // AÑADIR sender_id que la tabla requiere
       notification_category: category,
       priority: params.priority || 2,
       metadata: params.metadata || {},
@@ -435,6 +446,7 @@ export function createBirthdayNotification(params: {
     recipientId: params.recipientId,
     category: "birthday",
     priority: 3,
+    showOverlay: true,
     metadata: {
       birthday_member_id: params.memberId,
       birthday_member_name: params.memberName,
