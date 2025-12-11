@@ -6,13 +6,14 @@ self.addEventListener('push', event => {
   
   const options = {
     body: data.body || 'Nueva notificación de ARCANA',
-    icon: '/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png',
-    badge: '/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png',
+    icon: '/arcana-notification-icon.png',
+    badge: '/arcana-notification-icon.png',
     vibrate: [100, 50, 100],
     data: {
       url: data.url || '/notificaciones',
       notificationId: data.notificationId,
-      type: data.type
+      type: data.type,
+      metadata: data.metadata || {}
     },
     actions: [
       {
@@ -24,8 +25,10 @@ self.addEventListener('push', event => {
         title: 'Cerrar'
       }
     ],
-    requireInteraction: false,
-    tag: data.type || 'general'
+    requireInteraction: data.type === 'birthday' || data.type === 'blood_donation' || data.type === 'extraordinary_rehearsal',
+    tag: data.type || 'general',
+    // Configuración de imagen grande para overlays importantes
+    ...(data.image && { image: data.image })
   };
 
   event.waitUntil(

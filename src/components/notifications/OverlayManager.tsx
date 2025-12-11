@@ -47,6 +47,26 @@ const OverlayManager: React.FC = () => {
     if (!isMounted.current) return;
     console.log("📱 [OverlayManager] Mostrando overlay:", notification.type, notification);
 
+    // Special handling for birthday overlays - dispatch to BirthdayOverlay component
+    if (notification.type === 'birthday' || notification.type === 'birthday_daily') {
+      const memberData = notification.metadata || {};
+      window.dispatchEvent(new CustomEvent('testBirthdayOverlay', {
+        detail: {
+          id: memberData.birthday_member_id || memberData.member_id || notification.id,
+          nombres: memberData.birthday_member_name?.split(' ')[0] || 'Cumpleañero',
+          apellidos: memberData.birthday_member_name?.split(' ').slice(1).join(' ') || '',
+          photo_url: memberData.birthday_member_photo,
+          cargo: memberData.member_role || 'Integrante',
+          fecha_nacimiento: memberData.birthday_date || new Date().toISOString().split('T')[0],
+        }
+      }));
+      // Mark as read if it has a real ID
+      if (notification.id && !notification.id.startsWith('preview-') && !notification.id.startsWith('test-')) {
+        supabase.from('system_notifications').update({ is_read: true }).eq('id', notification.id);
+      }
+      return; // Don't show in generic overlay, BirthdayOverlay handles it
+    }
+
     // Clear any existing overlay first
     setActiveOverlay(null);
     setOverlayType(null);
@@ -107,6 +127,8 @@ const OverlayManager: React.FC = () => {
         "service_overlay",
         "daily_verse",
         "daily_advice",
+        "birthday",
+        "birthday_daily",
         "death_announcement",
         "meeting_announcement",
         "special_service",
@@ -379,6 +401,8 @@ const OverlayManager: React.FC = () => {
       "service_overlay",
       "daily_verse",
       "daily_advice",
+      "birthday",
+      "birthday_daily",
       "death_announcement",
       "meeting_announcement",
       "special_service",

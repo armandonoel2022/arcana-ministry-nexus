@@ -181,32 +181,37 @@ const BirthdayModule = () => {
 
   const sendBirthdayNotification = async (member: Member) => {
     try {
-      const { error } = await supabase
-        .from('system_notifications')
-        .insert({
-          type: 'general',
-          title: `🎉 ¡Cumpleaños de ${member.nombres}!`,
-          message: `Hoy es el cumpleaños de ${member.nombres} ${member.apellidos} (${getRoleLabel(member.cargo)}). ¡Felicitémosle en este día especial!`,
-          notification_category: 'birthday',
-          priority: 2,
-          metadata: {
-            member_id: member.id,
-            birthday_member_name: `${member.nombres} ${member.apellidos}`,
-            birthday_member_photo: member.photo_url,
-            member_role: member.cargo,
-            birthday_date: new Date().toISOString().split('T')[0],
-            birthday: true,
-            show_confetti: true,
-            play_birthday_sound: true
-          }
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "¡Notificación enviada!",
-        description: `Se ha enviado la notificación de cumpleaños de ${member.nombres} a todos los integrantes`,
+      // Import the notification service dynamically
+      const { createBirthdayNotification, createBroadcastNotification } = await import('@/services/notificationService');
+      
+      // Crear notificación broadcast para todos los usuarios
+      const result = await createBroadcastNotification({
+        type: 'birthday',
+        title: `🎉 ¡Cumpleaños de ${member.nombres}!`,
+        message: `Hoy es el cumpleaños de ${member.nombres} ${member.apellidos} (${getRoleLabel(member.cargo)}). ¡Felicitémosle en este día especial!`,
+        category: 'birthday',
+        priority: 3,
+        showOverlay: true,
+        metadata: {
+          member_id: member.id,
+          birthday_member_name: `${member.nombres} ${member.apellidos}`,
+          birthday_member_photo: member.photo_url,
+          member_role: member.cargo,
+          birthday_date: new Date().toISOString().split('T')[0],
+          birthday: true,
+          show_confetti: true,
+          play_birthday_sound: true
+        }
       });
+
+      if (result.success) {
+        toast({
+          title: "¡Notificación enviada!",
+          description: `Se ha enviado la notificación de cumpleaños de ${member.nombres} a todos los integrantes`,
+        });
+      } else {
+        throw new Error(result.error);
+      }
     } catch (error) {
       console.error('Error sending notification:', error);
       toast({

@@ -236,6 +236,24 @@ const GROUP_CONFIG = {
   },
 };
 
+// Helper function to get service time from title - moved outside component for use in createServiceAgendaNotification
+const getServiceTime = (serviceTitle: string): string => {
+  if (
+    serviceTitle.toLowerCase().includes("primera") ||
+    serviceTitle.toLowerCase().includes("8:00") ||
+    serviceTitle.toLowerCase().includes("primer")
+  ) {
+    return "8:00 AM";
+  } else if (
+    serviceTitle.toLowerCase().includes("segunda") ||
+    serviceTitle.toLowerCase().includes("10:45") ||
+    serviceTitle.toLowerCase().includes("segundo")
+  ) {
+    return "10:45 AM";
+  }
+  return serviceTitle;
+};
+
 // Función para crear notificación en el centro de notificaciones
 const createServiceAgendaNotification = async (services: WeekendService[]) => {
   try {
@@ -1097,22 +1115,7 @@ const ServiceNotificationOverlay = ({
     }
   };
 
-  const getServiceTime = (serviceTitle: string) => {
-    if (
-      serviceTitle.toLowerCase().includes("primera") ||
-      serviceTitle.toLowerCase().includes("8:00") ||
-      serviceTitle.toLowerCase().includes("primer")
-    ) {
-      return "8:00 AM";
-    } else if (
-      serviceTitle.toLowerCase().includes("segunda") ||
-      serviceTitle.toLowerCase().includes("10:45") ||
-      serviceTitle.toLowerCase().includes("segundo")
-    ) {
-      return "10:45 AM";
-    }
-    return serviceTitle;
-  };
+  // getServiceTime is now defined at module level (line ~239)
 
   const getInitials = (name: string) => {
     if (!name) return "NN";
