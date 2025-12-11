@@ -120,24 +120,21 @@ const ScheduledNotifications = () => {
   useEffect(() => {
     fetchScheduledNotifications();
 
-    // Configurar verificación de notificaciones programadas
     const checkAndExecuteScheduledNotifications = async () => {
       try {
         // Obtener hora actual en República Dominicana
         const now = new Date();
         const dominicanTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Santo_Domingo" }));
 
-        const currentDay = dominicanTime.getDay(); // 0=Domingo, 1=Lunes, etc.
+        const currentDay = dominicanTime.getDay();
         const currentHour = dominicanTime.getHours();
         const currentMinute = dominicanTime.getMinutes();
         const currentSecond = dominicanTime.getSeconds();
 
-        // Solo verificar en el segundo 0 de cada minuto (evitar múltiples ejecuciones)
+        // Solo verificar en el segundo 0 de cada minuto
         if (currentSecond !== 0) return;
 
-        // Formatear hora actual para comparar
         const currentTimeFormatted = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}:00`;
-        const currentTimeWithoutSeconds = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
 
         console.log("⏰ [ScheduledNotifications] Verificando a las:", currentTimeFormatted, "Día:", currentDay);
 
@@ -154,74 +151,95 @@ const ScheduledNotifications = () => {
         }
 
         if (scheduledNotifications && scheduledNotifications.length > 0) {
-          console.log(
-            "⏰ [ScheduledNotifications] Notificaciones encontradas para hoy:",
-            scheduledNotifications.length,
-          );
-
           for (const notification of scheduledNotifications) {
-            // Verificar si la hora coincide (con o sin segundos)
             const notificationTime = notification.time;
             const matchesExactTime = notificationTime === currentTimeFormatted;
-            const matchesTimeWithoutSeconds = notificationTime.startsWith(currentTimeWithoutSeconds);
+            const matchesTimeWithoutSeconds = notificationTime.startsWith(currentTimeFormatted.substring(0, 5));
 
             if (matchesExactTime || matchesTimeWithoutSeconds) {
-              console.log(
-                "⏰ [ScheduledNotifications] ✅ HORA COINCIDE!",
-                notification.name,
-                "a las",
-                notificationTime,
-              );
+              console.log("⏰ [ScheduledNotifications] ✅ HORA COINCIDE!", notification.name);
 
-              // Crear clave única para evitar ejecuciones duplicadas en el mismo minuto
               const executionKey = `executed_${notification.id}_${currentDay}_${currentHour}_${currentMinute}`;
 
               if (!sessionStorage.getItem(executionKey)) {
                 sessionStorage.setItem(executionKey, "true");
 
-                console.log("⏰ [ScheduledNotifications] 🚀 Ejecutando notificación programada:", notification.name);
+                console.log("⏰ [ScheduledNotifications] 🚀 Ejecutando:", notification.name);
 
-                // DISPARAR EL OVERLAY DIRECTAMENTE - igual que el preview
-                const typesNeedingRealData = ["daily_verse", "daily_advice", "service_overlay"];
-                const needsRealData = typesNeedingRealData.includes(notification.notification_type);
-
-                // Usar la función dispatchOverlayEvent que ya existe
-                const overlayData = {
-                  id: `scheduled-${notification.id}-${Date.now()}`,
-                  type: notification.notification_type,
-                  title: notification.name,
-                  message: notification.description || "",
-                  metadata: notification.metadata || {},
-                };
-
-                console.log("⏰ [ScheduledNotifications] Disparando overlay programado:", overlayData);
-                window.dispatchEvent(new CustomEvent("showOverlay", { detail: overlayData }));
-
-                console.log("⏰ [ScheduledNotifications] ✅ Overlay disparado para:", notification.name);
-
-                // También crear registro en system_notifications para historial
+                // USAR EL SERVICIO UNIFICADO DE NOTIFICACIONES
                 try {
-                  await supabase.from("system_notifications").insert({
-                    type: notification.notification_type,
-                    title: `Programado: ${notification.name}`,
-                    message: notification.description || "Notificación programada ejecutada automáticamente.",
-                    recipient_id: null, // Para todos los usuarios
-                    notification_category: "scheduled",
-                    priority: 1,
-                    metadata: notification.metadata || {},
-                    created_at: new Date().toISOString(),
+                  const notificationService = await import("@/services/notificationService");
+
+                  // Para tipos que necesitan datos reales de DB
+                  let finalMetadata = notification.metadata || {};
+
+                  if (notification.notification_type === "daily_verse") {
+                    const today = new Date().toISOString().split("T")[0];
+                    const { data: dailyVerse } = await supabase
+                      .from("daily_verses")
+                      .select(`*, bible_verses (*)`)
+                      .eq("date", today)
+                      .single();
+
+                    if (dailyVerse?.bible_verses) {
+                      const verse = dailyVerse.bible_verses as any;
+                      finalMetadata = {
+                        ...finalMetadata,
+                        verse_text: verse.text,
+                        verse_reference: `${verse.book} ${verse.chapter}:${verse.verse}`,
+                      };
+                    }
+                  } else if (notification.notification_type === "daily_advice") {
+                    const { data: adviceList } = await supabase.from("daily_advice").select("*").eq("is_active", true);
+
+                    if (adviceList && adviceList.length > 0) {
+                      const randomAdvice = adviceList[Math.floor(Math.random() * adviceList.length)];
+                      finalMetadata = {
+                        ...finalMetadata,
+                        advice_title: randomAdvice.title,
+                        advice_message: randomAdvice.message,
+                      };
+                    }
+                  }
+
+                  // Crear notificación usando el servicio unificado
+                  const result = await notificationService.createBroadcastNotification({
+                    type: notification.notification_type as any,
+                    title: notification.name,
+                    message: notification.description || "Notificación programada",
+                    category: "scheduled",
+                    priority: 2,
+                    showOverlay: true,
+                    sendNativePush: true,
+                    metadata: finalMetadata,
                   });
-                } catch (insertError) {
-                  console.error("Error insertando registro:", insertError);
+
+                  if (result.success) {
+                    console.log("✅ Notificación programada creada exitosamente");
+                  } else {
+                    console.error("❌ Error creando notificación:", result.error);
+                  }
+                } catch (serviceError) {
+                  console.error("❌ Error con notificationService:", serviceError);
+                  // Fallback: usar el método antiguo
+                  window.dispatchEvent(
+                    new CustomEvent("showOverlay", {
+                      detail: {
+                        id: `scheduled-${notification.id}-${Date.now()}`,
+                        type: notification.notification_type,
+                        title: notification.name,
+                        message: notification.description || "",
+                        metadata: notification.metadata || {},
+                      },
+                    }),
+                  );
                 }
-              } else {
-                console.log("⏰ [ScheduledNotifications] ⚠️ Ya ejecutada en este minuto");
               }
             }
           }
         }
       } catch (error) {
-        console.error("⏰ [ScheduledNotifications] Error general:", error);
+        console.error("⏰ [ScheduledNotifications] Error:", error);
       }
     };
 
@@ -231,10 +249,7 @@ const ScheduledNotifications = () => {
     // Configurar intervalo para verificar cada 30 segundos
     const intervalId = setInterval(checkAndExecuteScheduledNotifications, 30000);
 
-    // Limpiar intervalo al desmontar
-    return () => {
-      clearInterval(intervalId);
-    };
+    return () => clearInterval(intervalId);
   }, []); // Solo se ejecuta al montar el componente
 
   const fetchScheduledNotifications = async () => {
