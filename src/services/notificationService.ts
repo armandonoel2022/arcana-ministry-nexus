@@ -102,23 +102,36 @@ const overlayTypes: NotificationType[] = [
  * Función principal para crear notificaciones
  * Esta función maneja tanto notificaciones individuales como broadcast
  */
-async function createNotification(params: CreateNotificationParams): Promise<NotificationResult> {
+/**
+ * Función principal para crear notificaciones
+ * Esta función maneja tanto notificaciones individuales como broadcast
+ */
+export async function createNotification(params: CreateNotificationParams): Promise<NotificationResult> {
   console.log("📬 [NotificationService] Creando notificación:", params.type);
 
   try {
+    // Determinar la categoría basada en el tipo
+    const category = params.category || typeToCategory[params.type] || "general";
+
+    // Preparar datos para insertar
+    const notificationData = {
+      type: params.type,
+      title: params.title,
+      message: params.message,
+      recipient_id: params.recipientId,
+      notification_category: category,
+      priority: params.priority || 2,
+      metadata: params.metadata || {},
+      is_read: false,
+      created_at: new Date().toISOString(),
+    };
+
+    console.log("📬 [NotificationService] Insertando datos:", notificationData);
+
     // Guardar en system_notifications
     const { data: notification, error } = await supabase
       .from("system_notifications")
-      .insert({
-        type: params.type,
-        title: params.title,
-        message: params.message,
-        recipient_id: params.recipientId,
-        notification_category: params.category || typeToCategory[params.type] || "general",
-        priority: params.priority || 2,
-        metadata: params.metadata || {},
-        is_read: false,
-      })
+      .insert(notificationData)
       .select("id")
       .single();
 
@@ -133,7 +146,7 @@ async function createNotification(params: CreateNotificationParams): Promise<Not
     console.log("📬 [NotificationService] Notificación guardada con ID:", notification?.id);
 
     // Disparar overlay si es necesario
-    if (params.showOverlay) {
+    if (params.showOverlay && overlayTypes.includes(params.type)) {
       dispatchOverlayEvent({
         id: notification?.id || `notification-${Date.now()}`,
         type: params.type,
@@ -166,7 +179,6 @@ async function createNotification(params: CreateNotificationParams): Promise<Not
     };
   }
 }
-
 /**
  * Crear una notificación unificada (para broadcast o usuario específico)
  */

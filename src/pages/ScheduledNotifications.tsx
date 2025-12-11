@@ -326,8 +326,18 @@ const ScheduledNotifications = () => {
       } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Asegurarnos de que la hora esté en formato HH:MM:00
+      let time = formData.time;
+      if (time && !time.includes(":")) {
+        time = "07:30";
+      }
+      if (time && time.length === 5) {
+        time = time + ":00"; // Agregar segundos si no los tiene
+      }
+
       const submitData = {
         ...formData,
+        time: time,
         created_by: user.id,
         updated_at: new Date().toISOString(),
       };
@@ -353,7 +363,7 @@ const ScheduledNotifications = () => {
       fetchScheduledNotifications();
     } catch (error) {
       console.error("Error saving scheduled notification:", error);
-      toast.error("Error al guardar la notificación programada");
+      toast.error("Error al guardar la notificación programada: " + (error as Error).message);
     }
   };
 
@@ -700,32 +710,88 @@ const ScheduledNotifications = () => {
   }, [formData.notification_type, formData.days_of_week]);
 
   // Función de diagnóstico
+  // Función de diagnóstico MEJORADA
   const testNotificationSystem = async () => {
     try {
-      const notificationService = await import("@/services/notificationService");
+      console.log("🔧 [Diagnóstico] Probando sistema de notificaciones...");
 
-      const result = await notificationService.createBroadcastNotification({
+      // Primero verificar conexión a Supabase
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("No hay usuario autenticado");
+        return;
+      }
+
+      console.log("🔧 [Diagnóstico] Usuario:", user.id);
+
+      // Probar insertar una notificación simple directamente
+      const testNotification = {
         type: "service_overlay",
         title: "🔧 Prueba de diagnóstico",
-        message: "Esta es una prueba del sistema de notificaciones - Debería aparecer en el Centro de Notificaciones",
-        category: "overlay",
+        message: "Esta es una prueba del sistema de notificaciones",
+        recipient_id: user.id,
+        notification_category: "overlay",
         priority: 2,
-        showOverlay: true,
-        sendNativePush: false,
         metadata: {
           test: true,
           timestamp: new Date().toISOString(),
-          diagnostic: "system_test",
+          diagnostic: "direct_insert_test",
         },
-      });
+        is_read: false,
+        created_at: new Date().toISOString(),
+      };
 
-      if (result.success) {
-        toast.success("✅ Prueba exitosa. Revisa el centro de notificaciones.");
+      console.log("🔧 [Diagnóstico] Intentando insertar:", testNotification);
+
+      const { data, error: insertError } = await supabase
+        .from("system_notifications")
+        .insert(testNotification)
+        .select("id")
+        .single();
+
+      if (insertError) {
+        console.error("🔧 [Diagnóstico] Error directo:", insertError);
+        toast.error(`❌ Error directo: ${insertError.message}`);
       } else {
-        toast.error(`❌ Error: ${result.error}`);
+        console.log("🔧 [Diagnóstico] ✅ Insertado directamente con ID:", data.id);
+        toast.success("✅ Prueba exitosa. Notificación insertada directamente.");
+      }
+
+      // También probar con el servicio
+      try {
+        const notificationService = await import("@/services/notificationService");
+
+        const result = await notificationService.createBroadcastNotification({
+          type: "service_overlay",
+          title: "🔧 Prueba via servicio",
+          message: "Esta es una prueba usando el servicio de notificaciones",
+          category: "overlay",
+          priority: 2,
+          showOverlay: true,
+          sendNativePush: false,
+          metadata: {
+            test: true,
+            timestamp: new Date().toISOString(),
+            diagnostic: "service_test",
+          },
+        });
+
+        if (result.success) {
+          console.log("🔧 [Diagnóstico] ✅ Servicio funcionó, ID:", result.notificationId);
+          toast.success("✅ Servicio funcionó correctamente.");
+        } else {
+          console.error("🔧 [Diagnóstico] ❌ Servicio falló:", result.error);
+          toast.error(`❌ Servicio: ${result.error}`);
+        }
+      } catch (serviceError) {
+        console.error("🔧 [Diagnóstico] ❌ Error con servicio:", serviceError);
+        toast.error(`❌ Error servicio: ${serviceError}`);
       }
     } catch (error) {
-      toast.error(`❌ Error en prueba: ${error}`);
+      console.error("🔧 [Diagnóstico] ❌ Error general:", error);
+      toast.error(`❌ Error general: ${error}`);
     }
   };
 
