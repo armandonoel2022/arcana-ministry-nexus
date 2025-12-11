@@ -17,7 +17,6 @@ import {
   BookOpen,
   Lightbulb,
   RefreshCw,
-  Wrench,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -71,7 +70,6 @@ const notificationTypes = [
   { value: "blood_donation", label: "Donación de Sangre Urgente" },
   { value: "extraordinary_rehearsal", label: "Ensayo Extraordinario" },
   { value: "ministry_instructions", label: "Instrucciones a Integrantes" },
-  { value: "birthday", label: "Cumpleaños" },
 ];
 
 const ScheduledNotifications = () => {
@@ -116,9 +114,6 @@ const ScheduledNotifications = () => {
       family_contact: "",
       urgency_level: "urgent",
       additional_info: "",
-      // Birthday fields
-      birthday_member_name: "",
-      birthday_member_photo: "",
     },
   });
 
@@ -205,44 +200,6 @@ const ScheduledNotifications = () => {
                         advice_message: randomAdvice.message,
                       };
                     }
-                  } else if (notification.notification_type === "birthday") {
-                    // Buscar cumpleaños de hoy
-                    const { data: members, error: membersError } = await supabase
-                      .from("members")
-                      .select("*")
-                      .eq("is_active", true)
-                      .not("fecha_nacimiento", "is", null);
-
-                    if (!membersError && members && members.length > 0) {
-                      const today = new Date();
-                      const dominicanToday = new Date(
-                        today.toLocaleString("en-US", { timeZone: "America/Santo_Domingo" }),
-                      );
-                      const todayMonth = dominicanToday.getMonth() + 1;
-                      const todayDay = dominicanToday.getDate();
-
-                      const todaysBirthdays = members.filter((member) => {
-                        if (!member.fecha_nacimiento) return false;
-                        const birthDate = new Date(member.fecha_nacimiento);
-                        const birthMonth = birthDate.getMonth() + 1;
-                        const birthDay = birthDate.getDate();
-                        return birthMonth === todayMonth && birthDay === todayDay;
-                      });
-
-                      if (todaysBirthdays.length > 0) {
-                        const birthdayMember = todaysBirthdays[0];
-                        finalMetadata = {
-                          ...finalMetadata,
-                          birthday_member_id: birthdayMember.id,
-                          birthday_member_name: `${birthdayMember.nombres} ${birthdayMember.apellidos}`,
-                          birthday_member_photo: birthdayMember.photo_url,
-                          member_role: birthdayMember.cargo,
-                          birthday_date: member.fecha_nacimiento,
-                          show_confetti: true,
-                          play_birthday_sound: true,
-                        };
-                      }
-                    }
                   }
 
                   // Crear notificación usando el servicio unificado
@@ -326,18 +283,8 @@ const ScheduledNotifications = () => {
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Asegurarnos de que la hora esté en formato HH:MM:00
-      let time = formData.time;
-      if (time && !time.includes(":")) {
-        time = "07:30";
-      }
-      if (time && time.length === 5) {
-        time = time + ":00"; // Agregar segundos si no los tiene
-      }
-
       const submitData = {
         ...formData,
-        time: time,
         created_by: user.id,
         updated_at: new Date().toISOString(),
       };
@@ -363,7 +310,7 @@ const ScheduledNotifications = () => {
       fetchScheduledNotifications();
     } catch (error) {
       console.error("Error saving scheduled notification:", error);
-      toast.error("Error al guardar la notificación programada: " + (error as Error).message);
+      toast.error("Error al guardar la notificación programada");
     }
   };
 
@@ -428,8 +375,6 @@ const ScheduledNotifications = () => {
         family_contact: notification.metadata?.family_contact || "",
         urgency_level: notification.metadata?.urgency_level || "urgent",
         additional_info: notification.metadata?.additional_info || "",
-        birthday_member_name: notification.metadata?.birthday_member_name || "",
-        birthday_member_photo: notification.metadata?.birthday_member_photo || "",
       },
     });
     setSelectedDays(notification.days_of_week || [1]);
@@ -466,8 +411,6 @@ const ScheduledNotifications = () => {
         family_contact: "",
         urgency_level: "urgent",
         additional_info: "",
-        birthday_member_name: "",
-        birthday_member_photo: "",
       },
     });
     setSelectedDays([]);
@@ -499,7 +442,6 @@ const ScheduledNotifications = () => {
       blood_donation: "bg-red-100 text-red-800 border-red-200",
       extraordinary_rehearsal: "bg-indigo-100 text-indigo-800 border-indigo-200",
       ministry_instructions: "bg-blue-100 text-blue-800 border-blue-200",
-      birthday: "bg-pink-100 text-pink-800 border-pink-200",
     };
     return colors[type as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
@@ -613,64 +555,29 @@ const ScheduledNotifications = () => {
 
   const handleTestNotification = async (notification: ScheduledNotification) => {
     try {
-      setLoadingTest(notification.id);
+      // Types that need to load real data from DB
+      const typesNeedingRealData = ["daily_verse", "daily_advice", "service_overlay"];
+      const needsRealData = typesNeedingRealData.includes(notification.notification_type);
 
-      // Cargar datos reales si es necesario
-      let finalMetadata = notification.metadata || {};
+      // Mostrar el overlay a través del OverlayManager con datos reales
+      await dispatchOverlayEvent(notification, needsRealData);
 
-      if (notification.notification_type === "daily_verse") {
-        const today = new Date().toISOString().split("T")[0];
-        const { data: dailyVerse } = await supabase
-          .from("daily_verses")
-          .select(`*, bible_verses (*)`)
-          .eq("date", today)
-          .single();
-
-        if (dailyVerse?.bible_verses) {
-          const verse = dailyVerse.bible_verses as any;
-          finalMetadata = {
-            ...finalMetadata,
-            verse_text: verse.text,
-            verse_reference: `${verse.book} ${verse.chapter}:${verse.verse}`,
-          };
-        }
-      } else if (notification.notification_type === "daily_advice") {
-        const { data: adviceList } = await supabase.from("daily_advice").select("*").eq("is_active", true);
-
-        if (adviceList && adviceList.length > 0) {
-          const randomAdvice = adviceList[Math.floor(Math.random() * adviceList.length)];
-          finalMetadata = {
-            ...finalMetadata,
-            advice_title: randomAdvice.title,
-            advice_message: randomAdvice.message,
-          };
-        }
-      }
-
-      // Usar el servicio unificado de notificaciones
-      const notificationService = await import("@/services/notificationService");
-
-      const result = await notificationService.createBroadcastNotification({
-        type: notification.notification_type as any,
-        title: `[PRUEBA] ${notification.name}`,
-        message: notification.description || "Esta es una notificación de prueba",
-        category: "scheduled",
+      // También crear la notificación en system_notifications para registro
+      const { error } = await supabase.from("system_notifications").insert({
+        type: notification.notification_type,
+        title: `Prueba: ${notification.name}`,
+        message: notification.description || "Esta es una notificación de prueba programada.",
+        recipient_id: null,
+        notification_category: "system",
         priority: 1,
-        showOverlay: true,
-        sendNativePush: false, // En pruebas no enviar push
-        metadata: finalMetadata,
+        metadata: notification.metadata || {},
       });
 
-      if (result.success) {
-        toast.success("Notificación de prueba enviada correctamente");
-      } else {
-        throw new Error(result.error);
-      }
+      if (error) throw error;
+      toast.success("Notificación de prueba enviada al sistema");
     } catch (error) {
       console.error("Error testing notification:", error);
       toast.error("Error al enviar notificación de prueba");
-    } finally {
-      setLoadingTest(null);
     }
   };
 
@@ -696,7 +603,6 @@ const ScheduledNotifications = () => {
       blood_donation: "Donación de Sangre Urgente",
       extraordinary_rehearsal: "Ensayo Extraordinario",
       ministry_instructions: "Instrucciones a Integrantes",
-      birthday: "Cumpleaños",
     };
 
     const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
@@ -708,92 +614,6 @@ const ScheduledNotifications = () => {
     const autoName = `${typeNames[formData.notification_type] || formData.notification_type} - ${selectedDays}`;
     setFormData((prev) => ({ ...prev, name: autoName }));
   }, [formData.notification_type, formData.days_of_week]);
-
-  // Función de diagnóstico MEJORADA - CON sender_id AÑADIDO
-  const testNotificationSystem = async () => {
-    try {
-      console.log("🔧 [Diagnóstico] Probando sistema de notificaciones...");
-
-      // Primero verificar conexión a Supabase
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error("No hay usuario autenticado");
-        return;
-      }
-
-      console.log("🔧 [Diagnóstico] Usuario:", user.id);
-
-      // Probar insertar una notificación simple directamente
-      const testNotification = {
-        type: "service_overlay",
-        title: "🔧 Prueba de diagnóstico",
-        message: "Esta es una prueba del sistema de notificaciones",
-        recipient_id: user.id,
-        sender_id: user.id, // <-- ¡ESTO ES LO QUE FALTABA!
-        notification_category: "overlay",
-        priority: 2,
-        metadata: {
-          test: true,
-          timestamp: new Date().toISOString(),
-          diagnostic: "direct_insert_test",
-        },
-        is_read: false,
-        created_at: new Date().toISOString(),
-      };
-
-      console.log("🔧 [Diagnóstico] Intentando insertar:", testNotification);
-
-      const { data, error: insertError } = await supabase
-        .from("system_notifications")
-        .insert(testNotification)
-        .select("id")
-        .single();
-
-      if (insertError) {
-        console.error("🔧 [Diagnóstico] Error directo:", insertError);
-        toast.error(`❌ Error directo: ${insertError.message}`);
-      } else {
-        console.log("🔧 [Diagnóstico] ✅ Insertado directamente con ID:", data.id);
-        toast.success("✅ Prueba exitosa. Notificación insertada directamente.");
-      }
-
-      // También probar con el servicio
-      try {
-        const notificationService = await import("@/services/notificationService");
-
-        const result = await notificationService.createBroadcastNotification({
-          type: "service_overlay",
-          title: "🔧 Prueba via servicio",
-          message: "Esta es una prueba usando el servicio de notificaciones",
-          category: "overlay",
-          priority: 2,
-          showOverlay: true,
-          sendNativePush: false,
-          metadata: {
-            test: true,
-            timestamp: new Date().toISOString(),
-            diagnostic: "service_test",
-          },
-        });
-
-        if (result.success) {
-          console.log("🔧 [Diagnóstico] ✅ Servicio funcionó, ID:", result.notificationId);
-          toast.success("✅ Servicio funcionó correctamente.");
-        } else {
-          console.error("🔧 [Diagnóstico] ❌ Servicio falló:", result.error);
-          toast.error(`❌ Servicio: ${result.error}`);
-        }
-      } catch (serviceError) {
-        console.error("🔧 [Diagnóstico] ❌ Error con servicio:", serviceError);
-        toast.error(`❌ Error servicio: ${serviceError}`);
-      }
-    } catch (error) {
-      console.error("🔧 [Diagnóstico] ❌ Error general:", error);
-      toast.error(`❌ Error general: ${error}`);
-    }
-  };
 
   if (loading) {
     return (
@@ -825,23 +645,13 @@ const ScheduledNotifications = () => {
             </h1>
             <p className="text-xs sm:text-sm text-white/80 truncate">Configura notificaciones automáticas</p>
           </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={testNotificationSystem}
-              size="sm"
-              className="flex-shrink-0 bg-yellow-600 hover:bg-yellow-700 text-white border-yellow-700"
-              title="Probar sistema de notificaciones"
-            >
-              <Wrench className="w-4 h-4" />
-            </Button>
-            <Button
-              onClick={openCreateDialog}
-              size="sm"
-              className="flex-shrink-0 bg-white/20 hover:bg-white/30 text-white border-white/30"
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
+          <Button
+            onClick={openCreateDialog}
+            size="sm"
+            className="flex-shrink-0 bg-white/20 hover:bg-white/30 text-white border-white/30"
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
         </div>
 
         {/* Panel de Contenido Principal */}
@@ -1550,10 +1360,9 @@ const ScheduledNotifications = () => {
                         size="sm"
                         onClick={() => handleTestNotification(notification)}
                         className="flex items-center gap-1 text-xs h-8"
-                        disabled={loadingTest === notification.id}
                       >
                         <Play className="w-3 h-3" />
-                        {loadingTest === notification.id ? "Probando..." : "Probar"}
+                        Probar
                       </Button>
                       <Switch
                         checked={notification.is_active}
@@ -1638,16 +1447,6 @@ const ScheduledNotifications = () => {
                             <strong>Consejo:</strong> {notification.metadata.advice_title}
                             <br />
                             <strong>Mensaje:</strong> {notification.metadata.advice_message}
-                          </div>
-                        )}
-                        {notification.notification_type === "birthday" && (
-                          <div className="text-sm">
-                            <strong>Miembro:</strong> {notification.metadata.birthday_member_name}
-                            {notification.metadata.birthday_member_photo && (
-                              <div className="mt-1">
-                                <strong>Foto:</strong> {notification.metadata.birthday_member_photo}
-                              </div>
-                            )}
                           </div>
                         )}
                       </CollapsibleContent>
@@ -1776,23 +1575,6 @@ const ScheduledNotifications = () => {
                     <p className="text-xs text-yellow-700 dark:text-yellow-300 italic">
                       No necesitas ingresar texto manualmente. El sistema seleccionará automáticamente el consejo del
                       día.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {formData.notification_type === "birthday" && (
-              <div className="space-y-4 p-4 bg-pink-50 dark:bg-pink-950/30 rounded-lg border border-pink-200 dark:border-pink-800">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">🎂</span>
-                  <div className="space-y-2">
-                    <h4 className="font-semibold text-pink-900 dark:text-pink-100">Cumpleaños Automático</h4>
-                    <p className="text-sm text-pink-800 dark:text-pink-200">
-                      El sistema detectará automáticamente los cumpleaños de hoy desde la base de datos de miembros.
-                    </p>
-                    <p className="text-xs text-pink-700 dark:text-pink-300 italic">
-                      No necesitas configurar nada. El sistema buscará los cumpleaños de hoy automáticamente.
                     </p>
                   </div>
                 </div>

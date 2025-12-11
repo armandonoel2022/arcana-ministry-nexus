@@ -1,6 +1,6 @@
 /**
  * Servicio Unificado de Notificaciones ARCANA
- *
+ * 
  * Este servicio centraliza todas las notificaciones de la app:
  * - Guardado en system_notifications (persistencia)
  * - Disparo de overlays visuales
@@ -8,36 +8,37 @@
  */
 
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-// Tipos de notificación definidos en el sistema - ALINEADO CON LA BASE DE DATOS
-export type NotificationType =
-  | "service_overlay"
-  | "daily_verse"
-  | "daily_advice"
-  | "birthday"
-  | "birthday_daily"
-  | "birthday_monthly"
-  | "death_announcement"
-  | "meeting_announcement"
-  | "special_service"
-  | "prayer_request"
-  | "blood_donation"
-  | "extraordinary_rehearsal"
-  | "ministry_instructions"
-  | "director_replacement_request"
-  | "song_selection"
-  | "agenda_notification"
-  | "general";
+// Tipos de notificación definidos en el sistema
+export type NotificationType = 
+  | 'service_overlay'
+  | 'daily_verse'
+  | 'daily_advice'
+  | 'birthday'
+  | 'birthday_daily'
+  | 'birthday_monthly'
+  | 'death_announcement'
+  | 'meeting_announcement'
+  | 'special_service'
+  | 'prayer_request'
+  | 'blood_donation'
+  | 'extraordinary_rehearsal'
+  | 'ministry_instructions'
+  | 'director_replacement_request'
+  | 'song_selection'
+  | 'agenda_notification'
+  | 'general';
 
 // Categorías de notificación
-export type NotificationCategory =
-  | "overlay"
-  | "birthday"
-  | "agenda"
-  | "repertory"
-  | "director"
-  | "scheduled"
-  | "general";
+export type NotificationCategory = 
+  | 'overlay'
+  | 'birthday'
+  | 'agenda'
+  | 'repertory'
+  | 'director'
+  | 'scheduled'
+  | 'general';
 
 // Prioridades
 export type NotificationPriority = 1 | 2 | 3; // 1=baja, 2=media, 3=alta
@@ -47,7 +48,6 @@ export interface CreateNotificationParams {
   title: string;
   message: string;
   recipientId?: string | null; // null = broadcast a todos
-  senderId?: string | null; // ID del usuario que envía
   metadata?: Record<string, any>;
   category?: NotificationCategory;
   priority?: NotificationPriority;
@@ -64,112 +64,109 @@ export interface NotificationResult {
 
 // Mapeo de tipos a categorías
 const typeToCategory: Record<NotificationType, NotificationCategory> = {
-  service_overlay: "overlay",
-  daily_verse: "overlay",
-  daily_advice: "overlay",
-  birthday: "overlay",
-  birthday_daily: "birthday",
-  birthday_monthly: "birthday",
-  death_announcement: "overlay",
-  meeting_announcement: "overlay",
-  special_service: "overlay",
-  prayer_request: "overlay",
-  blood_donation: "overlay",
-  extraordinary_rehearsal: "overlay",
-  ministry_instructions: "overlay",
-  director_replacement_request: "director",
-  song_selection: "repertory",
-  agenda_notification: "agenda",
-  general: "general",
+  service_overlay: 'overlay',
+  daily_verse: 'overlay',
+  daily_advice: 'overlay',
+  birthday: 'overlay',
+  birthday_daily: 'birthday',
+  birthday_monthly: 'birthday',
+  death_announcement: 'overlay',
+  meeting_announcement: 'overlay',
+  special_service: 'overlay',
+  prayer_request: 'overlay',
+  blood_donation: 'overlay',
+  extraordinary_rehearsal: 'overlay',
+  ministry_instructions: 'overlay',
+  director_replacement_request: 'director',
+  song_selection: 'repertory',
+  agenda_notification: 'agenda',
+  general: 'general',
 };
 
 // Tipos que deben mostrar overlay automáticamente
 const overlayTypes: NotificationType[] = [
-  "service_overlay",
-  "daily_verse",
-  "daily_advice",
-  "birthday",
-  "death_announcement",
-  "meeting_announcement",
-  "special_service",
-  "prayer_request",
-  "blood_donation",
-  "extraordinary_rehearsal",
-  "ministry_instructions",
+  'service_overlay',
+  'daily_verse',
+  'daily_advice',
+  'birthday',
+  'death_announcement',
+  'meeting_announcement',
+  'special_service',
+  'prayer_request',
+  'blood_donation',
+  'extraordinary_rehearsal',
+  'ministry_instructions',
 ];
 
 /**
- * Función principal para crear notificaciones
- * Esta función maneja tanto notificaciones individuales como broadcast
+ * Crear una notificación unificada
  */
 export async function createNotification(params: CreateNotificationParams): Promise<NotificationResult> {
-  console.log("📬 [NotificationService] Creando notificación:", params.type);
+  const {
+    type,
+    title,
+    message,
+    recipientId = null,
+    metadata = {},
+    category = typeToCategory[type] || 'general',
+    priority = 2,
+    showOverlay = overlayTypes.includes(type),
+    sendNativePush = true,
+    scheduledFor = null,
+  } = params;
 
   try {
-    // Determinar la categoría basada en el tipo
-    const category = params.category || typeToCategory[params.type] || "general";
+    console.log('📬 [NotificationService] Creando notificación:', { type, title, recipientId, showOverlay });
 
-    // Obtener usuario actual como sender si no se especifica
-    let senderId = params.senderId;
-    if (!senderId) {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      senderId = user?.id || null;
-    }
-
-    // Preparar datos para insertar
+    // 1. Guardar en system_notifications
     const notificationData = {
-      type: params.type,
-      title: params.title,
-      message: params.message,
-      recipient_id: params.recipientId,
-      sender_id: senderId, // AÑADIR sender_id que la tabla requiere
+      type,
+      title,
+      message,
+      recipient_id: recipientId,
       notification_category: category,
-      priority: params.priority || 2,
-      metadata: params.metadata || {},
+      priority,
+      metadata: {
+        ...metadata,
+        created_via: 'notification_service',
+        show_overlay: showOverlay,
+      },
+      scheduled_for: scheduledFor?.toISOString() || null,
       is_read: false,
-      created_at: new Date().toISOString(),
     };
 
-    console.log("📬 [NotificationService] Insertando datos:", notificationData);
-
-    // Guardar en system_notifications
-    const { data: notification, error } = await supabase
-      .from("system_notifications")
+    const { data: notification, error: insertError } = await supabase
+      .from('system_notifications')
       .insert(notificationData)
-      .select("id")
+      .select('id')
       .single();
 
-    if (error) {
-      console.error("📬 [NotificationService] Error insertando:", error);
-      return {
-        success: false,
-        error: error.message,
-      };
+    if (insertError) {
+      console.error('📬 [NotificationService] Error insertando:', insertError);
+      throw new Error(`Error guardando notificación: ${insertError.message}`);
     }
 
-    console.log("📬 [NotificationService] Notificación guardada con ID:", notification?.id);
+    console.log('📬 [NotificationService] Notificación guardada con ID:', notification?.id);
 
-    // Disparar overlay si es necesario
-    if (params.showOverlay && overlayTypes.includes(params.type)) {
+    // 2. Disparar overlay si es necesario y no está programado
+    if (showOverlay && !scheduledFor) {
       dispatchOverlayEvent({
         id: notification?.id || `notification-${Date.now()}`,
-        type: params.type,
-        title: params.title,
-        message: params.message,
-        metadata: params.metadata || {},
+        type,
+        title,
+        message,
+        metadata,
       });
     }
 
-    // Enviar push nativo si está habilitado
-    if (params.sendNativePush) {
+    // 3. Enviar push nativa si está habilitado y no está programado
+    if (sendNativePush && !scheduledFor) {
       await sendNativePushNotification({
-        userId: params.recipientId,
-        title: params.title,
-        message: params.message,
-        type: params.type,
-        metadata: params.metadata,
+        userId: recipientId,
+        title,
+        message,
+        type,
+        metadata,
       });
     }
 
@@ -177,8 +174,9 @@ export async function createNotification(params: CreateNotificationParams): Prom
       success: true,
       notificationId: notification?.id,
     };
+
   } catch (error) {
-    console.error("📬 [NotificationService] Error:", error);
+    console.error('📬 [NotificationService] Error:', error);
     return {
       success: false,
       error: (error as Error).message,
@@ -187,14 +185,9 @@ export async function createNotification(params: CreateNotificationParams): Prom
 }
 
 /**
- * Crear una notificación broadcast (para todos los usuarios)
+ * Crear notificaciones broadcast (para todos los usuarios)
  */
-export async function createBroadcastNotification(
-  params: Omit<CreateNotificationParams, "recipientId">,
-): Promise<NotificationResult> {
-  console.log("📬 [NotificationService] Creando broadcast:", params.type);
-
-  // Usar la función createNotification con recipientId = null
+export async function createBroadcastNotification(params: Omit<CreateNotificationParams, 'recipientId'>): Promise<NotificationResult> {
   return createNotification({
     ...params,
     recipientId: null,
@@ -205,8 +198,8 @@ export async function createBroadcastNotification(
  * Crear notificaciones para múltiples usuarios
  */
 export async function createBulkNotifications(
-  params: Omit<CreateNotificationParams, "recipientId">,
-  recipientIds: string[],
+  params: Omit<CreateNotificationParams, 'recipientId'>,
+  recipientIds: string[]
 ): Promise<{ success: boolean; sentCount: number; errors: string[] }> {
   const errors: string[] = [];
   let sentCount = 0;
@@ -222,7 +215,7 @@ export async function createBulkNotifications(
     if (result.success) {
       sentCount++;
     } else {
-      errors.push(result.error || "Error desconocido");
+      errors.push(result.error || 'Error desconocido');
     }
   }
 
@@ -243,85 +236,71 @@ export function dispatchOverlayEvent(data: {
   message: string;
   metadata?: Record<string, any>;
 }): void {
-  console.log("📬 [NotificationService] Disparando overlay:", data.type);
+  console.log('📬 [NotificationService] Disparando overlay:', data.type);
 
   // Disparar evento genérico showOverlay
-  window.dispatchEvent(
-    new CustomEvent("showOverlay", {
-      detail: {
-        id: data.id,
-        type: data.type,
-        title: data.title,
-        message: data.message,
-        metadata: data.metadata || {},
-      },
-    }),
-  );
+  window.dispatchEvent(new CustomEvent('showOverlay', {
+    detail: {
+      id: data.id,
+      type: data.type,
+      title: data.title,
+      message: data.message,
+      metadata: data.metadata || {},
+    },
+  }));
 
   // Disparar eventos específicos según el tipo
   switch (data.type) {
-    case "service_overlay":
-      window.dispatchEvent(new CustomEvent("showServiceOverlay"));
+    case 'service_overlay':
+      window.dispatchEvent(new CustomEvent('showServiceOverlay'));
       break;
-    case "daily_verse":
-      window.dispatchEvent(
-        new CustomEvent("showVerseOverlay", {
-          detail: {
-            verseText: data.metadata?.verse_text || data.message,
-            verseReference: data.metadata?.verse_reference || "",
-          },
-        }),
-      );
+    case 'daily_verse':
+      window.dispatchEvent(new CustomEvent('showVerseOverlay', {
+        detail: {
+          verseText: data.metadata?.verse_text || data.message,
+          verseReference: data.metadata?.verse_reference || '',
+        },
+      }));
       break;
-    case "daily_advice":
-      window.dispatchEvent(
-        new CustomEvent("showAdviceOverlay", {
-          detail: {
-            title: data.metadata?.advice_title || data.title,
-            message: data.metadata?.advice_message || data.message,
-          },
-        }),
-      );
+    case 'daily_advice':
+      window.dispatchEvent(new CustomEvent('showAdviceOverlay', {
+        detail: {
+          title: data.metadata?.advice_title || data.title,
+          message: data.metadata?.advice_message || data.message,
+        },
+      }));
       break;
-    case "blood_donation":
-      window.dispatchEvent(
-        new CustomEvent("showBloodDonationOverlay", {
-          detail: data.metadata,
-        }),
-      );
+    case 'blood_donation':
+      window.dispatchEvent(new CustomEvent('showBloodDonationOverlay', {
+        detail: data.metadata,
+      }));
       break;
-    case "extraordinary_rehearsal":
-      window.dispatchEvent(
-        new CustomEvent("showRehearsalOverlay", {
-          detail: data.metadata,
-        }),
-      );
+    case 'extraordinary_rehearsal':
+      window.dispatchEvent(new CustomEvent('showRehearsalOverlay', {
+        detail: data.metadata,
+      }));
       break;
-    case "ministry_instructions":
-      window.dispatchEvent(
-        new CustomEvent("showInstructionsOverlay", {
-          detail: {
-            title: data.title,
-            instructions: data.message,
-            ...data.metadata,
-          },
-        }),
-      );
+    case 'ministry_instructions':
+      window.dispatchEvent(new CustomEvent('showInstructionsOverlay', {
+        detail: {
+          title: data.title,
+          instructions: data.message,
+          ...data.metadata,
+        },
+      }));
       break;
-    case "death_announcement":
-    case "meeting_announcement":
-    case "special_service":
-    case "prayer_request":
-      window.dispatchEvent(
-        new CustomEvent("showAnnouncementOverlay", {
-          detail: {
-            type: data.type,
-            title: data.title,
-            message: data.message,
-            ...data.metadata,
-          },
-        }),
-      );
+    case 'death_announcement':
+    case 'meeting_announcement':
+    case 'special_service':
+    case 'prayer_request':
+      window.dispatchEvent(new CustomEvent('showAnnouncementOverlay', {
+        detail: {
+          type: data.type,
+          title: data.title,
+          message: data.message,
+          ...data.metadata,
+        },
+      }));
       break;
   }
 }
@@ -338,30 +317,32 @@ async function sendNativePushNotification(params: {
 }): Promise<void> {
   try {
     // Verificar si hay suscripciones push para el usuario
-    let query = supabase.from("user_push_subscriptions").select("subscription, user_id");
-
+    let query = supabase
+      .from('user_push_subscriptions')
+      .select('subscription, user_id');
+    
     if (params.userId) {
-      query = query.eq("user_id", params.userId);
+      query = query.eq('user_id', params.userId);
     }
-
+    
     const { data: subscriptions, error } = await query;
-
+    
     if (error || !subscriptions || subscriptions.length === 0) {
-      console.log("📬 [NotificationService] No hay suscripciones push activas");
+      console.log('📬 [NotificationService] No hay suscripciones push activas');
       return;
     }
 
     console.log(`📬 [NotificationService] Enviando push a ${subscriptions.length} suscripciones`);
 
     // Enviar a través del edge function
-    await supabase.functions.invoke("send-push-notification", {
+    await supabase.functions.invoke('send-push-notification', {
       body: {
-        subscriptions: subscriptions.map((s) => s.subscription),
+        subscriptions: subscriptions.map(s => s.subscription),
         notification: {
           title: params.title,
           body: params.message,
-          icon: "/arcana-notification-icon.png",
-          badge: "/arcana-notification-icon.png",
+          icon: '/arcana-notification-icon.png',
+          badge: '/arcana-notification-icon.png',
           data: {
             type: params.type,
             ...params.metadata,
@@ -369,8 +350,9 @@ async function sendNativePushNotification(params: {
         },
       },
     });
+
   } catch (error) {
-    console.error("📬 [NotificationService] Error enviando push:", error);
+    console.error('📬 [NotificationService] Error enviando push:', error);
     // No lanzar error, push es opcional
   }
 }
@@ -380,7 +362,10 @@ async function sendNativePushNotification(params: {
  */
 export async function markNotificationAsRead(notificationId: string): Promise<boolean> {
   try {
-    const { error } = await supabase.from("system_notifications").update({ is_read: true }).eq("id", notificationId);
+    const { error } = await supabase
+      .from('system_notifications')
+      .update({ is_read: true })
+      .eq('id', notificationId);
 
     return !error;
   } catch {
@@ -398,30 +383,28 @@ export async function getUserNotifications(options?: {
 }): Promise<any[]> {
   const { limit = 50, unreadOnly = false, type } = options || {};
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
 
   let query = supabase
-    .from("system_notifications")
-    .select("*")
+    .from('system_notifications')
+    .select('*')
     .or(`recipient_id.eq.${user.id},recipient_id.is.null`)
-    .order("created_at", { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(limit);
 
   if (unreadOnly) {
-    query = query.eq("is_read", false);
+    query = query.eq('is_read', false);
   }
 
   if (type) {
-    query = query.eq("type", type);
+    query = query.eq('type', type);
   }
 
   const { data, error } = await query;
-
+  
   if (error) {
-    console.error("Error fetching notifications:", error);
+    console.error('Error fetching notifications:', error);
     return [];
   }
 
@@ -440,13 +423,12 @@ export function createBirthdayNotification(params: {
   recipientId?: string;
 }) {
   return createNotification({
-    type: "birthday",
+    type: 'birthday',
     title: `🎂 ¡Feliz Cumpleaños ${params.memberName}!`,
     message: `¡Hoy está de cumpleaños ${params.memberName}! Envíale una felicitación.`,
     recipientId: params.recipientId,
-    category: "birthday",
+    category: 'birthday',
     priority: 3,
-    showOverlay: true,
     metadata: {
       birthday_member_id: params.memberId,
       birthday_member_name: params.memberName,
@@ -465,7 +447,7 @@ export function createDirectorReplacementNotification(params: {
   originalDirector: string;
   replacementDirector: string;
   serviceDate: string;
-  status: "pending" | "accepted" | "rejected";
+  status: 'pending' | 'accepted' | 'rejected';
   requestId: string;
 }) {
   const statusMessages = {
@@ -475,11 +457,11 @@ export function createDirectorReplacementNotification(params: {
   };
 
   return createNotification({
-    type: "director_replacement_request",
-    title: "Solicitud de Reemplazo",
+    type: 'director_replacement_request',
+    title: 'Solicitud de Reemplazo',
     message: statusMessages[params.status],
     recipientId: params.recipientId,
-    category: "director",
+    category: 'director',
     priority: 3,
     showOverlay: true,
     metadata: {
@@ -502,11 +484,11 @@ export function createSongSelectionNotification(params: {
   recipientId?: string;
 }) {
   return createNotification({
-    type: "song_selection",
-    title: "Nueva Canción Seleccionada",
+    type: 'song_selection',
+    title: 'Nueva Canción Seleccionada',
     message: `${params.selectedBy} seleccionó "${params.songTitle}" para el servicio del ${params.serviceDate}`,
     recipientId: params.recipientId,
-    category: "repertory",
+    category: 'repertory',
     priority: 2,
     showOverlay: false,
     metadata: {
@@ -526,13 +508,13 @@ export function createBloodDonationNotification(params: {
   medicalCenter: string;
   contactPhone: string;
   familyMember: string;
-  urgencyLevel?: "normal" | "high" | "urgent";
+  urgencyLevel?: 'normal' | 'high' | 'urgent';
 }) {
   return createBroadcastNotification({
-    type: "blood_donation",
-    title: "🩸 Donación de Sangre Urgente",
+    type: 'blood_donation',
+    title: '🩸 Donación de Sangre Urgente',
     message: `Se necesita sangre tipo ${params.bloodType} para ${params.recipientName}`,
-    category: "overlay",
+    category: 'overlay',
     priority: 3,
     showOverlay: true,
     metadata: {
@@ -541,7 +523,7 @@ export function createBloodDonationNotification(params: {
       medical_center: params.medicalCenter,
       contact_phone: params.contactPhone,
       family_member: params.familyMember,
-      urgency_level: params.urgencyLevel || "urgent",
+      urgency_level: params.urgencyLevel || 'urgent',
     },
   });
 }
@@ -557,10 +539,10 @@ export function createExtraordinaryRehearsalNotification(params: {
   notes?: string;
 }) {
   return createBroadcastNotification({
-    type: "extraordinary_rehearsal",
-    title: "🎵 Ensayo Extraordinario",
+    type: 'extraordinary_rehearsal',
+    title: '🎵 Ensayo Extraordinario',
     message: `Ensayo para ${params.activityName} el ${params.rehearsalDate} a las ${params.rehearsalTime}`,
-    category: "overlay",
+    category: 'overlay',
     priority: 3,
     showOverlay: true,
     metadata: {
@@ -582,10 +564,10 @@ export function createMinistryInstructionsNotification(params: {
   priority?: NotificationPriority;
 }) {
   return createBroadcastNotification({
-    type: "ministry_instructions",
+    type: 'ministry_instructions',
     title: params.title,
     message: params.instructions,
-    category: "overlay",
+    category: 'overlay',
     priority: params.priority || 2,
     showOverlay: true,
     metadata: {
