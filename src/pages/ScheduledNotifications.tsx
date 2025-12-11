@@ -709,8 +709,7 @@ const ScheduledNotifications = () => {
     setFormData((prev) => ({ ...prev, name: autoName }));
   }, [formData.notification_type, formData.days_of_week]);
 
-  // Función de diagnóstico
-  // Función de diagnóstico MEJORADA
+  // Función de diagnóstico MEJORADA - CON sender_id AÑADIDO
   const testNotificationSystem = async () => {
     try {
       console.log("🔧 [Diagnóstico] Probando sistema de notificaciones...");
@@ -732,6 +731,7 @@ const ScheduledNotifications = () => {
         title: "🔧 Prueba de diagnóstico",
         message: "Esta es una prueba del sistema de notificaciones",
         recipient_id: user.id,
+        sender_id: user.id, // <-- ¡ESTO ES LO QUE FALTABA!
         notification_category: "overlay",
         priority: 2,
         metadata: {
