@@ -830,11 +830,12 @@ const ScheduledNotifications = () => {
       try {
         console.log("🔧 [Diagnóstico] Probando send_push_notification...");
 
+        // CORRECCIÓN: Usar los parámetros correctos según la definición de la función
         const { data: rpcResult, error: rpcError } = await supabase.rpc("send_push_notification", {
           p_user_id: user.id,
           p_title: "Prueba push",
-          p_body: "Este es un mensaje de prueba para push",
-          p_notification_type: "test",
+          p_message: "Este es un mensaje de prueba para push", // <-- CORREGIDO: p_message en lugar de p_body
+          p_type: "test", // <-- CORREGIDO: p_type en lugar de p_notification_type
         });
 
         if (rpcError) {
