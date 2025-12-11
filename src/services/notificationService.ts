@@ -99,7 +99,76 @@ const overlayTypes: NotificationType[] = [
 ];
 
 /**
- * Crear una notificación unificada
+ * Función principal para crear notificaciones
+ * Esta función maneja tanto notificaciones individuales como broadcast
+ */
+async function createNotification(params: CreateNotificationParams): Promise<NotificationResult> {
+  console.log("📬 [NotificationService] Creando notificación:", params.type);
+
+  try {
+    // Guardar en system_notifications
+    const { data: notification, error } = await supabase
+      .from("system_notifications")
+      .insert({
+        type: params.type,
+        title: params.title,
+        message: params.message,
+        recipient_id: params.recipientId,
+        notification_category: params.category || typeToCategory[params.type] || "general",
+        priority: params.priority || 2,
+        metadata: params.metadata || {},
+        is_read: false,
+      })
+      .select("id")
+      .single();
+
+    if (error) {
+      console.error("📬 [NotificationService] Error insertando:", error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+
+    console.log("📬 [NotificationService] Notificación guardada con ID:", notification?.id);
+
+    // Disparar overlay si es necesario
+    if (params.showOverlay) {
+      dispatchOverlayEvent({
+        id: notification?.id || `notification-${Date.now()}`,
+        type: params.type,
+        title: params.title,
+        message: params.message,
+        metadata: params.metadata || {},
+      });
+    }
+
+    // Enviar push nativo si está habilitado
+    if (params.sendNativePush) {
+      await sendNativePushNotification({
+        userId: params.recipientId,
+        title: params.title,
+        message: params.message,
+        type: params.type,
+        metadata: params.metadata,
+      });
+    }
+
+    return {
+      success: true,
+      notificationId: notification?.id,
+    };
+  } catch (error) {
+    console.error("📬 [NotificationService] Error:", error);
+    return {
+      success: false,
+      error: (error as Error).message,
+    };
+  }
+}
+
+/**
+ * Crear una notificación unificada (para broadcast o usuario específico)
  */
 export async function createBroadcastNotification(
   params: Omit<CreateNotificationParams, "recipientId">,
@@ -155,18 +224,6 @@ export async function createBroadcastNotification(
       error: (error as Error).message,
     };
   }
-}
-
-/**
- * Crear notificaciones broadcast (para todos los usuarios)
- */
-export async function createBroadcastNotification(
-  params: Omit<CreateNotificationParams, "recipientId">,
-): Promise<NotificationResult> {
-  return createNotification({
-    ...params,
-    recipientId: null,
-  });
 }
 
 /**
