@@ -557,6 +557,95 @@ const OverlayManager: React.FC = () => {
       }
     };
   }, [showOverlay, checkPendingOverlays, checkScheduledNotifications, getDefaultTitle]);
+  // State for dynamically loaded content
+  const [dynamicVerseData, setDynamicVerseData] = useState<{ text: string; reference: string } | null>(null);
+  const [dynamicAdviceData, setDynamicAdviceData] = useState<{ title: string; message: string } | null>(null);
+
+  // Load daily verse data when needed
+  useEffect(() => {
+    if (overlayType === 'daily_verse' && activeOverlay) {
+      const metadata = activeOverlay.metadata || {};
+      // Si ya tiene datos válidos, usarlos
+      if (metadata.verse_text && metadata.verse_text.length > 5) {
+        setDynamicVerseData({ text: metadata.verse_text, reference: metadata.verse_reference || '' });
+        return;
+      }
+      
+      // Cargar desde la base de datos
+      const loadVerseData = async () => {
+        const today = new Date().toISOString().split('T')[0];
+        const { data, error } = await supabase
+          .from('daily_verses')
+          .select('*, bible_verses(*)')
+          .eq('date', today)
+          .maybeSingle();
+
+        if (data?.bible_verses) {
+          const verse = data.bible_verses as any;
+          setDynamicVerseData({
+            text: verse.text,
+            reference: `${verse.book} ${verse.chapter}:${verse.verse}`
+          });
+        } else if (!error) {
+          // Si no hay versículo para hoy, obtener uno aleatorio
+          const { data: randomVerse } = await supabase
+            .from('bible_verses')
+            .select('*')
+            .limit(1)
+            .order('id', { ascending: false });
+          
+          if (randomVerse && randomVerse[0]) {
+            const verse = randomVerse[0];
+            setDynamicVerseData({
+              text: verse.text,
+              reference: `${verse.book} ${verse.chapter}:${verse.verse}`
+            });
+          }
+        }
+      };
+      loadVerseData();
+    }
+  }, [overlayType, activeOverlay]);
+
+  // Load daily advice data when needed
+  useEffect(() => {
+    if (overlayType === 'daily_advice' && activeOverlay) {
+      const metadata = activeOverlay.metadata || {};
+      // Si ya tiene datos válidos, usarlos
+      if (metadata.advice_message && metadata.advice_message.length > 5) {
+        setDynamicAdviceData({ title: metadata.advice_title || 'Consejo del Día', message: metadata.advice_message });
+        return;
+      }
+      
+      // Cargar desde la base de datos - seleccionar uno aleatorio
+      const loadAdviceData = async () => {
+        const { data, error } = await supabase
+          .from('daily_advice')
+          .select('*')
+          .eq('is_active', true);
+
+        if (data && data.length > 0) {
+          // Seleccionar uno aleatorio basado en el día
+          const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+          const index = dayOfYear % data.length;
+          const advice = data[index];
+          setDynamicAdviceData({
+            title: advice.title,
+            message: advice.message
+          });
+        }
+      };
+      loadAdviceData();
+    }
+  }, [overlayType, activeOverlay]);
+
+  // Reset dynamic data when overlay closes
+  useEffect(() => {
+    if (!activeOverlay) {
+      setDynamicVerseData(null);
+      setDynamicAdviceData(null);
+    }
+  }, [activeOverlay]);
 
   // Render the appropriate overlay based on type
   const renderOverlay = () => {
@@ -578,19 +667,27 @@ const OverlayManager: React.FC = () => {
         );
 
       case "daily_verse":
+        // Usar datos dinámicos si están disponibles, sino esperar
+        if (!dynamicVerseData) {
+          return null; // Esperar a que carguen los datos
+        }
         return (
           <DailyVerseOverlay
-            verseText={metadata.verse_text || activeOverlay.message || ""}
-            verseReference={metadata.verse_reference || ""}
+            verseText={dynamicVerseData.text}
+            verseReference={dynamicVerseData.reference}
             onClose={handleDismiss}
           />
         );
 
       case "daily_advice":
+        // Usar datos dinámicos si están disponibles, sino esperar
+        if (!dynamicAdviceData) {
+          return null; // Esperar a que carguen los datos
+        }
         return (
           <DailyAdviceOverlay
-            title={metadata.advice_title || activeOverlay.title || ""}
-            message={metadata.advice_message || activeOverlay.message || ""}
+            title={dynamicAdviceData.title}
+            message={dynamicAdviceData.message}
             onClose={handleDismiss}
           />
         );
