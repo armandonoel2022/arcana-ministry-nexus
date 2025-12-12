@@ -1217,6 +1217,42 @@ export type Database = {
         }
         Relationships: []
       }
+      push_notification_logs: {
+        Row: {
+          created_at: string | null
+          device_token: string | null
+          id: string
+          message: string | null
+          sent_at: string | null
+          status: string | null
+          title: string | null
+          type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          device_token?: string | null
+          id?: string
+          message?: string | null
+          sent_at?: string | null
+          status?: string | null
+          title?: string | null
+          type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          device_token?: string | null
+          id?: string
+          message?: string | null
+          sent_at?: string | null
+          status?: string | null
+          title?: string | null
+          type?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       rehearsal_participants: {
         Row: {
           id: string
@@ -2518,6 +2554,8 @@ export type Database = {
         | "blood_donation"
         | "extraordinary_rehearsal"
         | "ministry_instructions"
+        | "birthday"
+        | "agenda_notification"
       song_knowledge: "unknown" | "learning" | "known" | "expert"
       user_role:
         | "admin"
@@ -2739,6 +2777,8 @@ export const Constants = {
         "blood_donation",
         "extraordinary_rehearsal",
         "ministry_instructions",
+        "birthday",
+        "agenda_notification",
       ],
       song_knowledge: ["unknown", "learning", "known", "expert"],
       user_role: [

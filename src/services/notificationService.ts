@@ -124,7 +124,7 @@ export async function createNotification(params: CreateNotificationParams): Prom
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    const senderId = user?.id || "system";
+    const senderId = user?.id || null; // null si no hay usuario (sistema)
 
     // 1. Guardar en system_notifications (CORREGIDO: agregado sender_id y created_at)
     const notificationData = {
@@ -216,7 +216,7 @@ export async function createBroadcastNotification(
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    const senderId = user?.id || "system";
+    const senderId = user?.id || null; // null si no hay usuario (sistema)
 
     // Para broadcast en Lovable, creamos solo una notificación sin recipient_id
     const notificationData = {

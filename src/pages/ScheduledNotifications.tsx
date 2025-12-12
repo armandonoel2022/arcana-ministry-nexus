@@ -237,7 +237,7 @@ const ScheduledNotifications = () => {
                           birthday_member_name: `${birthdayMember.nombres} ${birthdayMember.apellidos}`,
                           birthday_member_photo: birthdayMember.photo_url,
                           member_role: birthdayMember.cargo,
-                          birthday_date: member.fecha_nacimiento,
+                          birthday_date: birthdayMember.fecha_nacimiento,
                           show_confetti: true,
                           play_birthday_sound: true,
                         };
