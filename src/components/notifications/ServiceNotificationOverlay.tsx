@@ -25,6 +25,7 @@ import { format, addDays, startOfWeek, endOfWeek, getDay, isWithinInterval, pars
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
+import { createBroadcastNotification } from "@/services/notificationService";
 
 interface WeekendService {
   id: string;
@@ -311,34 +312,32 @@ const createServiceAgendaNotification = async (services: WeekendService[]) => {
       })),
     };
 
-    // Insertar la notificación en system_notifications
-    const { data, error } = await supabase
-      .from("system_notifications")
-      .insert({
-        type: "service_overlay",
-        title: title,
-        message: message,
-        recipient_id: null, // Para todos los usuarios
-        notification_category: "agenda",
-        priority: 2, // Prioridad media
-        metadata: metadata,
-        is_read: false,
-      })
-      .select()
-      .single();
+    // Usar el servicio unificado de notificaciones
+    const result = await createBroadcastNotification({
+      type: "service_overlay",
+      title: title,
+      message: message,
+      category: "agenda",
+      priority: 2,
+      metadata: metadata,
+      showOverlay: false, // No mostrar overlay automáticamente aquí
+      sendNativePush: false,
+    });
 
-    if (error) {
-      console.error("❌ Error creando notificación de agenda:", error);
-      toast.error("No se pudo crear el registro de la agenda");
+    if (!result.success) {
+      console.error("❌ Error creando notificación de agenda:", result.error);
+      // No mostrar toast de error - el overlay funciona aunque no se guarde
+      console.log("⚠️ El overlay se muestra aunque la persistencia falló");
       return null;
     } else {
-      console.log("✅ Notificación de agenda creada exitosamente:", data.id);
+      console.log("✅ Notificación de agenda creada exitosamente:", result.notificationId);
       toast.success("Agenda registrada en notificaciones");
-      return data;
+      return { id: result.notificationId };
     }
   } catch (error) {
     console.error("❌ Error en createServiceAgendaNotification:", error);
-    toast.error("Error al crear registro de agenda");
+    // No mostrar toast de error - el overlay funciona aunque no se guarde
+    console.log("⚠️ El overlay se muestra aunque la persistencia falló");
     return null;
   }
 };
