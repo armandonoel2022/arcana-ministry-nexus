@@ -729,7 +729,7 @@ const ScheduledNotifications = () => {
 
       // PRUEBA DIRECTA - Sin Edge Functions
       const testNotification = {
-        type: "test_overlay",
+        type: "general", // Usar tipo válido del enum
         title: "🔧 Prueba del Sistema",
         message: "Esta es una prueba del sistema de notificaciones en Lovable",
         recipient_id: user.id,
@@ -742,7 +742,6 @@ const ScheduledNotifications = () => {
           diagnostic: "direct_test",
         },
         is_read: false,
-        created_at: new Date().toISOString(),
       };
 
       console.log("🔧 [Diagnóstico] Intentando insertar:", testNotification);
@@ -761,7 +760,7 @@ const ScheduledNotifications = () => {
         try {
           const notificationService = await import("@/services/notificationService");
           const result = await notificationService.createNotification({
-            type: "test_overlay",
+            type: "general", // Usar tipo válido del enum
             title: "🔧 Prueba via Servicio",
             message: "Esta es una prueba usando el servicio de notificaciones",
             recipientId: user.id,
