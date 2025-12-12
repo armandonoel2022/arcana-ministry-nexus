@@ -9,7 +9,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-// Tipos de notificación definidos en el sistema
+// Tipos de notificación definidos en el sistema (deben coincidir con enum en DB)
 export type NotificationType =
   | "service_overlay"
   | "daily_verse"
@@ -25,10 +25,14 @@ export type NotificationType =
   | "extraordinary_rehearsal"
   | "ministry_instructions"
   | "director_replacement_request"
+  | "director_replacement_response"
+  | "director_change"
   | "song_selection"
   | "agenda_notification"
+  | "service_program"
+  | "special_event"
   | "general"
-  | "test_overlay";
+  | "system";
 
 // Categorías de notificación
 export type NotificationCategory =
@@ -78,10 +82,14 @@ const typeToCategory: Record<NotificationType, NotificationCategory> = {
   extraordinary_rehearsal: "overlay",
   ministry_instructions: "overlay",
   director_replacement_request: "director",
+  director_replacement_response: "director",
+  director_change: "director",
   song_selection: "repertory",
   agenda_notification: "agenda",
+  service_program: "overlay",
+  special_event: "overlay",
   general: "general",
-  test_overlay: "general",
+  system: "general",
 };
 
 // Tipos que deben mostrar overlay automáticamente
@@ -97,7 +105,8 @@ const overlayTypes: NotificationType[] = [
   "blood_donation",
   "extraordinary_rehearsal",
   "ministry_instructions",
-  "test_overlay",
+  "service_program",
+  "special_event",
 ];
 
 /**
