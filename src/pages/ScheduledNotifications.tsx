@@ -790,7 +790,7 @@ const ScheduledNotifications = () => {
         console.log("🔧 [Diagnóstico] ✅ Insertado directamente con ID:", data.id);
         toast.success("✅ Prueba exitosa. Notificación creada.");
 
-        // Intentar disparar overlay después de un breve delay
+        // Disparar overlay con tipo válido
         setTimeout(() => {
           try {
             if (typeof window !== "undefined") {
@@ -798,7 +798,7 @@ const ScheduledNotifications = () => {
                 new CustomEvent("showOverlay", {
                   detail: {
                     id: data.id,
-                    type: "test_overlay",
+                    type: "general",
                     title: testNotification.title,
                     message: testNotification.message,
                     metadata: testNotification.metadata,
