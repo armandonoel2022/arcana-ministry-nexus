@@ -47,6 +47,7 @@ import DirectorReplacementNotificationOverlay from "./components/agenda/Director
 import SongChangeOverlay from "./components/songs/SongChangeOverlay";
 import { PendingSongNotifications } from "./components/songs/PendingSongNotifications";
 import { SwipeIndicator } from "./components/SwipeIndicator";
+import { OfflineIndicator } from "./components/OfflineIndicator";
 import { supabase } from "./integrations/supabase/client";
 import "./App.css";
 
@@ -91,7 +92,8 @@ function AppContent() {
                 <SwipeIndicator />
                 {/* OverlayManager dentro de la zona protegida para acceder al usuario */}
                 <OverlayManager />
-                <div className="flex h-screen w-full bg-gray-50">
+                <OfflineIndicator />
+                <div className="flex h-screen w-full bg-gray-50 pt-0">
                   <AppSidebar />
                   <div className="flex-1 flex flex-col">
                     <main className="flex-1 overflow-auto bg-gray-50">
