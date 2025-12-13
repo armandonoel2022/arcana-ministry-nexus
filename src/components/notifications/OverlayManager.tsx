@@ -101,7 +101,33 @@ const OverlayManager: React.FC = () => {
     setOverlayType(null);
   }, [activeOverlay]);
 
-  // Check for pending overlays when component mounts - only show ONE pending overlay
+  // Queue for pending overlays
+  const overlayQueue = useRef<OverlayData[]>([]);
+  const isProcessingQueue = useRef(false);
+
+  // Process next overlay in queue
+  const processNextOverlay = useCallback(() => {
+    if (overlayQueue.current.length === 0) {
+      isProcessingQueue.current = false;
+      return;
+    }
+
+    const nextOverlay = overlayQueue.current.shift();
+    if (nextOverlay) {
+      showOverlay(nextOverlay);
+    }
+  }, [showOverlay]);
+
+  // Enhanced dismiss that processes queue
+  const handleDismissWithQueue = useCallback(async () => {
+    await handleDismiss();
+    // Small delay before showing next overlay
+    setTimeout(() => {
+      processNextOverlay();
+    }, 500);
+  }, [handleDismiss, processNextOverlay]);
+
+  // Check for pending overlays when component mounts - SHOW ALL pending overlays in queue
   const checkPendingOverlays = useCallback(async () => {
     // Prevent multiple initializations
     if (hasInitialized.current) {
@@ -138,6 +164,7 @@ const OverlayManager: React.FC = () => {
         "ministry_instructions",
       ];
 
+      // Get ALL pending notifications (not just 1)
       const { data: pendingNotifications, error } = await supabase
         .from("system_notifications")
         .select("*")
@@ -145,8 +172,7 @@ const OverlayManager: React.FC = () => {
         .eq("is_read", false)
         .in("type", overlayTypes)
         .order("priority", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(1);
+        .order("created_at", { ascending: true }); // Oldest first
 
       if (error) {
         console.error("Error checking pending overlays:", error);
@@ -154,30 +180,40 @@ const OverlayManager: React.FC = () => {
       }
 
       if (pendingNotifications && pendingNotifications.length > 0) {
-        const notification = pendingNotifications[0];
-        console.log("📱 [OverlayManager] Overlay pendiente encontrado:", notification);
+        console.log(`📱 [OverlayManager] ${pendingNotifications.length} overlays pendientes encontrados`);
 
-        // Check if this notification was already shown in this session
-        const sessionKey = `overlay_shown_session_${notification.id}`;
-        const shownInSession = sessionStorage.getItem(sessionKey);
+        // Filter out already shown in this session
+        const notShownNotifications = pendingNotifications.filter(notification => {
+          const sessionKey = `overlay_shown_session_${notification.id}`;
+          return !sessionStorage.getItem(sessionKey);
+        });
 
-        if (!shownInSession) {
-          sessionStorage.setItem(sessionKey, "true");
-          showOverlay({
-            id: notification.id,
-            type: notification.type,
-            title: notification.title,
-            message: notification.message,
-            metadata: notification.metadata || {},
+        if (notShownNotifications.length > 0) {
+          // Add all to queue
+          notShownNotifications.forEach(notification => {
+            sessionStorage.setItem(`overlay_shown_session_${notification.id}`, "true");
+            overlayQueue.current.push({
+              id: notification.id,
+              type: notification.type,
+              title: notification.title,
+              message: notification.message,
+              metadata: notification.metadata || {},
+            });
           });
+
+          // Start processing queue
+          if (!isProcessingQueue.current) {
+            isProcessingQueue.current = true;
+            processNextOverlay();
+          }
         } else {
-          console.log("📱 [OverlayManager] Overlay ya mostrado en esta sesión");
+          console.log("📱 [OverlayManager] Todos los overlays ya mostrados en esta sesión");
         }
       }
     } catch (error) {
       console.error("Error in checkPendingOverlays:", error);
     }
-  }, [showOverlay]);
+  }, [showOverlay, processNextOverlay]);
 
   // Función MEJORADA para verificar notificaciones programadas - SISTEMA DE BACKUP
   const checkScheduledNotifications = useCallback(async () => {
@@ -658,9 +694,9 @@ const OverlayManager: React.FC = () => {
         return (
           <ServiceNotificationOverlay
             forceShow={true}
-            onClose={handleDismiss}
+            onClose={handleDismissWithQueue}
             onNavigate={(path) => {
-              handleDismiss();
+              handleDismissWithQueue();
               navigate(path);
             }}
           />
@@ -675,7 +711,7 @@ const OverlayManager: React.FC = () => {
           <DailyVerseOverlay
             verseText={dynamicVerseData.text}
             verseReference={dynamicVerseData.reference}
-            onClose={handleDismiss}
+            onClose={handleDismissWithQueue}
           />
         );
 
@@ -688,7 +724,7 @@ const OverlayManager: React.FC = () => {
           <DailyAdviceOverlay
             title={dynamicAdviceData.title}
             message={dynamicAdviceData.message}
-            onClose={handleDismiss}
+            onClose={handleDismissWithQueue}
           />
         );
 
@@ -701,7 +737,7 @@ const OverlayManager: React.FC = () => {
             title={metadata.title || activeOverlay.title || ""}
             message={metadata.message || activeOverlay.message || ""}
             announcementType={overlayType as any}
-            onClose={handleDismiss}
+            onClose={handleDismissWithQueue}
           />
         );
 
@@ -711,7 +747,7 @@ const OverlayManager: React.FC = () => {
             title={metadata.title || activeOverlay.title || ""}
             instructions={metadata.instructions || activeOverlay.message || ""}
             priority={metadata.priority || "normal"}
-            onClose={handleDismiss}
+            onClose={handleDismissWithQueue}
           />
         );
 
@@ -723,7 +759,7 @@ const OverlayManager: React.FC = () => {
             time={metadata.rehearsal_time || ""}
             location={metadata.location}
             additionalNotes={metadata.additional_notes}
-            onClose={handleDismiss}
+            onClose={handleDismissWithQueue}
           />
         );
 
@@ -737,7 +773,7 @@ const OverlayManager: React.FC = () => {
             familyContact={metadata.family_contact || ""}
             urgencyLevel={metadata.urgency_level || "urgent"}
             additionalInfo={metadata.additional_info}
-            onClose={handleDismiss}
+            onClose={handleDismissWithQueue}
           />
         );
 
