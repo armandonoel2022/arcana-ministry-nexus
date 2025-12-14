@@ -51,9 +51,9 @@ export const ChatRoomManagement = () => {
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [allProfiles, setAllProfiles] = useState<any[]>([]);
+  const [allMembers, setAllMembers] = useState<any[]>([]);
   const [showAddMembersDialog, setShowAddMembersDialog] = useState(false);
-  const [selectedUsersToAdd, setSelectedUsersToAdd] = useState<string[]>([]);
+  const [selectedMembersToAdd, setSelectedMembersToAdd] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [addingMembers, setAddingMembers] = useState(false);
   const { toast } = useToast();
@@ -67,49 +67,51 @@ export const ChatRoomManagement = () => {
     if (selectedRoom) {
       fetchRoomMembers();
       fetchJoinRequests();
-      fetchAllProfiles();
+      fetchAllMembers();
     }
   }, [selectedRoom]);
 
-  const fetchAllProfiles = async () => {
+  const fetchAllMembers = async () => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, photo_url')
+        .from('members')
+        .select('id, nombres, apellidos, email, photo_url, cargo, voz_instrumento')
         .eq('is_active', true)
-        .order('full_name');
+        .order('nombres');
 
       if (error) throw error;
-      setAllProfiles(data || []);
+      setAllMembers(data || []);
     } catch (error) {
-      console.error('Error fetching profiles:', error);
+      console.error('Error fetching members:', error);
     }
   };
 
   const addSelectedMembers = async () => {
-    if (!selectedRoom || selectedUsersToAdd.length === 0) return;
+    if (!selectedRoom || selectedMembersToAdd.length === 0) return;
 
     setAddingMembers(true);
     try {
-      const membersToAdd = selectedUsersToAdd.map(userId => ({
+      // For members table, we need to find matching profiles by email
+      // or create a mapping. For now, we'll add using member IDs as identifiers
+      const membersToAdd = selectedMembersToAdd.map(memberId => ({
         room_id: selectedRoom.id,
-        user_id: userId,
+        user_id: memberId, // Using member ID directly
         role: 'member',
         can_leave: true
       }));
 
       const { error } = await supabase
         .from('chat_room_members')
-        .upsert(membersToAdd, { onConflict: 'room_id,user_id' });
+        .insert(membersToAdd);
 
       if (error) throw error;
 
       toast({
         title: "Éxito",
-        description: `${selectedUsersToAdd.length} miembro(s) agregado(s) a la sala`
+        description: `${selectedMembersToAdd.length} miembro(s) agregado(s) a la sala`
       });
 
-      setSelectedUsersToAdd([]);
+      setSelectedMembersToAdd([]);
       setShowAddMembersDialog(false);
       fetchRoomMembers();
     } catch (error) {
@@ -130,32 +132,33 @@ export const ChatRoomManagement = () => {
     setAddingMembers(true);
     try {
       const existingMemberIds = members.map(m => m.user_id);
-      const profilesToAdd = allProfiles.filter(p => !existingMemberIds.includes(p.id));
+      const membersNotInRoom = allMembers.filter(m => !existingMemberIds.includes(m.id));
 
-      if (profilesToAdd.length === 0) {
+      if (membersNotInRoom.length === 0) {
         toast({
           title: "Info",
-          description: "Todos los usuarios ya son miembros de esta sala"
+          description: "Todos los integrantes ya son miembros de esta sala"
         });
+        setAddingMembers(false);
         return;
       }
 
-      const membersToAdd = profilesToAdd.map(profile => ({
+      const membersToAdd = membersNotInRoom.map(member => ({
         room_id: selectedRoom.id,
-        user_id: profile.id,
+        user_id: member.id,
         role: 'member',
         can_leave: true
       }));
 
       const { error } = await supabase
         .from('chat_room_members')
-        .upsert(membersToAdd, { onConflict: 'room_id,user_id' });
+        .insert(membersToAdd);
 
       if (error) throw error;
 
       toast({
         title: "Éxito",
-        description: `${profilesToAdd.length} miembro(s) agregado(s) a la sala`
+        description: `${membersNotInRoom.length} integrante(s) agregado(s) a la sala`
       });
 
       setShowAddMembersDialog(false);
@@ -164,7 +167,7 @@ export const ChatRoomManagement = () => {
       console.error('Error adding all members:', error);
       toast({
         title: "Error",
-        description: "No se pudieron agregar todos los miembros",
+        description: "No se pudieron agregar todos los integrantes",
         variant: "destructive"
       });
     } finally {
@@ -506,43 +509,45 @@ export const ChatRoomManagement = () => {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
-                      placeholder="Buscar usuario..."
+                      placeholder="Buscar integrante..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-9"
                     />
                   </div>
                   <ScrollArea className="h-[300px] border rounded-lg p-2">
-                    {allProfiles
-                      .filter(profile => {
-                        const isAlreadyMember = members.some(m => m.user_id === profile.id);
-                        const matchesSearch = profile.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                              profile.email?.toLowerCase().includes(searchTerm.toLowerCase());
+                    {allMembers
+                      .filter(member => {
+                        const isAlreadyMember = members.some(m => m.user_id === member.id);
+                        const fullName = `${member.nombres} ${member.apellidos}`.toLowerCase();
+                        const matchesSearch = fullName.includes(searchTerm.toLowerCase()) ||
+                                              member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                              member.cargo?.toLowerCase().includes(searchTerm.toLowerCase());
                         return !isAlreadyMember && matchesSearch;
                       })
-                      .map(profile => (
+                      .map(member => (
                         <div
-                          key={profile.id}
+                          key={member.id}
                           className="flex items-center gap-3 p-2 hover:bg-muted rounded-lg cursor-pointer"
                           onClick={() => {
-                            setSelectedUsersToAdd(prev =>
-                              prev.includes(profile.id)
-                                ? prev.filter(id => id !== profile.id)
-                                : [...prev, profile.id]
+                            setSelectedMembersToAdd(prev =>
+                              prev.includes(member.id)
+                                ? prev.filter(id => id !== member.id)
+                                : [...prev, member.id]
                             );
                           }}
                         >
                           <Checkbox
-                            checked={selectedUsersToAdd.includes(profile.id)}
+                            checked={selectedMembersToAdd.includes(member.id)}
                           />
                           <Avatar className="w-8 h-8">
                             <AvatarFallback className="text-xs">
-                              {getInitials(profile.full_name)}
+                              {getInitials(`${member.nombres} ${member.apellidos}`)}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{profile.full_name}</p>
-                            <p className="text-xs text-muted-foreground truncate">{profile.email}</p>
+                            <p className="text-sm font-medium truncate">{member.nombres} {member.apellidos}</p>
+                            <p className="text-xs text-muted-foreground truncate">{member.cargo} • {member.voz_instrumento || 'N/A'}</p>
                           </div>
                         </div>
                       ))}
@@ -550,10 +555,10 @@ export const ChatRoomManagement = () => {
                   <div className="flex gap-2">
                     <Button
                       onClick={addSelectedMembers}
-                      disabled={selectedUsersToAdd.length === 0 || addingMembers}
+                      disabled={selectedMembersToAdd.length === 0 || addingMembers}
                       className="flex-1"
                     >
-                      {addingMembers ? "Agregando..." : `Agregar ${selectedUsersToAdd.length} seleccionados`}
+                      {addingMembers ? "Agregando..." : `Agregar ${selectedMembersToAdd.length} seleccionados`}
                     </Button>
                     <Button
                       variant="outline"
