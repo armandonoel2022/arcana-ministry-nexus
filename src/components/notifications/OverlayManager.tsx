@@ -127,7 +127,24 @@ const OverlayManager: React.FC = () => {
     }, 500);
   }, [handleDismiss, processNextOverlay]);
 
-  // Check for pending overlays when component mounts - SHOW ALL pending overlays in queue
+  // Función helper para obtener títulos por defecto - MOVED UP before checkPendingOverlays
+  const getDefaultTitle = useCallback((type: string): string => {
+    const titles: Record<string, string> = {
+      service_overlay: "Programa de Servicios",
+      daily_verse: "Versículo del Día",
+      daily_advice: "Consejo del Día",
+      death_announcement: "Anuncio de Fallecimiento",
+      meeting_announcement: "Convocatoria a Reunión",
+      special_service: "Servicio Especial",
+      prayer_request: "Solicitud de Oración",
+      blood_donation: "Donación de Sangre Urgente",
+      extraordinary_rehearsal: "Ensayo Extraordinario",
+      ministry_instructions: "Instrucciones a Integrantes",
+    };
+    return titles[type] || "Notificación";
+  }, []);
+
+  // Check for pending overlays AND missed scheduled notifications when component mounts
   const checkPendingOverlays = useCallback(async () => {
     // Prevent multiple initializations
     if (hasInitialized.current) {
@@ -164,7 +181,7 @@ const OverlayManager: React.FC = () => {
         "ministry_instructions",
       ];
 
-      // Get ALL pending notifications (not just 1)
+      // Get ALL pending notifications from system_notifications (not just 1)
       const { data: pendingNotifications, error } = await supabase
         .from("system_notifications")
         .select("*")
@@ -176,11 +193,64 @@ const OverlayManager: React.FC = () => {
 
       if (error) {
         console.error("Error checking pending overlays:", error);
-        return;
       }
 
+      // ALSO check for scheduled notifications that should have triggered TODAY
+      const rdNow = new Date();
+      const dominicanTime = new Date(rdNow.toLocaleString("en-US", { timeZone: "America/Santo_Domingo" }));
+      const currentDay = dominicanTime.getDay();
+      const currentHour = dominicanTime.getHours();
+      const currentMinute = dominicanTime.getMinutes();
+      const currentTimeInMinutes = currentHour * 60 + currentMinute;
+      const todayDateKey = dominicanTime.toISOString().split('T')[0];
+
+      // Fetch scheduled notifications for today
+      const { data: scheduledNotifications } = await supabase
+        .from("scheduled_notifications")
+        .select("*")
+        .contains("days_of_week", [currentDay])
+        .eq("is_active", true);
+
+      const missedScheduledOverlays: OverlayData[] = [];
+
+      if (scheduledNotifications && scheduledNotifications.length > 0) {
+        console.log("📱 [OverlayManager] Verificando notificaciones programadas para hoy:", scheduledNotifications.length);
+
+        for (const scheduled of scheduledNotifications) {
+          // Parse scheduled time
+          const timeParts = scheduled.time.split(':');
+          const scheduledHour = parseInt(timeParts[0], 10);
+          const scheduledMinute = parseInt(timeParts[1], 10);
+          const scheduledTimeInMinutes = scheduledHour * 60 + scheduledMinute;
+
+          // If scheduled time has already passed today
+          if (scheduledTimeInMinutes <= currentTimeInMinutes) {
+            // Check if we've already shown this one today (using localStorage for persistence across sessions)
+            const shownKey = `scheduled_shown_${scheduled.id}_${todayDateKey}`;
+            
+            if (!localStorage.getItem(shownKey)) {
+              console.log(`📱 [OverlayManager] Notificación programada perdida encontrada: ${scheduled.name} (${scheduled.time})`);
+              
+              // Mark as shown for today
+              localStorage.setItem(shownKey, "true");
+              
+              missedScheduledOverlays.push({
+                id: `scheduled-missed-${scheduled.id}-${Date.now()}`,
+                type: scheduled.notification_type,
+                title: scheduled.name || getDefaultTitle(scheduled.notification_type),
+                message: scheduled.description || "",
+                metadata: scheduled.metadata || {},
+              });
+            }
+          }
+        }
+      }
+
+      // Combine pending system notifications with missed scheduled overlays
+      const allOverlaysToShow: OverlayData[] = [];
+
       if (pendingNotifications && pendingNotifications.length > 0) {
-        console.log(`📱 [OverlayManager] ${pendingNotifications.length} overlays pendientes encontrados`);
+        console.log(`📱 [OverlayManager] ${pendingNotifications.length} overlays pendientes en system_notifications`);
 
         // Filter out already shown in this session
         const notShownNotifications = pendingNotifications.filter(notification => {
@@ -188,32 +258,43 @@ const OverlayManager: React.FC = () => {
           return !sessionStorage.getItem(sessionKey);
         });
 
-        if (notShownNotifications.length > 0) {
-          // Add all to queue
-          notShownNotifications.forEach(notification => {
-            sessionStorage.setItem(`overlay_shown_session_${notification.id}`, "true");
-            overlayQueue.current.push({
-              id: notification.id,
-              type: notification.type,
-              title: notification.title,
-              message: notification.message,
-              metadata: notification.metadata || {},
-            });
+        notShownNotifications.forEach(notification => {
+          sessionStorage.setItem(`overlay_shown_session_${notification.id}`, "true");
+          allOverlaysToShow.push({
+            id: notification.id,
+            type: notification.type,
+            title: notification.title,
+            message: notification.message,
+            metadata: notification.metadata || {},
           });
+        });
+      }
 
-          // Start processing queue
-          if (!isProcessingQueue.current) {
-            isProcessingQueue.current = true;
-            processNextOverlay();
-          }
-        } else {
-          console.log("📱 [OverlayManager] Todos los overlays ya mostrados en esta sesión");
+      // Add missed scheduled overlays
+      if (missedScheduledOverlays.length > 0) {
+        console.log(`📱 [OverlayManager] ${missedScheduledOverlays.length} overlays programados perdidos encontrados`);
+        allOverlaysToShow.push(...missedScheduledOverlays);
+      }
+
+      // Add all to queue and start processing
+      if (allOverlaysToShow.length > 0) {
+        console.log(`📱 [OverlayManager] Total de overlays a mostrar: ${allOverlaysToShow.length}`);
+        allOverlaysToShow.forEach(overlay => {
+          overlayQueue.current.push(overlay);
+        });
+
+        // Start processing queue
+        if (!isProcessingQueue.current) {
+          isProcessingQueue.current = true;
+          processNextOverlay();
         }
+      } else {
+        console.log("📱 [OverlayManager] No hay overlays pendientes para mostrar");
       }
     } catch (error) {
       console.error("Error in checkPendingOverlays:", error);
     }
-  }, [showOverlay, processNextOverlay]);
+  }, [showOverlay, processNextOverlay, getDefaultTitle]);
 
   // Función MEJORADA para verificar notificaciones programadas - SISTEMA DE BACKUP
   const checkScheduledNotifications = useCallback(async () => {
@@ -297,24 +378,7 @@ const OverlayManager: React.FC = () => {
     } catch (error) {
       console.error("⏰ [OverlayManager] Error en checkScheduledNotifications:", error);
     }
-  }, [showOverlay]);
-
-  // Función helper para obtener títulos por defecto
-  const getDefaultTitle = useCallback((type: string): string => {
-    const titles: Record<string, string> = {
-      service_overlay: "Programa de Servicios",
-      daily_verse: "Versículo del Día",
-      daily_advice: "Consejo del Día",
-      death_announcement: "Anuncio de Fallecimiento",
-      meeting_announcement: "Convocatoria a Reunión",
-      special_service: "Servicio Especial",
-      prayer_request: "Solicitud de Oración",
-      blood_donation: "Donación de Sangre Urgente",
-      extraordinary_rehearsal: "Ensayo Extraordinario",
-      ministry_instructions: "Instrucciones a Integrantes",
-    };
-    return titles[type] || "Notificación";
-  }, []);
+  }, [showOverlay, getDefaultTitle]);
 
   useEffect(() => {
     console.log("📱 [OverlayManager] Inicializando...");
