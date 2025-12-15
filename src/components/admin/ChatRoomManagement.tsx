@@ -77,7 +77,7 @@ export const ChatRoomManagement = () => {
     try {
       const { data, error } = await supabase
         .from('members')
-        .select('id, nombres, apellidos, email, photo_url, cargo, voz_instrumento')
+        .select('id, nombres, apellidos, email, photo_url, cargo, voz_instrumento, grupo')
         .eq('is_active', true)
         .order('nombres');
 
@@ -537,41 +537,115 @@ export const ChatRoomManagement = () => {
                     />
                   </div>
                   <ScrollArea className="h-[300px] border rounded-lg p-2">
-                    {allMembers
-                      .filter(member => {
-                        const isAlreadyMember = members.some(m => m.user_id === member.id);
-                        const fullName = `${member.nombres} ${member.apellidos}`.toLowerCase();
-                        const matchesSearch = fullName.includes(searchTerm.toLowerCase()) ||
-                                              member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                              member.cargo?.toLowerCase().includes(searchTerm.toLowerCase());
-                        return !isAlreadyMember && matchesSearch;
-                      })
-                      .map(member => (
-                        <div
-                          key={member.id}
-                          className="flex items-center gap-3 p-2 hover:bg-muted rounded-lg cursor-pointer"
-                          onClick={() => {
-                            setSelectedMembersToAdd(prev =>
-                              prev.includes(member.id)
-                                ? prev.filter(id => id !== member.id)
-                                : [...prev, member.id]
-                            );
-                          }}
-                        >
-                          <Checkbox
-                            checked={selectedMembersToAdd.includes(member.id)}
-                          />
-                          <Avatar className="w-8 h-8">
-                            <AvatarFallback className="text-xs">
-                              {getInitials(`${member.nombres} ${member.apellidos}`)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{member.nombres} {member.apellidos}</p>
-                            <p className="text-xs text-muted-foreground truncate">{member.cargo} • {member.voz_instrumento || 'N/A'}</p>
-                          </div>
-                        </div>
-                      ))}
+                    {(() => {
+                      const roomName = selectedRoom.name.toLowerCase();
+                      
+                      // Function to check if member's group matches room name
+                      const matchesRoomGroup = (member: any) => {
+                        const grupo = member.grupo?.toLowerCase() || '';
+                        const cargo = member.cargo?.toLowerCase() || '';
+                        
+                        // Map room names to group keywords
+                        if (roomName.includes('general')) return true; // Everyone matches General
+                        if (roomName.includes('músico') || roomName.includes('musico')) return grupo.includes('músico') || grupo.includes('musico') || cargo.includes('músico');
+                        if (roomName.includes('danza')) return grupo.includes('danza') || cargo.includes('danza');
+                        if (roomName.includes('directiva')) return grupo.includes('directiva') || cargo.includes('directiva');
+                        if (roomName.includes('multimedia')) return grupo.includes('multimedia') || cargo.includes('multimedia');
+                        if (roomName.includes('logística') || roomName.includes('logistica') || roomName.includes('piso')) return grupo.includes('logística') || grupo.includes('piso') || cargo.includes('logística');
+                        if (roomName.includes('teatro')) return grupo.includes('teatro') || cargo.includes('teatro');
+                        if (roomName.includes('aleida')) return grupo.includes('aleida');
+                        if (roomName.includes('keyla')) return grupo.includes('keyla');
+                        if (roomName.includes('massy')) return grupo.includes('massy');
+                        return false;
+                      };
+
+                      const filteredMembers = allMembers
+                        .filter(member => {
+                          const isAlreadyMember = members.some(m => m.user_id === member.id);
+                          const fullName = `${member.nombres} ${member.apellidos}`.toLowerCase();
+                          const matchesSearch = fullName.includes(searchTerm.toLowerCase()) ||
+                                                member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                                member.cargo?.toLowerCase().includes(searchTerm.toLowerCase());
+                          return !isAlreadyMember && matchesSearch;
+                        })
+                        .sort((a, b) => {
+                          const aMatches = matchesRoomGroup(a);
+                          const bMatches = matchesRoomGroup(b);
+                          if (aMatches && !bMatches) return -1;
+                          if (!aMatches && bMatches) return 1;
+                          return 0;
+                        });
+
+                      const matchingMembers = filteredMembers.filter(matchesRoomGroup);
+                      const otherMembers = filteredMembers.filter(m => !matchesRoomGroup(m));
+
+                      return (
+                        <>
+                          {matchingMembers.length > 0 && (
+                            <>
+                              <div className="px-2 py-1 text-xs font-semibold text-primary bg-primary/10 rounded mb-2">
+                                Relacionados con "{selectedRoom.name}"
+                              </div>
+                              {matchingMembers.map(member => (
+                                <div
+                                  key={member.id}
+                                  className="flex items-center gap-3 p-2 hover:bg-muted rounded-lg cursor-pointer border-l-2 border-primary"
+                                  onClick={() => {
+                                    setSelectedMembersToAdd(prev =>
+                                      prev.includes(member.id)
+                                        ? prev.filter(id => id !== member.id)
+                                        : [...prev, member.id]
+                                    );
+                                  }}
+                                >
+                                  <Checkbox checked={selectedMembersToAdd.includes(member.id)} />
+                                  <Avatar className="w-8 h-8">
+                                    <AvatarFallback className="text-xs">
+                                      {getInitials(`${member.nombres} ${member.apellidos}`)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate">{member.nombres} {member.apellidos}</p>
+                                    <p className="text-xs text-muted-foreground truncate">{member.cargo} • {member.voz_instrumento || 'N/A'}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </>
+                          )}
+                          {otherMembers.length > 0 && (
+                            <>
+                              <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted rounded mb-2 mt-3">
+                                Otros integrantes
+                              </div>
+                              {otherMembers.map(member => (
+                                <div
+                                  key={member.id}
+                                  className="flex items-center gap-3 p-2 hover:bg-muted rounded-lg cursor-pointer"
+                                  onClick={() => {
+                                    setSelectedMembersToAdd(prev =>
+                                      prev.includes(member.id)
+                                        ? prev.filter(id => id !== member.id)
+                                        : [...prev, member.id]
+                                    );
+                                  }}
+                                >
+                                  <Checkbox checked={selectedMembersToAdd.includes(member.id)} />
+                                  <Avatar className="w-8 h-8">
+                                    <AvatarFallback className="text-xs">
+                                      {getInitials(`${member.nombres} ${member.apellidos}`)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate">{member.nombres} {member.apellidos}</p>
+                                    <p className="text-xs text-muted-foreground truncate">{member.cargo} • {member.voz_instrumento || 'N/A'}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </>
+                          )}
+                        </>
+                      );
+                    })()}
                   </ScrollArea>
                   <div className="flex gap-2">
                     <Button
