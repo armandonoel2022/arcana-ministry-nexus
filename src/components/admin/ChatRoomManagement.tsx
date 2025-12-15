@@ -658,7 +658,7 @@ export const ChatRoomManagement = () => {
                 </div>
                 <Button
                   onClick={() => setSelectedRoom(room)}
-                  className="bg-arcana-blue-gradient hover:opacity-90"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   Gestionar
                 </Button>
