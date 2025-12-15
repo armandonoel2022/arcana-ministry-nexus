@@ -27,10 +27,12 @@ interface RoomMember {
   user_id: string;
   role: string;
   can_leave: boolean;
-  profiles: {
-    full_name: string;
-    email: string;
-  };
+  member_info?: {
+    nombres: string;
+    apellidos: string;
+    email: string | null;
+    cargo: string;
+  } | null;
 }
 
 interface JoinRequest {
@@ -237,19 +239,38 @@ export const ChatRoomManagement = () => {
     if (!selectedRoom) return;
 
     try {
-      const { data, error } = await supabase
+      // First get the chat room members
+      const { data: roomMembers, error: roomError } = await supabase
         .from('chat_room_members')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .eq('room_id', selectedRoom.id);
 
-      if (error) throw error;
-      setMembers(data || []);
+      if (roomError) throw roomError;
+
+      if (!roomMembers || roomMembers.length === 0) {
+        setMembers([]);
+        return;
+      }
+
+      // Get member info from members table
+      const memberIds = roomMembers.map(m => m.user_id);
+      const { data: membersData, error: membersError } = await supabase
+        .from('members')
+        .select('id, nombres, apellidos, email, cargo')
+        .in('id', memberIds);
+
+      if (membersError) throw membersError;
+
+      // Combine the data
+      const membersWithInfo = roomMembers.map(rm => {
+        const memberInfo = membersData?.find(m => m.id === rm.user_id);
+        return {
+          ...rm,
+          member_info: memberInfo || null
+        };
+      });
+
+      setMembers(membersWithInfo);
     } catch (error) {
       console.error('Error fetching members:', error);
     }
@@ -578,14 +599,21 @@ export const ChatRoomManagement = () => {
                 <div className="flex items-center gap-3">
                   <Avatar>
                     <AvatarFallback>
-                      {getInitials(member.profiles.full_name)}
+                      {member.member_info ? getInitials(`${member.member_info.nombres} ${member.member_info.apellidos}`) : '??'}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium">{member.profiles.full_name}</p>
-                    <p className="text-sm text-gray-600">{member.profiles.email}</p>
+                    <p className="font-medium">
+                      {member.member_info ? `${member.member_info.nombres} ${member.member_info.apellidos}` : 'Usuario desconocido'}
+                    </p>
+                    <p className="text-sm text-muted-foreground">{member.member_info?.email || 'Sin email'}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <Badge variant="outline">{member.role}</Badge>
+                      {member.member_info?.cargo && (
+                        <Badge variant="secondary" className="text-xs">
+                          {member.member_info.cargo}
+                        </Badge>
+                      )}
                       {!member.can_leave && (
                         <Badge variant="secondary" className="text-xs">
                           Permanente
