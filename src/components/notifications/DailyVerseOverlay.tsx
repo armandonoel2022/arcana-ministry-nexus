@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { X, BookOpen } from 'lucide-react';
+import { X, BookOpen, Download, Share2 } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import { toast } from 'sonner';
 
 interface DailyVerseOverlayProps {
   verseText: string;
@@ -10,9 +12,53 @@ interface DailyVerseOverlayProps {
 }
 
 export const DailyVerseOverlay = ({ verseText, verseReference, onClose }: DailyVerseOverlayProps) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleDownload = async () => {
+    if (!cardRef.current) return;
+    
+    try {
+      const canvas = await html2canvas(cardRef.current, {
+        backgroundColor: null,
+        scale: 2,
+        useCORS: true,
+      });
+      
+      const link = document.createElement('a');
+      link.download = `versiculo-del-dia-${new Date().toISOString().split('T')[0]}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      toast.success('Imagen descargada');
+    } catch (error) {
+      console.error('Error al descargar:', error);
+      toast.error('Error al descargar imagen');
+    }
+  };
+
+  const handleShare = async () => {
+    const shareText = `📖 Versículo del Día\n\n"${verseText}"\n\n— ${verseReference}\n\n— Ministerio de Adoración ARCANA`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Versículo del Día',
+          text: shareText,
+        });
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          await navigator.clipboard.writeText(shareText);
+          toast.success('Copiado al portapapeles');
+        }
+      }
+    } else {
+      await navigator.clipboard.writeText(shareText);
+      toast.success('Copiado al portapapeles');
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <Card className="w-full max-w-2xl bg-gradient-to-br from-blue-50 via-white to-purple-50 border-2 border-blue-200 shadow-2xl relative overflow-hidden">
+      <Card ref={cardRef} className="w-full max-w-2xl bg-gradient-to-br from-blue-50 via-white to-purple-50 border-2 border-blue-200 shadow-2xl relative overflow-hidden">
         {/* Background decoration */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-30 -translate-y-32 translate-x-32" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-100 rounded-full blur-3xl opacity-30 translate-y-32 -translate-x-32" />
@@ -52,13 +98,33 @@ export const DailyVerseOverlay = ({ verseText, verseReference, onClose }: DailyV
             - {verseReference}
           </p>
 
-          {/* Close button */}
-          <div className="flex justify-center">
+          {/* Action buttons */}
+          <div className="flex flex-col sm:flex-row justify-center gap-3">
+            <div className="flex gap-2 justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownload}
+                className="border-blue-300 hover:bg-blue-50"
+              >
+                <Download className="w-4 h-4 mr-1" />
+                Descargar
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleShare}
+                className="border-blue-300 hover:bg-blue-50"
+              >
+                <Share2 className="w-4 h-4 mr-1" />
+                Compartir
+              </Button>
+            </div>
             <Button
               onClick={onClose}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 text-lg"
             >
-              Entendido
+              Amén
             </Button>
           </div>
         </div>
