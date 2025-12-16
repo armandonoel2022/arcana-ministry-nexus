@@ -633,10 +633,10 @@ const splitName = (fullName: string) => {
       return { firstName: "Denny Alberto", lastName: "Santana" };
     }
     if (fullName.includes("Fior")) {
-      return { firstName: "Fior", lastName: "Daliza Paniagua" };
+      return { firstName: "Fior Daliza", lastName: "Paniagua" };
     }
     if (fullName.includes("Ruth")) {
-      return { firstName: "Ruth", lastName: "Esmailin Ramirez" };
+      return { firstName: "Ruth Esmailin", lastName: "Ramirez" };
     }
 
     // Lógica general para otros nombres

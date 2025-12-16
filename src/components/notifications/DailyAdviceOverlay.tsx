@@ -12,16 +12,17 @@ interface DailyAdviceOverlayProps {
 }
 
 export const DailyAdviceOverlay = ({ title, message, onClose }: DailyAdviceOverlayProps) => {
-  const cardRef = useRef<HTMLDivElement>(null);
+  const downloadRef = useRef<HTMLDivElement>(null);
 
   const handleDownload = async () => {
-    if (!cardRef.current) return;
+    if (!downloadRef.current) return;
     
     try {
-      const canvas = await html2canvas(cardRef.current, {
-        backgroundColor: null,
+      const canvas = await html2canvas(downloadRef.current, {
+        backgroundColor: '#fefce8',
         scale: 2,
         useCORS: true,
+        logging: false,
       });
       
       const link = document.createElement('a');
@@ -38,95 +39,89 @@ export const DailyAdviceOverlay = ({ title, message, onClose }: DailyAdviceOverl
   const handleShare = async () => {
     const shareText = `💡 Consejo del Día: ${title}\n\n"${message}"\n\n— Ministerio de Adoración ARCANA`;
     
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Consejo del Día',
-          text: shareText,
-        });
-      } catch (error) {
-        if ((error as Error).name !== 'AbortError') {
-          await navigator.clipboard.writeText(shareText);
-          toast.success('Copiado al portapapeles');
-        }
-      }
-    } else {
-      await navigator.clipboard.writeText(shareText);
-      toast.success('Copiado al portapapeles');
-    }
+    await navigator.clipboard.writeText(shareText);
+    toast.success('Copiado al portapapeles');
   };
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <Card ref={cardRef} className="w-full max-w-2xl bg-gradient-to-br from-yellow-50 via-white to-orange-50 border-2 border-yellow-200 shadow-2xl relative overflow-hidden">
-        {/* Background decoration */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-100 rounded-full blur-3xl opacity-30 -translate-y-32 translate-x-32" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-100 rounded-full blur-3xl opacity-30 translate-y-32 -translate-x-32" />
-        
-        <div className="relative p-8">
-          {/* Close button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="absolute top-4 right-4 rounded-full hover:bg-gray-200"
-          >
-            <X className="w-5 h-5" />
-          </Button>
+      <Card className="w-full max-w-2xl bg-gradient-to-br from-yellow-50 via-white to-orange-50 border-2 border-yellow-200 shadow-2xl relative overflow-hidden">
+        {/* Close button - outside downloadable area */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClose}
+          className="absolute top-4 right-4 rounded-full hover:bg-gray-200 z-10"
+        >
+          <X className="w-5 h-5" />
+        </Button>
 
-          {/* Icon */}
-          <div className="flex justify-center mb-6">
-            <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg animate-pulse">
-              <Lightbulb className="w-10 h-10 text-white" />
+        {/* Downloadable content */}
+        <div ref={downloadRef} className="bg-gradient-to-br from-yellow-50 via-white to-orange-50 relative overflow-hidden">
+          {/* Background decoration */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-100 rounded-full blur-3xl opacity-30 -translate-y-32 translate-x-32" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-100 rounded-full blur-3xl opacity-30 translate-y-32 -translate-x-32" />
+          
+          <div className="relative p-8">
+            {/* Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                <Lightbulb className="w-10 h-10 text-white" />
+              </div>
             </div>
-          </div>
 
-          {/* Title */}
-          <h2 className="text-3xl font-bold text-center mb-6 bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
-            Consejo del Día
-          </h2>
+            {/* Title */}
+            <h2 className="text-3xl font-bold text-center mb-6 bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+              Consejo del Día
+            </h2>
 
-          {/* Advice title */}
-          <h3 className="text-2xl font-bold text-center mb-4 text-gray-800">
-            {title}
-          </h3>
+            {/* Advice title */}
+            <h3 className="text-2xl font-bold text-center mb-4 text-gray-800">
+              {title}
+            </h3>
 
-          {/* Advice text */}
-          <div className="bg-white/80 rounded-lg p-6 mb-6 shadow-inner border border-yellow-100">
-            <p className="text-xl text-gray-800 leading-relaxed text-center">
-              {message}
+            {/* Advice text */}
+            <div className="bg-white/80 rounded-lg p-6 mb-4 shadow-inner border border-yellow-100">
+              <p className="text-xl text-gray-800 leading-relaxed text-center">
+                {message}
+              </p>
+            </div>
+
+            {/* Ministry signature for download */}
+            <p className="text-center text-sm text-gray-500">
+              Ministerio de Adoración ARCANA
             </p>
           </div>
+        </div>
 
-          {/* Action buttons */}
-          <div className="flex flex-col sm:flex-row justify-center gap-3">
-            <div className="flex gap-2 justify-center">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownload}
-                className="border-yellow-300 hover:bg-yellow-50"
-              >
-                <Download className="w-4 h-4 mr-1" />
-                Descargar
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleShare}
-                className="border-yellow-300 hover:bg-yellow-50"
-              >
-                <Share2 className="w-4 h-4 mr-1" />
-                Compartir
-              </Button>
-            </div>
+        {/* Action buttons - outside downloadable area */}
+        <div className="relative p-4 pt-0 flex flex-col sm:flex-row justify-center gap-3">
+          <div className="flex gap-2 justify-center">
             <Button
-              onClick={onClose}
-              className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white px-8 py-3 text-lg"
+              variant="outline"
+              size="sm"
+              onClick={handleDownload}
+              className="border-yellow-300 hover:bg-yellow-50"
             >
-              Amén
+              <Download className="w-4 h-4 mr-1" />
+              Descargar
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleShare}
+              className="border-yellow-300 hover:bg-yellow-50"
+            >
+              <Share2 className="w-4 h-4 mr-1" />
+              Compartir
             </Button>
           </div>
+          <Button
+            onClick={onClose}
+            className="bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white px-8 py-3 text-lg"
+          >
+            Amén
+          </Button>
         </div>
       </Card>
     </div>
