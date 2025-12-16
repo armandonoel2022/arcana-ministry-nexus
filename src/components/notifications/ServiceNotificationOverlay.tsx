@@ -751,14 +751,24 @@ const ServiceNotificationOverlay = ({
 
   const showServiceProgramOverlay = (metadata: ServiceProgramNotification) => {
     if (metadata.services && Array.isArray(metadata.services)) {
-      const formattedServices = metadata.services.map((service: any) => {
+      // Primero extraer info de directores para poder pasarla como previous/next
+      const servicesWithDirectorInfo = metadata.services.map((service: any) => ({
+        director: service.director?.name || service.director || "Por asignar",
+        time: getServiceTime(service.time || service.title),
+      }));
+
+      const formattedServices = metadata.services.map((service: any, index: number) => {
         const groupName = service.group || "Grupo de Aleida";
         const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG] || GROUP_CONFIG["Grupo de Aleida"];
         const serviceTime = getServiceTime(service.time || service.title);
         const directorName = service.director?.name || service.director || "Por asignar";
 
-        // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS
-        const members = getGroupMembers(groupName, serviceTime, directorName);
+        // Obtener previous y next service para evitar que el director aparezca en coros
+        const previousService = index > 0 ? servicesWithDirectorInfo[index - 1] : undefined;
+        const nextService = index < servicesWithDirectorInfo.length - 1 ? servicesWithDirectorInfo[index + 1] : undefined;
+
+        // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS CON CONTEXTO
+        const members = getGroupMembers(groupName, serviceTime, directorName, previousService, nextService);
 
         return {
           id: service.id || Date.now().toString(),
@@ -882,8 +892,14 @@ const ServiceNotificationOverlay = ({
       if (error) throw error;
 
       if (data && data.length > 0) {
+        // Primero extraer info de directores para context de previous/next
+        const servicesDirectorInfo = data.map((service) => ({
+          director: service.leader || "Por asignar",
+          time: getServiceTime(service.title),
+        }));
+
         const servicesWithMembers = await Promise.all(
-          data.map(async (service) => {
+          data.map(async (service, serviceIndex) => {
             let members: any[] = [];
             let directorProfile: any = null;
 
@@ -945,11 +961,15 @@ const ServiceNotificationOverlay = ({
             const serviceTime = getServiceTime(service.title);
             const directorName = service.leader || "Por asignar";
 
-            // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS
-            members = getGroupMembers(groupName, serviceTime, directorName);
+            // Obtener previous y next service para evitar que el director aparezca en coros
+            const previousService = serviceIndex > 0 ? servicesDirectorInfo[serviceIndex - 1] : undefined;
+            const nextService = serviceIndex < servicesDirectorInfo.length - 1 ? servicesDirectorInfo[serviceIndex + 1] : undefined;
+
+            // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS CON CONTEXTO
+            members = getGroupMembers(groupName, serviceTime, directorName, previousService, nextService);
 
             console.log(
-              `Miembros finales para ${groupName}:`,
+              `Miembros finales para ${groupName} (director: ${directorName}, prev: ${previousService?.director}, next: ${nextService?.director}):`,
               members.map((m) => m.name),
             );
 
