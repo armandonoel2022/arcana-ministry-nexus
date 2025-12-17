@@ -148,11 +148,6 @@ const menuCategories = [
       icon: Settings,  
     },  
     {  
-      title: "Pruebas de Notificaciones",  
-      url: "/notification-testing",  
-      icon: Bell,  
-    },  
-    {  
       title: "Acerca del Ministerio",  
       url: "/about",  
       icon: Info,  

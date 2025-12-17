@@ -1,18 +1,62 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X, Lightbulb, Download, Share2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DailyAdviceOverlayProps {
-  title: string;
-  message: string;
+  title?: string;
+  message?: string;
   onClose: () => void;
 }
 
-export const DailyAdviceOverlay = ({ title, message, onClose }: DailyAdviceOverlayProps) => {
+export const DailyAdviceOverlay = ({ title: propTitle, message: propMessage, onClose }: DailyAdviceOverlayProps) => {
   const downloadRef = useRef<HTMLDivElement>(null);
+  const [title, setTitle] = useState(propTitle || '');
+  const [message, setMessage] = useState(propMessage || '');
+  const [loading, setLoading] = useState(!propTitle);
+
+  // Auto-cargar consejo si no se proporcionaron props
+  useEffect(() => {
+    const loadAdvice = async () => {
+      if (propTitle && propMessage) {
+        setTitle(propTitle);
+        setMessage(propMessage);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Cargar consejos activos de la base de datos
+        const { data: adviceList } = await supabase
+          .from('daily_advice')
+          .select('*')
+          .eq('is_active', true);
+
+        if (adviceList && adviceList.length > 0) {
+          // Seleccionar uno aleatorio
+          const randomAdvice = adviceList[Math.floor(Math.random() * adviceList.length)];
+          setTitle(randomAdvice.title);
+          setMessage(randomAdvice.message);
+        } else {
+          // Fallback
+          setTitle('Prepárate con tiempo');
+          setMessage('Recuerda revisar el repertorio de canciones para el servicio del próximo domingo. La preparación anticipada mejora la calidad de la alabanza.');
+        }
+      } catch (error) {
+        console.error('Error loading advice:', error);
+        // Fallback
+        setTitle('Consejo musical');
+        setMessage('La práctica constante es la clave del éxito musical.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAdvice();
+  }, [propTitle, propMessage]);
 
   const handleDownload = async () => {
     if (!downloadRef.current) return;
@@ -42,6 +86,14 @@ export const DailyAdviceOverlay = ({ title, message, onClose }: DailyAdviceOverl
     await navigator.clipboard.writeText(shareText);
     toast.success('Copiado al portapapeles');
   };
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="text-white text-lg">Cargando consejo...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">

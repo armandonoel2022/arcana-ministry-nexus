@@ -82,6 +82,11 @@ const ScheduledNotifications = () => {
   const [editingNotification, setEditingNotification] = useState<ScheduledNotification | null>(null);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [loadingTest, setLoadingTest] = useState<string | null>(null);
+  
+  // Estados para renderizado directo de overlays (enfoque simplificado)
+  const [showServiceOverlay, setShowServiceOverlay] = useState(false);
+  const [showVerseOverlay, setShowVerseOverlay] = useState(false);
+  const [showAdviceOverlay, setShowAdviceOverlay] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -1068,46 +1073,7 @@ const ScheduledNotifications = () => {
                         <Button
                           size="sm"
                           className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs h-8"
-                          onClick={async () => {
-                            try {
-                              // Cargar el versículo actual del día
-                              const today = new Date().toISOString().split("T")[0];
-
-                              const { data: dailyVerse } = await supabase
-                                .from("daily_verses")
-                                .select(
-                                  `
-                                  *,
-                                  bible_verses (*)
-                                `,
-                                )
-                                .eq("date", today)
-                                .single();
-
-                              if (dailyVerse && dailyVerse.bible_verses) {
-                                const verse = dailyVerse.bible_verses as any;
-                                window.dispatchEvent(
-                                  new CustomEvent("showOverlay", {
-                                    detail: {
-                                      id: `preview-verse-${Date.now()}`,
-                                      type: "daily_verse",
-                                      title: "Versículo del Día",
-                                      message: verse.text,
-                                      metadata: {
-                                        verse_text: verse.text,
-                                        verse_reference: `${verse.book} ${verse.chapter}:${verse.verse}`,
-                                      },
-                                    },
-                                  }),
-                                );
-                              } else {
-                                toast.error("No hay versículo del día configurado");
-                              }
-                            } catch (error) {
-                              console.error("Error:", error);
-                              toast.error("Error al cargar versículo");
-                            }
-                          }}
+                          onClick={() => setShowVerseOverlay(true)}
                         >
                           <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                           Vista Previa
@@ -1193,38 +1159,7 @@ const ScheduledNotifications = () => {
                         <Button
                           size="sm"
                           className="w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xs h-8"
-                          onClick={async () => {
-                            try {
-                              // Cargar un consejo aleatorio de la base de datos
-                              const { data: adviceList } = await supabase
-                                .from("daily_advice")
-                                .select("*")
-                                .eq("is_active", true);
-
-                              if (adviceList && adviceList.length > 0) {
-                                const randomAdvice = adviceList[Math.floor(Math.random() * adviceList.length)];
-                                window.dispatchEvent(
-                                  new CustomEvent("showOverlay", {
-                                    detail: {
-                                      id: `preview-advice-${Date.now()}`,
-                                      type: "daily_advice",
-                                      title: "Consejo del Día",
-                                      message: randomAdvice.message,
-                                      metadata: {
-                                        advice_title: randomAdvice.title,
-                                        advice_message: randomAdvice.message,
-                                      },
-                                    },
-                                  }),
-                                );
-                              } else {
-                                toast.error("No hay consejos disponibles");
-                              }
-                            } catch (error) {
-                              console.error("Error:", error);
-                              toast.error("Error al cargar consejo");
-                            }
-                          }}
+                          onClick={() => setShowAdviceOverlay(true)}
                         >
                           <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                           Vista Previa
@@ -1268,19 +1203,7 @@ const ScheduledNotifications = () => {
                         <Button
                           size="sm"
                           className="w-full bg-green-600 hover:bg-green-700 text-white text-xs h-8"
-                          onClick={() =>
-                            window.dispatchEvent(
-                              new CustomEvent("showOverlay", {
-                                detail: {
-                                  id: `preview-service-${Date.now()}`,
-                                  type: "service_overlay",
-                                  title: "Programa de Servicios",
-                                  message: "",
-                                  metadata: {},
-                                },
-                              }),
-                            )
-                          }
+                          onClick={() => setShowServiceOverlay(true)}
                         >
                           <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                           Vista Previa
@@ -2144,6 +2067,19 @@ const ScheduledNotifications = () => {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Overlays renderizados directamente (enfoque simplificado como NotificationTesting) */}
+      {showServiceOverlay && (
+        <ServiceNotificationOverlay onClose={() => setShowServiceOverlay(false)} />
+      )}
+      
+      {showVerseOverlay && (
+        <DailyVerseOverlay onClose={() => setShowVerseOverlay(false)} />
+      )}
+      
+      {showAdviceOverlay && (
+        <DailyAdviceOverlay onClose={() => setShowAdviceOverlay(false)} />
+      )}
     </div>
   );
 };
