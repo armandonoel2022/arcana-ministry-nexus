@@ -124,7 +124,7 @@ const ALL_MEMBERS = {
     name: "Félix Nicolás Peralta Hernández",
     voice: "Tenor",
     photo_url:
-      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/3d75bc74-76bb-454a-b3e0-d6e4de45d577.JPG",
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/f36d35a3-aa9c-4bd6-9b1a-ca1dd4326e3f.JPG",
   },
   [MEMBER_IDS.ARMANDO_NOEL]: {
     name: "Armando Noel Charle",
