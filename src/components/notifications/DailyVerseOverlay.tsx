@@ -1,18 +1,76 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X, BookOpen, Download, Share2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DailyVerseOverlayProps {
-  verseText: string;
-  verseReference: string;
+  verseText?: string;
+  verseReference?: string;
   onClose: () => void;
 }
 
-export const DailyVerseOverlay = ({ verseText, verseReference, onClose }: DailyVerseOverlayProps) => {
+export const DailyVerseOverlay = ({ verseText: propVerseText, verseReference: propVerseReference, onClose }: DailyVerseOverlayProps) => {
   const downloadRef = useRef<HTMLDivElement>(null);
+  const [verseText, setVerseText] = useState(propVerseText || '');
+  const [verseReference, setVerseReference] = useState(propVerseReference || '');
+  const [loading, setLoading] = useState(!propVerseText);
+
+  // Auto-cargar versículo si no se proporcionaron props
+  useEffect(() => {
+    const loadVerse = async () => {
+      if (propVerseText && propVerseReference) {
+        setVerseText(propVerseText);
+        setVerseReference(propVerseReference);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Intentar cargar versículo del día
+        const { data: dailyVerse } = await supabase
+          .from('daily_verses')
+          .select(`*, bible_verses (*)`)
+          .eq('date', today)
+          .single();
+
+        if (dailyVerse?.bible_verses) {
+          const verse = dailyVerse.bible_verses as any;
+          setVerseText(verse.text);
+          setVerseReference(`${verse.book} ${verse.chapter}:${verse.verse}`);
+        } else {
+          // Fallback: cargar versículo aleatorio
+          const { data: randomVerses } = await supabase
+            .from('bible_verses')
+            .select('*')
+            .limit(50);
+
+          if (randomVerses && randomVerses.length > 0) {
+            const verse = randomVerses[Math.floor(Math.random() * randomVerses.length)];
+            setVerseText(verse.text);
+            setVerseReference(`${verse.book} ${verse.chapter}:${verse.verse}`);
+          } else {
+            // Fallback final
+            setVerseText('Confía en el Señor de todo corazón, y no en tu propia inteligencia. Reconócelo en todos tus caminos, y él allanará tus sendas.');
+            setVerseReference('Proverbios 3:5-6');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading verse:', error);
+        // Fallback
+        setVerseText('Confía en el Señor de todo corazón, y no en tu propia inteligencia.');
+        setVerseReference('Proverbios 3:5');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadVerse();
+  }, [propVerseText, propVerseReference]);
 
   const handleDownload = async () => {
     if (!downloadRef.current) return;
@@ -42,6 +100,14 @@ export const DailyVerseOverlay = ({ verseText, verseReference, onClose }: DailyV
     await navigator.clipboard.writeText(shareText);
     toast.success('Copiado al portapapeles');
   };
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="text-white text-lg">Cargando versículo...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
