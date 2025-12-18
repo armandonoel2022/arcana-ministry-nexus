@@ -983,6 +983,118 @@ export type Database = {
         }
         Relationships: []
       }
+      multimedia_replacement_requests: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          notes: string | null
+          original_member_id: string
+          reason: string | null
+          replacement_member_id: string
+          requested_at: string
+          responded_at: string | null
+          role: string
+          service_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          original_member_id: string
+          reason?: string | null
+          replacement_member_id: string
+          requested_at?: string
+          responded_at?: string | null
+          role: string
+          service_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          original_member_id?: string
+          reason?: string | null
+          replacement_member_id?: string
+          requested_at?: string
+          responded_at?: string | null
+          role?: string
+          service_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "multimedia_replacement_requests_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      musician_replacement_requests: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          instrument: string
+          notes: string | null
+          original_member_id: string
+          reason: string | null
+          replacement_member_id: string
+          requested_at: string
+          responded_at: string | null
+          service_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          instrument: string
+          notes?: string | null
+          original_member_id: string
+          reason?: string | null
+          replacement_member_id: string
+          requested_at?: string
+          responded_at?: string | null
+          service_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          instrument?: string
+          notes?: string | null
+          original_member_id?: string
+          reason?: string | null
+          replacement_member_id?: string
+          requested_at?: string
+          responded_at?: string | null
+          service_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "musician_replacement_requests_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_settings: {
         Row: {
           agenda_notifications: boolean | null
@@ -2141,6 +2253,68 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_replacement_requests: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          group_name: string
+          id: string
+          mic_position: number | null
+          notes: string | null
+          original_member_id: string
+          reason: string | null
+          replacement_member_id: string
+          requested_at: string
+          responded_at: string | null
+          service_id: string
+          status: string
+          updated_at: string
+          voice_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          group_name: string
+          id?: string
+          mic_position?: number | null
+          notes?: string | null
+          original_member_id: string
+          reason?: string | null
+          replacement_member_id: string
+          requested_at?: string
+          responded_at?: string | null
+          service_id: string
+          status?: string
+          updated_at?: string
+          voice_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          group_name?: string
+          id?: string
+          mic_position?: number | null
+          notes?: string | null
+          original_member_id?: string
+          reason?: string | null
+          replacement_member_id?: string
+          requested_at?: string
+          responded_at?: string | null
+          service_id?: string
+          status?: string
+          updated_at?: string
+          voice_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_replacement_requests_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       walkie_talkie_channels: {
         Row: {
           created_at: string | null
@@ -2549,6 +2723,7 @@ export type Database = {
         | "ministry_instructions"
         | "birthday"
         | "agenda_notification"
+      replacement_category: "voice" | "musician" | "multimedia"
       song_knowledge: "unknown" | "learning" | "known" | "expert"
       user_role:
         | "admin"
@@ -2773,6 +2948,7 @@ export const Constants = {
         "birthday",
         "agenda_notification",
       ],
+      replacement_category: ["voice", "musician", "multimedia"],
       song_knowledge: ["unknown", "learning", "known", "expert"],
       user_role: [
         "admin",
