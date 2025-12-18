@@ -68,7 +68,7 @@ const menuCategories = [
         icon: Calendar,
       },
       {
-        title: "Reemplazos de Director",
+        title: "Reemplazos",
         url: "/director-replacements",
         icon: UserCheck,
       },

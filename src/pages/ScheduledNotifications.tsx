@@ -13,7 +13,6 @@ import {
   Save,
   X,
   Eye,
-  Play,
   BookOpen,
   Lightbulb,
   RefreshCw,
@@ -81,8 +80,8 @@ const ScheduledNotifications = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingNotification, setEditingNotification] = useState<ScheduledNotification | null>(null);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
-  const [loadingTest, setLoadingTest] = useState<string | null>(null);
   
+  const [loadingTest, setLoadingTest] = useState<string | null>(null);
   // Estados para renderizado directo de overlays (enfoque simplificado)
   const [showServiceOverlay, setShowServiceOverlay] = useState(false);
   const [showVerseOverlay, setShowVerseOverlay] = useState(false);
@@ -616,69 +615,7 @@ const ScheduledNotifications = () => {
     await dispatchOverlayEvent(notification, needsRealData);
   };
 
-  const handleTestNotification = async (notification: ScheduledNotification) => {
-    try {
-      setLoadingTest(notification.id);
-
-      // Cargar datos reales si es necesario
-      let finalMetadata = notification.metadata || {};
-
-      if (notification.notification_type === "daily_verse") {
-        const today = new Date().toISOString().split("T")[0];
-        const { data: dailyVerse } = await supabase
-          .from("daily_verses")
-          .select(`*, bible_verses (*)`)
-          .eq("date", today)
-          .single();
-
-        if (dailyVerse?.bible_verses) {
-          const verse = dailyVerse.bible_verses as any;
-          finalMetadata = {
-            ...finalMetadata,
-            verse_text: verse.text,
-            verse_reference: `${verse.book} ${verse.chapter}:${verse.verse}`,
-          };
-        }
-      } else if (notification.notification_type === "daily_advice") {
-        const { data: adviceList } = await supabase.from("daily_advice").select("*").eq("is_active", true);
-
-        if (adviceList && adviceList.length > 0) {
-          const randomAdvice = adviceList[Math.floor(Math.random() * adviceList.length)];
-          finalMetadata = {
-            ...finalMetadata,
-            advice_title: randomAdvice.title,
-            advice_message: randomAdvice.message,
-          };
-        }
-      }
-
-      // Usar el servicio unificado de notificaciones
-      const notificationService = await import("@/services/notificationService");
-
-      // Usar createNotification en lugar de createBroadcastNotification para Lovable
-      const result = await notificationService.createNotification({
-        type: notification.notification_type as any,
-        title: `[PRUEBA] ${notification.name}`,
-        message: notification.description || "Esta es una notificación de prueba",
-        category: "scheduled",
-        priority: 1,
-        showOverlay: true,
-        sendNativePush: false, // IMPORTANTE: deshabilitar para Lovable
-        metadata: finalMetadata,
-      });
-
-      if (result.success) {
-        toast.success("✅ Notificación de prueba enviada correctamente");
-      } else {
-        toast.error(`❌ Error: ${result.error}`);
-      }
-    } catch (error: any) {
-      console.error("Error testing notification:", error);
-      toast.error(`❌ Error: ${error.message || "Error desconocido"}`);
-    } finally {
-      setLoadingTest(null);
-    }
-  };
+  // handleTestNotification removed - "Probar" buttons eliminated
 
   const toggleDaySelection = (day: number) => {
     const newDays = formData.days_of_week.includes(day)
@@ -1489,16 +1426,6 @@ const ScheduledNotifications = () => {
                       >
                         <Eye className="w-3 h-3" />
                         Preview
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleTestNotification(notification)}
-                        className="flex items-center gap-1 text-xs h-8"
-                        disabled={loadingTest === notification.id}
-                      >
-                        <Play className="w-3 h-3" />
-                        {loadingTest === notification.id ? "Probando..." : "Probar"}
                       </Button>
                       <Switch
                         checked={notification.is_active}
