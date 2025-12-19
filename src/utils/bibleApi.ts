@@ -163,7 +163,14 @@ const getFromLocalDatabase = (reference: string): BibleVerse | null => {
   };
 
   const key = reference.toLowerCase();
-  return localVerses[key] || localVerses["salmos 23:1"];
+  if (localVerses[key]) {
+    return localVerses[key];
+  }
+  
+  // Return a random verse from local database instead of always Juan 3:16
+  const localKeys = Object.keys(localVerses);
+  const randomKey = localKeys[Math.floor(Math.random() * localKeys.length)];
+  return localVerses[randomKey];
 };
 
 /**

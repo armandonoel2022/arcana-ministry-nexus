@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Monitor, RefreshCw, Send, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Monitor, RefreshCw, Send, Clock, CheckCircle, XCircle, AlertCircle, Calendar, Camera, Video, Projector } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
@@ -18,28 +18,124 @@ interface Service {
   service_date: string;
 }
 
-interface Member {
+interface MultimediaMember {
   id: string;
-  nombres: string;
-  apellidos: string;
-  photo_url: string | null;
-  grupo: string | null;
+  name: string;
+  role: string;
+  roleLabel: string;
+  photo_url: string;
 }
+
+// Multimedia staff data
+const MULTIMEDIA_STAFF: MultimediaMember[] = [
+  {
+    id: "luis-marte",
+    name: "Luis Alberto Marte Batista",
+    role: "director_multimedia",
+    roleLabel: "Director Multimedia",
+    photo_url: ""
+  },
+  {
+    id: "camila-marte",
+    name: "Camila Marie Marte Martínez",
+    role: "encargado_proyeccion",
+    roleLabel: "Encargada de Proyección",
+    photo_url: ""
+  },
+  {
+    id: "enger-santana",
+    name: "Enger Julio F. Santana",
+    role: "encargado_proyeccion",
+    roleLabel: "Encargado de Proyección",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/56792791-3bf6-46ea-8421-0e1e0f3c983a.JPG"
+  },
+  {
+    id: "katherine-lorenzo",
+    name: "Katherine Orquidea Lorenzo Rosario",
+    role: "encargado_proyeccion",
+    roleLabel: "Encargada de Proyección",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/6543ab9d-404f-4eb6-ba1a-b948e58952fa.JPG"
+  },
+  {
+    id: "robert-caraballo",
+    name: "Robert Caraballo",
+    role: "encargado_proyeccion",
+    roleLabel: "Encargado de Proyección",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/880d8dc5-ec1d-470a-a765-53101230edb6.jpeg"
+  },
+  {
+    id: "delvin-sanchez",
+    name: "Delvin Josue Sánchez Ramírez",
+    role: "encargado_streaming",
+    roleLabel: "Encargado de Streaming",
+    photo_url: ""
+  },
+  {
+    id: "jose-henriquez",
+    name: "José Ramón Henríquez Toribio",
+    role: "encargado_streaming",
+    roleLabel: "Encargado de Streaming",
+    photo_url: ""
+  },
+  {
+    id: "wilton-gomez",
+    name: "Wilton Gómez Portes",
+    role: "camarografo",
+    roleLabel: "Camarógrafo",
+    photo_url: ""
+  },
+  {
+    id: "harold-pinales",
+    name: "Harold Javier Pinales Mora",
+    role: "camarografo",
+    roleLabel: "Camarógrafo",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/28fd6473-5fed-415d-b082-314724875b9a.JPG"
+  },
+  {
+    id: "mayker-martinez",
+    name: "Mayker Martínez Lara",
+    role: "camarografo",
+    roleLabel: "Camarógrafo",
+    photo_url: ""
+  },
+  {
+    id: "iham-francisco",
+    name: "Iham Francisco",
+    role: "camarografo",
+    roleLabel: "Camarógrafo",
+    photo_url: ""
+  }
+];
+
+const getRoleIcon = (role: string) => {
+  switch (role) {
+    case 'director_multimedia': return Monitor;
+    case 'encargado_proyeccion': return Projector;
+    case 'encargado_streaming': return Video;
+    case 'camarografo': return Camera;
+    default: return Monitor;
+  }
+};
+
+const getRoleColor = (role: string) => {
+  switch (role) {
+    case 'director_multimedia': return 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300';
+    case 'encargado_proyeccion': return 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300';
+    case 'encargado_streaming': return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
+    case 'camarografo': return 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300';
+    default: return 'bg-gray-100 text-gray-700';
+  }
+};
 
 const MultimediaReplacementRequest = () => {
   const [services, setServices] = useState<Service[]>([]);
-  const [members, setMembers] = useState<Member[]>([]);
   const [selectedService, setSelectedService] = useState<string>('');
-  const [selectedRole, setSelectedRole] = useState<string>('');
   const [selectedMember, setSelectedMember] = useState<string>('');
   const [selectedReplacement, setSelectedReplacement] = useState<string>('');
   const [reason, setReason] = useState('');
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
-  const [myRequests, setMyRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-
-  const roles = ['Cámaras', 'Sonido', 'Proyección', 'Streaming', 'Iluminación', 'Fotografía', 'Video'];
 
   useEffect(() => {
     fetchData();
@@ -49,7 +145,6 @@ const MultimediaReplacementRequest = () => {
     try {
       setLoading(true);
 
-      // Fetch upcoming services
       const today = new Date().toISOString();
       const { data: servicesData } = await supabase
         .from('services')
@@ -60,17 +155,6 @@ const MultimediaReplacementRequest = () => {
       
       setServices(servicesData || []);
 
-      // Fetch multimedia members
-      const { data: membersData } = await supabase
-        .from('members')
-        .select('*')
-        .eq('is_active', true)
-        .eq('grupo', 'Multimedia')
-        .order('nombres');
-      
-      setMembers(membersData || []);
-
-      // Fetch requests
       const { data: requestsData } = await supabase
         .from('multimedia_replacement_requests')
         .select('*')
@@ -78,7 +162,6 @@ const MultimediaReplacementRequest = () => {
 
       const pending = (requestsData || []).filter(r => r.status === 'pending');
       setPendingRequests(pending);
-      setMyRequests(requestsData || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Error al cargar datos');
@@ -88,10 +171,12 @@ const MultimediaReplacementRequest = () => {
   };
 
   const handleSubmitRequest = async () => {
-    if (!selectedService || !selectedMember || !selectedReplacement || !selectedRole) {
+    if (!selectedService || !selectedMember || !selectedReplacement) {
       toast.error('Por favor completa todos los campos requeridos');
       return;
     }
+
+    const member = MULTIMEDIA_STAFF.find(m => m.id === selectedMember);
 
     try {
       setSubmitting(true);
@@ -102,7 +187,7 @@ const MultimediaReplacementRequest = () => {
           service_id: selectedService,
           original_member_id: selectedMember,
           replacement_member_id: selectedReplacement,
-          role: selectedRole,
+          role: member?.roleLabel || 'Multimedia',
           reason: reason || null,
           status: 'pending',
           expires_at: addDays(new Date(), 1).toISOString()
@@ -111,14 +196,10 @@ const MultimediaReplacementRequest = () => {
       if (error) throw error;
 
       toast.success('Solicitud de reemplazo enviada');
-      
-      // Reset form
       setSelectedService('');
-      setSelectedRole('');
       setSelectedMember('');
       setSelectedReplacement('');
       setReason('');
-      
       fetchData();
     } catch (error: any) {
       console.error('Error creating request:', error);
@@ -164,9 +245,23 @@ const MultimediaReplacementRequest = () => {
     );
   };
 
-  const getMemberName = (memberId: string) => {
-    const member = members.find(m => m.id === memberId);
-    return member ? `${member.nombres} ${member.apellidos}` : 'Desconocido';
+  const getMemberName = (id: string) => {
+    return MULTIMEDIA_STAFF.find(m => m.id === id)?.name || 'Desconocido';
+  };
+
+  const selectedMemberData = MULTIMEDIA_STAFF.find(m => m.id === selectedMember);
+  
+  // Get available replacements (same role members, excluding selected)
+  const availableReplacements = selectedMemberData 
+    ? MULTIMEDIA_STAFF.filter(m => m.role === selectedMemberData.role && m.id !== selectedMember)
+    : [];
+
+  // Group staff by role for display
+  const groupedStaff = {
+    director: MULTIMEDIA_STAFF.filter(m => m.role === 'director_multimedia'),
+    proyeccion: MULTIMEDIA_STAFF.filter(m => m.role === 'encargado_proyeccion'),
+    streaming: MULTIMEDIA_STAFF.filter(m => m.role === 'encargado_streaming'),
+    camarografos: MULTIMEDIA_STAFF.filter(m => m.role === 'camarografo'),
   };
 
   if (loading) {
@@ -179,123 +274,290 @@ const MultimediaReplacementRequest = () => {
 
   return (
     <div className="space-y-6">
+      {/* Service Selection */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Monitor className="w-5 h-5 text-primary" />
-            Nueva Solicitud de Reemplazo Multimedia
+            <Calendar className="w-5 h-5 text-primary" />
+            Seleccionar Servicio
           </CardTitle>
-          <CardDescription>
-            Solicita un reemplazo para tu rol multimedia
-          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Servicio</Label>
-              <Select value={selectedService} onValueChange={setSelectedService}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona el servicio" />
-                </SelectTrigger>
-                <SelectContent>
-                  {services.map(service => (
-                    <SelectItem key={service.id} value={service.id}>
-                      {service.title} - {format(new Date(service.service_date), "EEE d MMM, h:mm a", { locale: es })}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Rol</Label>
-              <Select value={selectedRole} onValueChange={setSelectedRole}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona el rol" />
-                </SelectTrigger>
-                <SelectContent>
-                  {roles.map(role => (
-                    <SelectItem key={role} value={role}>{role}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Miembro a Reemplazar</Label>
-              <Select value={selectedMember} onValueChange={setSelectedMember}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona el miembro" />
-                </SelectTrigger>
-                <SelectContent>
-                  {members.map(member => (
-                    <SelectItem key={member.id} value={member.id}>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-6 h-6">
-                          <AvatarImage src={member.photo_url || undefined} />
-                          <AvatarFallback className="text-xs">
-                            {member.nombres[0]}{member.apellidos[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        {member.nombres} {member.apellidos}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Reemplazo Solicitado</Label>
-              <Select value={selectedReplacement} onValueChange={setSelectedReplacement} disabled={!selectedMember}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona el reemplazo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {members.filter(m => m.id !== selectedMember).map(member => (
-                    <SelectItem key={member.id} value={member.id}>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-6 h-6">
-                          <AvatarImage src={member.photo_url || undefined} />
-                          <AvatarFallback className="text-xs">
-                            {member.nombres[0]}{member.apellidos[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        {member.nombres} {member.apellidos}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Razón (opcional)</Label>
-            <Textarea
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Explica el motivo del reemplazo..."
-              className="resize-none"
-              rows={3}
-            />
-          </div>
-
-          <Button 
-            onClick={handleSubmitRequest} 
-            disabled={submitting || !selectedService || !selectedMember || !selectedReplacement}
-            className="w-full"
-          >
-            {submitting ? (
-              <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-            ) : (
-              <Send className="w-4 h-4 mr-2" />
-            )}
-            Enviar Solicitud
-          </Button>
+        <CardContent>
+          <Select value={selectedService} onValueChange={setSelectedService}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecciona el servicio" />
+            </SelectTrigger>
+            <SelectContent>
+              {services.map(service => (
+                <SelectItem key={service.id} value={service.id}>
+                  {service.title} - {format(new Date(service.service_date), "EEE d MMM, h:mm a", { locale: es })}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </CardContent>
       </Card>
 
+      {/* Staff by Category */}
+      {selectedService && (
+        <div className="space-y-4">
+          {/* Director */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Monitor className="w-4 h-4 text-purple-500" />
+                Director Multimedia
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {groupedStaff.director.map(member => {
+                  const RoleIcon = getRoleIcon(member.role);
+                  return (
+                    <div
+                      key={member.id}
+                      onClick={() => {
+                        setSelectedMember(member.id);
+                        setSelectedReplacement('');
+                      }}
+                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all text-center ${
+                        selectedMember === member.id 
+                          ? 'border-purple-500 bg-purple-50 dark:bg-purple-950' 
+                          : 'border-transparent bg-muted/50 hover:bg-muted'
+                      }`}
+                    >
+                      <Avatar className="w-12 h-12 mx-auto mb-2">
+                        <AvatarImage src={member.photo_url} alt={member.name} />
+                        <AvatarFallback className="text-xs">
+                          {member.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <p className="font-medium text-xs line-clamp-2">{member.name.split(' ').slice(0, 2).join(' ')}</p>
+                      <Badge className={`text-[10px] mt-1 ${getRoleColor(member.role)}`}>
+                        <RoleIcon className="w-3 h-3 mr-1" />
+                        Director
+                      </Badge>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Proyección */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Projector className="w-4 h-4 text-blue-500" />
+                Proyección
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {groupedStaff.proyeccion.map(member => {
+                  const RoleIcon = getRoleIcon(member.role);
+                  return (
+                    <div
+                      key={member.id}
+                      onClick={() => {
+                        setSelectedMember(member.id);
+                        setSelectedReplacement('');
+                      }}
+                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all text-center ${
+                        selectedMember === member.id 
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-950' 
+                          : 'border-transparent bg-muted/50 hover:bg-muted'
+                      }`}
+                    >
+                      <Avatar className="w-12 h-12 mx-auto mb-2">
+                        <AvatarImage src={member.photo_url} alt={member.name} />
+                        <AvatarFallback className="text-xs">
+                          {member.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <p className="font-medium text-xs line-clamp-2">{member.name.split(' ').slice(0, 2).join(' ')}</p>
+                      <Badge className={`text-[10px] mt-1 ${getRoleColor(member.role)}`}>
+                        <RoleIcon className="w-3 h-3 mr-1" />
+                        Proyección
+                      </Badge>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Streaming */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Video className="w-4 h-4 text-green-500" />
+                Streaming
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {groupedStaff.streaming.map(member => {
+                  const RoleIcon = getRoleIcon(member.role);
+                  return (
+                    <div
+                      key={member.id}
+                      onClick={() => {
+                        setSelectedMember(member.id);
+                        setSelectedReplacement('');
+                      }}
+                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all text-center ${
+                        selectedMember === member.id 
+                          ? 'border-green-500 bg-green-50 dark:bg-green-950' 
+                          : 'border-transparent bg-muted/50 hover:bg-muted'
+                      }`}
+                    >
+                      <Avatar className="w-12 h-12 mx-auto mb-2">
+                        <AvatarImage src={member.photo_url} alt={member.name} />
+                        <AvatarFallback className="text-xs">
+                          {member.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <p className="font-medium text-xs line-clamp-2">{member.name.split(' ').slice(0, 2).join(' ')}</p>
+                      <Badge className={`text-[10px] mt-1 ${getRoleColor(member.role)}`}>
+                        <RoleIcon className="w-3 h-3 mr-1" />
+                        Streaming
+                      </Badge>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Camarógrafos */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Camera className="w-4 h-4 text-orange-500" />
+                Camarógrafos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {groupedStaff.camarografos.map(member => {
+                  const RoleIcon = getRoleIcon(member.role);
+                  return (
+                    <div
+                      key={member.id}
+                      onClick={() => {
+                        setSelectedMember(member.id);
+                        setSelectedReplacement('');
+                      }}
+                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all text-center ${
+                        selectedMember === member.id 
+                          ? 'border-orange-500 bg-orange-50 dark:bg-orange-950' 
+                          : 'border-transparent bg-muted/50 hover:bg-muted'
+                      }`}
+                    >
+                      <Avatar className="w-12 h-12 mx-auto mb-2">
+                        <AvatarImage src={member.photo_url} alt={member.name} />
+                        <AvatarFallback className="text-xs">
+                          {member.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <p className="font-medium text-xs line-clamp-2">{member.name.split(' ').slice(0, 2).join(' ')}</p>
+                      <Badge className={`text-[10px] mt-1 ${getRoleColor(member.role)}`}>
+                        <RoleIcon className="w-3 h-3 mr-1" />
+                        Cámara
+                      </Badge>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Available Replacements */}
+      {selectedMember && availableReplacements.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <RefreshCw className="w-5 h-5 text-green-500" />
+              Personal Disponible para Reemplazo
+            </CardTitle>
+            <CardDescription>
+              Selecciona quién hará el reemplazo de {selectedMemberData?.name}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {availableReplacements.map(member => (
+                <div
+                  key={member.id}
+                  onClick={() => setSelectedReplacement(member.id)}
+                  className={`p-3 rounded-lg border-2 cursor-pointer transition-all text-center ${
+                    selectedReplacement === member.id 
+                      ? 'border-green-500 bg-green-50 dark:bg-green-950' 
+                      : 'border-transparent bg-muted/50 hover:bg-muted'
+                  }`}
+                >
+                  <Avatar className="w-12 h-12 mx-auto mb-2">
+                    <AvatarImage src={member.photo_url} alt={member.name} />
+                    <AvatarFallback className="text-xs">
+                      {member.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <p className="font-medium text-xs line-clamp-2">{member.name.split(' ').slice(0, 2).join(' ')}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Reason and Submit */}
+      {selectedMember && selectedReplacement && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Send className="w-5 h-5 text-primary" />
+              Enviar Solicitud
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Razón (opcional)</Label>
+              <Textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Explica el motivo del reemplazo..."
+                className="resize-none"
+                rows={3}
+              />
+            </div>
+
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <p className="text-sm">
+                <strong>Resumen:</strong> {getMemberName(selectedMember)} ({selectedMemberData?.roleLabel}) será reemplazado/a por{' '}
+                <strong>{getMemberName(selectedReplacement)}</strong>
+              </p>
+            </div>
+
+            <Button 
+              onClick={handleSubmitRequest} 
+              disabled={submitting}
+              className="w-full"
+            >
+              {submitting ? (
+                <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Send className="w-4 h-4 mr-2" />
+              )}
+              Enviar Solicitud de Reemplazo
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Pending Requests */}
       {pendingRequests.length > 0 && (
         <Card>
           <CardHeader>

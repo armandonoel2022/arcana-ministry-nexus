@@ -231,30 +231,45 @@ const VoiceReplacementRequest = () => {
         }));
       setAssignedMembers(assigned);
 
-      // Get available replacements from resting groups
+      // Get available replacements - prioritize resting groups, then include assigned members as last option
       const allGroupNames = Object.keys(GROUP_MEMBERS_CONFIG);
       const restingGroups = allGroupNames.filter(g => g !== groupName);
       
-      const availableIds: string[] = [];
+      // First: members from resting groups (best options)
+      const restingIds: string[] = [];
       restingGroups.forEach(g => {
         GROUP_MEMBERS_CONFIG[g].forEach(id => {
-          if (!availableIds.includes(id)) {
-            availableIds.push(id);
+          if (!restingIds.includes(id)) {
+            restingIds.push(id);
           }
         });
       });
 
-      const available: GroupMember[] = availableIds
+      const restingMembers: GroupMember[] = restingIds
         .filter(id => ALL_MEMBERS[id])
         .map(id => ({
           id,
           name: ALL_MEMBERS[id].name,
           voice: ALL_MEMBERS[id].voice,
-          role: 'Disponible',
+          role: 'Disponible (Descansa)',
           mic: '',
           photo_url: ALL_MEMBERS[id].photo_url,
         }));
-      setAvailableReplacements(available);
+      
+      // Second: members from assigned group (less ideal - they're already singing)
+      const assignedIds = memberIds.filter(id => ALL_MEMBERS[id]);
+      const assignedAsLastOption: GroupMember[] = assignedIds
+        .map(id => ({
+          id,
+          name: ALL_MEMBERS[id].name,
+          voice: ALL_MEMBERS[id].voice,
+          role: 'Asignado (Ya canta ese día)',
+          mic: '',
+          photo_url: ALL_MEMBERS[id].photo_url,
+        }));
+
+      // Combine: resting first, then assigned as last option
+      setAvailableReplacements([...restingMembers, ...assignedAsLastOption]);
     } else {
       setAssignedMembers([]);
       setAvailableReplacements([]);

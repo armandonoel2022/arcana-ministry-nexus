@@ -6,7 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Guitar, RefreshCw, Send, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Guitar, RefreshCw, Send, Clock, CheckCircle, XCircle, AlertCircle, AlertTriangle, Calendar, Music } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
@@ -18,29 +19,116 @@ interface Service {
   service_date: string;
 }
 
-interface Member {
+interface Musician {
   id: string;
-  nombres: string;
-  apellidos: string;
-  photo_url: string | null;
-  voz_instrumento: string | null;
-  grupo: string | null;
+  name: string;
+  instrument: string;
+  role: string;
+  photo_url: string;
+  replacements: string[];
 }
+
+// Musicians with their data and photo URLs from the members table
+const MUSICIANS: Musician[] = [
+  {
+    id: "david-santana",
+    name: "David Santana",
+    instrument: "Bajo",
+    role: "Director Musical",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/23c0a3d9-aac7-4c00-9d32-e34d6dadb399.JPG",
+    replacements: ["benjamin-martinez"]
+  },
+  {
+    id: "benjamin-martinez",
+    name: "Benjamín Martínez",
+    instrument: "Bajo",
+    role: "Bajista suplente",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/e91dc0fd-f10e-4538-a2ef-ebb20d40eeed.JPG",
+    replacements: []
+  },
+  {
+    id: "jose-neftali",
+    name: "José Neftalí",
+    instrument: "Piano",
+    role: "Pianista Principal",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/b4827a90-1989-46b9-9fdb-d1058e391d32.JPG",
+    replacements: ["roosevelt-martinez", "maria-santana"]
+  },
+  {
+    id: "roosevelt-martinez",
+    name: "Roosevelt Martínez",
+    instrument: "Piano",
+    role: "Pastor / Suplente Piano",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/97cfa6ca-96b8-4c7c-986f-7af421a17d6e.JPG",
+    replacements: []
+  },
+  {
+    id: "maria-santana",
+    name: "María del A. Pérez Santana",
+    instrument: "Piano",
+    role: "Suplente Piano",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/1d5866c9-cdc1-439e-976a-2d2e6a5aef80.jpeg",
+    replacements: []
+  },
+  {
+    id: "jatniel-baterista",
+    name: "Jatniel",
+    instrument: "Batería",
+    role: "Baterista",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/b06fc1d7-eea8-430e-9bc5-bbccecc8ea64.JPG",
+    replacements: ["hidekel-baterista", "alonso-baterista"]
+  },
+  {
+    id: "hidekel-baterista",
+    name: "Hidekel",
+    instrument: "Batería",
+    role: "Baterista",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/a127ca7a-3cf8-4f30-b3bb-8d903912a71b.JPG",
+    replacements: ["jatniel-baterista", "alonso-baterista"]
+  },
+  {
+    id: "alonso-baterista",
+    name: "Alonso",
+    instrument: "Batería",
+    role: "Baterista",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/67c1f8ac-4aee-47a9-a55e-3a16e0f8a7f2.JPG",
+    replacements: ["jatniel-baterista", "hidekel-baterista"]
+  },
+  {
+    id: "gerson-guitarra",
+    name: "Gerson Daniel Sánchez Santana",
+    instrument: "Guitarra Eléctrica",
+    role: "Guitarrista",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/7a14d13a-7b14-4f70-9a7e-eba31c42ff2c.JPG",
+    replacements: []
+  },
+  {
+    id: "elieser-percusion",
+    name: "Eliéser Leyba Ortiz",
+    instrument: "Percusión Menor",
+    role: "Percusionista",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/6ed3e787-ab2e-400b-8d13-d4ef4e3ab79b.JPG",
+    replacements: []
+  }
+];
+
+// Training warnings - instruments that need more musicians
+const TRAINING_WARNINGS = [
+  { instrument: "Guitarra Eléctrica", message: "Solo hay 1 guitarrista. Se necesita entrenar más músicos." },
+  { instrument: "Piano", message: "José Neftalí es el único pianista designado. Roosevelt y María son suplentes ocasionales." },
+  { instrument: "Percusión Menor", message: "Solo hay 1 percusionista. Se necesita entrenar más músicos." },
+  { instrument: "Bajo", message: "Solo hay 2 bajistas. Considera entrenar más músicos." }
+];
 
 const MusicianReplacementRequest = () => {
   const [services, setServices] = useState<Service[]>([]);
-  const [members, setMembers] = useState<Member[]>([]);
   const [selectedService, setSelectedService] = useState<string>('');
-  const [selectedInstrument, setSelectedInstrument] = useState<string>('');
-  const [selectedMember, setSelectedMember] = useState<string>('');
+  const [selectedMusician, setSelectedMusician] = useState<string>('');
   const [selectedReplacement, setSelectedReplacement] = useState<string>('');
   const [reason, setReason] = useState('');
   const [pendingRequests, setPendingRequests] = useState<any[]>([]);
-  const [myRequests, setMyRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-
-  const instruments = ['Piano', 'Guitarra Acústica', 'Guitarra Eléctrica', 'Bajo', 'Batería', 'Teclado', 'Violín', 'Saxofón', 'Trompeta'];
 
   useEffect(() => {
     fetchData();
@@ -50,7 +138,6 @@ const MusicianReplacementRequest = () => {
     try {
       setLoading(true);
 
-      // Fetch upcoming services
       const today = new Date().toISOString();
       const { data: servicesData } = await supabase
         .from('services')
@@ -61,17 +148,6 @@ const MusicianReplacementRequest = () => {
       
       setServices(servicesData || []);
 
-      // Fetch musicians
-      const { data: membersData } = await supabase
-        .from('members')
-        .select('*')
-        .eq('is_active', true)
-        .eq('grupo', 'Músicos')
-        .order('nombres');
-      
-      setMembers(membersData || []);
-
-      // Fetch requests
       const { data: requestsData } = await supabase
         .from('musician_replacement_requests')
         .select('*')
@@ -79,7 +155,6 @@ const MusicianReplacementRequest = () => {
 
       const pending = (requestsData || []).filter(r => r.status === 'pending');
       setPendingRequests(pending);
-      setMyRequests(requestsData || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Error al cargar datos');
@@ -89,10 +164,12 @@ const MusicianReplacementRequest = () => {
   };
 
   const handleSubmitRequest = async () => {
-    if (!selectedService || !selectedMember || !selectedReplacement || !selectedInstrument) {
+    if (!selectedService || !selectedMusician || !selectedReplacement) {
       toast.error('Por favor completa todos los campos requeridos');
       return;
     }
+
+    const musician = MUSICIANS.find(m => m.id === selectedMusician);
 
     try {
       setSubmitting(true);
@@ -101,9 +178,9 @@ const MusicianReplacementRequest = () => {
         .from('musician_replacement_requests')
         .insert({
           service_id: selectedService,
-          original_member_id: selectedMember,
+          original_member_id: selectedMusician,
           replacement_member_id: selectedReplacement,
-          instrument: selectedInstrument,
+          instrument: musician?.instrument || 'Instrumento',
           reason: reason || null,
           status: 'pending',
           expires_at: addDays(new Date(), 1).toISOString()
@@ -112,14 +189,10 @@ const MusicianReplacementRequest = () => {
       if (error) throw error;
 
       toast.success('Solicitud de reemplazo enviada');
-      
-      // Reset form
       setSelectedService('');
-      setSelectedInstrument('');
-      setSelectedMember('');
+      setSelectedMusician('');
       setSelectedReplacement('');
       setReason('');
-      
       fetchData();
     } catch (error: any) {
       console.error('Error creating request:', error);
@@ -165,10 +238,14 @@ const MusicianReplacementRequest = () => {
     );
   };
 
-  const getMemberName = (memberId: string) => {
-    const member = members.find(m => m.id === memberId);
-    return member ? `${member.nombres} ${member.apellidos}` : 'Desconocido';
+  const getMusicianName = (id: string) => {
+    return MUSICIANS.find(m => m.id === id)?.name || 'Desconocido';
   };
+
+  const selectedMusicianData = MUSICIANS.find(m => m.id === selectedMusician);
+  const availableReplacements = selectedMusicianData 
+    ? MUSICIANS.filter(m => selectedMusicianData.replacements.includes(m.id))
+    : [];
 
   if (loading) {
     return (
@@ -180,124 +257,181 @@ const MusicianReplacementRequest = () => {
 
   return (
     <div className="space-y-6">
+      {/* Training Warnings */}
+      <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
+        <AlertTriangle className="h-4 w-4 text-amber-600" />
+        <AlertDescription className="text-amber-800 dark:text-amber-200">
+          <strong>⚠️ Alerta de Entrenamiento:</strong>
+          <ul className="mt-2 list-disc list-inside space-y-1 text-sm">
+            {TRAINING_WARNINGS.map((warning, idx) => (
+              <li key={idx}><strong>{warning.instrument}:</strong> {warning.message}</li>
+            ))}
+          </ul>
+        </AlertDescription>
+      </Alert>
+
+      {/* Service Selection */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Guitar className="w-5 h-5 text-primary" />
-            Nueva Solicitud de Reemplazo de Músico
+            <Calendar className="w-5 h-5 text-primary" />
+            Seleccionar Servicio
           </CardTitle>
-          <CardDescription>
-            Solicita un reemplazo para tu instrumento
-          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Servicio</Label>
-              <Select value={selectedService} onValueChange={setSelectedService}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona el servicio" />
-                </SelectTrigger>
-                <SelectContent>
-                  {services.map(service => (
-                    <SelectItem key={service.id} value={service.id}>
-                      {service.title} - {format(new Date(service.service_date), "EEE d MMM, h:mm a", { locale: es })}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Instrumento</Label>
-              <Select value={selectedInstrument} onValueChange={setSelectedInstrument}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona el instrumento" />
-                </SelectTrigger>
-                <SelectContent>
-                  {instruments.map(inst => (
-                    <SelectItem key={inst} value={inst}>{inst}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Músico a Reemplazar</Label>
-              <Select value={selectedMember} onValueChange={setSelectedMember}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona el músico" />
-                </SelectTrigger>
-                <SelectContent>
-                  {members.map(member => (
-                    <SelectItem key={member.id} value={member.id}>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-6 h-6">
-                          <AvatarImage src={member.photo_url || undefined} />
-                          <AvatarFallback className="text-xs">
-                            {member.nombres[0]}{member.apellidos[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        {member.nombres} {member.apellidos}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Reemplazo Solicitado</Label>
-              <Select value={selectedReplacement} onValueChange={setSelectedReplacement} disabled={!selectedMember}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona el reemplazo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {members.filter(m => m.id !== selectedMember).map(member => (
-                    <SelectItem key={member.id} value={member.id}>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-6 h-6">
-                          <AvatarImage src={member.photo_url || undefined} />
-                          <AvatarFallback className="text-xs">
-                            {member.nombres[0]}{member.apellidos[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        {member.nombres} {member.apellidos}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Razón (opcional)</Label>
-            <Textarea
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Explica el motivo del reemplazo..."
-              className="resize-none"
-              rows={3}
-            />
-          </div>
-
-          <Button 
-            onClick={handleSubmitRequest} 
-            disabled={submitting || !selectedService || !selectedMember || !selectedReplacement}
-            className="w-full"
-          >
-            {submitting ? (
-              <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-            ) : (
-              <Send className="w-4 h-4 mr-2" />
-            )}
-            Enviar Solicitud
-          </Button>
+        <CardContent>
+          <Select value={selectedService} onValueChange={setSelectedService}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecciona el servicio" />
+            </SelectTrigger>
+            <SelectContent>
+              {services.map(service => (
+                <SelectItem key={service.id} value={service.id}>
+                  {service.title} - {format(new Date(service.service_date), "EEE d MMM, h:mm a", { locale: es })}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </CardContent>
       </Card>
 
-      {/* Pending & My Requests - Similar structure to VoiceReplacement */}
+      {/* Musicians Grid */}
+      {selectedService && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Music className="w-5 h-5 text-purple-500" />
+              Músicos - Selecciona quién necesita reemplazo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              {MUSICIANS.map(musician => (
+                <div
+                  key={musician.id}
+                  onClick={() => {
+                    setSelectedMusician(musician.id);
+                    setSelectedReplacement('');
+                  }}
+                  className={`p-3 rounded-lg border-2 cursor-pointer transition-all text-center ${
+                    selectedMusician === musician.id 
+                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-950' 
+                      : 'border-transparent bg-muted/50 hover:bg-muted'
+                  }`}
+                >
+                  <Avatar className="w-14 h-14 mx-auto mb-2">
+                    <AvatarImage src={musician.photo_url} alt={musician.name} />
+                    <AvatarFallback className="text-xs">
+                      {musician.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <p className="font-medium text-xs line-clamp-2">{musician.name.split(' ').slice(0, 2).join(' ')}</p>
+                  <Badge variant="outline" className="text-[10px] mt-1">{musician.instrument}</Badge>
+                  <p className="text-[10px] text-muted-foreground mt-1">{musician.role}</p>
+                  {musician.replacements.length === 0 && (
+                    <Badge variant="destructive" className="text-[9px] mt-1">Sin reemplazo</Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Available Replacements */}
+      {selectedMusician && availableReplacements.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <RefreshCw className="w-5 h-5 text-green-500" />
+              Músicos Disponibles para Reemplazo
+            </CardTitle>
+            <CardDescription>
+              Selecciona quién hará el reemplazo de {selectedMusicianData?.name}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+              {availableReplacements.map(musician => (
+                <div
+                  key={musician.id}
+                  onClick={() => setSelectedReplacement(musician.id)}
+                  className={`p-3 rounded-lg border-2 cursor-pointer transition-all text-center ${
+                    selectedReplacement === musician.id 
+                      ? 'border-green-500 bg-green-50 dark:bg-green-950' 
+                      : 'border-transparent bg-muted/50 hover:bg-muted'
+                  }`}
+                >
+                  <Avatar className="w-14 h-14 mx-auto mb-2">
+                    <AvatarImage src={musician.photo_url} alt={musician.name} />
+                    <AvatarFallback className="text-xs">
+                      {musician.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <p className="font-medium text-xs line-clamp-2">{musician.name.split(' ').slice(0, 2).join(' ')}</p>
+                  <Badge variant="outline" className="text-[10px] mt-1">{musician.instrument}</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* No Replacements Warning */}
+      {selectedMusician && availableReplacements.length === 0 && (
+        <Alert className="border-red-500 bg-red-50 dark:bg-red-950">
+          <AlertTriangle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="text-red-800 dark:text-red-200">
+            <strong>{selectedMusicianData?.name}</strong> no tiene músicos de reemplazo designados para {selectedMusicianData?.instrument}. 
+            Es urgente entrenar a más músicos en este instrumento.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Reason and Submit */}
+      {selectedMusician && selectedReplacement && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Send className="w-5 h-5 text-primary" />
+              Enviar Solicitud
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Razón (opcional)</Label>
+              <Textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Explica el motivo del reemplazo..."
+                className="resize-none"
+                rows={3}
+              />
+            </div>
+
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <p className="text-sm">
+                <strong>Resumen:</strong> {getMusicianName(selectedMusician)} ({selectedMusicianData?.instrument}) será reemplazado/a por{' '}
+                <strong>{getMusicianName(selectedReplacement)}</strong>
+              </p>
+            </div>
+
+            <Button 
+              onClick={handleSubmitRequest} 
+              disabled={submitting}
+              className="w-full"
+            >
+              {submitting ? (
+                <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Send className="w-4 h-4 mr-2" />
+              )}
+              Enviar Solicitud de Reemplazo
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Pending Requests */}
       {pendingRequests.length > 0 && (
         <Card>
           <CardHeader>
@@ -313,7 +447,7 @@ const MusicianReplacementRequest = () => {
                   <div>
                     <p className="font-medium">{request.instrument}</p>
                     <p className="text-sm text-muted-foreground">
-                      {getMemberName(request.original_member_id)} → {getMemberName(request.replacement_member_id)}
+                      {getMusicianName(request.original_member_id)} → {getMusicianName(request.replacement_member_id)}
                     </p>
                   </div>
                   {getStatusBadge(request.status)}
