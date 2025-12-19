@@ -81,7 +81,7 @@ export const DailyAdviceOverlay = ({ title: propTitle, message: propMessage, onC
   };
 
   const handleShare = async () => {
-    const shareText = `💡 Consejo del Día: ${title}\n\n"${message}"\n\n— Ministerio de Adoración ARCANA`;
+    const shareText = `💡 Consejo del Día: ${title}\n\n"${message}"\n\n— ARCANA`;
     
     await navigator.clipboard.writeText(shareText);
     toast.success('Copiado al portapapeles');
@@ -141,7 +141,7 @@ export const DailyAdviceOverlay = ({ title: propTitle, message: propMessage, onC
 
             {/* Ministry signature for download */}
             <p className="text-center text-sm text-gray-500">
-              Ministerio de Adoración ARCANA
+              ARCANA
             </p>
           </div>
         </div>

@@ -95,7 +95,7 @@ export const DailyVerseOverlay = ({ verseText: propVerseText, verseReference: pr
   };
 
   const handleShare = async () => {
-    const shareText = `📖 Versículo del Día\n\n"${verseText}"\n\n— ${verseReference}\n\n— Ministerio de Adoración ARCANA`;
+    const shareText = `📖 Versículo del Día\n\n"${verseText}"\n\n— ${verseReference}\n\n— ARCANA`;
     
     await navigator.clipboard.writeText(shareText);
     toast.success('Copiado al portapapeles');
@@ -155,7 +155,7 @@ export const DailyVerseOverlay = ({ verseText: propVerseText, verseReference: pr
 
             {/* Ministry signature for download */}
             <p className="text-center text-sm text-gray-500">
-              Ministerio de Adoración ARCANA
+              ARCANA
             </p>
           </div>
         </div>
