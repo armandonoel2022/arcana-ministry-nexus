@@ -31,15 +31,15 @@ interface Musician {
 // Musicians with their data and photo URLs from the members table
 const MUSICIANS: Musician[] = [
   {
-    id: "david-santana",
+    id: "479ee7fd-b5cc-4a2e-8c2a-5bc7edeb46cd",
     name: "David Santana",
     instrument: "Bajo",
     role: "Director Musical",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/23c0a3d9-aac7-4c00-9d32-e34d6dadb399.JPG",
-    replacements: ["benjamin-martinez"]
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/479ee7fd-b5cc-4a2e-8c2a-5bc7edeb46cd.JPG",
+    replacements: ["e91dc0fd-f10e-4538-a2ef-ebb20d40eeed"]
   },
   {
-    id: "benjamin-martinez",
+    id: "e91dc0fd-f10e-4538-a2ef-ebb20d40eeed",
     name: "Benjamín Martínez",
     instrument: "Bajo",
     role: "Bajista suplente",
@@ -47,15 +47,15 @@ const MUSICIANS: Musician[] = [
     replacements: []
   },
   {
-    id: "jose-neftali",
-    name: "José Neftalí",
+    id: "147ba353-6c2e-45b2-8f70-b992400c5766",
+    name: "José Neftalí Castillo",
     instrument: "Piano",
     role: "Pianista Principal",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/b4827a90-1989-46b9-9fdb-d1058e391d32.JPG",
-    replacements: ["roosevelt-martinez", "maria-santana"]
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/147ba353-6c2e-45b2-8f70-b992400c5766.JPG",
+    replacements: ["97cfa6ca-96b8-4c7c-986f-7af421a17d6e", "1d5866c9-cdc1-439e-976a-2d2e6a5aef80"]
   },
   {
-    id: "roosevelt-martinez",
+    id: "97cfa6ca-96b8-4c7c-986f-7af421a17d6e",
     name: "Roosevelt Martínez",
     instrument: "Piano",
     role: "Pastor / Suplente Piano",
@@ -63,7 +63,7 @@ const MUSICIANS: Musician[] = [
     replacements: []
   },
   {
-    id: "maria-santana",
+    id: "1d5866c9-cdc1-439e-976a-2d2e6a5aef80",
     name: "María del A. Pérez Santana",
     instrument: "Piano",
     role: "Suplente Piano",
@@ -71,43 +71,43 @@ const MUSICIANS: Musician[] = [
     replacements: []
   },
   {
-    id: "jatniel-baterista",
-    name: "Jatniel",
+    id: "5c511308-3a29-4ab3-84b7-9e6bddfb7dc5",
+    name: "Jatniel Martínez Portes",
     instrument: "Batería",
     role: "Baterista",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/b06fc1d7-eea8-430e-9bc5-bbccecc8ea64.JPG",
-    replacements: ["hidekel-baterista", "alonso-baterista"]
+    photo_url: "",
+    replacements: ["7715c56e-ca85-4fbf-9647-6e6d6f312364", "2ee5d44e-1938-4df4-87b3-b3dea8b703f1"]
   },
   {
-    id: "hidekel-baterista",
-    name: "Hidekel",
+    id: "7715c56e-ca85-4fbf-9647-6e6d6f312364",
+    name: "Hidekel Mateo Morillo",
     instrument: "Batería",
     role: "Baterista",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/a127ca7a-3cf8-4f30-b3bb-8d903912a71b.JPG",
-    replacements: ["jatniel-baterista", "alonso-baterista"]
+    photo_url: "",
+    replacements: ["5c511308-3a29-4ab3-84b7-9e6bddfb7dc5", "2ee5d44e-1938-4df4-87b3-b3dea8b703f1"]
   },
   {
-    id: "alonso-baterista",
-    name: "Alonso",
+    id: "2ee5d44e-1938-4df4-87b3-b3dea8b703f1",
+    name: "Alonso Núñez",
     instrument: "Batería",
     role: "Baterista",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/67c1f8ac-4aee-47a9-a55e-3a16e0f8a7f2.JPG",
-    replacements: ["jatniel-baterista", "hidekel-baterista"]
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/2ee5d44e-1938-4df4-87b3-b3dea8b703f1.png",
+    replacements: ["5c511308-3a29-4ab3-84b7-9e6bddfb7dc5", "7715c56e-ca85-4fbf-9647-6e6d6f312364"]
   },
   {
-    id: "gerson-guitarra",
+    id: "fc76fca9-7a2e-457b-80c7-8cf2987c6b6c",
     name: "Gerson Daniel Sánchez Santana",
     instrument: "Guitarra Eléctrica",
     role: "Guitarrista",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/7a14d13a-7b14-4f70-9a7e-eba31c42ff2c.JPG",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/fc76fca9-7a2e-457b-80c7-8cf2987c6b6c.JPG",
     replacements: []
   },
   {
-    id: "elieser-percusion",
+    id: "61ded9a2-d5a1-41d6-bbba-f19ba5cddf88",
     name: "Eliéser Leyba Ortiz",
     instrument: "Percusión Menor",
     role: "Percusionista",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/6ed3e787-ab2e-400b-8d13-d4ef4e3ab79b.JPG",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/61ded9a2-d5a1-41d6-bbba-f19ba5cddf88.png",
     replacements: []
   }
 ];
