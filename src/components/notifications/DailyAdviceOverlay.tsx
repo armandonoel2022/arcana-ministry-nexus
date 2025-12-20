@@ -109,38 +109,38 @@ export const DailyAdviceOverlay = ({ title: propTitle, message: propMessage, onC
         </Button>
 
         {/* Downloadable content */}
-        <div ref={downloadRef} className="bg-gradient-to-br from-yellow-50 via-white to-orange-50 relative overflow-hidden">
-          {/* Background decoration */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-100 rounded-full blur-3xl opacity-30 -translate-y-32 translate-x-32" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-100 rounded-full blur-3xl opacity-30 translate-y-32 -translate-x-32" />
+        <div ref={downloadRef} className="relative overflow-hidden" style={{ backgroundColor: '#fefce8' }}>
+          {/* Background decoration - using solid colors for html2canvas compatibility */}
+          <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-20 -translate-y-32 translate-x-32" style={{ backgroundColor: '#fef08a' }} />
+          <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-20 translate-y-32 -translate-x-32" style={{ backgroundColor: '#fed7aa' }} />
           
           <div className="relative p-8">
             {/* Icon */}
             <div className="flex justify-center mb-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center shadow-lg animate-pulse">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-lg" style={{ backgroundColor: '#f59e0b' }}>
                 <Lightbulb className="w-10 h-10 text-white" />
               </div>
             </div>
 
-            {/* Title */}
-            <h2 className="text-3xl font-bold text-center mb-6 bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+            {/* Title - using solid color instead of gradient for html2canvas */}
+            <h2 className="text-3xl font-bold text-center mb-6" style={{ color: '#d97706' }}>
               Consejo del Día
             </h2>
 
             {/* Advice title */}
-            <h3 className="text-2xl font-bold text-center mb-4 text-gray-800">
+            <h3 className="text-2xl font-bold text-center mb-4" style={{ color: '#1f2937' }}>
               {title}
             </h3>
 
             {/* Advice text */}
-            <div className="bg-white/80 rounded-lg p-6 mb-4 shadow-inner border border-yellow-100">
-              <p className="text-xl text-gray-800 leading-relaxed text-center">
+            <div className="rounded-lg p-6 mb-4 shadow-inner" style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', border: '1px solid #fef08a' }}>
+              <p className="text-xl leading-relaxed text-center" style={{ color: '#1f2937' }}>
                 {message}
               </p>
             </div>
 
             {/* Ministry signature for download */}
-            <p className="text-center text-sm text-gray-500">
+            <p className="text-center text-sm" style={{ color: '#6b7280' }}>
               ARCANA
             </p>
           </div>
