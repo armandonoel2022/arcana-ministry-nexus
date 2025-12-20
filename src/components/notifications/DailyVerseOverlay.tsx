@@ -123,38 +123,38 @@ export const DailyVerseOverlay = ({ verseText: propVerseText, verseReference: pr
         </Button>
 
         {/* Downloadable content */}
-        <div ref={downloadRef} className="bg-gradient-to-br from-blue-50 via-white to-purple-50 relative overflow-hidden">
-          {/* Background decoration */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-30 -translate-y-32 translate-x-32" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-100 rounded-full blur-3xl opacity-30 translate-y-32 -translate-x-32" />
+        <div ref={downloadRef} className="relative overflow-hidden" style={{ backgroundColor: '#f0f9ff' }}>
+          {/* Background decoration - using solid colors for html2canvas compatibility */}
+          <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-20 -translate-y-32 translate-x-32" style={{ backgroundColor: '#dbeafe' }} />
+          <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-20 translate-y-32 -translate-x-32" style={{ backgroundColor: '#e9d5ff' }} />
           
           <div className="relative p-8">
             {/* Icon */}
             <div className="flex justify-center mb-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-lg" style={{ backgroundColor: '#6366f1' }}>
                 <BookOpen className="w-10 h-10 text-white" />
               </div>
             </div>
 
-            {/* Title */}
-            <h2 className="text-3xl font-bold text-center mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            {/* Title - using solid color instead of gradient for html2canvas */}
+            <h2 className="text-3xl font-bold text-center mb-6" style={{ color: '#4f46e5' }}>
               Versículo del Día
             </h2>
 
             {/* Verse text */}
-            <div className="bg-white/80 rounded-lg p-6 mb-4 shadow-inner border border-blue-100">
-              <p className="text-xl text-gray-800 leading-relaxed text-center font-serif italic">
+            <div className="rounded-lg p-6 mb-4 shadow-inner" style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', border: '1px solid #dbeafe' }}>
+              <p className="text-xl leading-relaxed text-center font-serif italic" style={{ color: '#1f2937' }}>
                 "{verseText}"
               </p>
             </div>
 
             {/* Reference */}
-            <p className="text-center text-lg font-semibold text-blue-700 mb-4">
+            <p className="text-center text-lg font-semibold mb-4" style={{ color: '#3b82f6' }}>
               - {verseReference}
             </p>
 
             {/* Ministry signature for download */}
-            <p className="text-center text-sm text-gray-500">
+            <p className="text-center text-sm" style={{ color: '#6b7280' }}>
               ARCANA
             </p>
           </div>

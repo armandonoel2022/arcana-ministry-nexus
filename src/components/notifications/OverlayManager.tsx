@@ -687,15 +687,15 @@ const OverlayManager: React.FC = () => {
             reference: `${verse.book} ${verse.chapter}:${verse.verse}`
           });
         } else if (!error) {
-          // Si no hay versículo para hoy, obtener uno aleatorio
-          const { data: randomVerse } = await supabase
+          // Si no hay versículo para hoy, obtener uno aleatorio de verdad
+          const { data: allVerses } = await supabase
             .from('bible_verses')
-            .select('*')
-            .limit(1)
-            .order('id', { ascending: false });
+            .select('*');
           
-          if (randomVerse && randomVerse[0]) {
-            const verse = randomVerse[0];
+          if (allVerses && allVerses.length > 0) {
+            // Seleccionar un versículo aleatorio
+            const randomIndex = Math.floor(Math.random() * allVerses.length);
+            const verse = allVerses[randomIndex];
             setDynamicVerseData({
               text: verse.text,
               reference: `${verse.book} ${verse.chapter}:${verse.verse}`
