@@ -11,10 +11,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface DirectorChangeRequestProps {
-  serviceId: string;
-  currentDirector: string;
-  serviceDate: string;
-  serviceTitle: string;
+  serviceId?: string;
+  currentDirector?: string;
+  serviceDate?: string;
+  serviceTitle?: string;
   onRequestCreated?: () => void;
 }
 
@@ -40,11 +40,18 @@ interface DirectorRequest {
   };
 }
 
+interface ServiceOption {
+  id: string;
+  title: string;
+  service_date: string;
+  leader: string;
+}
+
 const DirectorChangeRequest: React.FC<DirectorChangeRequestProps> = ({
-  serviceId,
-  currentDirector,
-  serviceDate,
-  serviceTitle,
+  serviceId: propServiceId,
+  currentDirector: propCurrentDirector,
+  serviceDate: propServiceDate,
+  serviceTitle: propServiceTitle,
   onRequestCreated
 }) => {
   const [showRequestForm, setShowRequestForm] = useState(false);
@@ -55,10 +62,61 @@ const DirectorChangeRequest: React.FC<DirectorChangeRequestProps> = ({
   const [existingRequests, setExistingRequests] = useState<DirectorRequest[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
+  // Modo standalone (sin service preseleccionado)
+  const [standalonMode] = useState(!propServiceId);
+  const [availableServices, setAvailableServices] = useState<ServiceOption[]>([]);
+  const [selectedServiceId, setSelectedServiceId] = useState('');
+  const [loadingServices, setLoadingServices] = useState(false);
+
+  const serviceId = propServiceId || selectedServiceId;
+  const selectedServiceData = availableServices.find(s => s.id === selectedServiceId);
+  const currentDirector = propCurrentDirector || selectedServiceData?.leader || '';
+  const serviceDate = propServiceDate || selectedServiceData?.service_date || '';
+  const serviceTitle = propServiceTitle || selectedServiceData?.title || '';
+
   useEffect(() => {
     checkCurrentUser();
-    fetchExistingRequests();
+    if (standalonMode) {
+      fetchAvailableServices();
+    }
+  }, [standalonMode]);
+
+  useEffect(() => {
+    if (serviceId) {
+      fetchExistingRequests();
+    }
   }, [serviceId]);
+
+  const fetchAvailableServices = async () => {
+    setLoadingServices(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile) return;
+
+      // Obtener servicios futuros donde el usuario es el líder
+      const { data: services } = await supabase
+        .from('services')
+        .select('id, title, service_date, leader')
+        .eq('leader', profile.full_name)
+        .gte('service_date', new Date().toISOString())
+        .order('service_date', { ascending: true })
+        .limit(20);
+
+      setAvailableServices(services || []);
+    } catch (error) {
+      console.error('Error fetching services:', error);
+    } finally {
+      setLoadingServices(false);
+    }
+  };
 
   const checkCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -252,23 +310,56 @@ const DirectorChangeRequest: React.FC<DirectorChangeRequestProps> = ({
             Solicitar Reemplazo de Director
           </CardTitle>
           <CardDescription>
-            Solicita a otro director que dirija este servicio en tu lugar
+            Solicita a otro director que dirija un servicio en tu lugar
           </CardDescription>
         </CardHeader>
         <CardContent>
           {!showRequestForm ? (
             <div className="space-y-4">
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <div className="text-sm text-gray-600">Servicio actual:</div>
-                <div className="font-medium">{serviceTitle}</div>
-                <div className="text-sm text-gray-600 mt-1">
-                  {format(new Date(serviceDate), 'dd/MM/yyyy', { locale: es })} - Dirigido por: {currentDirector}
+              {/* Selector de servicio en modo standalone */}
+              {standalonMode && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Selecciona el servicio a solicitar reemplazo</label>
+                  {loadingServices ? (
+                    <p className="text-muted-foreground text-sm">Cargando tus servicios...</p>
+                  ) : availableServices.length === 0 ? (
+                    <p className="text-muted-foreground text-sm">No tienes servicios asignados próximamente.</p>
+                  ) : (
+                    <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un servicio" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableServices.map((service) => (
+                          <SelectItem key={service.id} value={service.id}>
+                            <div>
+                              <div className="font-medium">{service.title}</div>
+                              <div className="text-sm text-gray-500">
+                                {format(new Date(service.service_date), "EEE dd/MM/yyyy HH:mm", { locale: es })}
+                              </div>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
-              </div>
+              )}
+
+              {/* Info del servicio seleccionado */}
+              {serviceId && serviceTitle && (
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <div className="text-sm text-gray-600">Servicio seleccionado:</div>
+                  <div className="font-medium">{serviceTitle}</div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    {serviceDate && format(new Date(serviceDate), 'dd/MM/yyyy', { locale: es })} - Dirigido por: {currentDirector}
+                  </div>
+                </div>
+              )}
               
               <Button 
                 onClick={handleRequestForm}
-                disabled={hasPendingRequest}
+                disabled={hasPendingRequest || !serviceId}
                 className="w-full"
               >
                 {hasPendingRequest ? 'Ya tienes una solicitud pendiente' : 'Solicitar Reemplazo'}
