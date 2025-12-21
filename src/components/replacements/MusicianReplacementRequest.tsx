@@ -52,14 +52,14 @@ const MUSICIANS: Musician[] = [
     instrument: "Piano",
     role: "Pianista Principal",
     photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/147ba353-6c2e-45b2-8f70-b992400c5766.JPG",
-    replacements: ["97cfa6ca-96b8-4c7c-986f-7af421a17d6e", "1d5866c9-cdc1-439e-976a-2d2e6a5aef80"]
+    replacements: ["60b1f3d9-9826-4e5c-a348-cebbdbd2a7c9", "1d5866c9-cdc1-439e-976a-2d2e6a5aef80"]
   },
   {
-    id: "97cfa6ca-96b8-4c7c-986f-7af421a17d6e",
+    id: "60b1f3d9-9826-4e5c-a348-cebbdbd2a7c9",
     name: "Roosevelt Martínez",
     instrument: "Piano",
     role: "Pastor / Suplente Piano",
-    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/97cfa6ca-96b8-4c7c-986f-7af421a17d6e.JPG",
+    photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/60b1f3d9-9826-4e5c-a348-cebbdbd2a7c9.JPG",
     replacements: []
   },
   {

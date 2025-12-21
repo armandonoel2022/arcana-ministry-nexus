@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserCheck, Mic, Guitar, Monitor, ArrowLeft, RefreshCw } from "lucide-react";
 import DirectorRequestResponse from '@/components/agenda/DirectorRequestResponse';
+import DirectorChangeRequest from '@/components/agenda/DirectorChangeRequest';
 import DirectorReplacementHistory from '@/components/agenda/DirectorReplacementHistory';
 import VoiceReplacementRequest from '@/components/replacements/VoiceReplacementRequest';
 import MusicianReplacementRequest from '@/components/replacements/MusicianReplacementRequest';
@@ -97,8 +98,12 @@ const DirectorReplacements = () => {
 
   const renderDirectorSection = () => (
     <div className="space-y-4">
-      <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue="request" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="request" className="flex items-center gap-2 text-xs sm:text-sm">
+            <UserCheck className="w-4 h-4" />
+            <span className="hidden sm:inline">Solicitar</span> Reemplazo
+          </TabsTrigger>
           <TabsTrigger value="pending" className="flex items-center gap-2 text-xs sm:text-sm">
             <MessageSquare className="w-4 h-4" />
             <span className="hidden sm:inline">Solicitudes</span> Pendientes
@@ -108,6 +113,15 @@ const DirectorReplacements = () => {
             Historial
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="request" className="space-y-4">
+          <DirectorChangeRequest
+            serviceId=""
+            currentDirector=""
+            serviceDate=""
+            serviceTitle=""
+          />
+        </TabsContent>
 
         <TabsContent value="pending" className="space-y-4">
           <DirectorRequestResponse />
