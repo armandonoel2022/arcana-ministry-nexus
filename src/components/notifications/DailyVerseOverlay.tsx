@@ -29,28 +29,28 @@ export const DailyVerseOverlay = ({ verseText: propVerseText, verseReference: pr
       }
 
       try {
-        const today = new Date().toISOString().split('T')[0];
-        
-        // Intentar cargar versículo del día
+        const dominicanNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
+        const today = dominicanNow.toISOString().split('T')[0];
+
+        // Intentar cargar versículo del día (por fecha RD)
         const { data: dailyVerse } = await supabase
           .from('daily_verses')
           .select(`*, bible_verses (*)`)
           .eq('date', today)
-          .single();
+          .maybeSingle();
 
         if (dailyVerse?.bible_verses) {
           const verse = dailyVerse.bible_verses as any;
           setVerseText(verse.text);
           setVerseReference(`${verse.book} ${verse.chapter}:${verse.verse}`);
         } else {
-          // Fallback: cargar versículo aleatorio
-          const { data: randomVerses } = await supabase
-            .from('bible_verses')
-            .select('*')
-            .limit(50);
+          // Fallback: selección determinística por día
+          const { data: verses } = await supabase.from('bible_verses').select('*');
 
-          if (randomVerses && randomVerses.length > 0) {
-            const verse = randomVerses[Math.floor(Math.random() * randomVerses.length)];
+          if (verses && verses.length > 0) {
+            const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+            const idx = dayOfYear % verses.length;
+            const verse = verses[idx];
             setVerseText(verse.text);
             setVerseReference(`${verse.book} ${verse.chapter}:${verse.verse}`);
           } else {

@@ -673,7 +673,8 @@ const OverlayManager: React.FC = () => {
       
       // Cargar desde la base de datos
       const loadVerseData = async () => {
-        const today = new Date().toISOString().split('T')[0];
+        const dominicanNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
+        const today = dominicanNow.toISOString().split('T')[0];
         const { data, error } = await supabase
           .from('daily_verses')
           .select('*, bible_verses(*)')
@@ -687,15 +688,13 @@ const OverlayManager: React.FC = () => {
             reference: `${verse.book} ${verse.chapter}:${verse.verse}`
           });
         } else if (!error) {
-          // Si no hay versículo para hoy, obtener uno aleatorio de verdad
-          const { data: allVerses } = await supabase
-            .from('bible_verses')
-            .select('*');
-          
+          // Si no hay versículo para hoy, selección determinística por día
+          const { data: allVerses } = await supabase.from('bible_verses').select('*');
+
           if (allVerses && allVerses.length > 0) {
-            // Seleccionar un versículo aleatorio
-            const randomIndex = Math.floor(Math.random() * allVerses.length);
-            const verse = allVerses[randomIndex];
+            const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+            const idx = dayOfYear % allVerses.length;
+            const verse = allVerses[idx];
             setDynamicVerseData({
               text: verse.text,
               reference: `${verse.book} ${verse.chapter}:${verse.verse}`

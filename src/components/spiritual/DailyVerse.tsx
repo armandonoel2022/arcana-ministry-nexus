@@ -58,8 +58,9 @@ export const DailyVerse = () => {
 
   const fetchTodayVerse = async () => {
     try {
-      const today = new Date().toISOString().split('T')[0];
-      
+      const dominicanNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
+      const today = dominicanNow.toISOString().split('T')[0];
+
       const { data, error } = await supabase
         .from('daily_verses')
         .select(`
@@ -73,7 +74,7 @@ export const DailyVerse = () => {
           )
         `)
         .eq('date', today)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         throw error;
@@ -99,24 +100,24 @@ export const DailyVerse = () => {
 
   const createRandomDailyVerse = async () => {
     try {
-      // Obtener un versículo aleatorio
-      const { data: verses, error: versesError } = await supabase
-        .from('bible_verses')
-        .select('*');
+      const dominicanNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
+      const today = dominicanNow.toISOString().split('T')[0];
 
+      // Obtener un versículo determinístico por día (evita resultados repetidos por “random”)
+      const { data: verses, error: versesError } = await supabase.from('bible_verses').select('*');
       if (versesError) throw versesError;
 
       if (verses && verses.length > 0) {
-        const randomVerse = verses[Math.floor(Math.random() * verses.length)];
-        const today = new Date().toISOString().split('T')[0];
+        const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+        const idx = dayOfYear % verses.length;
+        const selectedVerse = verses[idx];
 
-        // Crear el versículo diario
         const { data: dailyVerseData, error: dailyVerseError } = await supabase
           .from('daily_verses')
           .insert({
-            verse_id: randomVerse.id,
+            verse_id: selectedVerse.id,
             date: today,
-            reflection: "Que este versículo te inspire y fortalezca tu fe hoy."
+            reflection: 'Que este versículo te inspire y fortalezca tu fe hoy.'
           })
           .select(`
             *,
@@ -131,11 +132,10 @@ export const DailyVerse = () => {
           .single();
 
         if (dailyVerseError) throw dailyVerseError;
-
         setDailyVerse(dailyVerseData);
       }
     } catch (error) {
-      console.error('Error creating random daily verse:', error);
+      console.error('Error creating daily verse:', error);
     }
   };
 
