@@ -177,18 +177,20 @@ const getFromLocalDatabase = (reference: string): BibleVerse | null => {
  * Versículo aleatorio - usa los más comunes
  */
 export const getRandomVerse = async (): Promise<BibleVerse | null> => {
+  // Selección determinística por día para evitar “random” repetido en algunos entornos
   const verses = [
     "Salmos 23:1",
     "Salmos 100:1-2",
-    "Juan 3:16",
     "Filipenses 4:13",
     "Jeremías 29:11",
     "Romanos 8:28",
     "Isaías 41:10",
     "Proverbios 3:5-6",
+    "Juan 3:17",
   ];
 
-  const randomVerse = verses[Math.floor(Math.random() * verses.length)];
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+  const randomVerse = verses[dayOfYear % verses.length];
   return await getSpecificVerse(randomVerse);
 };
 
