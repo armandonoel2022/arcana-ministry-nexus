@@ -101,14 +101,19 @@ const DirectorChangeRequest: React.FC<DirectorChangeRequestProps> = ({
 
       if (!profile) return;
 
-      // Obtener servicios futuros donde el usuario es el líder
+      // Obtener la fecha actual en zona horaria de RD (solo la fecha, sin hora)
+      const now = new Date();
+      const rdDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
+      const todayStr = rdDate.toISOString().split('T')[0]; // YYYY-MM-DD
+
+      // Obtener los próximos 10 servicios donde el usuario es el líder
       const { data: services } = await supabase
         .from('services')
         .select('id, title, service_date, leader')
         .eq('leader', profile.full_name)
-        .gte('service_date', new Date().toISOString())
+        .gte('service_date', todayStr)
         .order('service_date', { ascending: true })
-        .limit(20);
+        .limit(10);
 
       setAvailableServices(services || []);
     } catch (error) {
