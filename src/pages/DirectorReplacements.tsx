@@ -1,20 +1,19 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserCheck, Mic, Guitar, Monitor, ArrowLeft, RefreshCw } from "lucide-react";
-import DirectorRequestResponse from '@/components/agenda/DirectorRequestResponse';
-import DirectorReplacementHistory from '@/components/agenda/DirectorReplacementHistory';
-import VoiceReplacementRequest from '@/components/replacements/VoiceReplacementRequest';
-import MusicianReplacementRequest from '@/components/replacements/MusicianReplacementRequest';
-import MultimediaReplacementRequest from '@/components/replacements/MultimediaReplacementRequest';
+import DirectorRequestResponse from "@/components/agenda/DirectorRequestResponse";
+import DirectorReplacementHistory from "@/components/agenda/DirectorReplacementHistory";
+import DirectorNextServiceRequest from "@/components/agenda/DirectorNextServiceRequest";
+import VoiceReplacementRequest from "@/components/replacements/VoiceReplacementRequest";
+import MusicianReplacementRequest from "@/components/replacements/MusicianReplacementRequest";
+import MultimediaReplacementRequest from "@/components/replacements/MultimediaReplacementRequest";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MessageSquare, History } from "lucide-react";
 
 type ReplacementMode = 'selector' | 'director' | 'voice' | 'musician' | 'multimedia';
 
 const DirectorReplacements = () => {
-  const navigate = useNavigate();
   const [mode, setMode] = useState<ReplacementMode>('selector');
 
   const renderModeSelector = () => (
@@ -116,22 +115,7 @@ const DirectorReplacements = () => {
         </TabsList>
 
         <TabsContent value="request" className="space-y-4">
-          <Card>
-            <CardContent className="p-4 sm:p-6">
-              <div className="space-y-3">
-                <h2 className="text-lg sm:text-xl font-semibold">Solicitar Reemplazo de Director</h2>
-                <p className="text-sm text-muted-foreground">
-                  Esta acción se gestiona desde la Agenda Ministerial (donde ya se selecciona tu próximo servicio automáticamente).
-                </p>
-                <Button
-                  className="w-full"
-                  onClick={() => navigate('/agenda?filter=my_agenda')}
-                >
-                  Solicitar Reemplazo
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <DirectorNextServiceRequest />
         </TabsContent>
 
         <TabsContent value="pending" className="space-y-4">
