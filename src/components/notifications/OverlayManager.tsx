@@ -57,6 +57,14 @@ const OverlayManager: React.FC = () => {
       return;
     }
 
+    // IMPORTANTE: Algunos overlays cargan sus propios datos y deben manejar su propio guardado
+    // para poder incluir los datos reales (no los metadatos vacíos del scheduled_notifications)
+    const selfSavingTypes = ['service_overlay', 'daily_verse', 'daily_advice'];
+    if (selfSavingTypes.includes(notification.type)) {
+      console.log("📱 [OverlayManager] El overlay", notification.type, "maneja su propio guardado con datos reales");
+      return;
+    }
+
     try {
       console.log("📱 [OverlayManager] Guardando overlay en centro de notificaciones:", notification.type);
       

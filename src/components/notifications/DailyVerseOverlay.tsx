@@ -5,6 +5,7 @@ import { X, BookOpen, Download, Share2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { createBroadcastNotification } from '@/services/notificationService';
 
 interface DailyVerseOverlayProps {
   verseText?: string;
@@ -17,6 +18,37 @@ export const DailyVerseOverlay = ({ verseText: propVerseText, verseReference: pr
   const [verseText, setVerseText] = useState(propVerseText || '');
   const [verseReference, setVerseReference] = useState(propVerseReference || '');
   const [loading, setLoading] = useState(!propVerseText);
+  const [notificationSaved, setNotificationSaved] = useState(false);
+
+  // Guardar notificación cuando tenemos los datos del versículo
+  useEffect(() => {
+    const saveNotification = async () => {
+      if (verseText && verseReference && !notificationSaved) {
+        try {
+          console.log("📖 [DailyVerseOverlay] Guardando versículo en centro de notificaciones...");
+          
+          await createBroadcastNotification({
+            type: 'daily_verse',
+            title: 'Versículo del Día',
+            message: `"${verseText}" — ${verseReference}`,
+            metadata: {
+              verse_text: verseText,
+              verse_reference: verseReference,
+              saved_from_overlay: true,
+            },
+            showOverlay: false,
+          });
+          
+          setNotificationSaved(true);
+          console.log("📖 [DailyVerseOverlay] ✅ Versículo guardado en notificaciones");
+        } catch (error) {
+          console.error("📖 [DailyVerseOverlay] Error guardando notificación:", error);
+        }
+      }
+    };
+
+    saveNotification();
+  }, [verseText, verseReference, notificationSaved]);
 
   // Auto-cargar versículo si no se proporcionaron props
   useEffect(() => {
