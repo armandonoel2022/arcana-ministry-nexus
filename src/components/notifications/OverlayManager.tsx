@@ -9,6 +9,7 @@ import MinistryInstructionsOverlay from "./MinistryInstructionsOverlay";
 import ExtraordinaryRehearsalOverlay from "./ExtraordinaryRehearsalOverlay";
 import BloodDonationOverlay from "./BloodDonationOverlay";
 import { toast } from "sonner";
+import { createBroadcastNotification, NotificationType } from "@/services/notificationService";
 
 interface OverlayData {
   id: string;
@@ -42,6 +43,42 @@ const OverlayManager: React.FC = () => {
   const lastScheduledCheck = useRef<number>(0);
   const scheduledNotificationsChecked = useRef<Set<string>>(new Set());
 
+  // Function to save overlay notification to database if it doesn't exist
+  const saveOverlayToNotifications = useCallback(async (notification: OverlayData) => {
+    // Only save if it's a preview/backup/scheduled overlay (not already from DB)
+    const isTemporaryId = notification.id.startsWith('preview-') || 
+                          notification.id.startsWith('scheduled-') || 
+                          notification.id.startsWith('test-') ||
+                          notification.id.startsWith('broadcast-') ||
+                          notification.id.startsWith('notification-');
+    
+    if (!isTemporaryId) {
+      console.log("📱 [OverlayManager] Overlay ya tiene ID de BD, no se guarda nuevamente");
+      return;
+    }
+
+    try {
+      console.log("📱 [OverlayManager] Guardando overlay en centro de notificaciones:", notification.type);
+      
+      // Use the notification service to create a persistent notification
+      await createBroadcastNotification({
+        type: notification.type as NotificationType,
+        title: notification.title,
+        message: notification.message,
+        metadata: {
+          ...notification.metadata,
+          saved_from_overlay: true,
+          original_id: notification.id,
+        },
+        showOverlay: false, // Don't trigger another overlay, we're already showing it
+      });
+      
+      console.log("📱 [OverlayManager] ✅ Overlay guardado exitosamente en centro de notificaciones");
+    } catch (error) {
+      console.error("📱 [OverlayManager] Error guardando overlay:", error);
+    }
+  }, []);
+
   // Function to show overlay with safety check
   const showOverlay = useCallback((notification: OverlayData) => {
     if (!isMounted.current) return;
@@ -60,12 +97,17 @@ const OverlayManager: React.FC = () => {
           fecha_nacimiento: memberData.birthday_date || new Date().toISOString().split('T')[0],
         }
       }));
-      // Mark as read if it has a real ID
+      // Mark as read if it has a real ID, or save if temporary
       if (notification.id && !notification.id.startsWith('preview-') && !notification.id.startsWith('test-')) {
         supabase.from('system_notifications').update({ is_read: true }).eq('id', notification.id);
+      } else {
+        saveOverlayToNotifications(notification);
       }
       return; // Don't show in generic overlay, BirthdayOverlay handles it
     }
+
+    // Save overlay to notifications center if it has a temporary ID
+    saveOverlayToNotifications(notification);
 
     // Clear any existing overlay first
     setActiveOverlay(null);
@@ -78,7 +120,7 @@ const OverlayManager: React.FC = () => {
         setOverlayType(notification.type);
       }
     }, 50);
-  }, []);
+  }, [saveOverlayToNotifications]);
 
   // Function to dismiss overlay and mark as read
   const handleDismiss = useCallback(async () => {
