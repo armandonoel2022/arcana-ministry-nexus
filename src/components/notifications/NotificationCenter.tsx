@@ -603,29 +603,39 @@ const NotificationCenter = () => {
                           )}
 
                           {/* Información para daily_verse */}
-                          {notification.type === "daily_verse" && notification.metadata.verse_reference && (
-                            <>
-                              <div className="font-medium">Referencia:</div>
-                              <div>{notification.metadata.verse_reference}</div>
+                          {notification.type === "daily_verse" && (
+                            <div className="space-y-2">
                               {notification.metadata.verse_text && (
-                                <>
-                                  <div className="font-medium">Versículo:</div>
-                                  <div className="italic">{notification.metadata.verse_text}</div>
-                                </>
+                                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                  <p className="italic text-gray-800 text-sm leading-relaxed">
+                                    "{notification.metadata.verse_text}"
+                                  </p>
+                                </div>
                               )}
-                            </>
+                              {notification.metadata.verse_reference && (
+                                <p className="text-sm font-semibold text-blue-600 text-center">
+                                  — {notification.metadata.verse_reference}
+                                </p>
+                              )}
+                            </div>
                           )}
 
                           {/* Información para daily_advice */}
                           {notification.type === "daily_advice" && (
-                            <>
+                            <div className="space-y-2">
                               {notification.metadata.advice_title && (
-                                <>
-                                  <div className="font-medium">Título:</div>
-                                  <div>{notification.metadata.advice_title}</div>
-                                </>
+                                <p className="font-semibold text-yellow-700 text-sm">
+                                  💡 {notification.metadata.advice_title}
+                                </p>
                               )}
-                            </>
+                              {notification.metadata.advice_message && (
+                                <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                                  <p className="text-gray-800 text-sm leading-relaxed">
+                                    {notification.metadata.advice_message}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
                           )}
 
                           {/* Información para blood_donation */}
@@ -724,6 +734,11 @@ const NotificationCenter = () => {
                                 "service_date",
                                 "total_services",
                                 "services_info",
+                                "saved_from_overlay",
+                                "original_id",
+                                "created_via",
+                                "show_overlay",
+                                "is_broadcast",
                               ].includes(key)
                             ) {
                               return (
