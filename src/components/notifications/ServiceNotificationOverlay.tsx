@@ -342,6 +342,60 @@ const createServiceAgendaNotification = async (services: WeekendService[]) => {
   }
 };
 
+// Crear una notificación RESUMIDA para el PRÓXIMO servicio (lo que se muestra en el centro de notificaciones)
+const createNextServiceNotification = async (services: WeekendService[]) => {
+  try {
+    if (!services || services.length === 0) return null;
+
+    // Elegir el próximo servicio por fecha
+    const nextService = [...services].sort(
+      (a, b) => new Date(a.service_date).getTime() - new Date(b.service_date).getTime(),
+    )[0];
+
+    const serviceDate = format(new Date(nextService.service_date), "EEEE, dd 'de' MMMM", { locale: es });
+    const leader = nextService.leader || "Por asignar";
+    const groupName = nextService.worship_groups?.name || "Grupo de Alabanza";
+
+    const title = `Próximo servicio: ${serviceDate}`;
+    const message = `Dirige: ${leader}\nCoros: ${groupName}`;
+
+    const metadata = {
+      service_date: nextService.service_date,
+      leader,
+      group_name: groupName,
+      service_id: nextService.id,
+      services_info: services.map((s) => ({
+        id: s.id,
+        service_date: s.service_date,
+        director: s.leader,
+        group_name: s.worship_groups?.name,
+      })),
+    };
+
+    const result = await createBroadcastNotification({
+      type: "service_overlay",
+      title,
+      message,
+      category: "agenda",
+      priority: 2,
+      metadata,
+      showOverlay: false,
+      sendNativePush: false,
+    });
+
+    if (!result.success) {
+      console.error("❌ Error creando notificación de próximo servicio:", result.error);
+      return null;
+    }
+
+    console.log("✅ Notificación de próximo servicio creada:", result.notificationId);
+    return { id: result.notificationId };
+  } catch (error) {
+    console.error("❌ Error en createNextServiceNotification:", error);
+    return null;
+  }
+};
+
 // Función COMPLEJA para determinar miembros del grupo basado en todas las reglas
 const getGroupMembers = (
   groupName: string,
@@ -740,11 +794,11 @@ const ServiceNotificationOverlay = ({
     }
   }, [forceShow]);
 
-  // Cuando los servicios se cargan, crear la notificación automáticamente
+  // Cuando los servicios se cargan, crear la notificación automáticamente (RESUMEN del próximo servicio)
   useEffect(() => {
     if (services.length > 0 && !notificationCreated && forceShow) {
-      console.log("📱 Servicios cargados, creando notificación de agenda...");
-      createServiceAgendaNotification(services);
+      console.log("📱 Servicios cargados, creando notificación del próximo servicio...");
+      createNextServiceNotification(services);
       setNotificationCreated(true);
     }
   }, [services, notificationCreated, forceShow]);
