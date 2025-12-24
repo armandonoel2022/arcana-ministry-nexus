@@ -794,14 +794,14 @@ const ServiceNotificationOverlay = ({
     }
   }, [forceShow]);
 
-  // Cuando los servicios se cargan, crear la notificación automáticamente (RESUMEN del próximo servicio)
+  // Cuando los servicios se cargan y el overlay está activo, crear la notificación automáticamente (RESUMEN del próximo servicio)
   useEffect(() => {
-    if (services.length > 0 && !notificationCreated && forceShow) {
+    if (services.length > 0 && !notificationCreated) {
       console.log("📱 Servicios cargados, creando notificación del próximo servicio...");
       createNextServiceNotification(services);
       setNotificationCreated(true);
     }
-  }, [services, notificationCreated, forceShow]);
+  }, [services, notificationCreated]);
 
   const showServiceProgramOverlay = (metadata: ServiceProgramNotification) => {
     if (metadata.services && Array.isArray(metadata.services)) {
