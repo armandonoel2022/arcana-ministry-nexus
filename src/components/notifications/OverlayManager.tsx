@@ -87,10 +87,27 @@ const OverlayManager: React.FC = () => {
     }
   }, []);
 
+  // Track currently showing overlay ID to prevent duplicates
+  const currentOverlayId = useRef<string | null>(null);
+
   // Function to show overlay with safety check
   const showOverlay = useCallback((notification: OverlayData) => {
     if (!isMounted.current) return;
-    console.log("📱 [OverlayManager] Mostrando overlay:", notification.type, notification);
+    
+    // PREVENT duplicate overlays - if same ID is already showing, skip
+    if (currentOverlayId.current === notification.id) {
+      console.log("📱 [OverlayManager] Overlay ya visible, ignorando duplicado:", notification.id);
+      return;
+    }
+    
+    // PREVENT showing if an overlay is already active (queue it instead)
+    if (activeOverlay && currentOverlayId.current) {
+      console.log("📱 [OverlayManager] Overlay activo, añadiendo a cola:", notification.type);
+      overlayQueue.current.push(notification);
+      return;
+    }
+
+    console.log("📱 [OverlayManager] Mostrando overlay:", notification.type, notification.id);
 
     // Special handling for birthday overlays - dispatch to BirthdayOverlay component
     if (notification.type === 'birthday' || notification.type === 'birthday_daily') {
@@ -117,18 +134,11 @@ const OverlayManager: React.FC = () => {
     // Save overlay to notifications center if it has a temporary ID
     saveOverlayToNotifications(notification);
 
-    // Clear any existing overlay first
-    setActiveOverlay(null);
-    setOverlayType(null);
-
-    // Force a small delay to ensure DOM is ready
-    setTimeout(() => {
-      if (isMounted.current) {
-        setActiveOverlay(notification);
-        setOverlayType(notification.type);
-      }
-    }, 50);
-  }, [saveOverlayToNotifications]);
+    // Set overlay directly without clearing first (prevents flicker)
+    currentOverlayId.current = notification.id;
+    setActiveOverlay(notification);
+    setOverlayType(notification.type);
+  }, [saveOverlayToNotifications, activeOverlay]);
 
   // Function to dismiss overlay and mark as read
   const handleDismiss = useCallback(async () => {
@@ -147,6 +157,8 @@ const OverlayManager: React.FC = () => {
       }
     }
 
+    // Clear the current overlay reference
+    currentOverlayId.current = null;
     setActiveOverlay(null);
     setOverlayType(null);
   }, [activeOverlay]);
