@@ -260,55 +260,45 @@ const createServiceAgendaNotification = async (services: WeekendService[]) => {
   try {
     console.log("🎯 Creando notificación de agenda para", services.length, "servicios");
 
-    const title = `Agenda de Presentaciones - ${format(new Date(services[0].service_date), "EEEE, dd 'de' MMMM", { locale: es })}`;
+    const serviceDate = format(new Date(services[0].service_date), "EEEE, dd 'de' MMMM", { locale: es });
+    const title = `Agenda de Servicios - ${serviceDate}`;
 
-    // Crear mensaje estructurado
-    let message = "📅 PROGRAMA DE SERVICIOS DEL FIN DE SEMANA\n\n";
-
+    // Crear mensaje RESUMIDO para push notifications
+    // Usamos las horas correctas: primer servicio 08:00, segundo 10:45
+    let message = "";
     services.forEach((service, index) => {
-      const serviceTime = getServiceTime(service.title);
-      const groupName = service.worship_groups?.name || "Grupo de Alabanza";
+      const serviceTime = index === 0 ? "08:00 AM" : "10:45 AM";
       const director = service.leader || "Por asignar";
-
-      message += `🎵 SERVICIO ${index + 1} - ${serviceTime}\n`;
-      message += `   Dirige: ${director}\n`;
-      message += `   Grupo: ${groupName}\n`;
-      message += `   Hora: ${serviceTime}\n`;
-
-      if (service.selected_songs && service.selected_songs.length > 0) {
-        message += `   Canciones: ${service.selected_songs.map((s) => s.title).join(", ")}\n`;
-      }
-
-      message += "\n";
+      const groupName = service.worship_groups?.name || "Grupo de Alabanza";
+      
+      message += `⏰ ${serviceTime}: ${director} (${groupName})`;
+      if (index < services.length - 1) message += "\n";
     });
 
-    // Crear metadata detallada
+    // Crear metadata LIMPIA para el centro de notificaciones
+    // Sin IDs innecesarios, con horas correctas
     const metadata = {
       service_date: services[0].service_date,
       total_services: services.length,
-      services_info: services.map((service) => ({
-        id: service.id,
-        time: getServiceTime(service.title),
-        director: service.leader,
+      // Info para push notifications del sistema (Android/iOS)
+      push_config: {
+        icon: "/arcana-notification-icon.png",
+        badge: "/arcana-notification-icon.png",
+        tag: "arcana-service-agenda",
+        click_action: "/agenda-ministerial",
+      },
+      // Servicios con info consolidada
+      services_info: services.map((service, index) => ({
+        // Sin ID - no es útil para el usuario
+        time: index === 0 ? "08:00 AM" : "10:45 AM", // Horas correctas
+        director: service.leader || "Por asignar",
         group_name: service.worship_groups?.name || "Grupo de Alabanza",
         group_color: service.worship_groups?.color_theme || "#3B82F6",
-        service_type: service.service_type || "regular",
-        location: service.location || "Templo Principal",
         special_activity: service.special_activity,
-        songs:
-          service.selected_songs?.map((song) => ({
-            id: song.id,
-            title: song.title,
-            artist: song.artist,
-            order: song.song_order,
-          })) || [],
-        members:
-          service.group_members?.map((member) => ({
-            id: member.user_id,
-            name: member.profiles?.full_name,
-            role: member.instrument,
-            is_leader: member.is_leader,
-          })) || [],
+        songs: service.selected_songs?.map((song) => ({
+          title: song.title,
+          artist: song.artist,
+        })) || [],
       })),
     };
 
@@ -320,13 +310,12 @@ const createServiceAgendaNotification = async (services: WeekendService[]) => {
       category: "agenda",
       priority: 2,
       metadata: metadata,
-      showOverlay: false, // No mostrar overlay automáticamente aquí
+      showOverlay: false,
       sendNativePush: false,
     });
 
     if (!result.success) {
       console.error("❌ Error creando notificación de agenda:", result.error);
-      // No mostrar toast de error - el overlay funciona aunque no se guarde
       console.log("⚠️ El overlay se muestra aunque la persistencia falló");
       return null;
     } else {
@@ -336,7 +325,6 @@ const createServiceAgendaNotification = async (services: WeekendService[]) => {
     }
   } catch (error) {
     console.error("❌ Error en createServiceAgendaNotification:", error);
-    // No mostrar toast de error - el overlay funciona aunque no se guarde
     console.log("⚠️ El overlay se muestra aunque la persistencia falló");
     return null;
   }

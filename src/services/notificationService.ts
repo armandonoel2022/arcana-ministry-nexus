@@ -428,8 +428,57 @@ export function dispatchOverlayEvent(data: {
   }
 }
 
+// Configuración de push notifications de ARCANA
+export const ARCANA_PUSH_CONFIG = {
+  icon: "/arcana-notification-icon.png",
+  badge: "/arcana-notification-icon.png",
+  tag: "arcana-notification",
+  // Acciones predefinidas por tipo
+  actions: {
+    service_overlay: { click_action: "/agenda-ministerial" },
+    daily_verse: { click_action: "/modulo-espiritual" },
+    birthday: { click_action: "/cumpleanos" },
+    director_replacement_request: { click_action: "/reemplazos-director" },
+    song_selection: { click_action: "/repertorio-musical" },
+  } as Record<string, { click_action: string }>,
+};
+
+/**
+ * Generar payload para push notification del sistema (Android/iOS)
+ * Esta función prepara los datos para cuando se implemente el envío real
+ */
+export function generatePushPayload(params: {
+  title: string;
+  message: string;
+  type: NotificationType;
+  metadata?: Record<string, any>;
+}): {
+  title: string;
+  body: string;
+  icon: string;
+  badge: string;
+  tag: string;
+  data: Record<string, any>;
+} {
+  const actionConfig = ARCANA_PUSH_CONFIG.actions[params.type] || { click_action: "/" };
+  
+  return {
+    title: params.title,
+    body: params.message,
+    icon: ARCANA_PUSH_CONFIG.icon,
+    badge: ARCANA_PUSH_CONFIG.badge,
+    tag: `${ARCANA_PUSH_CONFIG.tag}-${params.type}`,
+    data: {
+      type: params.type,
+      click_action: actionConfig.click_action,
+      ...params.metadata,
+    },
+  };
+}
+
 /**
  * Enviar notificación push nativa - VERSIÓN SIMULADA para Lovable
+ * Cuando se implemente el envío real, usar generatePushPayload()
  */
 async function sendNativePushNotification(params: {
   userId: string | null;
@@ -438,8 +487,19 @@ async function sendNativePushNotification(params: {
   type: NotificationType;
   metadata?: Record<string, any>;
 }): Promise<void> {
-  // EN LOVABLE NO USAMOS PUSH REALES - solo simulación
-  console.log("📬 [NotificationService] Push nativo simulado para:", params.userId || "broadcast");
+  // Generar el payload (listo para cuando se active el envío real)
+  const pushPayload = generatePushPayload({
+    title: params.title,
+    message: params.message,
+    type: params.type,
+    metadata: params.metadata,
+  });
+  
+  console.log("📬 [NotificationService] Push preparado (simulado):", {
+    recipient: params.userId || "broadcast",
+    payload: pushPayload,
+  });
+  
   return Promise.resolve();
 }
 
