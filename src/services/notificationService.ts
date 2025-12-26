@@ -135,6 +135,28 @@ export async function createNotification(params: CreateNotificationParams): Prom
     } = await supabase.auth.getUser();
     const senderId = user?.id || null; // null si no hay usuario (sistema)
 
+    // Verificar si ya existe una notificación similar reciente (evitar duplicados)
+    const now = new Date();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+    
+    const { data: existingNotifications } = await supabase
+      .from("system_notifications")
+      .select("id")
+      .eq("type", type)
+      .eq("title", title)
+      .gte("created_at", fiveMinutesAgo.toISOString())
+      .or(recipientId ? `recipient_id.eq.${recipientId}` : "recipient_id.is.null")
+      .limit(1);
+
+    if (existingNotifications && existingNotifications.length > 0) {
+      console.log("📬 [NotificationService] Notificación duplicada detectada, omitiendo");
+      return {
+        success: true,
+        notificationId: existingNotifications[0].id,
+        error: "Notificación ya existe",
+      };
+    }
+
     // 1. Guardar en system_notifications (CORREGIDO: agregado sender_id y created_at)
     const notificationData = {
       type,
@@ -226,6 +248,28 @@ export async function createBroadcastNotification(
       data: { user },
     } = await supabase.auth.getUser();
     const senderId = user?.id || null; // null si no hay usuario (sistema)
+
+    // Verificar si ya existe una notificación broadcast similar reciente (evitar duplicados)
+    const now = new Date();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+    
+    const { data: existingNotifications } = await supabase
+      .from("system_notifications")
+      .select("id")
+      .eq("type", params.type)
+      .eq("title", params.title)
+      .is("recipient_id", null)
+      .gte("created_at", fiveMinutesAgo.toISOString())
+      .limit(1);
+
+    if (existingNotifications && existingNotifications.length > 0) {
+      console.log("📬 [NotificationService] Broadcast duplicado detectado, omitiendo");
+      return {
+        success: true,
+        notificationId: existingNotifications[0].id,
+        error: "Broadcast ya existe",
+      };
+    }
 
     // Para broadcast en Lovable, creamos solo una notificación sin recipient_id
     const notificationData = {

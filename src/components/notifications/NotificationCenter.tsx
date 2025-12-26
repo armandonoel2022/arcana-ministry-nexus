@@ -442,7 +442,7 @@ const NotificationCenter = () => {
                             <div className="flex items-center gap-1 flex-shrink-0 justify-center sm:justify-start">
                               <Clock className="w-3 h-3 flex-shrink-0" />
                               <span>
-                                {format(new Date(notification.created_at), "dd/MM/yyyy HH:mm", { locale: es })}
+                                {format(new Date(notification.created_at), "dd/MM/yyyy hh:mm a", { locale: es })}
                               </span>
                             </div>
                             {notification.scheduled_for && (
@@ -450,7 +450,7 @@ const NotificationCenter = () => {
                                 <Settings className="w-3 h-3 flex-shrink-0" />
                                 <span>
                                   Programada:{" "}
-                                  {format(new Date(notification.scheduled_for), "dd/MM/yyyy HH:mm", { locale: es })}
+                                  {format(new Date(notification.scheduled_for), "dd/MM/yyyy hh:mm a", { locale: es })}
                                 </span>
                               </div>
                             )}
@@ -580,41 +580,17 @@ const NotificationCenter = () => {
                             </>
                           )}
 
-                          {/* Información para daily_verse */}
-                          {notification.type === "daily_verse" && (
-                            <div className="space-y-2">
-                              {notification.metadata.verse_text && (
-                                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                  <p className="italic text-gray-800 text-sm leading-relaxed">
-                                    "{notification.metadata.verse_text}"
-                                  </p>
-                                </div>
-                              )}
-                              {notification.metadata.verse_reference && (
-                                <p className="text-sm font-semibold text-blue-600 text-center">
-                                  — {notification.metadata.verse_reference}
-                                </p>
-                              )}
+                          {/* Información para daily_verse - Solo mostrar si hay contenido adicional no duplicado */}
+                          {notification.type === "daily_verse" && notification.metadata.verse_reference && (
+                            <div className="text-center">
+                              <p className="text-sm font-semibold text-blue-600">
+                                — {notification.metadata.verse_reference}
+                              </p>
                             </div>
                           )}
 
-                          {/* Información para daily_advice */}
-                          {notification.type === "daily_advice" && (
-                            <div className="space-y-2">
-                              {notification.metadata.advice_title && (
-                                <p className="font-semibold text-yellow-700 text-sm">
-                                  💡 {notification.metadata.advice_title}
-                                </p>
-                              )}
-                              {notification.metadata.advice_message && (
-                                <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                                  <p className="text-gray-800 text-sm leading-relaxed">
-                                    {notification.metadata.advice_message}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          )}
+                          {/* Información para daily_advice - Sin duplicar contenido */}
+                          {notification.type === "daily_advice" && null}
 
                           {/* Información para blood_donation */}
                           {notification.type === "blood_donation" && (
@@ -690,44 +666,7 @@ const NotificationCenter = () => {
                             </>
                           )}
 
-                          {/* Mostrar metadata general si existe */}
-                          {Object.entries(notification.metadata).map(([key, value]) => {
-                            if (
-                              typeof value === "string" &&
-                              value &&
-                              ![
-                                "verse_reference",
-                                "verse_text",
-                                "advice_title",
-                                "advice_message",
-                                "recipient_name",
-                                "blood_type",
-                                "medical_center",
-                                "activity_name",
-                                "date",
-                                "rehearsal_time",
-                                "priority",
-                                "title",
-                                "instructions",
-                                "service_date",
-                                "total_services",
-                                "services_info",
-                                "saved_from_overlay",
-                                "original_id",
-                                "created_via",
-                                "show_overlay",
-                                "is_broadcast",
-                              ].includes(key)
-                            ) {
-                              return (
-                                <React.Fragment key={key}>
-                                  <div className="font-medium">{key.replace(/_/g, " ")}:</div>
-                                  <div>{String(value)}</div>
-                                </React.Fragment>
-                              );
-                            }
-                            return null;
-                          })}
+                          {/* Metadata general - NO mostrar campos innecesarios */}
                         </div>
                       </div>
                     )}
