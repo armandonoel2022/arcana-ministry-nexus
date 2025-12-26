@@ -186,11 +186,20 @@ const NotificationCenter = () => {
       } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Get IDs of all unread notifications for this user (personal + broadcast)
+      const unreadIds = notifications
+        .filter((n) => !n.is_read)
+        .map((n) => n.id);
+
+      if (unreadIds.length === 0) return;
+
+      console.log("Marking as read:", unreadIds.length, "notifications");
+
+      // Update all unread notifications by their IDs
       const { error } = await supabase
         .from("system_notifications")
         .update({ is_read: true })
-        .eq("is_read", false)
-        .eq("recipient_id", user.id);
+        .in("id", unreadIds);
 
       if (error) throw error;
 

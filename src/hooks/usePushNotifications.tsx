@@ -2,6 +2,28 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { ARCANA_PUSH_CONFIG } from '@/services/notificationService';
+
+// Import Capacitor plugins dynamically
+let PushNotifications: any = null;
+let LocalNotifications: any = null;
+
+// Try to import Capacitor plugins
+try {
+  import('@capacitor/push-notifications').then((module) => {
+    PushNotifications = module.PushNotifications;
+  }).catch(() => {
+    console.log('📱 [PushNotifications] Capacitor push-notifications not available');
+  });
+
+  import('@capacitor/local-notifications').then((module) => {
+    LocalNotifications = module.LocalNotifications;
+  }).catch(() => {
+    console.log('📱 [PushNotifications] Capacitor local-notifications not available');
+  });
+} catch (e) {
+  console.log('📱 [PushNotifications] Capacitor plugins not available');
+}
 
 // Helper to detect if we're in a native app context
 const isNativePlatform = () => {
@@ -9,18 +31,19 @@ const isNativePlatform = () => {
          (window as any).Capacitor.isNativePlatform?.();
 };
 
-// Helper to get Capacitor plugins
-const getCapacitorPlugins = () => {
+// Helper to get Capacitor core
+const getCapacitor = () => {
   if (typeof (window as any).Capacitor !== 'undefined') {
-    return (window as any).Capacitor.Plugins || {};
+    return (window as any).Capacitor;
   }
-  return {};
+  return null;
 };
 
 export const usePushNotifications = () => {
   const [isSupported, setIsSupported] = useState(false);
   const [permission, setPermission] = useState<'granted' | 'denied' | 'default'>('default');
   const [isRegistering, setIsRegistering] = useState(false);
+  const [deviceToken, setDeviceToken] = useState<string | null>(null);
   const { user } = useAuth();
 
   // Check support and current permission
@@ -33,7 +56,6 @@ export const usePushNotifications = () => {
         
         // Try to check current permission status via Capacitor
         try {
-          const { PushNotifications } = getCapacitorPlugins();
           if (PushNotifications) {
             const permStatus = await PushNotifications.checkPermissions();
             console.log('📱 [PushNotifications] Native permission status:', permStatus);
@@ -75,6 +97,51 @@ export const usePushNotifications = () => {
     checkSupport();
   }, []);
 
+  // Set up native push listeners when permission is granted
+  useEffect(() => {
+    if (!isNativePlatform() || permission !== 'granted' || !PushNotifications) return;
+
+    const setupNativeListeners = async () => {
+      try {
+        // Registration success
+        await PushNotifications.addListener('registration', async (token: { value: string }) => {
+          console.log('📱 [PushNotifications] Push registration token:', token.value);
+          setDeviceToken(token.value);
+          await saveDeviceToken(token.value, 'native');
+        });
+
+        // Registration error
+        await PushNotifications.addListener('registrationError', (error: any) => {
+          console.error('📱 [PushNotifications] Registration error:', error);
+        });
+
+        // Push notification received while app is in foreground
+        await PushNotifications.addListener('pushNotificationReceived', (notification: any) => {
+          console.log('📱 [PushNotifications] Push received (foreground):', notification);
+          handleIncomingPush(notification);
+        });
+
+        // User tapped on push notification
+        await PushNotifications.addListener('pushNotificationActionPerformed', (action: any) => {
+          console.log('📱 [PushNotifications] Push action performed:', action);
+          handlePushAction(action);
+        });
+
+        console.log('📱 [PushNotifications] Native listeners set up');
+      } catch (error) {
+        console.error('📱 [PushNotifications] Error setting up listeners:', error);
+      }
+    };
+
+    setupNativeListeners();
+
+    return () => {
+      if (PushNotifications) {
+        PushNotifications.removeAllListeners();
+      }
+    };
+  }, [permission]);
+
   const requestPermission = useCallback(async (): Promise<boolean> => {
     if (!isSupported) {
       console.log('📱 [PushNotifications] Not supported');
@@ -99,8 +166,6 @@ export const usePushNotifications = () => {
       if (isNativePlatform()) {
         console.log('📱 [PushNotifications] Requesting native permissions...');
         
-        const { PushNotifications, LocalNotifications } = getCapacitorPlugins();
-        
         if (PushNotifications) {
           // Request push notification permission
           const permResult = await PushNotifications.requestPermissions();
@@ -113,28 +178,6 @@ export const usePushNotifications = () => {
             // Register with APNs/FCM
             await PushNotifications.register();
             console.log('📱 [PushNotifications] Registered with push service');
-            
-            // Setup listeners for push notifications
-            PushNotifications.addListener('registration', (token: any) => {
-              console.log('📱 [PushNotifications] Push registration token:', token.value);
-              // Save token to database for backend push
-              saveDeviceToken(token.value);
-            });
-
-            PushNotifications.addListener('registrationError', (error: any) => {
-              console.error('📱 [PushNotifications] Registration error:', error);
-              toast.error('Error al registrar notificaciones push');
-            });
-
-            PushNotifications.addListener('pushNotificationReceived', (notification: any) => {
-              console.log('📱 [PushNotifications] Push received:', notification);
-              // Show in-app notification or trigger overlay
-              handleIncomingPush(notification);
-            });
-
-            PushNotifications.addListener('pushNotificationActionPerformed', (notification: any) => {
-              console.log('📱 [PushNotifications] Push action performed:', notification);
-            });
             
             toast.success('Notificaciones push activadas correctamente');
             setIsRegistering(false);
@@ -198,15 +241,24 @@ export const usePushNotifications = () => {
     }
   }, [isSupported, user, isRegistering]);
 
-  const saveDeviceToken = async (token: string) => {
+  const saveDeviceToken = async (token: string, platform: 'native' | 'web') => {
     if (!user) return;
     
     try {
+      const subscriptionData = {
+        token,
+        platform,
+        device_type: isNativePlatform() 
+          ? (getCapacitor()?.getPlatform?.() || 'native')
+          : 'web',
+        updated_at: new Date().toISOString()
+      };
+
       const { error } = await supabase
         .from('user_push_subscriptions')
         .upsert({
           user_id: user.id,
-          subscription: { token, platform: 'native' },
+          subscription: subscriptionData,
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'user_id'
@@ -223,9 +275,29 @@ export const usePushNotifications = () => {
   };
 
   const handleIncomingPush = (notification: any) => {
-    // Dispatch custom event to trigger overlay
+    console.log('📱 [PushNotifications] Processing incoming push:', notification);
+    
+    // If app is in foreground on native, show local notification
+    if (isNativePlatform() && LocalNotifications) {
+      LocalNotifications.schedule({
+        notifications: [
+          {
+            title: notification.title || 'ARCANA',
+            body: notification.body || notification.message || '',
+            id: Date.now(),
+            schedule: { at: new Date(Date.now() + 100) },
+            smallIcon: 'arcana_notification_icon',
+            largeIcon: 'arcana_notification_icon',
+            sound: 'notification.wav',
+            extra: notification.data || {}
+          }
+        ]
+      });
+    }
+
+    // Dispatch custom event to trigger overlay if needed
     const data = notification.data || {};
-    if (data.type && data.type.includes('overlay')) {
+    if (data.show_overlay || (data.type && overlayTypes.includes(data.type))) {
       window.dispatchEvent(new CustomEvent('showOverlay', {
         detail: {
           id: data.id || `push-${Date.now()}`,
@@ -235,6 +307,20 @@ export const usePushNotifications = () => {
           metadata: data.metadata || {}
         }
       }));
+    }
+  };
+
+  const handlePushAction = (action: any) => {
+    console.log('📱 [PushNotifications] Handling push action:', action);
+    
+    const data = action.notification?.data || {};
+    
+    // Navigate to appropriate screen based on notification type
+    if (data.click_action) {
+      window.location.href = data.click_action;
+    } else if (data.type && ARCANA_PUSH_CONFIG.actions[data.type as keyof typeof ARCANA_PUSH_CONFIG.actions]) {
+      const actionConfig = ARCANA_PUSH_CONFIG.actions[data.type as keyof typeof ARCANA_PUSH_CONFIG.actions];
+      window.location.href = actionConfig.click_action;
     }
   };
 
@@ -282,7 +368,10 @@ export const usePushNotifications = () => {
         .from('user_push_subscriptions')
         .upsert({
           user_id: user.id,
-          subscription: subscription.toJSON(),
+          subscription: {
+            ...subscription.toJSON(),
+            platform: 'web'
+          },
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'user_id'
@@ -301,7 +390,6 @@ export const usePushNotifications = () => {
   const unsubscribe = useCallback(async (): Promise<boolean> => {
     try {
       if (isNativePlatform()) {
-        const { PushNotifications } = getCapacitorPlugins();
         if (PushNotifications) {
           await PushNotifications.removeAllListeners();
         }
@@ -323,6 +411,7 @@ export const usePushNotifications = () => {
       }
       
       setPermission('default');
+      setDeviceToken(null);
       localStorage.removeItem('push_notification_permission');
       toast.success('Notificaciones desactivadas');
       return true;
@@ -333,14 +422,82 @@ export const usePushNotifications = () => {
     }
   }, [user]);
 
+  // Send a local notification (works on both web and native)
+  const sendLocalNotification = useCallback(async (options: {
+    title: string;
+    body: string;
+    data?: Record<string, any>;
+    tag?: string;
+  }): Promise<boolean> => {
+    try {
+      if (permission !== 'granted') {
+        console.log('📱 [PushNotifications] Permission not granted');
+        return false;
+      }
+
+      if (isNativePlatform() && LocalNotifications) {
+        // Native local notification
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              title: options.title,
+              body: options.body,
+              id: Date.now(),
+              schedule: { at: new Date(Date.now() + 100) },
+              smallIcon: 'arcana_notification_icon',
+              largeIcon: 'arcana_notification_icon',
+              sound: 'notification.wav',
+              extra: options.data || {},
+              group: options.tag || 'arcana'
+            }
+          ]
+        });
+        return true;
+      } else if ('Notification' in window) {
+        // Web notification
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification(options.title, {
+          body: options.body,
+          icon: ARCANA_PUSH_CONFIG.icon,
+          badge: ARCANA_PUSH_CONFIG.badge,
+          tag: options.tag || ARCANA_PUSH_CONFIG.tag,
+          data: options.data
+        });
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('📱 [PushNotifications] Error sending local notification:', error);
+      return false;
+    }
+  }, [permission]);
+
   return {
     isSupported,
     permission,
     isRegistering,
+    deviceToken,
     requestPermission,
-    unsubscribe
+    unsubscribe,
+    sendLocalNotification
   };
 };
+
+// Types that should trigger overlay display
+const overlayTypes = [
+  'service_overlay',
+  'daily_verse',
+  'daily_advice',
+  'birthday',
+  'death_announcement',
+  'meeting_announcement',
+  'special_service',
+  'prayer_request',
+  'blood_donation',
+  'extraordinary_rehearsal',
+  'ministry_instructions',
+];
 
 function urlBase64ToUint8Array(base64String: string): BufferSource {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
