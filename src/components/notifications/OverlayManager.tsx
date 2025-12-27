@@ -112,9 +112,19 @@ const OverlayManager: React.FC = () => {
           from: activeOverlay.type,
           to: notification.type,
         });
+        // Clear the current overlay first
         currentOverlayId.current = null;
         setActiveOverlay(null);
         setOverlayType(null);
+        // Use setTimeout to ensure state update completes before showing new overlay
+        setTimeout(() => {
+          console.log("📱 [OverlayManager] Mostrando nuevo overlay después de limpiar:", notification.type, notification.id);
+          currentOverlayId.current = notification.id;
+          setActiveOverlay(notification);
+          setOverlayType(notification.type);
+          saveOverlayToNotifications(notification);
+        }, 100);
+        return;
       } else if (activeOverlay && currentOverlayId.current) {
         // PREVENT showing if an overlay is already active (queue it instead)
         console.log("📱 [OverlayManager] Overlay activo, añadiendo a cola:", notification.type);
