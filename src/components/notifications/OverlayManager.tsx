@@ -47,12 +47,12 @@ const OverlayManager: React.FC = () => {
 
   // Function to save overlay notification to database if it doesn't exist
   const saveOverlayToNotifications = useCallback(async (notification: OverlayData) => {
-    // Only save if it's a preview/backup/scheduled overlay (not already from DB)
-    const isTemporaryId = notification.id.startsWith('preview-') || 
-                          notification.id.startsWith('scheduled-') || 
-                          notification.id.startsWith('test-') ||
-                          notification.id.startsWith('broadcast-') ||
-                          notification.id.startsWith('notification-');
+    // Only save if it's a scheduled/test/broadcast overlay (NOT previews)
+    const isTemporaryId =
+      notification.id.startsWith("scheduled-") ||
+      notification.id.startsWith("test-") ||
+      notification.id.startsWith("broadcast-") ||
+      notification.id.startsWith("notification-");
     
     if (!isTemporaryId) {
       console.log("📱 [OverlayManager] Overlay ya tiene ID de BD, no se guarda nuevamente");
@@ -97,7 +97,12 @@ const OverlayManager: React.FC = () => {
     (notification: OverlayData) => {
       if (!isMounted.current) return;
 
-      const isPreview = notification.id?.startsWith("preview-");
+      console.log("📱 [OverlayManager] showOverlay()", {
+        id: notification.id,
+        type: notification.type,
+        hasActive: Boolean(activeOverlay),
+        currentId: currentOverlayId.current,
+      });
 
       // PREVENT duplicate overlays - if same ID is already showing, skip
       if (currentOverlayId.current === notification.id) {
@@ -105,28 +110,18 @@ const OverlayManager: React.FC = () => {
         return;
       }
 
-      // If a preview is triggered while another overlay is active, replace it immediately
-      // (prevents the queue from getting stuck and makes Preview buttons feel responsive)
-      if (isPreview && activeOverlay && currentOverlayId.current) {
-        console.log("📱 [OverlayManager] Preview solicitado, reemplazando overlay activo:", {
-          from: activeOverlay.type,
-          to: notification.type,
-        });
-        // Clear the current overlay first
-        currentOverlayId.current = null;
-        setActiveOverlay(null);
-        setOverlayType(null);
-        // Use setTimeout to ensure state update completes before showing new overlay
-        setTimeout(() => {
-          console.log("📱 [OverlayManager] Mostrando nuevo overlay después de limpiar:", notification.type, notification.id);
-          currentOverlayId.current = notification.id;
-          setActiveOverlay(notification);
-          setOverlayType(notification.type);
-          saveOverlayToNotifications(notification);
-        }, 100);
+      const isPreview = notification.id?.startsWith("preview-");
+
+      // Previews should always be immediate/replacing (never queued)
+      if (isPreview) {
+        currentOverlayId.current = notification.id;
+        setActiveOverlay(notification);
+        setOverlayType(notification.type);
         return;
-      } else if (activeOverlay && currentOverlayId.current) {
-        // PREVENT showing if an overlay is already active (queue it instead)
+      }
+
+      // Non-preview: if an overlay is already active, queue it
+      if (activeOverlay && currentOverlayId.current) {
         console.log("📱 [OverlayManager] Overlay activo, añadiendo a cola:", notification.type);
         overlayQueue.current.push(notification);
         return;
