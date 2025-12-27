@@ -913,7 +913,7 @@ const OverlayManager: React.FC = () => {
           <PregnancyRevealOverlay
             parentNames={metadata.parent_names || ""}
             sonogramImageUrl={metadata.sonogram_image_url}
-            message={metadata.message || activeOverlay.message}
+            message={metadata.pregnancy_message || metadata.message || activeOverlay.message}
             dueDate={metadata.due_date}
             onClose={handleDismissWithQueue}
           />
@@ -927,9 +927,9 @@ const OverlayManager: React.FC = () => {
             babyPhotoUrl={metadata.baby_photo_url}
             birthDate={metadata.birth_date}
             birthTime={metadata.birth_time}
-            weight={metadata.weight}
-            height={metadata.height}
-            message={metadata.message || activeOverlay.message}
+            weight={metadata.baby_weight || metadata.weight}
+            height={metadata.baby_height || metadata.height}
+            message={metadata.birth_message || metadata.message || activeOverlay.message}
             onClose={handleDismissWithQueue}
           />
         );
