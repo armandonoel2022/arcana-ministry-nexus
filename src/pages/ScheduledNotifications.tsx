@@ -1468,7 +1468,7 @@ const ScheduledNotifications = () => {
                           }}
                         >
                           <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                          Crear Nuevo
+                          Editar
                         </Button>
                         <Button
                           size="sm"
@@ -1511,7 +1511,7 @@ const ScheduledNotifications = () => {
                           }}
                         >
                           <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                          Crear Nuevo
+                          Editar
                         </Button>
                         <Button
                           size="sm"
