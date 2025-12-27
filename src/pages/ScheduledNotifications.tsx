@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -78,7 +78,10 @@ const ScheduledNotifications = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingNotification, setEditingNotification] = useState<ScheduledNotification | null>(null);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
-  
+
+  // Evita disparos duplicados cuando el setInterval se ejecuta varias veces en el mismo minuto
+  const lastCheckedMinuteRef = useRef<string | null>(null);
+
   const [loadingTest, setLoadingTest] = useState<string | null>(null);
   const [uploadingSonogram, setUploadingSonogram] = useState(false);
   const [uploadingBabyPhoto, setUploadingBabyPhoto] = useState(false);
@@ -147,10 +150,11 @@ const ScheduledNotifications = () => {
         const currentDay = dominicanTime.getDay();
         const currentHour = dominicanTime.getHours();
         const currentMinute = dominicanTime.getMinutes();
-        const currentSecond = dominicanTime.getSeconds();
 
-        // Solo verificar en el segundo 0 de cada minuto
-        if (currentSecond !== 0) return;
+        // Ejecutar máximo 1 vez por minuto (evita depender de que el segundo sea exactamente 0)
+        const minuteKey = `${currentDay}-${currentHour}-${currentMinute}`;
+        if (lastCheckedMinuteRef.current === minuteKey) return;
+        lastCheckedMinuteRef.current = minuteKey;
 
         const currentTimeFormatted = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}:00`;
 
