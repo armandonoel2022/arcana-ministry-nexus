@@ -21,15 +21,6 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import ServiceNotificationOverlay from "@/components/notifications/ServiceNotificationOverlay";
-import { DailyVerseOverlay } from "@/components/notifications/DailyVerseOverlay";
-import { DailyAdviceOverlay } from "@/components/notifications/DailyAdviceOverlay";
-import GeneralAnnouncementOverlay from "@/components/notifications/GeneralAnnouncementOverlay";
-import MinistryInstructionsOverlay from "@/components/notifications/MinistryInstructionsOverlay";
-import ExtraordinaryRehearsalOverlay from "@/components/notifications/ExtraordinaryRehearsalOverlay";
-import BloodDonationOverlay from "@/components/notifications/BloodDonationOverlay";
-import PregnancyRevealOverlay from "@/components/notifications/PregnancyRevealOverlay";
-import BirthAnnouncementOverlay from "@/components/notifications/BirthAnnouncementOverlay";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -86,12 +77,6 @@ const ScheduledNotifications = () => {
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   
   const [loadingTest, setLoadingTest] = useState<string | null>(null);
-  // Estados para renderizado directo de overlays (enfoque simplificado)
-  const [showServiceOverlay, setShowServiceOverlay] = useState(false);
-  const [showVerseOverlay, setShowVerseOverlay] = useState(false);
-  const [showAdviceOverlay, setShowAdviceOverlay] = useState(false);
-  const [showPregnancyOverlay, setShowPregnancyOverlay] = useState(false);
-  const [showBirthOverlay, setShowBirthOverlay] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -663,6 +648,19 @@ const ScheduledNotifications = () => {
     await dispatchOverlayEvent(notification, needsRealData);
   };
 
+  const handlePreviewByType = async (type: ScheduledNotification["notification_type"]) => {
+    const candidate = notifications
+      .filter((n) => n.notification_type === type)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+
+    if (!candidate) {
+      toast.error(`No hay un overlay programado para: ${getTypeLabel(type)}`);
+      return;
+    }
+
+    await handlePreview(candidate);
+  };
+
   // handleTestNotification removed - "Probar" buttons eliminated
 
   const toggleDaySelection = (day: number) => {
@@ -1060,7 +1058,7 @@ const ScheduledNotifications = () => {
                         <Button
                           size="sm"
                           className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs h-8"
-                          onClick={() => setShowVerseOverlay(true)}
+                          onClick={() => handlePreviewByType("daily_verse")}
                         >
                           <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                           Vista Previa
@@ -1146,7 +1144,7 @@ const ScheduledNotifications = () => {
                         <Button
                           size="sm"
                           className="w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xs h-8"
-                          onClick={() => setShowAdviceOverlay(true)}
+                          onClick={() => handlePreviewByType("daily_advice")}
                         >
                           <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                           Vista Previa
@@ -1190,7 +1188,7 @@ const ScheduledNotifications = () => {
                         <Button
                           size="sm"
                           className="w-full bg-green-600 hover:bg-green-700 text-white text-xs h-8"
-                          onClick={() => setShowServiceOverlay(true)}
+                          onClick={() => handlePreviewByType("service_overlay")}
                         >
                           <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                           Vista Previa
@@ -1474,7 +1472,7 @@ const ScheduledNotifications = () => {
                         <Button
                           size="sm"
                           className="w-full bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white text-xs h-8"
-                          onClick={() => setShowPregnancyOverlay(true)}
+                          onClick={() => handlePreviewByType("pregnancy_reveal")}
                         >
                           <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                           Vista Previa
@@ -1517,7 +1515,7 @@ const ScheduledNotifications = () => {
                         <Button
                           size="sm"
                           className="w-full bg-gradient-to-r from-amber-500 to-violet-500 hover:from-amber-600 hover:to-violet-600 text-white text-xs h-8"
-                          onClick={() => setShowBirthOverlay(true)}
+                          onClick={() => handlePreviewByType("birth_announcement")}
                         >
                           <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                           Vista Previa
@@ -2294,42 +2292,6 @@ const ScheduledNotifications = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Overlays renderizados directamente (enfoque simplificado como NotificationTesting) */}
-      {showServiceOverlay && (
-        <ServiceNotificationOverlay onClose={() => setShowServiceOverlay(false)} />
-      )}
-      
-      {showVerseOverlay && (
-        <DailyVerseOverlay onClose={() => setShowVerseOverlay(false)} />
-      )}
-      
-      {showAdviceOverlay && (
-        <DailyAdviceOverlay onClose={() => setShowAdviceOverlay(false)} />
-      )}
-      
-      {showPregnancyOverlay && (
-        <PregnancyRevealOverlay
-          parentNames="Juan y María Pérez"
-          sonogramImageUrl=""
-          message="Estamos esperando una bendición de Dios que llegará a nuestras vidas para llenarnos de alegría."
-          dueDate="Marzo 2025"
-          onClose={() => setShowPregnancyOverlay(false)}
-        />
-      )}
-      
-      {showBirthOverlay && (
-        <BirthAnnouncementOverlay
-          babyName="Sofía"
-          parentNames="Juan y María Pérez"
-          babyPhotoUrl=""
-          birthDate="25 de Diciembre, 2024"
-          birthTime="10:30 AM"
-          weight="7 lbs 8 oz"
-          height="50 cm"
-          message="Con inmensa alegría anunciamos la llegada de nuestra princesa."
-          onClose={() => setShowBirthOverlay(false)}
-        />
-      )}
     </div>
   );
 };
