@@ -28,6 +28,8 @@ import GeneralAnnouncementOverlay from "@/components/notifications/GeneralAnnoun
 import MinistryInstructionsOverlay from "@/components/notifications/MinistryInstructionsOverlay";
 import ExtraordinaryRehearsalOverlay from "@/components/notifications/ExtraordinaryRehearsalOverlay";
 import BloodDonationOverlay from "@/components/notifications/BloodDonationOverlay";
+import PregnancyRevealOverlay from "@/components/notifications/PregnancyRevealOverlay";
+import BirthAnnouncementOverlay from "@/components/notifications/BirthAnnouncementOverlay";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -71,6 +73,8 @@ const notificationTypes = [
   { value: "extraordinary_rehearsal", label: "Ensayo Extraordinario" },
   { value: "ministry_instructions", label: "Instrucciones a Integrantes" },
   { value: "birthday", label: "Cumpleaños" },
+  { value: "pregnancy_reveal", label: "Revelación de Embarazo" },
+  { value: "birth_announcement", label: "Anuncio de Nacimiento" },
 ];
 
 const ScheduledNotifications = () => {
@@ -86,6 +90,8 @@ const ScheduledNotifications = () => {
   const [showServiceOverlay, setShowServiceOverlay] = useState(false);
   const [showVerseOverlay, setShowVerseOverlay] = useState(false);
   const [showAdviceOverlay, setShowAdviceOverlay] = useState(false);
+  const [showPregnancyOverlay, setShowPregnancyOverlay] = useState(false);
+  const [showBirthOverlay, setShowBirthOverlay] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -123,6 +129,19 @@ const ScheduledNotifications = () => {
       // Birthday fields
       birthday_member_name: "",
       birthday_member_photo: "",
+      // Pregnancy reveal fields
+      parent_names: "",
+      sonogram_image_url: "",
+      pregnancy_message: "",
+      due_date: "",
+      // Birth announcement fields
+      baby_name: "",
+      baby_photo_url: "",
+      birth_date: "",
+      birth_time: "",
+      baby_weight: "",
+      baby_height: "",
+      birth_message: "",
     },
   });
 
@@ -434,6 +453,19 @@ const ScheduledNotifications = () => {
         additional_info: notification.metadata?.additional_info || "",
         birthday_member_name: notification.metadata?.birthday_member_name || "",
         birthday_member_photo: notification.metadata?.birthday_member_photo || "",
+        // Pregnancy reveal fields
+        parent_names: notification.metadata?.parent_names || "",
+        sonogram_image_url: notification.metadata?.sonogram_image_url || "",
+        pregnancy_message: notification.metadata?.pregnancy_message || "",
+        due_date: notification.metadata?.due_date || "",
+        // Birth announcement fields
+        baby_name: notification.metadata?.baby_name || "",
+        baby_photo_url: notification.metadata?.baby_photo_url || "",
+        birth_date: notification.metadata?.birth_date || "",
+        birth_time: notification.metadata?.birth_time || "",
+        baby_weight: notification.metadata?.baby_weight || "",
+        baby_height: notification.metadata?.baby_height || "",
+        birth_message: notification.metadata?.birth_message || "",
       },
     });
     setSelectedDays(notification.days_of_week || [1]);
@@ -472,6 +504,19 @@ const ScheduledNotifications = () => {
         additional_info: "",
         birthday_member_name: "",
         birthday_member_photo: "",
+        // Pregnancy reveal fields
+        parent_names: "",
+        sonogram_image_url: "",
+        pregnancy_message: "",
+        due_date: "",
+        // Birth announcement fields
+        baby_name: "",
+        baby_photo_url: "",
+        birth_date: "",
+        birth_time: "",
+        baby_weight: "",
+        baby_height: "",
+        birth_message: "",
       },
     });
     setSelectedDays([]);
@@ -504,6 +549,8 @@ const ScheduledNotifications = () => {
       extraordinary_rehearsal: "bg-indigo-100 text-indigo-800 border-indigo-200",
       ministry_instructions: "bg-blue-100 text-blue-800 border-blue-200",
       birthday: "bg-pink-100 text-pink-800 border-pink-200",
+      pregnancy_reveal: "bg-rose-100 text-rose-800 border-rose-200",
+      birth_announcement: "bg-amber-100 text-amber-800 border-amber-200",
     };
     return colors[type as keyof typeof colors] || "bg-gray-100 text-gray-800";
   };
@@ -640,6 +687,8 @@ const ScheduledNotifications = () => {
       extraordinary_rehearsal: "Ensayo Extraordinario",
       ministry_instructions: "Instrucciones a Integrantes",
       birthday: "Cumpleaños",
+      pregnancy_reveal: "Revelación de Embarazo",
+      birth_announcement: "Anuncio de Nacimiento",
     };
 
     const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
@@ -1390,6 +1439,92 @@ const ScheduledNotifications = () => {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Revelación de Embarazo */}
+                <Card className="border-2 border-rose-200 bg-gradient-to-br from-rose-50 via-amber-50 to-sky-50 dark:from-rose-950 dark:via-amber-950 dark:to-sky-950 hover:shadow-md transition-shadow">
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-rose-400 to-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-lg sm:text-xl">🤰</span>
+                        </div>
+                        <h3 className="text-sm sm:text-base font-bold text-rose-800 dark:text-rose-200 truncate">
+                          Revelación Embarazo
+                        </h3>
+                      </div>
+                      <p className="text-xs text-foreground/70 line-clamp-2">Anunciar nuevo embarazo</p>
+                      <div className="space-y-1.5 pt-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full border-rose-500 text-rose-600 hover:bg-rose-50 text-xs h-8"
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              notification_type: "pregnancy_reveal",
+                              days_of_week: [0],
+                            });
+                            setIsDialogOpen(true);
+                          }}
+                        >
+                          <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                          Crear Nuevo
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="w-full bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white text-xs h-8"
+                          onClick={() => setShowPregnancyOverlay(true)}
+                        >
+                          <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                          Vista Previa
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Anuncio de Nacimiento */}
+                <Card className="border-2 border-amber-200 bg-gradient-to-br from-amber-50 via-rose-50 to-violet-50 dark:from-amber-950 dark:via-rose-950 dark:to-violet-950 hover:shadow-md transition-shadow">
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-amber-400 to-violet-500 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-lg sm:text-xl">👶</span>
+                        </div>
+                        <h3 className="text-sm sm:text-base font-bold text-amber-800 dark:text-amber-200 truncate">
+                          Anuncio Nacimiento
+                        </h3>
+                      </div>
+                      <p className="text-xs text-foreground/70 line-clamp-2">Celebrar nuevo nacimiento</p>
+                      <div className="space-y-1.5 pt-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full border-amber-500 text-amber-600 hover:bg-amber-50 text-xs h-8"
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              notification_type: "birth_announcement",
+                              days_of_week: [0],
+                            });
+                            setIsDialogOpen(true);
+                          }}
+                        >
+                          <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                          Crear Nuevo
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="w-full bg-gradient-to-r from-amber-500 to-violet-500 hover:from-amber-600 hover:to-violet-600 text-white text-xs h-8"
+                          onClick={() => setShowBirthOverlay(true)}
+                        >
+                          <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                          Vista Previa
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </CardContent>
           </Card>
@@ -1931,6 +2066,169 @@ const ScheduledNotifications = () => {
               </div>
             )}
 
+            {/* Pregnancy Reveal */}
+            {formData.notification_type === "pregnancy_reveal" && (
+              <div className="space-y-4 p-4 bg-gradient-to-br from-rose-50 via-amber-50 to-sky-50 dark:from-rose-950/30 dark:via-amber-950/30 dark:to-sky-950/30 rounded-lg border border-rose-200 dark:border-rose-800">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">🤰</span>
+                  <h4 className="font-semibold text-rose-900 dark:text-rose-100">Revelación de Embarazo</h4>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="parent_names">Nombres de los Padres *</Label>
+                  <Input
+                    id="parent_names"
+                    value={formData.metadata.parent_names || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, metadata: { ...formData.metadata, parent_names: e.target.value } })
+                    }
+                    placeholder="Ej: Juan y María Pérez"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sonogram_image_url">URL de Imagen de Sonografía (opcional)</Label>
+                  <Input
+                    id="sonogram_image_url"
+                    value={formData.metadata.sonogram_image_url || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, metadata: { ...formData.metadata, sonogram_image_url: e.target.value } })
+                    }
+                    placeholder="https://... (URL de la imagen)"
+                  />
+                  <p className="text-xs text-muted-foreground">Puedes subir la imagen a un servicio como Imgur o Supabase Storage</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="pregnancy_message">Mensaje Personalizado (opcional)</Label>
+                  <Textarea
+                    id="pregnancy_message"
+                    value={formData.metadata.pregnancy_message || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, metadata: { ...formData.metadata, pregnancy_message: e.target.value } })
+                    }
+                    placeholder="Un mensaje especial para compartir esta bendición..."
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="due_date">Fecha Estimada de Llegada (opcional)</Label>
+                  <Input
+                    id="due_date"
+                    value={formData.metadata.due_date || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, metadata: { ...formData.metadata, due_date: e.target.value } })
+                    }
+                    placeholder="Ej: Marzo 2025"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Birth Announcement */}
+            {formData.notification_type === "birth_announcement" && (
+              <div className="space-y-4 p-4 bg-gradient-to-br from-amber-50 via-rose-50 to-violet-50 dark:from-amber-950/30 dark:via-rose-950/30 dark:to-violet-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">👶</span>
+                  <h4 className="font-semibold text-amber-900 dark:text-amber-100">Anuncio de Nacimiento</h4>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="baby_name">Nombre del Bebé (opcional)</Label>
+                    <Input
+                      id="baby_name"
+                      value={formData.metadata.baby_name || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, metadata: { ...formData.metadata, baby_name: e.target.value } })
+                      }
+                      placeholder="Ej: Sofía"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="parent_names_birth">Nombres de los Padres *</Label>
+                    <Input
+                      id="parent_names_birth"
+                      value={formData.metadata.parent_names || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, metadata: { ...formData.metadata, parent_names: e.target.value } })
+                      }
+                      placeholder="Ej: Juan y María Pérez"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="baby_photo_url">URL de Foto del Bebé (opcional)</Label>
+                  <Input
+                    id="baby_photo_url"
+                    value={formData.metadata.baby_photo_url || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, metadata: { ...formData.metadata, baby_photo_url: e.target.value } })
+                    }
+                    placeholder="https://... (URL de la imagen)"
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="birth_date">Fecha de Nacimiento</Label>
+                    <Input
+                      id="birth_date"
+                      type="date"
+                      value={formData.metadata.birth_date || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, metadata: { ...formData.metadata, birth_date: e.target.value } })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="birth_time">Hora de Nacimiento</Label>
+                    <Input
+                      id="birth_time"
+                      type="time"
+                      value={formData.metadata.birth_time || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, metadata: { ...formData.metadata, birth_time: e.target.value } })
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="baby_weight">Peso (opcional)</Label>
+                    <Input
+                      id="baby_weight"
+                      value={formData.metadata.baby_weight || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, metadata: { ...formData.metadata, baby_weight: e.target.value } })
+                      }
+                      placeholder="Ej: 7 lbs 8 oz"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="baby_height">Talla (opcional)</Label>
+                    <Input
+                      id="baby_height"
+                      value={formData.metadata.baby_height || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, metadata: { ...formData.metadata, baby_height: e.target.value } })
+                      }
+                      placeholder="Ej: 50 cm"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="birth_message">Mensaje de los Padres (opcional)</Label>
+                  <Textarea
+                    id="birth_message"
+                    value={formData.metadata.birth_message || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, metadata: { ...formData.metadata, birth_message: e.target.value } })
+                    }
+                    placeholder="Un mensaje especial para compartir esta alegría..."
+                    rows={3}
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>Días de la Semana</Label>
               <p className="text-sm text-muted-foreground mb-3">
@@ -2006,6 +2304,30 @@ const ScheduledNotifications = () => {
       
       {showAdviceOverlay && (
         <DailyAdviceOverlay onClose={() => setShowAdviceOverlay(false)} />
+      )}
+      
+      {showPregnancyOverlay && (
+        <PregnancyRevealOverlay
+          parentNames="Juan y María Pérez"
+          sonogramImageUrl=""
+          message="Estamos esperando una bendición de Dios que llegará a nuestras vidas para llenarnos de alegría."
+          dueDate="Marzo 2025"
+          onClose={() => setShowPregnancyOverlay(false)}
+        />
+      )}
+      
+      {showBirthOverlay && (
+        <BirthAnnouncementOverlay
+          babyName="Sofía"
+          parentNames="Juan y María Pérez"
+          babyPhotoUrl=""
+          birthDate="25 de Diciembre, 2024"
+          birthTime="10:30 AM"
+          weight="7 lbs 8 oz"
+          height="50 cm"
+          message="Con inmensa alegría anunciamos la llegada de nuestra princesa."
+          onClose={() => setShowBirthOverlay(false)}
+        />
       )}
     </div>
   );
