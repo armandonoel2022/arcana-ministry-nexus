@@ -93,23 +93,36 @@ const OverlayManager: React.FC = () => {
   const currentOverlayId = useRef<string | null>(null);
 
   // Function to show overlay with safety check
-  const showOverlay = useCallback((notification: OverlayData) => {
-    if (!isMounted.current) return;
-    
-    // PREVENT duplicate overlays - if same ID is already showing, skip
-    if (currentOverlayId.current === notification.id) {
-      console.log("📱 [OverlayManager] Overlay ya visible, ignorando duplicado:", notification.id);
-      return;
-    }
-    
-    // PREVENT showing if an overlay is already active (queue it instead)
-    if (activeOverlay && currentOverlayId.current) {
-      console.log("📱 [OverlayManager] Overlay activo, añadiendo a cola:", notification.type);
-      overlayQueue.current.push(notification);
-      return;
-    }
+  const showOverlay = useCallback(
+    (notification: OverlayData) => {
+      if (!isMounted.current) return;
 
-    console.log("📱 [OverlayManager] Mostrando overlay:", notification.type, notification.id);
+      const isPreview = notification.id?.startsWith("preview-");
+
+      // PREVENT duplicate overlays - if same ID is already showing, skip
+      if (currentOverlayId.current === notification.id) {
+        console.log("📱 [OverlayManager] Overlay ya visible, ignorando duplicado:", notification.id);
+        return;
+      }
+
+      // If a preview is triggered while another overlay is active, replace it immediately
+      // (prevents the queue from getting stuck and makes Preview buttons feel responsive)
+      if (isPreview && activeOverlay && currentOverlayId.current) {
+        console.log("📱 [OverlayManager] Preview solicitado, reemplazando overlay activo:", {
+          from: activeOverlay.type,
+          to: notification.type,
+        });
+        currentOverlayId.current = null;
+        setActiveOverlay(null);
+        setOverlayType(null);
+      } else if (activeOverlay && currentOverlayId.current) {
+        // PREVENT showing if an overlay is already active (queue it instead)
+        console.log("📱 [OverlayManager] Overlay activo, añadiendo a cola:", notification.type);
+        overlayQueue.current.push(notification);
+        return;
+      }
+
+      console.log("📱 [OverlayManager] Mostrando overlay:", notification.type, notification.id);
 
     // Special handling for birthday overlays - dispatch to BirthdayOverlay component
     if (notification.type === 'birthday' || notification.type === 'birthday_daily') {
