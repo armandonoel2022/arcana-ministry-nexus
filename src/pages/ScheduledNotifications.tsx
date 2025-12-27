@@ -17,6 +17,9 @@ import {
   Lightbulb,
   RefreshCw,
   Wrench,
+  Upload,
+  Image as ImageIcon,
+  Loader2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -77,6 +80,8 @@ const ScheduledNotifications = () => {
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   
   const [loadingTest, setLoadingTest] = useState<string | null>(null);
+  const [uploadingSonogram, setUploadingSonogram] = useState(false);
+  const [uploadingBabyPhoto, setUploadingBabyPhoto] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -659,6 +664,60 @@ const ScheduledNotifications = () => {
     }
 
     await handlePreview(candidate);
+  };
+
+  // Helper function to upload image to Supabase Storage
+  const uploadOverlayImage = async (file: File, folder: string): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${folder}/${Date.now()}.${fileExt}`;
+
+      const { data, error } = await supabase.storage
+        .from("overlay-images")
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (error) {
+        console.error("Error uploading image:", error);
+        toast.error("Error al subir la imagen");
+        return null;
+      }
+
+      const { data: urlData } = supabase.storage.from("overlay-images").getPublicUrl(data.path);
+      return urlData.publicUrl;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast.error("Error al subir la imagen");
+      return null;
+    }
+  };
+
+  const handleSonogramUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingSonogram(true);
+    const url = await uploadOverlayImage(file, "sonograms");
+    if (url) {
+      setFormData({ ...formData, metadata: { ...formData.metadata, sonogram_image_url: url } });
+      toast.success("Sonografía cargada exitosamente");
+    }
+    setUploadingSonogram(false);
+  };
+
+  const handleBabyPhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingBabyPhoto(true);
+    const url = await uploadOverlayImage(file, "baby-photos");
+    if (url) {
+      setFormData({ ...formData, metadata: { ...formData.metadata, baby_photo_url: url } });
+      toast.success("Foto del bebé cargada exitosamente");
+    }
+    setUploadingBabyPhoto(false);
   };
 
   // handleTestNotification removed - "Probar" buttons eliminated
@@ -2085,16 +2144,46 @@ const ScheduledNotifications = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="sonogram_image_url">URL de Imagen de Sonografía (opcional)</Label>
-                  <Input
-                    id="sonogram_image_url"
-                    value={formData.metadata.sonogram_image_url || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, metadata: { ...formData.metadata, sonogram_image_url: e.target.value } })
-                    }
-                    placeholder="https://... (URL de la imagen)"
-                  />
-                  <p className="text-xs text-muted-foreground">Puedes subir la imagen a un servicio como Imgur o Supabase Storage</p>
+                  <Label>Imagen de Sonografía (opcional)</Label>
+                  <div className="flex flex-col gap-2">
+                    {formData.metadata.sonogram_image_url && (
+                      <div className="relative w-32 h-32">
+                        <img
+                          src={formData.metadata.sonogram_image_url}
+                          alt="Sonografía"
+                          className="w-full h-full object-cover rounded-lg border-2 border-rose-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData({ ...formData, metadata: { ...formData.metadata, sonogram_image_url: "" } })
+                          }
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                    <label className="cursor-pointer">
+                      <div className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-rose-300 rounded-lg hover:bg-rose-50 transition-colors w-fit">
+                        {uploadingSonogram ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-rose-500" />
+                        ) : (
+                          <Upload className="w-4 h-4 text-rose-500" />
+                        )}
+                        <span className="text-sm text-rose-600">
+                          {uploadingSonogram ? "Subiendo..." : "Subir sonografía"}
+                        </span>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleSonogramUpload}
+                        disabled={uploadingSonogram}
+                      />
+                    </label>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="pregnancy_message">Mensaje Personalizado (opcional)</Label>
@@ -2155,15 +2244,46 @@ const ScheduledNotifications = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="baby_photo_url">URL de Foto del Bebé (opcional)</Label>
-                  <Input
-                    id="baby_photo_url"
-                    value={formData.metadata.baby_photo_url || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, metadata: { ...formData.metadata, baby_photo_url: e.target.value } })
-                    }
-                    placeholder="https://... (URL de la imagen)"
-                  />
+                  <Label>Foto del Bebé (opcional)</Label>
+                  <div className="flex flex-col gap-2">
+                    {formData.metadata.baby_photo_url && (
+                      <div className="relative w-32 h-32">
+                        <img
+                          src={formData.metadata.baby_photo_url}
+                          alt="Foto del bebé"
+                          className="w-full h-full object-cover rounded-full border-4 border-amber-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData({ ...formData, metadata: { ...formData.metadata, baby_photo_url: "" } })
+                          }
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                    <label className="cursor-pointer">
+                      <div className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-amber-300 rounded-lg hover:bg-amber-50 transition-colors w-fit">
+                        {uploadingBabyPhoto ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
+                        ) : (
+                          <Upload className="w-4 h-4 text-amber-500" />
+                        )}
+                        <span className="text-sm text-amber-600">
+                          {uploadingBabyPhoto ? "Subiendo..." : "Subir foto del bebé"}
+                        </span>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleBabyPhotoUpload}
+                        disabled={uploadingBabyPhoto}
+                      />
+                    </label>
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
