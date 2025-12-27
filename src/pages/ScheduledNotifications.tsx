@@ -644,7 +644,8 @@ const ScheduledNotifications = () => {
 
     // For non-special types or when not loading real data, use metadata
     const overlayData = {
-      id: `preview-${notification.id || Date.now()}`,
+      // Always generate a fresh preview ID so the OverlayManager doesn't treat repeated previews as duplicates
+      id: `preview-${notification.notification_type}-${Date.now()}`,
       type: notification.notification_type,
       title: notification.name,
       message: notification.description || "",
