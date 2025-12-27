@@ -31,6 +31,8 @@ export type NotificationType =
   | "agenda_notification"
   | "service_program"
   | "special_event"
+  | "pregnancy_reveal"
+  | "birth_announcement"
   | "general"
   | "system";
 
@@ -88,6 +90,8 @@ const typeToCategory: Record<NotificationType, NotificationCategory> = {
   agenda_notification: "agenda",
   service_program: "overlay",
   special_event: "overlay",
+  pregnancy_reveal: "overlay",
+  birth_announcement: "overlay",
   general: "general",
   system: "general",
 };
@@ -107,6 +111,8 @@ const overlayTypes: NotificationType[] = [
   "ministry_instructions",
   "service_program",
   "special_event",
+  "pregnancy_reveal",
+  "birth_announcement",
 ];
 
 /**
@@ -466,6 +472,34 @@ export function dispatchOverlayEvent(data: {
           }),
         );
         break;
+      case "pregnancy_reveal":
+        window.dispatchEvent(
+          new CustomEvent("showPregnancyOverlay", {
+            detail: {
+              parentNames: data.metadata?.parent_names,
+              sonogramImageUrl: data.metadata?.sonogram_image_url,
+              message: data.message,
+              dueDate: data.metadata?.due_date,
+            },
+          }),
+        );
+        break;
+      case "birth_announcement":
+        window.dispatchEvent(
+          new CustomEvent("showBirthOverlay", {
+            detail: {
+              babyName: data.metadata?.baby_name,
+              parentNames: data.metadata?.parent_names,
+              babyPhotoUrl: data.metadata?.baby_photo_url,
+              birthDate: data.metadata?.birth_date,
+              birthTime: data.metadata?.birth_time,
+              weight: data.metadata?.weight,
+              height: data.metadata?.height,
+              message: data.message,
+            },
+          }),
+        );
+        break;
     }
   } catch (error) {
     console.error("Error disparando overlay:", error);
@@ -765,6 +799,64 @@ export function createMinistryInstructionsNotification(params: {
   });
 }
 
+/**
+ * Crear notificación de revelación de embarazo
+ */
+export function createPregnancyRevealNotification(params: {
+  parentNames: string;
+  sonogramImageUrl?: string;
+  message?: string;
+  dueDate?: string;
+}) {
+  return createBroadcastNotification({
+    type: "pregnancy_reveal",
+    title: "👶 ¡Nueva Bendición en Camino!",
+    message: params.message || `${params.parentNames} están esperando un bebé`,
+    category: "overlay",
+    priority: 3,
+    showOverlay: true,
+    metadata: {
+      parent_names: params.parentNames,
+      sonogram_image_url: params.sonogramImageUrl,
+      message: params.message,
+      due_date: params.dueDate,
+    },
+  });
+}
+
+/**
+ * Crear notificación de anuncio de nacimiento
+ */
+export function createBirthAnnouncementNotification(params: {
+  parentNames: string;
+  babyName?: string;
+  babyPhotoUrl?: string;
+  birthDate?: string;
+  birthTime?: string;
+  weight?: string;
+  height?: string;
+  message?: string;
+}) {
+  return createBroadcastNotification({
+    type: "birth_announcement",
+    title: params.babyName ? `🎉 ¡Ha nacido ${params.babyName}!` : "🎉 ¡Nuevo Miembro en la Familia!",
+    message: params.message || `${params.parentNames} comparten la alegría del nacimiento de su bebé`,
+    category: "overlay",
+    priority: 3,
+    showOverlay: true,
+    metadata: {
+      parent_names: params.parentNames,
+      baby_name: params.babyName,
+      baby_photo_url: params.babyPhotoUrl,
+      birth_date: params.birthDate,
+      birth_time: params.birthTime,
+      weight: params.weight,
+      height: params.height,
+      message: params.message,
+    },
+  });
+}
+
 export default {
   createNotification,
   createBroadcastNotification,
@@ -778,4 +870,6 @@ export default {
   createBloodDonationNotification,
   createExtraordinaryRehearsalNotification,
   createMinistryInstructionsNotification,
+  createPregnancyRevealNotification,
+  createBirthAnnouncementNotification,
 };

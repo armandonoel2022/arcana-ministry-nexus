@@ -8,6 +8,8 @@ import GeneralAnnouncementOverlay from "./GeneralAnnouncementOverlay";
 import MinistryInstructionsOverlay from "./MinistryInstructionsOverlay";
 import ExtraordinaryRehearsalOverlay from "./ExtraordinaryRehearsalOverlay";
 import BloodDonationOverlay from "./BloodDonationOverlay";
+import PregnancyRevealOverlay from "./PregnancyRevealOverlay";
+import BirthAnnouncementOverlay from "./BirthAnnouncementOverlay";
 import { toast } from "sonner";
 import { createBroadcastNotification, NotificationType } from "@/services/notificationService";
 
@@ -202,6 +204,8 @@ const OverlayManager: React.FC = () => {
       blood_donation: "Donación de Sangre Urgente",
       extraordinary_rehearsal: "Ensayo Extraordinario",
       ministry_instructions: "Instrucciones a Integrantes",
+      pregnancy_reveal: "Revelación de Embarazo",
+      birth_announcement: "Anuncio de Nacimiento",
     };
     return titles[type] || "Notificación";
   }, []);
@@ -572,6 +576,8 @@ const OverlayManager: React.FC = () => {
       "blood_donation",
       "extraordinary_rehearsal",
       "ministry_instructions",
+      "pregnancy_reveal",
+      "birth_announcement",
     ];
 
     const checkForNewNotifications = async () => {
@@ -898,6 +904,32 @@ const OverlayManager: React.FC = () => {
             familyContact={metadata.family_contact || ""}
             urgencyLevel={metadata.urgency_level || "urgent"}
             additionalInfo={metadata.additional_info}
+            onClose={handleDismissWithQueue}
+          />
+        );
+
+      case "pregnancy_reveal":
+        return (
+          <PregnancyRevealOverlay
+            parentNames={metadata.parent_names || ""}
+            sonogramImageUrl={metadata.sonogram_image_url}
+            message={metadata.message || activeOverlay.message}
+            dueDate={metadata.due_date}
+            onClose={handleDismissWithQueue}
+          />
+        );
+
+      case "birth_announcement":
+        return (
+          <BirthAnnouncementOverlay
+            babyName={metadata.baby_name}
+            parentNames={metadata.parent_names || ""}
+            babyPhotoUrl={metadata.baby_photo_url}
+            birthDate={metadata.birth_date}
+            birthTime={metadata.birth_time}
+            weight={metadata.weight}
+            height={metadata.height}
+            message={metadata.message || activeOverlay.message}
             onClose={handleDismissWithQueue}
           />
         );
