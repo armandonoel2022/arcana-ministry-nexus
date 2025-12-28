@@ -6,7 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { ChatRoomManagement } from "@/components/admin/ChatRoomManagement";
 import UserApprovalManagement from "@/components/admin/UserApprovalManagement";
-import { Users, MessageSquare, Shield, Settings, UserCheck } from "lucide-react";
+import NotificationTestMenu from "@/components/notifications/NotificationTestMenu";
+import { Users, MessageSquare, Shield, UserCheck, TestTube } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const AdminDashboard = () => {
@@ -97,18 +98,22 @@ const AdminDashboard = () => {
       </div>
 
       <Tabs defaultValue="approval" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="approval" className="flex items-center gap-2">
             <UserCheck className="w-4 h-4" />
-            Aprobación de Usuarios
+            <span className="hidden sm:inline">Aprobación</span>
           </TabsTrigger>
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
-            Gestión de Usuarios
+            <span className="hidden sm:inline">Usuarios</span>
           </TabsTrigger>
           <TabsTrigger value="chat" className="flex items-center gap-2">
             <MessageSquare className="w-4 h-4" />
-            Gestión de Salas
+            <span className="hidden sm:inline">Salas</span>
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <TestTube className="w-4 h-4" />
+            <span className="hidden sm:inline">Pruebas</span>
           </TabsTrigger>
         </TabsList>
 
@@ -134,6 +139,20 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <ChatRoomManagement />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="notifications" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TestTube className="w-5 h-5 text-arcana-purple-600" />
+                Pruebas de Notificaciones
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <NotificationTestMenu />
             </CardContent>
           </Card>
         </TabsContent>
