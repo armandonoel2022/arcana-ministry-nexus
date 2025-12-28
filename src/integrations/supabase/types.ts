@@ -1594,6 +1594,42 @@ export type Database = {
         }
         Relationships: []
       }
+      screen_permissions: {
+        Row: {
+          can_edit: boolean | null
+          can_view: boolean | null
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          screen_category: string
+          screen_name: string
+          screen_path: string
+          updated_at: string | null
+        }
+        Insert: {
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          screen_category: string
+          screen_name: string
+          screen_path: string
+          updated_at?: string | null
+        }
+        Update: {
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          screen_category?: string
+          screen_name?: string
+          screen_path?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       service_songs: {
         Row: {
           created_at: string
@@ -2122,6 +2158,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_song_knowledge: {
         Row: {
           id: string
@@ -2479,6 +2536,17 @@ export type Database = {
       }
       get_current_user_role: { Args: never; Returns: string }
       get_spanish_month_name: { Args: { date_input: string }; Returns: string }
+      get_user_roles: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"][]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       http: {
         Args: { request: Database["public"]["CompositeTypes"]["http_request"] }
         Returns: Database["public"]["CompositeTypes"]["http_response"]
@@ -2654,6 +2722,7 @@ export type Database = {
           }
     }
     Enums: {
+      app_role: "admin" | "lider" | "vocal" | "musico" | "miembro"
       blood_type: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-"
       instrument_type:
         | "vocals"
@@ -2723,6 +2792,8 @@ export type Database = {
         | "ministry_instructions"
         | "birthday"
         | "agenda_notification"
+        | "pregnancy_reveal"
+        | "birth_announcement"
       replacement_category: "voice" | "musician" | "multimedia"
       song_knowledge: "unknown" | "learning" | "known" | "expert"
       user_role:
@@ -2875,6 +2946,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "lider", "vocal", "musico", "miembro"],
       blood_type: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
       instrument_type: [
         "vocals",
@@ -2947,6 +3019,8 @@ export const Constants = {
         "ministry_instructions",
         "birthday",
         "agenda_notification",
+        "pregnancy_reveal",
+        "birth_announcement",
       ],
       replacement_category: ["voice", "musician", "multimedia"],
       song_knowledge: ["unknown", "learning", "known", "expert"],
