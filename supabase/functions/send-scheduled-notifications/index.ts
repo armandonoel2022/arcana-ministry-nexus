@@ -93,6 +93,19 @@ serve(async (req) => {
         case 'special_event':
           await processSpecialEventNotification(supabase, notification);
           break;
+        case 'birth_announcement':
+          await processBirthAnnouncementNotification(supabase, notification);
+          break;
+        case 'pregnancy_reveal':
+          await processPregnancyRevealNotification(supabase, notification);
+          break;
+        case 'director_change':
+          await processDirectorChangeNotification(supabase, notification);
+          break;
+        case 'birthday':
+        case 'birthday_daily':
+          await processBirthdayNotification(supabase, notification);
+          break;
         default:
           await processGeneralNotification(supabase, notification);
       }
@@ -510,6 +523,200 @@ async function processGeneralNotification(supabase: any, notification: Scheduled
     
   } catch (error) {
     console.error('Error processing general notification:', error);
+    throw error;
+  }
+}
+
+async function processBirthAnnouncementNotification(supabase: any, notification: ScheduledNotification) {
+  console.log('Processing birth announcement notification...');
+  
+  try {
+    const metadata = notification.metadata || {};
+    
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('is_active', true);
+
+    if (profilesError) throw profilesError;
+
+    const title = metadata.title || 'Anuncio de Nacimiento';
+    const message = metadata.message || '¡Bendiciones! Ha nacido un nuevo miembro en nuestra familia ministerial.';
+
+    for (const profile of profiles || []) {
+      await supabase
+        .from('system_notifications')
+        .insert({
+          recipient_id: profile.id,
+          type: 'birth_announcement',
+          title: title,
+          message: message,
+          notification_category: 'general',
+          metadata: { ...metadata, show_overlay: true },
+          priority: 3
+        });
+      
+      await sendPushNotification(supabase, profile.id, {
+        title, body: message, url: '/notificaciones', type: 'birth_announcement'
+      });
+    }
+
+    console.log('Birth announcement notification sent successfully');
+  } catch (error) {
+    console.error('Error processing birth announcement notification:', error);
+    throw error;
+  }
+}
+
+async function processPregnancyRevealNotification(supabase: any, notification: ScheduledNotification) {
+  console.log('Processing pregnancy reveal notification...');
+  
+  try {
+    const metadata = notification.metadata || {};
+    
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('is_active', true);
+
+    if (profilesError) throw profilesError;
+
+    const title = metadata.title || 'Revelación de Embarazo';
+    const message = metadata.message || '¡Grandes noticias! Un nuevo bebé está en camino.';
+
+    for (const profile of profiles || []) {
+      await supabase
+        .from('system_notifications')
+        .insert({
+          recipient_id: profile.id,
+          type: 'pregnancy_reveal',
+          title: title,
+          message: message,
+          notification_category: 'general',
+          metadata: { ...metadata, show_overlay: true },
+          priority: 2
+        });
+      
+      await sendPushNotification(supabase, profile.id, {
+        title, body: message, url: '/notificaciones', type: 'pregnancy_reveal'
+      });
+    }
+
+    console.log('Pregnancy reveal notification sent successfully');
+  } catch (error) {
+    console.error('Error processing pregnancy reveal notification:', error);
+    throw error;
+  }
+}
+
+async function processDirectorChangeNotification(supabase: any, notification: ScheduledNotification) {
+  console.log('Processing director change notification...');
+  
+  try {
+    const metadata = notification.metadata || {};
+    
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('is_active', true);
+
+    if (profilesError) throw profilesError;
+
+    const title = metadata.title || 'Cambio de Director';
+    const message = metadata.message || 'Se ha realizado un cambio de director para un servicio próximo.';
+
+    for (const profile of profiles || []) {
+      await supabase
+        .from('system_notifications')
+        .insert({
+          recipient_id: profile.id,
+          type: 'director_change',
+          title: title,
+          message: message,
+          notification_category: 'agenda',
+          metadata: { ...metadata, show_overlay: true },
+          priority: 2
+        });
+      
+      await sendPushNotification(supabase, profile.id, {
+        title, body: message, url: '/ministerial-agenda', type: 'director_change'
+      });
+    }
+
+    console.log('Director change notification sent successfully');
+  } catch (error) {
+    console.error('Error processing director change notification:', error);
+    throw error;
+  }
+}
+
+async function processBirthdayNotification(supabase: any, notification: ScheduledNotification) {
+  console.log('Processing birthday notification...');
+  
+  try {
+    const rdNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
+    const currentMonth = rdNow.getMonth() + 1;
+    const currentDay = rdNow.getDate();
+
+    const { data: members, error: membersError } = await supabase
+      .from('members')
+      .select('id, nombres, apellidos, photo_url, cargo, fecha_nacimiento')
+      .eq('is_active', true)
+      .not('fecha_nacimiento', 'is', null);
+
+    if (membersError) throw membersError;
+
+    const birthdayMembers = (members || []).filter((member: any) => {
+      if (!member.fecha_nacimiento) return false;
+      const birthDate = new Date(member.fecha_nacimiento);
+      return birthDate.getMonth() + 1 === currentMonth && birthDate.getDate() === currentDay;
+    });
+
+    if (birthdayMembers.length === 0) {
+      console.log('No birthdays today');
+      return;
+    }
+
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('is_active', true);
+
+    if (profilesError) throw profilesError;
+
+    for (const member of birthdayMembers) {
+      const memberName = `${member.nombres} ${member.apellidos}`;
+      const title = `¡Feliz Cumpleaños ${member.nombres}!`;
+      const message = `Hoy celebramos el cumpleaños de ${memberName}. ¡Únete a la celebración!`;
+
+      for (const profile of profiles || []) {
+        await supabase
+          .from('system_notifications')
+          .insert({
+            recipient_id: profile.id,
+            type: 'birthday',
+            title: title,
+            message: message,
+            notification_category: 'general',
+            metadata: {
+              birthday_member_id: member.id,
+              birthday_member_name: memberName,
+              birthday_member_photo: member.photo_url,
+              member_role: member.cargo,
+              show_overlay: true
+            },
+            priority: 2
+          });
+        
+        await sendPushNotification(supabase, profile.id, {
+          title, body: message, url: '/cumpleanos', type: 'birthday'
+        });
+      }
+    }
+
+    console.log('Birthday notifications sent successfully');
+  } catch (error) {
+    console.error('Error processing birthday notification:', error);
     throw error;
   }
 }
