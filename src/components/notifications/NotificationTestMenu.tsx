@@ -142,17 +142,34 @@ const NotificationTestMenu = () => {
 
   const testDirectorRequest = () => {
     // Disparar evento para overlay de solicitud de reemplazo
-    window.dispatchEvent(new CustomEvent('testDirectorRequestOverlay', {
-      detail: {
-        id: 'test-request-1',
-        service_id: 'test-service-1',
-        original_director_id: 'test-original',
-        original_director: { full_name: 'Juan Pérez', photo_url: 'https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/d6602109-ad3e-4db6-ab4a-2984dadfc569.JPG' },
-        service: { title: 'Servicio Dominical - 8:00 AM', service_date: new Date().toISOString() },
-        reason: 'Tengo un compromiso familiar y no podré asistir este domingo.',
-        requested_at: new Date().toISOString(),
-      }
-    }));
+    const nowIso = new Date().toISOString();
+    const expiresIso = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(); // +2h
+
+    window.dispatchEvent(
+      new CustomEvent("testDirectorRequestOverlay", {
+        detail: {
+          id: "test-request-1",
+          service_id: "test-service-1",
+          original_director_id: "test-original",
+          reason: "Tengo un compromiso familiar y no podré asistir este domingo.",
+          requested_at: nowIso,
+          expires_at: expiresIso,
+          original_director: {
+            full_name: "Juan Pérez",
+            phone: "809-555-0000",
+            email: "juan.perez@example.com",
+            photo_url:
+              "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/d6602109-ad3e-4db6-ab4a-2984dadfc569.JPG",
+          },
+          services: {
+            title: "Servicio Dominical - 8:00 AM",
+            service_date: nowIso,
+            location: "Templo Principal",
+          },
+        },
+      })
+    );
+
     toast({
       title: "Overlay disparado",
       description: "Se ha disparado el overlay de solicitud de reemplazo de director.",

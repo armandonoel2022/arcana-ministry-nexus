@@ -3,10 +3,35 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { CheckCircle, XCircle, Calendar, User, Clock, MessageCircle } from "lucide-react";
-import { format } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+const toValidDate = (value: unknown): Date | null => {
+  if (!value) return null;
+  if (value instanceof Date) return isValid(value) ? value : null;
+  if (typeof value === 'number') {
+    const d = new Date(value);
+    return isValid(d) ? d : null;
+  }
+  if (typeof value === 'string') {
+    const iso = parseISO(value);
+    if (isValid(iso)) return iso;
+    const d = new Date(value);
+    return isValid(d) ? d : null;
+  }
+  return null;
+};
+
+const safeFormat = (
+  value: unknown,
+  fmt: string,
+  opts?: Parameters<typeof format>[2]
+) => {
+  const d = toValidDate(value);
+  return d ? format(d, fmt, opts) : "Fecha inválida";
+};
 
 interface RequestData {
   id: string;
@@ -224,7 +249,7 @@ const DirectorReplacementRequestOverlay = () => {
               sender_id: user.id,
               type: 'director_change',
               title: 'Servicio Reasignado Automáticamente',
-              message: `Para mantener el equilibrio, se te ha asignado el servicio "${serviceToReassign.title}" del ${format(new Date(serviceToReassign.service_date), 'dd/MM/yyyy', { locale: es })} que originalmente era de ${userProfile?.full_name}.`,
+              message: `Para mantener el equilibrio, se te ha asignado el servicio "${serviceToReassign.title}" del ${safeFormat(serviceToReassign.service_date, 'dd/MM/yyyy', { locale: es })} que originalmente era de ${userProfile?.full_name}.`,
               notification_category: 'agenda',
                metadata: {
                 service_id: serviceToReassign.id,
@@ -250,7 +275,7 @@ const DirectorReplacementRequestOverlay = () => {
             sender_id: user.id,
             type: 'director_change',
             title: 'Cambio de Director Confirmado',
-            message: `El servicio "${currentRequest.services?.title}" del ${currentRequest.services?.service_date && format(new Date(currentRequest.services.service_date), 'dd/MM/yyyy', { locale: es })} ahora será dirigido por ${userProfile?.full_name || 'Director de reemplazo'}`,
+            message: `El servicio "${currentRequest.services?.title}" del ${safeFormat(currentRequest.services?.service_date, 'dd/MM/yyyy', { locale: es })} ahora será dirigido por ${userProfile?.full_name || 'Director de reemplazo'}`,
             notification_category: 'agenda',
             metadata: {
               service_id: currentRequest.service_id,
@@ -319,12 +344,14 @@ const DirectorReplacementRequestOverlay = () => {
             <div className="flex items-center justify-center gap-2 text-blue-700">
               <Calendar className="w-5 h-5" />
               <span className="font-medium">
-                {currentRequest.services?.service_date && format(new Date(currentRequest.services.service_date), "EEEE, dd 'de' MMMM 'de' yyyy 'a las' HH:mm", { locale: es })}
+                {safeFormat(
+                  currentRequest.services?.service_date,
+                  "EEEE, dd 'de' MMMM 'de' yyyy 'a las' HH:mm",
+                  { locale: es }
+                )}
               </span>
             </div>
-            <div className="text-blue-600">
-              📍 {currentRequest.services?.location}
-            </div>
+            <div className="text-blue-600">📍 {currentRequest.services?.location}</div>
           </div>
 
           {/* Original Director */}
@@ -367,10 +394,10 @@ const DirectorReplacementRequestOverlay = () => {
           <div className="flex justify-between text-sm text-gray-500 border-t pt-4">
             <span className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
-              Solicitado: {format(new Date(currentRequest.requested_at), 'dd/MM/yyyy HH:mm', { locale: es })}
+              Solicitado: {safeFormat(currentRequest.requested_at, "dd/MM/yyyy HH:mm", { locale: es })}
             </span>
             <span className="text-orange-600 font-medium">
-              Expira: {format(new Date(currentRequest.expires_at), 'dd/MM/yyyy HH:mm', { locale: es })}
+              Expira: {safeFormat(currentRequest.expires_at, "dd/MM/yyyy HH:mm", { locale: es })}
             </span>
           </div>
 
