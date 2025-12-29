@@ -40,6 +40,8 @@ import { ThemeProvider } from "./hooks/useTheme";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import NotificationOverlay from "./components/notifications/NotificationOverlay";
 import OverlayManager from "./components/notifications/OverlayManager";
+import WomensDayOverlay from "./components/notifications/WomensDayOverlay";
+import { useWomensDayTheme } from "./hooks/useWomensDayTheme";
 import { useSwipeGesture } from "./hooks/useSwipeGesture";
 import { BirthdayOverlay } from "./components/birthday/BirthdayOverlay";
 import DirectorReplacementRequestOverlay from "./components/agenda/DirectorReplacementRequestOverlay";
@@ -72,6 +74,23 @@ function SidebarLayout() {
 }
 
 function AppContent() {
+  const { isWomensDay, showOverlay: showWomensDayOverlay, dismissOverlay, themeStyles } = useWomensDayTheme();
+
+  // Apply Women's Day theme styles
+  useEffect(() => {
+    if (themeStyles) {
+      const root = document.documentElement;
+      Object.entries(themeStyles).forEach(([key, value]) => {
+        root.style.setProperty(key, value as string);
+      });
+      return () => {
+        Object.keys(themeStyles).forEach((key) => {
+          root.style.removeProperty(key);
+        });
+      };
+    }
+  }, [themeStyles]);
+
   return (
     <BrowserRouter>
       {/* Overlays específicos que funcionan independientemente */}
@@ -80,6 +99,9 @@ function AppContent() {
       <DirectorReplacementNotificationOverlay />
       <SongChangeOverlay />
       <PendingSongNotifications />
+      
+      {/* Women's Day Overlay */}
+      {showWomensDayOverlay && <WomensDayOverlay onClose={dismissOverlay} />}
 
       <Routes>
         <Route path="/auth" element={<Auth />} />

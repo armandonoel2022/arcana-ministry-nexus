@@ -1,29 +1,93 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Calendar, MapPin, Clock, Church, PartyPopper } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import arcanaLogo from '@/assets/arca-noe-logo.png';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SpecialEventOverlayProps {
-  eventName: string;
-  eventDate: string;
+  eventName?: string;
+  eventDate?: string;
   eventTime?: string;
   location?: string;
   description?: string;
   eventType?: string;
+  autoFetch?: boolean; // If true, fetch the next event from DB
   onClose: () => void;
 }
 
 const SpecialEventOverlay: React.FC<SpecialEventOverlayProps> = ({
-  eventName,
-  eventDate,
-  eventTime,
-  location,
-  description,
-  eventType = 'special',
+  eventName: propEventName,
+  eventDate: propEventDate,
+  eventTime: propEventTime,
+  location: propLocation,
+  description: propDescription,
+  eventType: propEventType = 'special',
+  autoFetch = false,
   onClose,
 }) => {
+  const [eventData, setEventData] = useState<{
+    eventName: string;
+    eventDate: string;
+    eventTime?: string;
+    location?: string;
+    description?: string;
+    eventType?: string;
+  } | null>(null);
+  const [loading, setLoading] = useState(autoFetch);
+
+  useEffect(() => {
+    if (autoFetch) {
+      fetchNextEvent();
+    }
+  }, [autoFetch]);
+
+  const fetchNextEvent = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const { data, error } = await supabase
+        .from('special_events')
+        .select('*')
+        .gte('event_date', today)
+        .order('event_date', { ascending: true })
+        .limit(1)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setEventData({
+          eventName: data.title,
+          eventDate: data.event_date,
+          eventTime: data.event_date?.split('T')[1]?.slice(0, 5) || undefined,
+          location: data.location || undefined,
+          description: data.description || undefined,
+          eventType: data.event_type || 'special',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching next event:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Use fetched data or props
+  const eventName = eventData?.eventName || propEventName || 'Evento Especial';
+  const eventDate = eventData?.eventDate || propEventDate || '';
+  const eventTime = eventData?.eventTime || propEventTime;
+  const location = eventData?.location || propLocation;
+  const description = eventData?.description || propDescription;
+  const eventType = eventData?.eventType || propEventType;
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-white border-t-transparent rounded-full" />
+      </div>
+    );
+  }
   // Parse and format date safely
   const formatDate = (dateStr: string) => {
     try {

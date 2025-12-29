@@ -884,6 +884,41 @@ export type Database = {
           },
         ]
       }
+      member_aliases: {
+        Row: {
+          alias: string
+          created_at: string
+          created_by: string
+          id: string
+          is_active: boolean | null
+          profile_id: string
+        }
+        Insert: {
+          alias: string
+          created_at?: string
+          created_by: string
+          id?: string
+          is_active?: boolean | null
+          profile_id: string
+        }
+        Update: {
+          alias?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_active?: boolean | null
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_aliases_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       members: {
         Row: {
           apellidos: string
