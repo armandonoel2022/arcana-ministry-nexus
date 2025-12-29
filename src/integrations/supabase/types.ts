@@ -356,6 +356,60 @@ export type Database = {
         }
         Relationships: []
       }
+      direct_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_deleted: boolean | null
+          is_read: boolean | null
+          media_type: string | null
+          media_url: string | null
+          message: string
+          receiver_id: string
+          sender_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_deleted?: boolean | null
+          is_read?: boolean | null
+          media_type?: string | null
+          media_url?: string | null
+          message: string
+          receiver_id: string
+          sender_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_deleted?: boolean | null
+          is_read?: boolean | null
+          media_type?: string | null
+          media_url?: string | null
+          message?: string
+          receiver_id?: string
+          sender_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_messages_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       director_replacement_requests: {
         Row: {
           created_at: string
@@ -698,6 +752,45 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "special_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      frequent_contacts: {
+        Row: {
+          contact_id: string
+          id: string
+          interaction_count: number | null
+          last_interaction_at: string | null
+          user_id: string
+        }
+        Insert: {
+          contact_id: string
+          id?: string
+          interaction_count?: number | null
+          last_interaction_at?: string | null
+          user_id: string
+        }
+        Update: {
+          contact_id?: string
+          id?: string
+          interaction_count?: number | null
+          last_interaction_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "frequent_contacts_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "frequent_contacts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2508,6 +2601,19 @@ export type Database = {
       }
     }
     Views: {
+      dm_conversations: {
+        Row: {
+          conversation_partner: string | null
+          id: string | null
+          is_read: boolean | null
+          last_message: string | null
+          last_message_at: string | null
+          partner_name: string | null
+          partner_photo: string | null
+          unread_count: number | null
+        }
+        Relationships: []
+      }
       service_selected_songs: {
         Row: {
           artist: string | null
