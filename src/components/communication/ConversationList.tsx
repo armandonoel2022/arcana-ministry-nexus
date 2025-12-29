@@ -127,16 +127,35 @@ export const ConversationList = ({
       if (partnerIds.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("id, full_name, photo_url")
+          .select("id, full_name, photo_url, email")
           .in("id", partnerIds);
+
+        // Obtener fotos de members para los que no tienen foto en profiles
+        const { data: members } = await supabase
+          .from("members")
+          .select("email, photo_url, nombres, apellidos")
+          .eq("is_active", true);
 
         directConversations = (profiles || []).map(profile => {
           const msgInfo = partnerMap.get(profile.id)!;
+          
+          // Si no tiene foto en profiles, buscar en members
+          let photoUrl = profile.photo_url;
+          if (!photoUrl && members) {
+            const member = members.find(m => 
+              (m.email && profile.email && m.email.toLowerCase() === profile.email.toLowerCase()) ||
+              (profile.full_name && m.nombres && profile.full_name.toLowerCase().includes(m.nombres.toLowerCase()))
+            );
+            if (member?.photo_url) {
+              photoUrl = member.photo_url;
+            }
+          }
+
           return {
             id: `dm-${profile.id}`,
             type: "direct" as const,
             name: profile.full_name,
-            photo_url: profile.photo_url,
+            photo_url: photoUrl,
             partner_id: profile.id,
             last_message: msgInfo.message,
             last_message_at: msgInfo.created_at,

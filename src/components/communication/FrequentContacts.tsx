@@ -7,6 +7,7 @@ interface Contact {
   id: string;
   full_name: string;
   photo_url: string | null;
+  email?: string | null;
   interaction_count?: number;
 }
 
@@ -35,34 +36,69 @@ export const FrequentContacts = ({ currentUserId, onSelectContact, onShowAllCont
           profiles:contact_id (
             id,
             full_name,
-            photo_url
+            photo_url,
+            email
           )
         `)
         .eq("user_id", currentUserId)
         .order("interaction_count", { ascending: false })
         .limit(10);
 
+      let contactsList: Contact[] = [];
+
       if (frequentData && frequentData.length > 0) {
-        const mappedContacts = frequentData
+        contactsList = frequentData
           .filter(fc => fc.profiles)
           .map(fc => ({
             id: (fc.profiles as any).id,
             full_name: (fc.profiles as any).full_name,
             photo_url: (fc.profiles as any).photo_url,
+            email: (fc.profiles as any).email,
             interaction_count: fc.interaction_count
           }));
-        setContacts(mappedContacts);
       } else {
         // Si no hay contactos frecuentes, mostrar algunos perfiles activos
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("id, full_name, photo_url")
+          .select("id, full_name, photo_url, email")
           .eq("is_active", true)
           .neq("id", currentUserId)
           .limit(10);
         
-        setContacts(profiles || []);
+        contactsList = (profiles || []).map(p => ({
+          id: p.id,
+          full_name: p.full_name,
+          photo_url: p.photo_url,
+          email: p.email
+        }));
       }
+
+      // Buscar fotos en members para los que no tienen foto en profiles
+      const contactsWithoutPhoto = contactsList.filter(c => !c.photo_url);
+      if (contactsWithoutPhoto.length > 0) {
+        const { data: members } = await supabase
+          .from("members")
+          .select("email, photo_url, nombres, apellidos")
+          .eq("is_active", true);
+
+        if (members) {
+          contactsList = contactsList.map(contact => {
+            if (!contact.photo_url) {
+              // Buscar por email o por nombre
+              const member = members.find(m => 
+                (m.email && contact.email && m.email.toLowerCase() === contact.email.toLowerCase()) ||
+                (contact.full_name && m.nombres && contact.full_name.toLowerCase().includes(m.nombres.toLowerCase()))
+              );
+              if (member?.photo_url) {
+                return { ...contact, photo_url: member.photo_url };
+              }
+            }
+            return contact;
+          });
+        }
+      }
+
+      setContacts(contactsList);
     } catch (error) {
       console.error("Error fetching frequent contacts:", error);
     } finally {

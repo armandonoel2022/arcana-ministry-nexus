@@ -9,6 +9,7 @@ interface Contact {
   id: string;
   full_name: string;
   photo_url: string | null;
+  email?: string | null;
 }
 
 interface ContactSelectorProps {
@@ -28,14 +29,42 @@ export const ContactSelector = ({ currentUserId, onSelectContact, onBack }: Cont
 
   const fetchContacts = async () => {
     try {
-      const { data } = await supabase
+      const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, full_name, photo_url")
+        .select("id, full_name, photo_url, email")
         .eq("is_active", true)
         .neq("id", currentUserId)
         .order("full_name");
 
-      setContacts(data || []);
+      // Obtener fotos de members para los que no tienen foto en profiles
+      const { data: members } = await supabase
+        .from("members")
+        .select("email, photo_url, nombres, apellidos")
+        .eq("is_active", true);
+
+      const contactsWithPhotos = (profiles || []).map(profile => {
+        let photoUrl = profile.photo_url;
+        
+        // Si no tiene foto en profiles, buscar en members
+        if (!photoUrl && members) {
+          const member = members.find(m => 
+            (m.email && profile.email && m.email.toLowerCase() === profile.email.toLowerCase()) ||
+            (profile.full_name && m.nombres && profile.full_name.toLowerCase().includes(m.nombres.toLowerCase()))
+          );
+          if (member?.photo_url) {
+            photoUrl = member.photo_url;
+          }
+        }
+
+        return {
+          id: profile.id,
+          full_name: profile.full_name,
+          photo_url: photoUrl,
+          email: profile.email
+        };
+      });
+
+      setContacts(contactsWithPhotos);
     } catch (error) {
       console.error("Error fetching contacts:", error);
     } finally {
