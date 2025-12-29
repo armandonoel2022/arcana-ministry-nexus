@@ -720,7 +720,7 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-[100dvh] bg-background">
       {/* Song Limit Overlay */}
       {showSongLimitOverlay && songLimitData && (
         <SongLimitOverlay
@@ -759,11 +759,10 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
           <RoomMembersPanel
             roomId={room.id}
             roomName={room.name}
+            roomType={room.room_type}
             currentUserId={currentUser.id}
             onStartChat={(member) => {
-              if (onStartDirectChat) {
-                onStartDirectChat(member);
-              }
+              onStartDirectChat?.(member);
             }}
             onLeaveRoom={onBack}
           />
@@ -774,11 +773,11 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
       {currentUser && (
         <RoomMembersRow
           roomId={room.id}
+          roomType={room.room_type}
+          roomName={room.name}
           currentUserId={currentUser.id}
           onSelectMember={(member) => {
-            if (onStartDirectChat) {
-              onStartDirectChat(member);
-            }
+            onStartDirectChat?.(member);
           }}
         />
       )}
@@ -909,7 +908,7 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
       </div>
 
       {/* Message Input - improved visibility */}
-      <div className="border-t-2 border-primary/20 p-3 shrink-0 bg-card shadow-[0_-4px_12px_rgba(0,0,0,0.1)]">
+      <div className="border-t-2 border-primary/20 p-3 shrink-0 bg-card shadow-[0_-4px_12px_rgba(0,0,0,0.1)] pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
         {/* Toolbar para emoticones y archivos */}
         <div className="flex gap-2 mb-3 relative">
           <Button

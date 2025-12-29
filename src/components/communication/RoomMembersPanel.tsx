@@ -1,17 +1,16 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Users, MessageCircle, LogOut, Crown, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Crown, LogOut, MessageCircle, Shield, Users } from "lucide-react";
 
 interface RoomMember {
   id: string;
   full_name: string;
   photo_url: string | null;
-  email?: string | null;
   role: string;
   isCurrentUser: boolean;
 }
@@ -19,17 +18,19 @@ interface RoomMember {
 interface RoomMembersPanelProps {
   roomId: string;
   roomName: string;
+  roomType?: string;
   currentUserId: string;
   onStartChat: (member: { id: string; full_name: string; photo_url: string | null }) => void;
   onLeaveRoom?: () => void;
 }
 
-export const RoomMembersPanel = ({ 
-  roomId, 
-  roomName, 
-  currentUserId, 
+export const RoomMembersPanel = ({
+  roomId,
+  roomName,
+  roomType,
+  currentUserId,
   onStartChat,
-  onLeaveRoom 
+  onLeaveRoom,
 }: RoomMembersPanelProps) => {
   const [members, setMembers] = useState<RoomMember[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,74 +38,109 @@ export const RoomMembersPanel = ({
   const [leaving, setLeaving] = useState(false);
   const { toast } = useToast();
 
+  const isGeneralRoom = roomType === "general" || roomName?.toLowerCase().includes("general");
+
   useEffect(() => {
-    if (isOpen) {
-      fetchMembers();
-    }
-  }, [isOpen, roomId]);
+    if (isOpen) fetchMembers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, roomId, roomType, roomName, currentUserId]);
 
   const fetchMembers = async () => {
+    setLoading(true);
     try {
-      // Obtener miembros de la sala
-      const { data: roomMembers } = await supabase
-        .from("chat_room_members")
-        .select(`
-          user_id,
-          role,
-          profiles:user_id (
-            id,
-            full_name,
-            photo_url,
-            email
-          )
-        `)
-        .eq("room_id", roomId);
-
-      // Obtener fotos de members
       const { data: allMembers } = await supabase
         .from("members")
         .select("email, photo_url, nombres, apellidos")
         .eq("is_active", true);
 
-      const mappedMembers: RoomMember[] = (roomMembers || [])
-        .filter(rm => rm.profiles)
-        .map(rm => {
-          const profile = rm.profiles as any;
-          let photoUrl = profile.photo_url;
+      // Sala general: lista de usuarios activos (registrados)
+      if (isGeneralRoom) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, photo_url, email")
+          .eq("is_active", true)
+          .order("full_name");
 
-          // Buscar foto en members si no tiene en profiles
+        const mapped = (profiles || []).map((p) => {
+          let photoUrl = p.photo_url;
           if (!photoUrl && allMembers) {
-            const member = allMembers.find(m => 
-              (m.email && profile.email && m.email.toLowerCase() === profile.email.toLowerCase()) ||
-              (profile.full_name && m.nombres && profile.full_name.toLowerCase().includes(m.nombres.toLowerCase()))
+            const m = allMembers.find(
+              (mm) =>
+                (mm.email && p.email && mm.email.toLowerCase() === p.email.toLowerCase()) ||
+                (p.full_name && mm.nombres && p.full_name.toLowerCase().includes(mm.nombres.toLowerCase())),
             );
-            if (member?.photo_url) {
-              photoUrl = member.photo_url;
-            }
+            if (m?.photo_url) photoUrl = m.photo_url;
           }
-
           return {
-            id: profile.id,
-            full_name: profile.full_name,
+            id: p.id,
+            full_name: p.full_name,
             photo_url: photoUrl,
-            email: profile.email,
-            role: rm.role || "member",
-            isCurrentUser: profile.id === currentUserId
+            role: p.id === currentUserId ? "you" : "member",
+            isCurrentUser: p.id === currentUserId,
           };
         });
 
-      // Ordenar: moderadores primero, luego por nombre
-      mappedMembers.sort((a, b) => {
-        if (a.role === "moderator" && b.role !== "moderator") return -1;
-        if (b.role === "moderator" && a.role !== "moderator") return 1;
-        if (a.role === "admin" && b.role !== "admin") return -1;
-        if (b.role === "admin" && a.role !== "admin") return 1;
+        setMembers(mapped);
+        return;
+      }
+
+      // Otras salas: usar chat_room_members (sin join por FK)
+      const { data: roomMembers, error: rmError } = await supabase
+        .from("chat_room_members")
+        .select("user_id, role")
+        .eq("room_id", roomId);
+
+      if (rmError) throw rmError;
+
+      const membershipMap = new Map<string, string>();
+      (roomMembers || []).forEach((rm) => {
+        if (rm.user_id) membershipMap.set(rm.user_id, rm.role || "member");
+      });
+
+      const ids = Array.from(membershipMap.keys());
+      if (ids.length === 0) {
+        setMembers([]);
+        return;
+      }
+
+      const { data: profiles, error: pError } = await supabase
+        .from("profiles")
+        .select("id, full_name, photo_url, email")
+        .in("id", ids);
+
+      if (pError) throw pError;
+
+      const mapped: RoomMember[] = (profiles || []).map((p) => {
+        let photoUrl = p.photo_url;
+        if (!photoUrl && allMembers) {
+          const m = allMembers.find(
+            (mm) =>
+              (mm.email && p.email && mm.email.toLowerCase() === p.email.toLowerCase()) ||
+              (p.full_name && mm.nombres && p.full_name.toLowerCase().includes(mm.nombres.toLowerCase())),
+          );
+          if (m?.photo_url) photoUrl = m.photo_url;
+        }
+        const role = membershipMap.get(p.id) || "member";
+        return {
+          id: p.id,
+          full_name: p.full_name,
+          photo_url: photoUrl,
+          role,
+          isCurrentUser: p.id === currentUserId,
+        };
+      });
+
+      mapped.sort((a, b) => {
+        const rank = (r: string) => (r === "moderator" ? 0 : r === "admin" ? 1 : 2);
+        const d = rank(a.role) - rank(b.role);
+        if (d !== 0) return d;
         return a.full_name.localeCompare(b.full_name);
       });
 
-      setMembers(mappedMembers);
+      setMembers(mapped);
     } catch (error) {
       console.error("Error fetching room members:", error);
+      setMembers([]);
     } finally {
       setLoading(false);
     }
@@ -112,7 +148,6 @@ export const RoomMembersPanel = ({
 
   const handleLeaveRoom = async () => {
     if (leaving) return;
-    
     setLeaving(true);
     try {
       const { error } = await supabase
@@ -132,24 +167,19 @@ export const RoomMembersPanel = ({
       onLeaveRoom?.();
     } catch (error) {
       console.error("Error leaving room:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo salir de la sala",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "No se pudo salir de la sala", variant: "destructive" });
     } finally {
       setLeaving(false);
     }
   };
 
-  const getInitials = (name: string) => {
-    return name
+  const getInitials = (name: string) =>
+    name
       .split(" ")
       .map((word) => word[0])
       .join("")
       .toUpperCase()
       .slice(0, 2);
-  };
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -162,7 +192,6 @@ export const RoomMembersPanel = ({
     }
   };
 
-  // Colores para los bordes de avatares
   const borderColors = [
     "ring-emerald-400",
     "ring-amber-400",
@@ -171,20 +200,17 @@ export const RoomMembersPanel = ({
     "ring-violet-400",
     "ring-rose-400",
     "ring-teal-400",
-    "ring-orange-400"
+    "ring-orange-400",
   ];
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-primary-foreground hover:bg-primary-foreground/10"
-        >
+        <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10">
           <Users className="w-5 h-5" />
         </Button>
       </SheetTrigger>
+
       <SheetContent side="right" className="w-80 p-0">
         <SheetHeader className="p-4 border-b bg-primary">
           <SheetTitle className="text-primary-foreground flex items-center gap-2">
@@ -193,10 +219,10 @@ export const RoomMembersPanel = ({
           </SheetTitle>
         </SheetHeader>
 
-        <ScrollArea className="h-[calc(100vh-140px)]">
+        <ScrollArea className="h-[calc(100dvh-140px)]">
           {loading ? (
             <div className="space-y-3 p-4">
-              {[1, 2, 3, 4, 5].map(i => (
+              {[1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="flex items-center gap-3 animate-pulse">
                   <div className="w-12 h-12 rounded-full bg-muted" />
                   <div className="flex-1 space-y-2">
@@ -211,30 +237,27 @@ export const RoomMembersPanel = ({
               {members.map((member, index) => (
                 <div
                   key={member.id}
-                  className={`flex items-center gap-3 p-3 ${
-                    member.isCurrentUser ? "bg-primary/5" : "hover:bg-muted/50"
-                  }`}
+                  className={`flex items-center gap-3 p-3 ${member.isCurrentUser ? "bg-primary/5" : "hover:bg-muted/50"}`}
                 >
-                  <Avatar className={`w-12 h-12 ring-2 ${borderColors[index % borderColors.length]} ring-offset-2 ring-offset-background`}>
+                  <Avatar
+                    className={`w-12 h-12 ring-2 ${
+                      borderColors[index % borderColors.length]
+                    } ring-offset-2 ring-offset-background`}
+                  >
                     <AvatarImage src={member.photo_url || undefined} className="object-cover" />
                     <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/40 text-sm font-medium">
                       {getInitials(member.full_name)}
                     </AvatarFallback>
                   </Avatar>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-medium text-foreground truncate">
-                        {member.full_name}
-                      </span>
+                      <span className="font-medium text-foreground truncate">{member.full_name}</span>
                       {getRoleIcon(member.role)}
-                      {member.isCurrentUser && (
-                        <span className="text-xs text-muted-foreground">(Tú)</span>
-                      )}
+                      {member.isCurrentUser && <span className="text-xs text-muted-foreground">(Tú)</span>}
                     </div>
                     <p className="text-xs text-muted-foreground capitalize">
-                      {member.role === "moderator" ? "Moderador" : 
-                       member.role === "admin" ? "Admin" : "Miembro"}
+                      {member.role === "moderator" ? "Moderador" : member.role === "admin" ? "Admin" : "Miembro"}
                     </p>
                   </div>
 
@@ -244,11 +267,7 @@ export const RoomMembersPanel = ({
                       size="icon"
                       className="shrink-0 text-primary hover:bg-primary/10"
                       onClick={() => {
-                        onStartChat({
-                          id: member.id,
-                          full_name: member.full_name,
-                          photo_url: member.photo_url
-                        });
+                        onStartChat({ id: member.id, full_name: member.full_name, photo_url: member.photo_url });
                         setIsOpen(false);
                       }}
                     >
@@ -261,14 +280,8 @@ export const RoomMembersPanel = ({
           )}
         </ScrollArea>
 
-        {/* Leave room button */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-background">
-          <Button
-            variant="destructive"
-            className="w-full"
-            onClick={handleLeaveRoom}
-            disabled={leaving}
-          >
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-background pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          <Button variant="destructive" className="w-full" onClick={handleLeaveRoom} disabled={leaving}>
             <LogOut className="w-4 h-4 mr-2" />
             {leaving ? "Saliendo..." : "Salir de la sala"}
           </Button>
