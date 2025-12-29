@@ -37,6 +37,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
 
 interface Notification {
   id: string;
@@ -59,6 +60,7 @@ const NotificationCenter = () => {
     "all",
   );
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchNotifications();
@@ -234,6 +236,10 @@ const NotificationCenter = () => {
       extraordinary_rehearsal: <Volume2 className="w-5 h-5 text-indigo-600" />,
       ministry_instructions: <FileText className="w-5 h-5 text-sky-600" />,
       birthday: <Gift className="w-5 h-5 text-pink-600" />,
+      pregnancy_reveal: <Heart className="w-5 h-5 text-rose-500" />,
+      birth_announcement: <Gift className="w-5 h-5 text-amber-500" />,
+      special_event: <Church className="w-5 h-5 text-purple-600" />,
+      director_change: <UserCheck className="w-5 h-5 text-orange-600" />,
     };
 
     // Iconos para notificaciones del sistema (categorías específicas)
@@ -306,8 +312,88 @@ const NotificationCenter = () => {
       "extraordinary_rehearsal",
       "ministry_instructions",
       "birthday",
+      "birthday_daily",
+      "pregnancy_reveal",
+      "birth_announcement",
+      "director_change",
+      "special_event",
     ];
     return overlayTypes.includes(notification.type) || notification.notification_category === "scheduled";
+  };
+
+  // Abrir overlay correspondiente al hacer clic en una notificación
+  const openOverlayFromNotification = (notification: Notification) => {
+    console.log("📱 [NotificationCenter] Abriendo overlay para notificación:", notification.type, notification.id);
+
+    // Marcar como leída
+    markAsRead(notification.id);
+
+    const metadata = notification.metadata || {};
+
+    // Dispatch custom event to show overlay
+    const overlayData = {
+      id: notification.id,
+      type: notification.type,
+      title: notification.title,
+      message: notification.message,
+      metadata: metadata,
+    };
+
+    // Handle special cases
+    switch (notification.type) {
+      case "birthday":
+      case "birthday_daily":
+        window.dispatchEvent(
+          new CustomEvent("testBirthdayOverlay", {
+            detail: {
+              id: metadata.birthday_member_id || metadata.member_id || notification.id,
+              nombres: metadata.birthday_member_name?.split(" ")[0] || "Cumpleañero",
+              apellidos: metadata.birthday_member_name?.split(" ").slice(1).join(" ") || "",
+              photo_url: metadata.birthday_member_photo,
+              cargo: metadata.member_role || "Integrante",
+              fecha_nacimiento: metadata.birthday_date || new Date().toISOString().split("T")[0],
+            },
+          })
+        );
+        break;
+
+      case "director_change":
+      case "director_replacement_request":
+      case "director_replacement_response":
+        // Navigate to replacements page for director-related notifications
+        navigate("/agenda");
+        break;
+
+      default:
+        // Dispatch generic overlay event
+        window.dispatchEvent(new CustomEvent("showOverlay", { detail: overlayData }));
+        break;
+    }
+  };
+
+  // Determinar si se puede abrir un overlay para esta notificación
+  const canOpenOverlay = (notification: Notification): boolean => {
+    const openableTypes = [
+      "service_overlay",
+      "daily_verse",
+      "daily_advice",
+      "death_announcement",
+      "meeting_announcement",
+      "special_service",
+      "prayer_request",
+      "blood_donation",
+      "extraordinary_rehearsal",
+      "ministry_instructions",
+      "birthday",
+      "birthday_daily",
+      "pregnancy_reveal",
+      "birth_announcement",
+      "director_change",
+      "director_replacement_request",
+      "director_replacement_response",
+      "special_event",
+    ];
+    return openableTypes.includes(notification.type);
   };
 
   const filteredNotifications = notifications.filter((notification) => {
@@ -420,7 +506,13 @@ const NotificationCenter = () => {
                   className={`border-l-4 ${getPriorityColor(notification.priority)} ${
                     !notification.is_read ? "ring-2 ring-blue-100" : ""
                   } hover:shadow-md transition-shadow cursor-pointer w-full mx-0`}
-                  onClick={() => !notification.is_read && markAsRead(notification.id)}
+                  onClick={() => {
+                    if (canOpenOverlay(notification)) {
+                      openOverlayFromNotification(notification);
+                    } else if (!notification.is_read) {
+                      markAsRead(notification.id);
+                    }
+                  }}
                 >
                   <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-3">
                     <div className="flex items-start justify-between gap-2 w-full">
@@ -675,6 +767,41 @@ const NotificationCenter = () => {
                             </>
                           )}
 
+                          {/* Información para pregnancy_reveal */}
+                          {notification.type === "pregnancy_reveal" && notification.metadata && (
+                            <div className="text-center p-3 bg-gradient-to-r from-rose-50 via-amber-50 to-sky-50 rounded-lg">
+                              <div className="text-3xl mb-2">👶💕</div>
+                              <p className="font-semibold text-rose-600">
+                                {notification.metadata.parent_names}
+                              </p>
+                              {notification.metadata.due_date && (
+                                <p className="text-sm text-gray-600 mt-1">
+                                  Fecha esperada: {notification.metadata.due_date}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Información para birth_announcement */}
+                          {notification.type === "birth_announcement" && notification.metadata && (
+                            <div className="text-center p-3 bg-gradient-to-r from-amber-50 via-rose-50 to-violet-50 rounded-lg">
+                              <div className="text-3xl mb-2">👶🎉✨</div>
+                              {notification.metadata.baby_name && (
+                                <p className="font-bold text-lg text-rose-600">
+                                  {notification.metadata.baby_name}
+                                </p>
+                              )}
+                              <p className="text-sm text-gray-700 mt-1">
+                                Padres: {notification.metadata.parent_names}
+                              </p>
+                              {notification.metadata.birth_date && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {notification.metadata.birth_date}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
                           {/* Metadata general - NO mostrar campos innecesarios */}
                         </div>
                       </div>
@@ -713,6 +840,24 @@ const NotificationCenter = () => {
                             <span className="font-medium break-words">{notification.metadata.selected_by_name}</span>
                           </div>
                         )}
+                      </div>
+                    )}
+
+                    {/* Botón para ver overlay completo */}
+                    {canOpenOverlay(notification) && (
+                      <div className="mt-3 pt-3 border-t border-gray-200 flex justify-center sm:justify-start">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openOverlayFromNotification(notification);
+                          }}
+                        >
+                          <Megaphone className="w-4 h-4" />
+                          Ver Detalles
+                        </Button>
                       </div>
                     )}
                   </CardContent>

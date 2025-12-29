@@ -1,6 +1,8 @@
 import React from 'react';
-import { X, Heart, Baby, Sparkles } from 'lucide-react';
+import { X, Heart, Baby, Sparkles, MessageCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface PregnancyRevealOverlayProps {
   parentNames: string;
@@ -17,6 +19,13 @@ const PregnancyRevealOverlay = ({
   dueDate,
   onClose 
 }: PregnancyRevealOverlayProps) => {
+  const navigate = useNavigate();
+
+  const handleGoToCongratulate = () => {
+    onClose();
+    navigate('/communication');
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-rose-50 via-amber-50 to-sky-50 border-2 border-rose-200 shadow-2xl">
@@ -81,11 +90,29 @@ const PregnancyRevealOverlay = ({
           </div>
 
           {/* Footer con mensaje inspirador */}
-          <div className="text-center p-4 bg-gradient-to-r from-rose-100 via-amber-100 to-sky-100 rounded-lg">
+          <div className="text-center p-4 bg-gradient-to-r from-rose-100 via-amber-100 to-sky-100 rounded-lg mb-5">
             <p className="text-sm text-gray-700 italic">
               "He aquí, herencia de Jehová son los hijos; cosa de estima el fruto del vientre."
             </p>
             <p className="text-xs text-gray-500 mt-1">— Salmos 127:3</p>
+          </div>
+
+          {/* Botones de acción */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button
+              onClick={handleGoToCongratulate}
+              className="bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-semibold px-8 py-3 text-base shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+            >
+              <MessageCircle className="w-5 h-5" />
+              Ir a Felicitar
+            </Button>
+            <Button
+              onClick={onClose}
+              variant="outline"
+              className="border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 px-8 py-3 text-base font-semibold transition-all duration-200"
+            >
+              Cerrar
+            </Button>
           </div>
 
           {/* Decoraciones flotantes */}
