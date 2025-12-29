@@ -720,7 +720,7 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
   }
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-background">
+    <div className="flex flex-col min-h-[100dvh] h-[100dvh] bg-background">
       {/* Song Limit Overlay */}
       {showSongLimitOverlay && songLimitData && (
         <SongLimitOverlay
@@ -785,7 +785,7 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
       {/* Messages Area */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-3 space-y-3 bg-muted/30"
+        className="flex-1 overflow-y-auto p-3 space-y-3 bg-muted/30 pb-36 overscroll-contain"
       >
         {messages.length === 0 ? (
           <div className="text-center text-gray-500 py-8">No hay mensajes aún. ¡Sé el primero en escribir!</div>
@@ -908,7 +908,7 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
       </div>
 
       {/* Message Input - improved visibility */}
-      <div className="border-t-2 border-primary/20 p-3 shrink-0 bg-card shadow-[0_-4px_12px_rgba(0,0,0,0.1)] pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+      <div className="sticky bottom-0 z-20 border-t-2 border-primary/20 p-3 shrink-0 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 shadow-[0_-6px_18px_rgba(0,0,0,0.12)] pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
         {/* Toolbar para emoticones y archivos */}
         <div className="flex gap-2 mb-3 relative">
           <Button
