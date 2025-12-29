@@ -10,10 +10,11 @@ import { createBroadcastNotification } from '@/services/notificationService';
 interface DailyAdviceOverlayProps {
   title?: string;
   message?: string;
+  skipSaveNotification?: boolean;
   onClose: () => void;
 }
 
-export const DailyAdviceOverlay = ({ title: propTitle, message: propMessage, onClose }: DailyAdviceOverlayProps) => {
+export const DailyAdviceOverlay = ({ title: propTitle, message: propMessage, skipSaveNotification = false, onClose }: DailyAdviceOverlayProps) => {
   const downloadRef = useRef<HTMLDivElement>(null);
   const [title, setTitle] = useState(propTitle || '');
   const [message, setMessage] = useState(propMessage || '');
@@ -21,9 +22,10 @@ export const DailyAdviceOverlay = ({ title: propTitle, message: propMessage, onC
   const [notificationSaved, setNotificationSaved] = useState(false);
 
   // Guardar notificación cuando tenemos los datos del consejo
+  // Solo si no viene del centro de notificaciones (skipSaveNotification = false)
   useEffect(() => {
     const saveNotification = async () => {
-      if (title && message && !notificationSaved) {
+      if (title && message && !notificationSaved && !skipSaveNotification) {
         try {
           console.log("💡 [DailyAdviceOverlay] Guardando consejo en centro de notificaciones...");
           
@@ -48,7 +50,7 @@ export const DailyAdviceOverlay = ({ title: propTitle, message: propMessage, onC
     };
 
     saveNotification();
-  }, [title, message, notificationSaved]);
+  }, [title, message, notificationSaved, skipSaveNotification]);
 
   // Auto-cargar consejo si no se proporcionaron props
   useEffect(() => {

@@ -884,10 +884,13 @@ const OverlayManager: React.FC = () => {
         if (!dynamicVerseData) {
           return null; // Esperar a que carguen los datos
         }
+        // Skip saving notification if opened from NotificationCenter
+        const skipVerseNotification = activeOverlay.id?.startsWith("notification-click-");
         return (
           <DailyVerseOverlay
             verseText={dynamicVerseData.text}
             verseReference={dynamicVerseData.reference}
+            skipSaveNotification={skipVerseNotification}
             onClose={handleDismissWithQueue}
           />
         );
@@ -897,10 +900,13 @@ const OverlayManager: React.FC = () => {
         if (!dynamicAdviceData) {
           return null; // Esperar a que carguen los datos
         }
+        // Skip saving notification if opened from NotificationCenter
+        const skipAdviceNotification = activeOverlay.id?.startsWith("notification-click-");
         return (
           <DailyAdviceOverlay
             title={dynamicAdviceData.title}
             message={dynamicAdviceData.message}
+            skipSaveNotification={skipAdviceNotification}
             onClose={handleDismissWithQueue}
           />
         );

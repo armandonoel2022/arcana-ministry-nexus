@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, Baby, Heart, Star, Calendar, Weight, Ruler, MessageCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 interface BirthAnnouncementOverlayProps {
   babyName?: string;
@@ -28,10 +29,33 @@ const BirthAnnouncementOverlay = ({
   onClose 
 }: BirthAnnouncementOverlayProps) => {
   const navigate = useNavigate();
+  const [generalRoomId, setGeneralRoomId] = useState<string | null>(null);
+
+  // Get the general chat room ID
+  useEffect(() => {
+    const fetchGeneralRoom = async () => {
+      const { data } = await supabase
+        .from('chat_rooms')
+        .select('id')
+        .eq('room_type', 'general')
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle();
+      
+      if (data) {
+        setGeneralRoomId(data.id);
+      }
+    };
+    fetchGeneralRoom();
+  }, []);
 
   const handleGoToCongratulate = () => {
     onClose();
-    navigate('/communication');
+    if (generalRoomId) {
+      navigate(`/communication?room=${generalRoomId}`);
+    } else {
+      navigate('/communication');
+    }
   };
 
   return (

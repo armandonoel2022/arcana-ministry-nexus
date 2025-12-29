@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,7 @@ interface ChatRoomData {
 }
 
 export const ChatRooms = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [rooms, setRooms] = useState<ChatRoomData[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<ChatRoomData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,6 +86,17 @@ export const ChatRooms = () => {
         })) || [];
 
       setRooms(roomsWithCount);
+
+      // Check if there's a room ID in URL params
+      const roomIdFromUrl = searchParams.get('room');
+      if (roomIdFromUrl && roomsWithCount.length > 0) {
+        const roomToOpen = roomsWithCount.find(r => r.id === roomIdFromUrl);
+        if (roomToOpen && roomToOpen.is_member) {
+          setSelectedRoom(roomToOpen);
+          // Clear the URL param after opening
+          setSearchParams({});
+        }
+      }
     } catch (error) {
       console.error("Error in fetchRooms:", error);
       toast({
