@@ -10,6 +10,8 @@ import ExtraordinaryRehearsalOverlay from "./ExtraordinaryRehearsalOverlay";
 import BloodDonationOverlay from "./BloodDonationOverlay";
 import PregnancyRevealOverlay from "./PregnancyRevealOverlay";
 import BirthAnnouncementOverlay from "./BirthAnnouncementOverlay";
+import DirectorChangeOverlay from "./DirectorChangeOverlay";
+import SpecialEventOverlay from "./SpecialEventOverlay";
 import { toast } from "sonner";
 import { createBroadcastNotification, NotificationType } from "@/services/notificationService";
 
@@ -100,17 +102,43 @@ const OverlayManager: React.FC = () => {
       console.log("📱 [OverlayManager] showOverlay()", {
         id: notification.id,
         type: notification.type,
-        hasActive: Boolean(activeOverlay),
         currentId: currentOverlayId.current,
       });
+
+      const isPreview = notification.id?.startsWith("preview-");
+      const isFromNotificationCenter = notification.id?.startsWith("notification-click-");
+
+      // For notification center clicks, always allow reopening (use unique timestamp ID)
+      if (isFromNotificationCenter) {
+        console.log("📱 [OverlayManager] Overlay desde NotificationCenter, permitiendo siempre");
+        currentOverlayId.current = notification.id;
+        
+        // Special handling for birthday overlays
+        if (notification.type === 'birthday' || notification.type === 'birthday_daily') {
+          const memberData = notification.metadata || {};
+          window.dispatchEvent(new CustomEvent('testBirthdayOverlay', {
+            detail: {
+              id: memberData.birthday_member_id || memberData.member_id || notification.id,
+              nombres: memberData.birthday_member_name?.split(' ')[0] || 'Cumpleañero',
+              apellidos: memberData.birthday_member_name?.split(' ').slice(1).join(' ') || '',
+              photo_url: memberData.birthday_member_photo,
+              cargo: memberData.member_role || 'Integrante',
+              fecha_nacimiento: memberData.birthday_date || new Date().toISOString().split('T')[0],
+            }
+          }));
+          return;
+        }
+        
+        setActiveOverlay(notification);
+        setOverlayType(notification.type);
+        return;
+      }
 
       // PREVENT duplicate overlays - if same ID is already showing, skip
       if (currentOverlayId.current === notification.id) {
         console.log("📱 [OverlayManager] Overlay ya visible, ignorando duplicado:", notification.id);
         return;
       }
-
-      const isPreview = notification.id?.startsWith("preview-");
 
       // Previews should always be immediate/replacing (never queued)
       if (isPreview) {
@@ -121,7 +149,7 @@ const OverlayManager: React.FC = () => {
       }
 
       // Non-preview: if an overlay is already active, queue it
-      if (activeOverlay && currentOverlayId.current) {
+      if (currentOverlayId.current) {
         console.log("📱 [OverlayManager] Overlay activo, añadiendo a cola:", notification.type);
         overlayQueue.current.push(notification);
         return;
@@ -158,7 +186,7 @@ const OverlayManager: React.FC = () => {
     currentOverlayId.current = notification.id;
     setActiveOverlay(notification);
     setOverlayType(notification.type);
-  }, [saveOverlayToNotifications, activeOverlay]);
+  }, [saveOverlayToNotifications]);
 
   // Function to dismiss overlay and mark as read
   const handleDismiss = useCallback(async () => {
@@ -948,6 +976,36 @@ const OverlayManager: React.FC = () => {
             weight={metadata.baby_weight || metadata.weight}
             height={metadata.baby_height || metadata.height}
             message={metadata.birth_message || metadata.message || activeOverlay.message}
+            onClose={handleDismissWithQueue}
+          />
+        );
+
+      case "director_change":
+      case "director_replacement_request":
+      case "director_replacement_response":
+        return (
+          <DirectorChangeOverlay
+            serviceDate={metadata.service_date || new Date().toISOString()}
+            serviceTime={metadata.service_time || "10:45 a.m."}
+            originalDirectorName={metadata.original_director_name || metadata.requester_name || "Director Original"}
+            originalDirectorPhoto={metadata.original_director_photo || metadata.requester_photo}
+            newDirectorName={metadata.new_director_name || metadata.responder_name || "Nuevo Director"}
+            newDirectorPhoto={metadata.new_director_photo || metadata.responder_photo}
+            status={metadata.status || "accepted"}
+            hasSongSelection={metadata.has_song_selection || false}
+            onClose={handleDismissWithQueue}
+          />
+        );
+
+      case "special_event":
+        return (
+          <SpecialEventOverlay
+            eventName={metadata.event_name || activeOverlay.title || "Evento Especial"}
+            eventDate={metadata.event_date || new Date().toISOString()}
+            eventTime={metadata.event_time}
+            location={metadata.location}
+            description={metadata.description || activeOverlay.message}
+            eventType={metadata.event_type}
             onClose={handleDismissWithQueue}
           />
         );
