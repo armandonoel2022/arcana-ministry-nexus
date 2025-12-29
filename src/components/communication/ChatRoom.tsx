@@ -14,6 +14,7 @@ import { EmoticonPicker } from "./EmoticonPicker";
 import { VoiceMessagePlayer } from "./VoiceMessagePlayer";
 import { BuzzButton } from "./BuzzButton";
 import { RoomMembersPanel } from "./RoomMembersPanel";
+import { RoomMembersRow } from "./RoomMembersRow";
 import { useEmoticons } from "@/hooks/useEmoticons";
 import { useSounds } from "@/hooks/useSounds";
 import { useMediaUpload } from "@/hooks/useMediaUpload";
@@ -769,10 +770,23 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
         )}
       </div>
 
+      {/* Members Row - horizontal scroll of avatars */}
+      {currentUser && (
+        <RoomMembersRow
+          roomId={room.id}
+          currentUserId={currentUser.id}
+          onSelectMember={(member) => {
+            if (onStartDirectChat) {
+              onStartDirectChat(member);
+            }
+          }}
+        />
+      )}
+
       {/* Messages Area */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-3 space-y-3"
+        className="flex-1 overflow-y-auto p-3 space-y-3 bg-muted/30"
       >
         {messages.length === 0 ? (
           <div className="text-center text-gray-500 py-8">No hay mensajes aún. ¡Sé el primero en escribir!</div>
@@ -894,99 +908,102 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Message Input */}
-      <div className="border-t p-2 sm:p-3 shrink-0 bg-background">
-            {/* Toolbar para emoticones y archivos */}
-            <div className="flex gap-2 mb-2 relative">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowEmoticons(!showEmoticons)}
-                title="Emoticones"
-              >
-                <Smile className="w-4 h-4" />
-              </Button>
+      {/* Message Input - improved visibility */}
+      <div className="border-t-2 border-primary/20 p-3 shrink-0 bg-card shadow-[0_-4px_12px_rgba(0,0,0,0.1)]">
+        {/* Toolbar para emoticones y archivos */}
+        <div className="flex gap-2 mb-3 relative">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowEmoticons(!showEmoticons)}
+            title="Emoticones"
+            className="shadow-sm"
+          >
+            <Smile className="w-4 h-4" />
+          </Button>
 
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => inputRef.current?.click()}
-                disabled={uploading}
-                title="Adjuntar archivo"
-              >
-                <Paperclip className="w-4 h-4" />
-              </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            title="Adjuntar archivo"
+            className="shadow-sm"
+          >
+            <Paperclip className="w-4 h-4" />
+          </Button>
 
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setNewMessage((prev) => prev + " @");
-                  document.querySelector("input")?.focus();
-                }}
-                title="Mencionar usuario"
-              >
-                <AtSign className="w-4 h-4" />
-              </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              setNewMessage((prev) => prev + " @");
+              document.querySelector("input")?.focus();
+            }}
+            title="Mencionar usuario"
+            className="shadow-sm"
+          >
+            <AtSign className="w-4 h-4" />
+          </Button>
 
-              <BuzzButton currentUserId={currentUser?.id || ""} />
+          <BuzzButton currentUserId={currentUser?.id || ""} />
 
-              <input
-                ref={inputRef}
-                type="file"
-                accept="image/*,video/*"
-                className="hidden"
-                onChange={handleFileSelect}
-              />
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*,video/*"
+            className="hidden"
+            onChange={handleFileSelect}
+          />
 
-              <EmoticonPicker
-                visible={showEmoticons}
-                onClose={() => setShowEmoticons(false)}
-                onSelect={(emoticon) => {
-                  setNewMessage((prev) => prev + emoticon);
-                  setShowEmoticons(false);
-                }}
-              />
+          <EmoticonPicker
+            visible={showEmoticons}
+            onClose={() => setShowEmoticons(false)}
+            onSelect={(emoticon) => {
+              setNewMessage((prev) => prev + emoticon);
+              setShowEmoticons(false);
+            }}
+          />
 
-              {uploading && (
-                <div className="absolute left-0 bottom-full mb-2 bg-white p-2 rounded-lg shadow-md">
-                  <div className="text-xs text-muted-foreground">Subiendo... {progress.toFixed(0)}%</div>
-                  <div className="w-32 h-1 bg-secondary rounded-full mt-1">
-                    <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {attachedMedia && (
-              <div className="mb-2 p-2 bg-secondary rounded-lg flex items-center justify-between">
-                <span className="text-sm truncate flex-1">📎 {attachedMedia.name}</span>
-                <Button type="button" variant="ghost" size="sm" onClick={() => setAttachedMedia(null)}>
-                  ✕
-                </Button>
+          {uploading && (
+            <div className="absolute left-0 bottom-full mb-2 bg-card p-2 rounded-lg shadow-lg border">
+              <div className="text-xs text-muted-foreground">Subiendo... {progress.toFixed(0)}%</div>
+              <div className="w-32 h-1.5 bg-secondary rounded-full mt-1">
+                <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
               </div>
-            )}
+            </div>
+          )}
+        </div>
 
-            <div className="flex gap-2 items-end pb-2">
-              <VoiceNoteRecorder onVoiceNote={handleVoiceNote} roomId={room.id} userId={currentUser?.id || ""} />
-              <Input
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                onFocus={() => setTimeout(scrollToBottom, 50)}
-                placeholder="Escribe... (usa :) para emoticones, @ para mencionar)"
-                className="flex-1"
-              />
-              <Button
-                onClick={() => sendMessage()}
-                disabled={!newMessage.trim() && !attachedMedia}
-                className="bg-arcana-blue-gradient hover:opacity-90"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
+        {attachedMedia && (
+          <div className="mb-3 p-2 bg-secondary rounded-lg flex items-center justify-between border">
+            <span className="text-sm truncate flex-1">📎 {attachedMedia.name}</span>
+            <Button type="button" variant="ghost" size="sm" onClick={() => setAttachedMedia(null)}>
+              ✕
+            </Button>
+          </div>
+        )}
+
+        <div className="flex gap-2 items-center">
+          <VoiceNoteRecorder onVoiceNote={handleVoiceNote} roomId={room.id} userId={currentUser?.id || ""} />
+          <Input
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            onFocus={() => setTimeout(scrollToBottom, 50)}
+            placeholder="Escribe un mensaje..."
+            className="flex-1 bg-background border-2 focus:border-primary h-11 text-base"
+          />
+          <Button
+            onClick={() => sendMessage()}
+            disabled={!newMessage.trim() && !attachedMedia}
+            className="bg-primary hover:bg-primary/90 h-11 px-5 shadow-md"
+          >
+            <Send className="w-5 h-5" />
+          </Button>
         </div>
       </div>
     </div>
