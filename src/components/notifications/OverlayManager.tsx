@@ -994,9 +994,9 @@ const OverlayManager: React.FC = () => {
           <DirectorChangeOverlay
             serviceDate={metadata.service_date || new Date().toISOString()}
             serviceTime={metadata.service_time || "10:45 a.m."}
-            originalDirectorName={metadata.original_director_name || metadata.requester_name || "Director Original"}
+            originalDirectorName={metadata.original_director_name || metadata.original_director || metadata.requester_name || "Director Original"}
             originalDirectorPhoto={metadata.original_director_photo || metadata.requester_photo}
-            newDirectorName={metadata.new_director_name || metadata.responder_name || "Nuevo Director"}
+            newDirectorName={metadata.new_director_name || metadata.new_director || metadata.responder_name || "Nuevo Director"}
             newDirectorPhoto={metadata.new_director_photo || metadata.responder_photo}
             status={metadata.status || "accepted"}
             hasSongSelection={metadata.has_song_selection || false}
