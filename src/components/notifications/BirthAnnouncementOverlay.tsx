@@ -1,6 +1,8 @@
 import React from 'react';
-import { X, Baby, Heart, Star, Calendar, Weight, Ruler } from 'lucide-react';
+import { X, Baby, Heart, Star, Calendar, Weight, Ruler, MessageCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface BirthAnnouncementOverlayProps {
   babyName?: string;
@@ -25,6 +27,13 @@ const BirthAnnouncementOverlay = ({
   message,
   onClose 
 }: BirthAnnouncementOverlayProps) => {
+  const navigate = useNavigate();
+
+  const handleGoToCongratulate = () => {
+    onClose();
+    navigate('/communication');
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-amber-50 via-rose-50 to-violet-50 border-2 border-amber-200 shadow-2xl">
@@ -122,11 +131,29 @@ const BirthAnnouncementOverlay = ({
           )}
 
           {/* Footer inspirador */}
-          <div className="text-center p-4 bg-gradient-to-r from-amber-100 via-rose-100 to-violet-100 rounded-lg">
+          <div className="text-center p-4 bg-gradient-to-r from-amber-100 via-rose-100 to-violet-100 rounded-lg mb-5">
             <p className="text-sm text-gray-700 italic">
               "Antes que te formase en el vientre te conocí, y antes que nacieses te santifiqué."
             </p>
             <p className="text-xs text-gray-500 mt-1">— Jeremías 1:5</p>
+          </div>
+
+          {/* Botones de acción */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button
+              onClick={handleGoToCongratulate}
+              className="bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white font-semibold px-8 py-3 text-base shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+            >
+              <MessageCircle className="w-5 h-5" />
+              Ir a Felicitar
+            </Button>
+            <Button
+              onClick={onClose}
+              variant="outline"
+              className="border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 px-8 py-3 text-base font-semibold transition-all duration-200"
+            >
+              Cerrar
+            </Button>
           </div>
 
           {/* Decoraciones */}
