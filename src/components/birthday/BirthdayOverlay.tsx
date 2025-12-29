@@ -219,8 +219,8 @@ export const BirthdayOverlay = () => {
                 {/* Message */}
                 <div className="bg-gradient-to-r from-yellow-50 via-orange-50 to-pink-50 rounded-2xl p-8 border-2 border-orange-200 shadow-inner">
                   <p className="text-xl text-gray-700 leading-relaxed">
-                    En tu día especial, toda la familia de{" "}
-                    <span className="font-bold text-orange-600">ADN Ministerio</span>{" "}
+                    En tu día especial, toda la familia del{" "}
+                    <span className="font-bold text-orange-600">Ministerio ADN Arca de Noé</span>{" "}
                     te desea un feliz cumpleaños lleno de bendiciones y alegría. ✨
                   </p>
                 </div>
