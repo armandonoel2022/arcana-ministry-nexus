@@ -12,6 +12,7 @@ import PregnancyRevealOverlay from "./PregnancyRevealOverlay";
 import BirthAnnouncementOverlay from "./BirthAnnouncementOverlay";
 import DirectorChangeOverlay from "./DirectorChangeOverlay";
 import SpecialEventOverlay from "./SpecialEventOverlay";
+import VoiceReplacementOverlay from "./VoiceReplacementOverlay";
 import { toast } from "sonner";
 import { createBroadcastNotification, NotificationType } from "@/services/notificationService";
 
@@ -1006,12 +1007,34 @@ const OverlayManager: React.FC = () => {
       case "special_event":
         return (
           <SpecialEventOverlay
-            eventName={metadata.event_name || activeOverlay.title || "Evento Especial"}
-            eventDate={metadata.event_date || new Date().toISOString()}
+            eventName={metadata.event_name || activeOverlay.title || undefined}
+            eventDate={metadata.event_date || undefined}
             eventTime={metadata.event_time}
             location={metadata.location}
-            description={metadata.description || activeOverlay.message}
+            description={metadata.description || activeOverlay.message || undefined}
             eventType={metadata.event_type}
+            autoFetch={!metadata.event_name && !metadata.event_date} // Auto-fetch if no data provided
+            onClose={handleDismissWithQueue}
+          />
+        );
+
+      case "voice_replacement":
+      case "voice_replacement_request":
+      case "voice_replacement_response":
+        return (
+          <VoiceReplacementOverlay
+            serviceDate={metadata.service_date || new Date().toISOString()}
+            serviceTime={metadata.service_time || "10:45 a.m."}
+            serviceTitle={metadata.service_title || "Servicio de Alabanza"}
+            originalMemberName={metadata.original_member_name || "Corista"}
+            originalMemberPhoto={metadata.original_member_photo}
+            replacementMemberName={metadata.replacement_member_name || "Reemplazo"}
+            replacementMemberPhoto={metadata.replacement_member_photo}
+            voiceType={metadata.voice_type || "Soprano"}
+            micPosition={metadata.mic_position}
+            groupName={metadata.group_name || "Grupo de Alabanza"}
+            status={metadata.status || "pending"}
+            reason={metadata.reason}
             onClose={handleDismissWithQueue}
           />
         );
