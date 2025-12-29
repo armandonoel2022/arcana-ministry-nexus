@@ -330,9 +330,12 @@ const NotificationCenter = () => {
 
     const metadata = notification.metadata || {};
 
+    // Use a unique ID with timestamp to allow reopening the same notification
+    const uniqueId = `notification-click-${notification.id}-${Date.now()}`;
+
     // Dispatch custom event to show overlay
     const overlayData = {
-      id: notification.id,
+      id: uniqueId,
       type: notification.type,
       title: notification.title,
       message: notification.message,
@@ -360,8 +363,8 @@ const NotificationCenter = () => {
       case "director_change":
       case "director_replacement_request":
       case "director_replacement_response":
-        // Navigate to replacements page for director-related notifications
-        navigate("/agenda");
+        // Dispatch overlay event for director changes
+        window.dispatchEvent(new CustomEvent("showOverlay", { detail: overlayData }));
         break;
 
       default:
