@@ -13,6 +13,7 @@ import { SongLimitOverlay } from "./SongLimitOverlay";
 import { EmoticonPicker } from "./EmoticonPicker";
 import { VoiceMessagePlayer } from "./VoiceMessagePlayer";
 import { BuzzButton } from "./BuzzButton";
+import { RoomMembersPanel } from "./RoomMembersPanel";
 import { useEmoticons } from "@/hooks/useEmoticons";
 import { useSounds } from "@/hooks/useSounds";
 import { useMediaUpload } from "@/hooks/useMediaUpload";
@@ -30,7 +31,7 @@ interface Message {
   id: string;
   message: string;
   created_at: string;
-  user_id: string | null; // Allow null for bot messages
+  user_id: string | null;
   is_bot?: boolean;
   actions?: BotAction[];
   media_url?: string;
@@ -44,9 +45,10 @@ interface Message {
 interface ChatRoomProps {
   room: ChatRoomData;
   onBack?: () => void;
+  onStartDirectChat?: (partner: { id: string; full_name: string; photo_url: string | null }) => void;
 }
 
-export const ChatRoom = ({ room, onBack }: ChatRoomProps) => {
+export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -752,9 +754,19 @@ export const ChatRoom = ({ room, onBack }: ChatRoomProps) => {
           <h2 className="font-semibold text-primary-foreground truncate">{room.name}</h2>
           {room.description && <p className="text-xs text-primary-foreground/70 truncate">{room.description}</p>}
         </div>
-        <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10">
-          <MoreVertical className="w-5 h-5" />
-        </Button>
+        {currentUser && (
+          <RoomMembersPanel
+            roomId={room.id}
+            roomName={room.name}
+            currentUserId={currentUser.id}
+            onStartChat={(member) => {
+              if (onStartDirectChat) {
+                onStartDirectChat(member);
+              }
+            }}
+            onLeaveRoom={onBack}
+          />
+        )}
       </div>
 
       {/* Messages Area */}
