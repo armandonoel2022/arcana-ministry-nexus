@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Users, Bot, Smile, Paperclip, AtSign } from "lucide-react";
+import { Send, Users, Bot, Smile, Paperclip, AtSign, ArrowLeft, MoreVertical } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ArcanaBot, BotAction } from "./ArcanaBot";
 import { ArcanaAvatar } from "./ArcanaAvatar";
@@ -717,7 +717,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
   }
 
   return (
-    <div className="space-y-4 relative">
+    <div className="flex flex-col h-screen bg-background">
       {/* Song Limit Overlay */}
       {showSongLimitOverlay && songLimitData && (
         <SongLimitOverlay
@@ -732,28 +732,36 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
 
       {/* Avatar animado de ARCANA */}
       <ArcanaAvatar isActive={arcanaActive} expression={arcanaExpression} position="bottom-right" />
+
       {/* Room Header */}
-      <Card className="bg-gradient-to-r from-arcana-blue-50 to-arcana-gold-50">
-        <CardHeader className="pb-2 sm:pb-3">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-arcana-blue-gradient rounded-full flex items-center justify-center flex-shrink-0">
-              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <CardTitle className="text-base sm:text-xl truncate">{room.name}</CardTitle>
-              {room.description && <p className="text-xs sm:text-sm text-gray-600 truncate">{room.description}</p>}
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
+      <div className="bg-primary px-3 py-2 flex items-center gap-3 shadow-md shrink-0">
+        {onBack && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onBack}
+            className="text-primary-foreground hover:bg-primary-foreground/10"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+        )}
+        <div className="w-10 h-10 bg-primary-foreground/20 rounded-full flex items-center justify-center">
+          <Users className="w-5 h-5 text-primary-foreground" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2 className="font-semibold text-primary-foreground truncate">{room.name}</h2>
+          {room.description && <p className="text-xs text-primary-foreground/70 truncate">{room.description}</p>}
+        </div>
+        <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10">
+          <MoreVertical className="w-5 h-5" />
+        </Button>
+      </div>
 
       {/* Messages Area */}
-      <Card className="h-[60vh] sm:h-[70vh]">
-        <CardContent className="p-0 h-full flex flex-col">
-          <div
-            ref={messagesContainerRef}
-            className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth"
-          >
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-3 space-y-3"
+      >
             {messages.length === 0 ? (
               <div className="text-center text-gray-500 py-8">No hay mensajes aún. ¡Sé el primero en escribir!</div>
             ) : (
@@ -875,7 +883,7 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
           </div>
 
           {/* Message Input */}
-          <div className="border-t p-2 sm:p-3 pb-0 sticky bottom-0 bg-white/95 backdrop-blur">
+          <div className="border-t p-2 sm:p-3 shrink-0 bg-background">
             {/* Toolbar para emoticones y archivos */}
             <div className="flex gap-2 mb-2 relative">
               <Button
@@ -969,8 +977,10 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };
+
+export { ChatRoom };
