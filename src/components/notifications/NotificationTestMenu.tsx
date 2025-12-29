@@ -71,14 +71,14 @@ const NotificationTestMenu = () => {
   const testDirectorChange = () => {
     testNotification("cambio de director", {
       type: "director_change",
-      title: "Cambio de Director - Domingo 8:00 AM",
+      title: "Cambio de Director - Domingo 10:45 AM",
       message: "Se ha realizado un cambio de director para el servicio del domingo.",
       category: "agenda",
       priority: 2,
       metadata: {
         service_date: new Date().toISOString(),
-        service_time: "8:00 a.m.",
-        original_director_name: "Armando Noel",
+        service_time: "10:45 a.m.",
+        original_director_name: "Armando Noel Charle",
         original_director_photo: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/d6602109-ad3e-4db6-ab4a-2984dadfc569.JPG",
         new_director_name: "Roosevelt Martínez",
         new_director_photo: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/00a916a8-ab94-4cc0-81ae-668dd6071416.JPG",

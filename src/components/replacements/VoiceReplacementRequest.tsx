@@ -105,11 +105,14 @@ const ALL_MEMBERS: Record<string, { name: string; voice: string; photo_url: stri
   [MEMBER_IDS.RODES_ESTHER]: { name: "Rodes Esther Santana Cuesta", voice: "Contralto", photo_url: "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/bdcc27cd-40ae-456e-a340-633ce7da08c0.JPG" },
 };
 
-// Group configurations
+// Group configurations - First member is the Director de Alabanza for that group
 const GROUP_MEMBERS_CONFIG: Record<string, string[]> = {
-  "Grupo de Aleida": [MEMBER_IDS.ALEIDA_BATISTA, MEMBER_IDS.ELIABI_JOANA, MEMBER_IDS.FELIX_NICOLAS, MEMBER_IDS.ARMANDO_NOEL, MEMBER_IDS.FIOR_DALIZA, MEMBER_IDS.RUTH_ESMAILIN],
-  "Grupo de Keyla": [MEMBER_IDS.KEYLA_YANIRA, MEMBER_IDS.YINDHIA_CAROLINA, MEMBER_IDS.ARIZONI_LIRIANO, MEMBER_IDS.DENNY_ALBERTO, MEMBER_IDS.AIDA_LORENA, MEMBER_IDS.SUGEY_GONZALEZ],
-  "Grupo de Massy": [MEMBER_IDS.DAMARIS_CASTILLO, MEMBER_IDS.JISELL_AMADA, MEMBER_IDS.GUARIONEX_GARCIA, MEMBER_IDS.FREDDERID_ABRAHAN, MEMBER_IDS.MARIA_SANTANA, MEMBER_IDS.ROSELY_MONTERO, MEMBER_IDS.RODES_ESTHER],
+  // Grupo de Aleida: Eliabi Joana es Directora de Alabanza, Aleida es líder de grupo pero corista
+  "Grupo de Aleida": [MEMBER_IDS.ELIABI_JOANA, MEMBER_IDS.ALEIDA_BATISTA, MEMBER_IDS.FELIX_NICOLAS, MEMBER_IDS.FIOR_DALIZA, MEMBER_IDS.RUTH_ESMAILIN],
+  // Grupo de Keyla: Keyla es Directora de Alabanza y líder
+  "Grupo de Keyla": [MEMBER_IDS.KEYLA_YANIRA, MEMBER_IDS.YINDHIA_CAROLINA, MEMBER_IDS.ARIZONI_LIRIANO, MEMBER_IDS.AIDA_LORENA, MEMBER_IDS.SUGEY_GONZALEZ],
+  // Grupo de Massy: Damaris (Massy) es Directora de Alabanza y líder
+  "Grupo de Massy": [MEMBER_IDS.DAMARIS_CASTILLO, MEMBER_IDS.JISELL_AMADA, MEMBER_IDS.FREDDERID_ABRAHAN, MEMBER_IDS.ROSELY_MONTERO, MEMBER_IDS.RODES_ESTHER],
 };
 
 const VoiceReplacementRequest = () => {
@@ -225,7 +228,7 @@ const VoiceReplacementRequest = () => {
           id,
           name: ALL_MEMBERS[id].name,
           voice: ALL_MEMBERS[id].voice,
-          role: index === 0 ? 'Directora' : 'Corista',
+          role: index === 0 ? 'Director/a de Alabanza' : 'Corista',
           mic: `Micrófono #${index + 1}`,
           photo_url: ALL_MEMBERS[id].photo_url,
         }));
