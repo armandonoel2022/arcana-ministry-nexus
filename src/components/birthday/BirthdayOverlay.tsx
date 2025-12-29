@@ -19,10 +19,12 @@ interface Member {
 export const BirthdayOverlay = () => {
   const [birthdayMembers, setBirthdayMembers] = useState<Member[]>([]);
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
+  const [generalRoomId, setGeneralRoomId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchTodaysBirthdays();
+    fetchGeneralRoomId();
     
     // Listen for test overlay trigger using custom event
     const handleTestOverlay = (event: Event) => {
@@ -52,6 +54,20 @@ export const BirthdayOverlay = () => {
       window.removeEventListener('testBirthdayOverlay', handleTestOverlay);
     };
   }, []);
+
+  const fetchGeneralRoomId = async () => {
+    try {
+      const { data } = await supabase
+        .from('chat_rooms')
+        .select('id')
+        .eq('name', 'Sala General')
+        .eq('is_active', true)
+        .single();
+      if (data) setGeneralRoomId(data.id);
+    } catch (error) {
+      console.error('Error fetching general room:', error);
+    }
+  };
 
   const fetchTodaysBirthdays = async () => {
     try {
@@ -97,7 +113,11 @@ export const BirthdayOverlay = () => {
 
   const handleGoToCelebrate = (memberId: string) => {
     handleDismiss(memberId);
-    navigate('/communication');
+    if (generalRoomId) {
+      navigate(`/communication?roomId=${generalRoomId}`);
+    } else {
+      navigate('/communication');
+    }
   };
 
   const getRoleLabel = (role: string) => {
