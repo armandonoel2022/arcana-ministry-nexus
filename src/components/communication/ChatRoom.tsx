@@ -46,7 +46,7 @@ interface ChatRoomProps {
   onBack?: () => void;
 }
 
-export const ChatRoom = ({ room }: ChatRoomProps) => {
+export const ChatRoom = ({ room, onBack }: ChatRoomProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -762,128 +762,128 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto p-3 space-y-3"
       >
-            {messages.length === 0 ? (
-              <div className="text-center text-gray-500 py-8">No hay mensajes aún. ¡Sé el primero en escribir!</div>
-            ) : (
-              messages.map((message) => {
-                const isOwnMessage = message.user_id === currentUser?.id;
-                const isBotMessage = isBot(message);
+        {messages.length === 0 ? (
+          <div className="text-center text-gray-500 py-8">No hay mensajes aún. ¡Sé el primero en escribir!</div>
+        ) : (
+          messages.map((message) => {
+            const isOwnMessage = message.user_id === currentUser?.id;
+            const isBotMessage = isBot(message);
 
-                return (
+            return (
+              <div
+                key={message.id}
+                className={`flex gap-3 ${isOwnMessage && !isBotMessage ? "justify-end" : "justify-start"}`}
+              >
+                {(!isOwnMessage || isBotMessage) && (
+                  <Avatar className="w-8 h-8 flex-shrink-0">
+                    {!isBotMessage && message.profiles?.photo_url && (
+                      <AvatarImage
+                        src={message.profiles.photo_url}
+                        alt={getUserDisplayName(message)}
+                        className="object-cover"
+                      />
+                    )}
+                    <AvatarFallback className={`text-xs ${isBotMessage ? "bg-purple-100" : "bg-arcana-blue-100"}`}>
+                      {isBotMessage ? (
+                        <Bot className="w-4 h-4 text-purple-600" />
+                      ) : (
+                        getInitials(getUserDisplayName(message))
+                      )}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+                <div className={`max-w-xs ${isOwnMessage && !isBotMessage ? "order-first" : ""}`}>
                   <div
-                    key={message.id}
-                    className={`flex gap-3 ${isOwnMessage && !isBotMessage ? "justify-end" : "justify-start"}`}
+                    className={`p-3 rounded-lg ${
+                      isBotMessage
+                        ? "bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300"
+                        : isOwnMessage
+                          ? "bg-blue-500 text-white"
+                          : "bg-gray-100 text-gray-900"
+                    }`}
                   >
                     {(!isOwnMessage || isBotMessage) && (
-                      <Avatar className="w-8 h-8 flex-shrink-0">
-                        {!isBotMessage && message.profiles?.photo_url && (
-                          <AvatarImage
-                            src={message.profiles.photo_url}
-                            alt={getUserDisplayName(message)}
-                            className="object-cover"
+                      <p className="text-xs font-medium mb-1 text-left">{getUserDisplayName(message)}</p>
+                    )}
+                    <div
+                      className="text-sm whitespace-pre-wrap text-left"
+                      dangerouslySetInnerHTML={{
+                        __html: message.message
+                          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                          .replace(
+                            /\[(.*?)\]\((.*?)\)/g,
+                            '<a href="$2" target="_blank" rel="noopener noreferrer" class="underline text-purple-900 hover:text-purple-700">$1</a>',
+                          ),
+                      }}
+                    />
+
+                    {/* Multimedia */}
+                    {message.media_url && (
+                      <div className="mt-2">
+                        {message.media_type === "image" && (
+                          <img
+                            src={message.media_url}
+                            alt="Imagen"
+                            className="max-w-full rounded-lg max-h-64 object-contain"
+                            loading="lazy"
                           />
                         )}
-                        <AvatarFallback className={`text-xs ${isBotMessage ? "bg-purple-100" : "bg-arcana-blue-100"}`}>
-                          {isBotMessage ? (
-                            <Bot className="w-4 h-4 text-purple-600" />
-                          ) : (
-                            getInitials(getUserDisplayName(message))
-                          )}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                    <div className={`max-w-xs ${isOwnMessage && !isBotMessage ? "order-first" : ""}`}>
-                      <div
-                        className={`p-3 rounded-lg ${
-                          isBotMessage
-                            ? "bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300"
-                            : isOwnMessage
-                              ? "bg-blue-500 text-white"
-                              : "bg-gray-100 text-gray-900"
-                        }`}
-                      >
-                        {(!isOwnMessage || isBotMessage) && (
-                          <p className="text-xs font-medium mb-1 text-left">{getUserDisplayName(message)}</p>
+                        {message.media_type === "video" && (
+                          <video controls className="max-w-full rounded-lg max-h-64">
+                            <source src={message.media_url} type="video/mp4" />
+                          </video>
                         )}
-                        <div
-                          className="text-sm whitespace-pre-wrap text-left"
-                          dangerouslySetInnerHTML={{
-                            __html: message.message
-                              .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                              .replace(
-                                /\[(.*?)\]\((.*?)\)/g,
-                                '<a href="$2" target="_blank" rel="noopener noreferrer" class="underline text-purple-900 hover:text-purple-700">$1</a>',
-                              ),
-                          }}
-                        />
-
-                        {/* Multimedia */}
-                        {message.media_url && (
-                          <div className="mt-2">
-                            {message.media_type === "image" && (
-                              <img
-                                src={message.media_url}
-                                alt="Imagen"
-                                className="max-w-full rounded-lg max-h-64 object-contain"
-                                loading="lazy"
-                              />
-                            )}
-                            {message.media_type === "video" && (
-                              <video controls className="max-w-full rounded-lg max-h-64">
-                                <source src={message.media_url} type="video/mp4" />
-                              </video>
-                            )}
-                            {(message.media_type === "audio" || message.media_type === "voice") && (
-                              <VoiceMessagePlayer audioUrl={message.media_url} />
-                            )}
-                          </div>
-                        )}
-
-                        {/* Render action buttons if available */}
-                        {message.actions && message.actions.length > 0 && (
-                          <div className="mt-3 flex flex-col gap-2">
-                            {message.actions.map((action, idx) => (
-                              <Button
-                                key={idx}
-                                onClick={() => handleActionClick(action)}
-                                size="sm"
-                                className="bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-md"
-                              >
-                                ➕ Agregar "{action.songName}"
-                              </Button>
-                            ))}
-                          </div>
+                        {(message.media_type === "audio" || message.media_type === "voice") && (
+                          <VoiceMessagePlayer audioUrl={message.media_url} />
                         )}
                       </div>
-                      <p
-                        className={`text-xs text-gray-500 mt-1 ${isOwnMessage && !isBotMessage ? "text-right" : "text-left"}`}
-                      >
-                        {formatTime(message.created_at)}
-                      </p>
-                    </div>
-                    {isOwnMessage && !isBotMessage && (
-                      <Avatar className="w-8 h-8 flex-shrink-0">
-                        {(currentUser?.profile?.photo_url || currentUser?.member?.photo_url) && (
-                          <AvatarImage
-                            src={currentUser?.profile?.photo_url || currentUser?.member?.photo_url}
-                            alt="Tu foto"
-                            className="object-cover"
-                          />
-                        )}
-                        <AvatarFallback className="text-xs bg-arcana-gold-100">
-                          {currentUser?.profile?.full_name ? getInitials(currentUser.profile.full_name) : "Tú"}
-                        </AvatarFallback>
-                      </Avatar>
+                    )}
+
+                    {/* Render action buttons if available */}
+                    {message.actions && message.actions.length > 0 && (
+                      <div className="mt-3 flex flex-col gap-2">
+                        {message.actions.map((action, idx) => (
+                          <Button
+                            key={idx}
+                            onClick={() => handleActionClick(action)}
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-md"
+                          >
+                            ➕ Agregar "{action.songName}"
+                          </Button>
+                        ))}
+                      </div>
                     )}
                   </div>
-                );
-              })
-            )}
-            <div ref={messagesEndRef} />
-          </div>
+                  <p
+                    className={`text-xs text-gray-500 mt-1 ${isOwnMessage && !isBotMessage ? "text-right" : "text-left"}`}
+                  >
+                    {formatTime(message.created_at)}
+                  </p>
+                </div>
+                {isOwnMessage && !isBotMessage && (
+                  <Avatar className="w-8 h-8 flex-shrink-0">
+                    {(currentUser?.profile?.photo_url || currentUser?.member?.photo_url) && (
+                      <AvatarImage
+                        src={currentUser?.profile?.photo_url || currentUser?.member?.photo_url}
+                        alt="Tu foto"
+                        className="object-cover"
+                      />
+                    )}
+                    <AvatarFallback className="text-xs bg-arcana-gold-100">
+                      {currentUser?.profile?.full_name ? getInitials(currentUser.profile.full_name) : "Tú"}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+              </div>
+            );
+          })
+        )}
+        <div ref={messagesEndRef} />
+      </div>
 
-          {/* Message Input */}
-          <div className="border-t p-2 sm:p-3 shrink-0 bg-background">
+      {/* Message Input */}
+      <div className="border-t p-2 sm:p-3 shrink-0 bg-background">
             {/* Toolbar para emoticones y archivos */}
             <div className="flex gap-2 mb-2 relative">
               <Button
@@ -975,12 +975,8 @@ export const ChatRoom = ({ room }: ChatRoomProps) => {
               >
                 <Send className="w-4 h-4" />
               </Button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
   );
 };
-
-export { ChatRoom };
