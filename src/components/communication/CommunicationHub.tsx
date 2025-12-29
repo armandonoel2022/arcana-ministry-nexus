@@ -172,7 +172,16 @@ export const CommunicationHub = () => {
 
   // View: Room chat
   if (view === "room" && selectedRoom) {
-    return <ChatRoom room={selectedRoom} onBack={handleBack} />;
+    return (
+      <ChatRoom 
+        room={selectedRoom} 
+        onBack={handleBack}
+        onStartDirectChat={(partner) => {
+          setSelectedPartner(partner);
+          setView("direct");
+        }}
+      />
+    );
   }
 
   // View: Direct message
