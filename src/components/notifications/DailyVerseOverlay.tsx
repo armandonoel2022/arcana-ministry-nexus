@@ -10,10 +10,11 @@ import { createBroadcastNotification } from '@/services/notificationService';
 interface DailyVerseOverlayProps {
   verseText?: string;
   verseReference?: string;
+  skipSaveNotification?: boolean;
   onClose: () => void;
 }
 
-export const DailyVerseOverlay = ({ verseText: propVerseText, verseReference: propVerseReference, onClose }: DailyVerseOverlayProps) => {
+export const DailyVerseOverlay = ({ verseText: propVerseText, verseReference: propVerseReference, skipSaveNotification = false, onClose }: DailyVerseOverlayProps) => {
   const downloadRef = useRef<HTMLDivElement>(null);
   const [verseText, setVerseText] = useState(propVerseText || '');
   const [verseReference, setVerseReference] = useState(propVerseReference || '');
@@ -21,9 +22,10 @@ export const DailyVerseOverlay = ({ verseText: propVerseText, verseReference: pr
   const [notificationSaved, setNotificationSaved] = useState(false);
 
   // Guardar notificación cuando tenemos los datos del versículo
+  // Solo si no viene del centro de notificaciones (skipSaveNotification = false)
   useEffect(() => {
     const saveNotification = async () => {
-      if (verseText && verseReference && !notificationSaved) {
+      if (verseText && verseReference && !notificationSaved && !skipSaveNotification) {
         try {
           console.log("📖 [DailyVerseOverlay] Guardando versículo en centro de notificaciones...");
           
@@ -48,7 +50,7 @@ export const DailyVerseOverlay = ({ verseText: propVerseText, verseReference: pr
     };
 
     saveNotification();
-  }, [verseText, verseReference, notificationSaved]);
+  }, [verseText, verseReference, notificationSaved, skipSaveNotification]);
 
   // Auto-cargar versículo si no se proporcionaron props
   useEffect(() => {
