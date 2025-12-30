@@ -356,11 +356,11 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
         const textX = photoX + photoSize + 8;
         const textMaxWidth = pageWidth - textX - margin - 50;
         
-        // Línea 1: Orden + Tipo de servicio
+        // Línea 1: Orden + Tipo de servicio + Hora
         doc.setTextColor(...darkBlue);
         doc.setFontSize(10);
         doc.setFont("helvetica", "bold");
-        doc.text(`${orderName} Domingo • ${service.title}`, textX, yPosition + 10);
+        doc.text(`${orderName} Domingo • ${service.title} • ${timeFormatted}`, textX, yPosition + 10);
 
         // Línea 2: Director de alabanza
         doc.setTextColor(71, 85, 105);
@@ -368,9 +368,27 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
         doc.setFont("helvetica", "normal");
         doc.text(`Director: ${service.leader}`, textX, yPosition + 17);
 
-        // Línea 3: Hora y Grupo coral
+        // Línea 3: Grupo coral con color distintivo
+        // Determinar color según el nombre del grupo
+        const getGroupColor = (name: string): [number, number, number] => {
+          const nameLower = name.toLowerCase();
+          if (nameLower.includes('aleida')) return [220, 38, 38]; // red-600
+          if (nameLower.includes('keyla')) return [124, 58, 237]; // violet-600
+          if (nameLower.includes('massy')) return [22, 163, 74]; // green-600
+          return [71, 85, 105]; // slate-600 default
+        };
+
+        const groupColor = getGroupColor(groupName);
+        
         doc.setFontSize(8);
-        doc.text(`${timeFormatted} | Coros: ${groupName}`, textX, yPosition + 24);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(71, 85, 105);
+        doc.text("Coros: ", textX, yPosition + 24);
+        
+        const corosWidth = doc.getTextWidth("Coros: ");
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(...groupColor);
+        doc.text(groupName, textX + corosWidth, yPosition + 24);
 
         // Evento especial (a la derecha, más compacto)
         const eventX = pageWidth - margin - 5;
