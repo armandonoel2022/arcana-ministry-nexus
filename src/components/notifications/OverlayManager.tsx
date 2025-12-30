@@ -94,6 +94,30 @@ const OverlayManager: React.FC = () => {
 
   // Track currently showing overlay ID to prevent duplicates
   const currentOverlayId = useRef<string | null>(null);
+  
+  // Queue for pending overlays (moved before showOverlay since it's used inside)
+  const overlayQueue = useRef<OverlayData[]>([]);
+  const isProcessingQueue = useRef(false);
+  
+  // Track overlays shown in this session to prevent repeats
+  const shownInSession = useRef<Set<string>>(new Set());
+
+  // Helper to generate a stable key for an overlay (ignoring timestamps in IDs)
+  const getOverlaySessionKey = useCallback((notification: OverlayData): string => {
+    // For scheduled/backup overlays, use type + base ID
+    if (notification.id.startsWith('scheduled-')) {
+      const parts = notification.id.split('-');
+      // scheduled-backup-UUID-timestamp or scheduled-missed-UUID-timestamp
+      const baseId = parts.slice(0, 3).join('-');
+      return `${notification.type}_${baseId}`;
+    }
+    // For test/preview, don't track (allow multiple tests)
+    if (notification.id.startsWith('preview-') || notification.id.startsWith('test-')) {
+      return '';
+    }
+    // For regular notifications, use the actual ID
+    return `${notification.type}_${notification.id}`;
+  }, []);
 
   // Function to show overlay with safety check
   const showOverlay = useCallback(
@@ -107,7 +131,18 @@ const OverlayManager: React.FC = () => {
       });
 
       const isPreview = notification.id?.startsWith("preview-");
+      const isTest = notification.id?.startsWith("test-");
       const isFromNotificationCenter = notification.id?.startsWith("notification-click-");
+
+      // CONTROL DE SESIÓN: Verificar si ya se mostró en esta sesión
+      const sessionKey = getOverlaySessionKey(notification);
+      if (sessionKey && !isPreview && !isTest && !isFromNotificationCenter) {
+        // Check both our Set AND sessionStorage for redundancy
+        if (shownInSession.current.has(sessionKey) || sessionStorage.getItem(`overlay_session_${sessionKey}`)) {
+          console.log("📱 [OverlayManager] ⚠️ Overlay ya mostrado en esta sesión, ignorando:", sessionKey);
+          return;
+        }
+      }
 
       // For notification center clicks, always allow reopening (use unique timestamp ID)
       if (isFromNotificationCenter) {
@@ -149,11 +184,24 @@ const OverlayManager: React.FC = () => {
         return;
       }
 
-      // Non-preview: if an overlay is already active, queue it
+      // Non-preview: if an overlay is already active, queue it (but check if not already in queue)
       if (currentOverlayId.current) {
+        // Check if already in queue
+        const alreadyQueued = overlayQueue.current.some(q => getOverlaySessionKey(q) === sessionKey);
+        if (alreadyQueued) {
+          console.log("📱 [OverlayManager] Overlay ya en cola, ignorando:", notification.type);
+          return;
+        }
         console.log("📱 [OverlayManager] Overlay activo, añadiendo a cola:", notification.type);
         overlayQueue.current.push(notification);
         return;
+      }
+
+      // MARCAR COMO MOSTRADO EN SESIÓN antes de mostrarlo
+      if (sessionKey) {
+        shownInSession.current.add(sessionKey);
+        sessionStorage.setItem(`overlay_session_${sessionKey}`, 'true');
+        console.log("📱 [OverlayManager] ✅ Marcando overlay como mostrado en sesión:", sessionKey);
       }
 
       console.log("📱 [OverlayManager] Mostrando overlay:", notification.type, notification.id);
@@ -187,7 +235,7 @@ const OverlayManager: React.FC = () => {
     currentOverlayId.current = notification.id;
     setActiveOverlay(notification);
     setOverlayType(notification.type);
-  }, [saveOverlayToNotifications]);
+  }, [saveOverlayToNotifications, getOverlaySessionKey]);
 
   // Function to dismiss overlay and mark as read
   const handleDismiss = useCallback(async () => {
@@ -211,10 +259,6 @@ const OverlayManager: React.FC = () => {
     setActiveOverlay(null);
     setOverlayType(null);
   }, [activeOverlay]);
-
-  // Queue for pending overlays
-  const overlayQueue = useRef<OverlayData[]>([]);
-  const isProcessingQueue = useRef(false);
 
   // Process next overlay in queue
   const processNextOverlay = useCallback(() => {
