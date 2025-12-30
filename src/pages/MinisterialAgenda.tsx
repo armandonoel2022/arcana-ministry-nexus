@@ -5,13 +5,32 @@ import { AgendaForm } from "@/components/agenda/AgendaForm";
 import { AgendaTable } from "@/components/agenda/AgendaTable";
 import { CSVUpload } from "@/components/agenda/CSVUpload";
 import GenerateNextYearServices from "@/components/agenda/GenerateNextYearServices";
+import MonthlyAgendaPDF from "@/components/agenda/MonthlyAgendaPDF";
 import { Calendar, Upload, Plus } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const MinisterialAgenda = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [searchParams] = useSearchParams();
   const filterParam = searchParams.get("filter");
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
+
+  // Cargar años disponibles para el PDF
+  useEffect(() => {
+    const loadYears = async () => {
+      const { data } = await supabase
+        .from("services")
+        .select("service_date")
+        .order("service_date", { ascending: true });
+      
+      if (data) {
+        const years = [...new Set(data.map((s) => new Date(s.service_date).getFullYear()))].sort((a, b) => a - b);
+        setAvailableYears(years);
+      }
+    };
+    loadYears();
+  }, [refreshTrigger]);
 
   const handleDataUpdate = () => {
     setRefreshTrigger((prev) => prev + 1);
@@ -32,6 +51,11 @@ const MinisterialAgenda = () => {
             </p>
           </div>
           <GenerateNextYearServices onDataUpdate={handleDataUpdate} />
+        </div>
+
+        {/* Componente de descarga de PDF mensual */}
+        <div className="mb-4">
+          <MonthlyAgendaPDF availableYears={availableYears} />
         </div>
 
         {/* Panel de Contenido Principal */}
