@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Download, FileDown, Calendar, Loader2 } from "lucide-react";
+import { Download, FileDown, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { format, startOfMonth, endOfMonth, getDay } from "date-fns";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import arcanaLogo from "@/assets/arcana-logo.png";
 
 interface Service {
   id: string;
@@ -22,11 +22,6 @@ interface Service {
     name: string;
     color_theme: string;
   } | null;
-}
-
-interface DirectorProfile {
-  full_name: string;
-  photo_url: string | null;
 }
 
 interface MonthlyAgendaPDFProps {
@@ -54,13 +49,24 @@ const getSpecialEvent = (monthOrder: number): string => {
 // Helper para obtener el nombre del orden
 const getOrderName = (order: number): string => {
   const names: { [key: number]: string } = {
-    1: "Primer",
-    2: "Segundo",
-    3: "Tercer",
-    4: "Cuarto",
-    5: "Quinto",
+    1: "1er",
+    2: "2do",
+    3: "3er",
+    4: "4to",
+    5: "5to",
   };
   return names[order] || `${order}°`;
+};
+
+// Formatear hora en formato 12h
+const formatTime12h = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const ampm = hours >= 12 ? 'p.m.' : 'a.m.';
+  const hour12 = hours % 12 || 12;
+  const minuteStr = minutes.toString().padStart(2, '0');
+  return `${hour12.toString().padStart(2, '0')}:${minuteStr} ${ampm}`;
 };
 
 // Meses del año
@@ -98,6 +104,41 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
     } catch {
       return null;
     }
+  };
+
+  // Función para dibujar imagen circular con clip
+  const drawCircularImage = (
+    doc: jsPDF,
+    imageData: string,
+    x: number,
+    y: number,
+    diameter: number
+  ) => {
+    const radius = diameter / 2;
+    const centerX = x + radius;
+    const centerY = y + radius;
+
+    // Guardar estado gráfico
+    doc.saveGraphicsState();
+
+    // Crear path circular para clip
+    // @ts-ignore - jsPDF tiene este método internamente
+    doc.circle(centerX, centerY, radius, 'S');
+    
+    // Dibujar imagen (se cortará al círculo)
+    try {
+      doc.addImage(imageData, "JPEG", x, y, diameter, diameter);
+    } catch {
+      // Si falla, no hacer nada
+    }
+
+    // Restaurar estado
+    doc.restoreGraphicsState();
+
+    // Dibujar borde circular
+    doc.setDrawColor(59, 130, 246);
+    doc.setLineWidth(0.8);
+    doc.circle(centerX, centerY, radius, 'S');
   };
 
   const generatePDF = async () => {
@@ -153,14 +194,12 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
       const directorPhotos: { [key: string]: string | null } = {};
       
       for (const leader of uniqueLeaders) {
-        // Primero buscar en profiles
         const profile = profiles?.find(
           (p) => p.full_name.toLowerCase() === leader.toLowerCase()
         );
         if (profile?.photo_url) {
           directorPhotos[leader] = profile.photo_url;
         } else {
-          // Buscar en members
           const member = members?.find(
             (m) => `${m.nombres} ${m.apellidos}`.toLowerCase() === leader.toLowerCase()
           );
@@ -176,7 +215,10 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
         }
       }
 
-      // Crear el PDF
+      // Cargar logo ARCANA
+      const logoBase64 = await loadImageAsBase64(arcanaLogo);
+
+      // Crear el PDF - una sola página
       const doc = new jsPDF({
         orientation: "portrait",
         unit: "mm",
@@ -185,142 +227,187 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
 
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
-      const margin = 15;
-      const monthName = MONTHS[selectedMonth].label;
+      const margin = 12;
+      const monthName = MONTHS[selectedMonth].label.toUpperCase();
 
       // Colores del diseño
-      const primaryColor: [number, number, number] = [59, 130, 246]; // Blue-500
-      const secondaryColor: [number, number, number] = [30, 64, 175]; // Blue-800
-      const lightBg: [number, number, number] = [239, 246, 255]; // Blue-50
+      const primaryBlue: [number, number, number] = [59, 130, 246];
+      const darkBlue: [number, number, number] = [30, 64, 175];
+      const lightBg: [number, number, number] = [248, 250, 252];
+      const accentGold: [number, number, number] = [234, 179, 8];
 
-      // Header con gradiente simulado
-      doc.setFillColor(...secondaryColor);
-      doc.rect(0, 0, pageWidth, 45, "F");
+      // Fondo suave
+      doc.setFillColor(...lightBg);
+      doc.rect(0, 0, pageWidth, pageHeight, "F");
 
-      // Franja decorativa
-      doc.setFillColor(...primaryColor);
-      doc.rect(0, 45, pageWidth, 3, "F");
+      // Header con degradado simulado (rectángulos apilados)
+      const headerHeight = 35;
+      doc.setFillColor(37, 99, 235); // blue-600
+      doc.roundedRect(margin, margin, pageWidth - margin * 2, headerHeight, 4, 4, "F");
 
-      // Título principal
+      // Logo ARCANA en el header (lado izquierdo)
+      if (logoBase64) {
+        try {
+          const logoSize = 22;
+          doc.addImage(logoBase64, "PNG", margin + 8, margin + 6, logoSize, logoSize);
+        } catch {
+          // Si falla, continuar sin logo
+        }
+      }
+
+      // Título en el header
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(24);
-      doc.setFont("helvetica", "bold");
-      doc.text("AGENDA", pageWidth / 2, 18, { align: "center" });
-      
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "normal");
-      doc.text("Ministerio ADN Arca de Noé", pageWidth / 2, 28, { align: "center" });
-      
       doc.setFontSize(18);
       doc.setFont("helvetica", "bold");
-      doc.text(`${monthName} ${selectedYear}`, pageWidth / 2, 40, { align: "center" });
+      doc.text("AGENDA MINISTERIAL", pageWidth / 2 + 5, margin + 14, { align: "center" });
+      
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text("Ministerio ADN Arca de Noé", pageWidth / 2 + 5, margin + 22, { align: "center" });
+      
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text(`${monthName} ${selectedYear}`, pageWidth / 2 + 5, margin + 30, { align: "center" });
 
-      // Generar contenido
-      let yPosition = 58;
-      const cardHeight = 40;
-      const cardSpacing = 8;
-      const photoSize = 25;
+      // Calcular altura de cada card para que quepan todas en una página
+      const contentStartY = margin + headerHeight + 10;
+      const footerHeight = 15;
+      const availableHeight = pageHeight - contentStartY - footerHeight - margin;
+      const cardSpacing = 6;
+      const numServices = services.length;
+      const totalSpacing = (numServices - 1) * cardSpacing;
+      const cardHeight = Math.min(38, (availableHeight - totalSpacing) / numServices);
+      const photoSize = Math.min(28, cardHeight - 6);
+
+      let yPosition = contentStartY;
 
       for (let i = 0; i < services.length; i++) {
         const service = services[i] as unknown as Service;
         const serviceDate = new Date(service.service_date);
+        const dayNumber = serviceDate.getDate();
         const dayName = format(serviceDate, "EEEE", { locale: es });
-        const dateFormatted = format(serviceDate, "dd 'de' MMMM", { locale: es });
-        const timeFormatted = format(serviceDate, "HH:mm");
+        const capitalizedDayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+        const timeFormatted = formatTime12h(service.service_date);
         const orderName = getOrderName(service.month_order);
         const specialEvent = getSpecialEvent(service.month_order);
+        const groupName = service.worship_groups?.name || "Sin asignar";
 
-        // Verificar si necesitamos nueva página
-        if (yPosition + cardHeight > pageHeight - margin) {
-          doc.addPage();
-          yPosition = margin;
-        }
-
-        // Card background
-        doc.setFillColor(...lightBg);
+        // Card background con sombra suave
+        doc.setFillColor(255, 255, 255);
         doc.roundedRect(margin, yPosition, pageWidth - margin * 2, cardHeight, 3, 3, "F");
+        
+        // Borde sutil
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(margin, yPosition, pageWidth - margin * 2, cardHeight, 3, 3, "S");
 
-        // Borde izquierdo con color
-        doc.setFillColor(...primaryColor);
-        doc.rect(margin, yPosition, 4, cardHeight, "F");
+        // Número del día (destacado a la izquierda)
+        doc.setFillColor(...primaryBlue);
+        doc.roundedRect(margin + 3, yPosition + 3, 18, cardHeight - 6, 2, 2, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.text(dayNumber.toString(), margin + 12, yPosition + cardHeight / 2 + 1, { align: "center" });
+        doc.setFontSize(7);
+        doc.setFont("helvetica", "normal");
+        doc.text(capitalizedDayName.substring(0, 3).toUpperCase(), margin + 12, yPosition + cardHeight / 2 + 6, { align: "center" });
 
-        // Foto del director
-        const photoX = margin + 10;
+        // Foto del director (circular)
+        const photoX = margin + 25;
         const photoY = yPosition + (cardHeight - photoSize) / 2;
         
         const directorImage = directorImagesBase64[service.leader];
         if (directorImage) {
           try {
-            // Círculo de fondo para la foto
+            // Dibujar círculo de fondo blanco
             doc.setFillColor(255, 255, 255);
             doc.circle(photoX + photoSize / 2, photoY + photoSize / 2, photoSize / 2 + 1, "F");
+            
+            // Dibujar imagen
             doc.addImage(directorImage, "JPEG", photoX, photoY, photoSize, photoSize);
+            
+            // Borde circular
+            doc.setDrawColor(...primaryBlue);
+            doc.setLineWidth(0.8);
+            doc.circle(photoX + photoSize / 2, photoY + photoSize / 2, photoSize / 2, "S");
           } catch {
-            // Si falla la imagen, mostrar placeholder
-            doc.setFillColor(200, 200, 200);
+            // Placeholder si falla
+            doc.setFillColor(226, 232, 240);
             doc.circle(photoX + photoSize / 2, photoY + photoSize / 2, photoSize / 2, "F");
-            doc.setTextColor(100, 100, 100);
-            doc.setFontSize(8);
-            doc.text("Sin foto", photoX + photoSize / 2, photoY + photoSize / 2 + 2, { align: "center" });
+            doc.setTextColor(100, 116, 139);
+            doc.setFontSize(6);
+            doc.text(service.leader.split(' ').map(n => n[0]).join(''), photoX + photoSize / 2, photoY + photoSize / 2 + 2, { align: "center" });
           }
         } else {
-          // Placeholder circular
-          doc.setFillColor(200, 200, 200);
+          // Placeholder circular con iniciales
+          doc.setFillColor(226, 232, 240);
           doc.circle(photoX + photoSize / 2, photoY + photoSize / 2, photoSize / 2, "F");
-          doc.setTextColor(100, 100, 100);
-          doc.setFontSize(8);
-          doc.text("Sin foto", photoX + photoSize / 2, photoY + photoSize / 2 + 2, { align: "center" });
+          doc.setDrawColor(...primaryBlue);
+          doc.setLineWidth(0.5);
+          doc.circle(photoX + photoSize / 2, photoY + photoSize / 2, photoSize / 2, "S");
+          doc.setTextColor(71, 85, 105);
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          const initials = service.leader.split(' ').map(n => n[0]).join('').substring(0, 2);
+          doc.text(initials, photoX + photoSize / 2, photoY + photoSize / 2 + 3, { align: "center" });
         }
 
         // Información del servicio
         const textX = photoX + photoSize + 8;
+        const textMaxWidth = pageWidth - textX - margin - 50;
         
         // Línea 1: Orden + Tipo de servicio
-        doc.setTextColor(...secondaryColor);
-        doc.setFontSize(11);
-        doc.setFont("helvetica", "bold");
-        doc.text(`${orderName} Domingo - ${service.title}`, textX, yPosition + 10);
-
-        // Línea 2: Fecha y hora
-        doc.setTextColor(100, 100, 100);
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "normal");
-        const capitalizedDayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
-        doc.text(`${capitalizedDayName}, ${dateFormatted} | ${timeFormatted} hrs`, textX, yPosition + 17);
-
-        // Línea 3: Director de alabanza
-        doc.setTextColor(60, 60, 60);
+        doc.setTextColor(...darkBlue);
         doc.setFontSize(10);
         doc.setFont("helvetica", "bold");
-        doc.text(`Director: ${service.leader}`, textX, yPosition + 25);
+        doc.text(`${orderName} Domingo • ${service.title}`, textX, yPosition + 10);
 
-        // Línea 4: Grupo coral y evento especial
-        doc.setFont("helvetica", "normal");
+        // Línea 2: Director de alabanza
+        doc.setTextColor(71, 85, 105);
         doc.setFontSize(9);
-        const groupName = service.worship_groups?.name || "Sin asignar";
-        doc.text(`Coros: ${groupName}`, textX, yPosition + 32);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Director: ${service.leader}`, textX, yPosition + 17);
 
-        // Evento especial a la derecha
+        // Línea 3: Hora y Grupo coral
+        doc.setFontSize(8);
+        doc.text(`${timeFormatted} | Coros: ${groupName}`, textX, yPosition + 24);
+
+        // Evento especial (a la derecha, más compacto)
         const eventX = pageWidth - margin - 5;
-        doc.setTextColor(...primaryColor);
-        doc.setFont("helvetica", "bold");
-        doc.text(`Evento: ${specialEvent}`, eventX, yPosition + 32, { align: "right" });
+        if (specialEvent !== "Ninguno") {
+          doc.setFillColor(...accentGold);
+          const eventWidth = doc.getTextWidth(specialEvent) + 8;
+          doc.roundedRect(eventX - eventWidth - 2, yPosition + 8, eventWidth + 4, 12, 2, 2, "F");
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(7);
+          doc.setFont("helvetica", "bold");
+          doc.text(specialEvent, eventX, yPosition + 15, { align: "right" });
+        } else {
+          doc.setTextColor(148, 163, 184);
+          doc.setFontSize(7);
+          doc.setFont("helvetica", "italic");
+          doc.text("Sin evento especial", eventX, yPosition + 15, { align: "right" });
+        }
 
         yPosition += cardHeight + cardSpacing;
       }
 
-      // Footer
-      const footerY = pageHeight - 10;
-      doc.setTextColor(150, 150, 150);
-      doc.setFontSize(8);
+      // Footer elegante
+      const footerY = pageHeight - margin - 5;
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.3);
+      doc.line(margin, footerY - 8, pageWidth - margin, footerY - 8);
+      
+      doc.setTextColor(148, 163, 184);
+      doc.setFontSize(7);
       doc.setFont("helvetica", "italic");
-      doc.text(`Generado el ${format(new Date(), "dd/MM/yyyy 'a las' HH:mm", { locale: es })}`, pageWidth / 2, footerY, { align: "center" });
+      doc.text(`Generado por ARCANA • ${format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: es })}`, pageWidth / 2, footerY, { align: "center" });
 
       // Descargar
-      const fileName = `Agenda_ADN_${monthName}_${selectedYear}.pdf`;
+      const fileName = `Agenda_ADN_${MONTHS[selectedMonth].label}_${selectedYear}.pdf`;
       doc.save(fileName);
       
-      toast.success(`Agenda de ${monthName} ${selectedYear} descargada correctamente`);
+      toast.success(`Agenda de ${MONTHS[selectedMonth].label} ${selectedYear} descargada`);
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast.error("Error al generar el PDF");
@@ -329,7 +416,6 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
     }
   };
 
-  // Si no hay años disponibles, usar el año actual
   const yearsToShow = availableYears.length > 0 ? availableYears : [new Date().getFullYear()];
 
   return (

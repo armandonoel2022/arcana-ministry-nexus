@@ -11,6 +11,7 @@ import { format, isToday, isSameDay, parseISO, isSameMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import BirthdayCard from './BirthdayCard';
 import BirthdayNotificationTest from './BirthdayNotificationTest';
+import BirthdayCalendarPDF from './BirthdayCalendarPDF';
 import {
   Dialog,
   DialogContent,
@@ -380,6 +381,9 @@ const BirthdayModule = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Descargar calendario de cumpleaños */}
+      <BirthdayCalendarPDF />
 
       {/* Panel de pruebas para administradores - siempre visible para debugging */}
       <BirthdayNotificationTest />
