@@ -356,11 +356,11 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
         const textX = photoX + photoSize + 8;
         const textMaxWidth = pageWidth - textX - margin - 50;
         
-        // Línea 1: Orden + Tipo de servicio + Hora
+        // Línea 1: Orden + Tipo de servicio (el título ya incluye la hora)
         doc.setTextColor(...darkBlue);
         doc.setFontSize(10);
         doc.setFont("helvetica", "bold");
-        doc.text(`${orderName} Domingo • ${service.title} • ${timeFormatted}`, textX, yPosition + 10);
+        doc.text(`${orderName} Domingo • ${service.title}`, textX, yPosition + 10);
 
         // Línea 2: Director de alabanza
         doc.setTextColor(71, 85, 105);
