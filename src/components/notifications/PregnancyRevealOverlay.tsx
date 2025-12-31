@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { X, Heart, Baby, Sparkles, MessageCircle } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import { X, Heart, Baby, Sparkles, MessageCircle, Download } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import html2canvas from 'html2canvas';
+import { toast } from 'sonner';
 
 interface PregnancyRevealOverlayProps {
   parentNames: string;
@@ -22,6 +24,8 @@ const PregnancyRevealOverlay = ({
 }: PregnancyRevealOverlayProps) => {
   const navigate = useNavigate();
   const [generalRoomId, setGeneralRoomId] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Get the general chat room ID
   useEffect(() => {
@@ -50,17 +54,54 @@ const PregnancyRevealOverlay = ({
     }
   };
 
+  const handleDownload = async () => {
+    if (!contentRef.current) return;
+    
+    setIsDownloading(true);
+    try {
+      const canvas = await html2canvas(contentRef.current, {
+        backgroundColor: '#fdf2f8',
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+      });
+      
+      const link = document.createElement('a');
+      link.download = `revelacion-embarazo-${parentNames.replace(/\s+/g, '-').toLowerCase()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      
+      toast.success('Imagen descargada exitosamente');
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      toast.error('Error al descargar la imagen');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-rose-50 via-amber-50 to-sky-50 border-2 border-rose-200 shadow-2xl">
-        <div className="relative p-6 md:p-8">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-full bg-rose-100 hover:bg-rose-200 transition-colors z-10"
-            aria-label="Cerrar"
-          >
-            <X className="w-5 h-5 text-rose-600" />
-          </button>
+        <div ref={contentRef} className="relative p-6 md:p-8">
+          {/* Botones de acción en la esquina */}
+          <div className="absolute top-4 right-4 flex gap-2 z-10">
+            <button
+              onClick={handleDownload}
+              disabled={isDownloading}
+              className="p-2 rounded-full bg-rose-100 hover:bg-rose-200 transition-colors disabled:opacity-50"
+              aria-label="Descargar"
+            >
+              <Download className="w-5 h-5 text-rose-600" />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-full bg-rose-100 hover:bg-rose-200 transition-colors"
+              aria-label="Cerrar"
+            >
+              <X className="w-5 h-5 text-rose-600" />
+            </button>
+          </div>
 
           {/* Header con decoración */}
           <div className="text-center mb-6">
