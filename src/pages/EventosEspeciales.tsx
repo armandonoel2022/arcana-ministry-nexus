@@ -280,7 +280,20 @@ const EventosEspeciales = () => {
   };
 
   const createProgramItem = async () => {
-    if (!selectedEvent) return;
+    if (!selectedEvent) {
+      toast.error('No hay evento seleccionado');
+      return;
+    }
+
+    if (!itemForm.title.trim()) {
+      toast.error('El título es requerido');
+      return;
+    }
+
+    if (!itemForm.start_time || !itemForm.end_time) {
+      toast.error('Las horas de inicio y finalización son requeridas');
+      return;
+    }
 
     try {
       const duration = calculateDuration(itemForm.start_time, itemForm.end_time);
@@ -298,11 +311,11 @@ const EventosEspeciales = () => {
           event_id: selectedEvent.id,
           time_slot: `${itemForm.start_time} - ${itemForm.end_time}`,
           title: itemForm.title,
-          description: itemForm.description,
-          responsible_person: itemForm.responsible_person,
+          description: itemForm.description || null,
+          responsible_person: itemForm.responsible_person || null,
           duration_minutes: duration,
           item_order: nextOrder,
-          notes: itemForm.notes,
+          notes: itemForm.notes || null,
           worship_set_id: itemForm.worship_set_id || null,
           highlight_color: itemForm.highlight_color || null,
         }]);
@@ -323,6 +336,7 @@ const EventosEspeciales = () => {
       });
       fetchProgramItems(selectedEvent.id);
     } catch (error: any) {
+      console.error('Error creating program item:', error);
       toast.error('Error al agregar item: ' + error.message);
     }
   };
