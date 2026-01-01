@@ -59,6 +59,34 @@ const HIGHLIGHT_COLORS = [
   { value: '#34495e', label: 'Gris oscuro', color: '#34495e' },
 ];
 
+// Helper function to convert 24h time to 12h format
+const convertTo12HourFormat = (time24: string): string => {
+  if (!time24) return '';
+  const [hours, minutes] = time24.split(':').map(Number);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const hours12 = hours % 12 || 12;
+  return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
+};
+
+// Helper function to convert 12h time to 24h format for calculations
+const convertTo24HourFormat = (time12: string): string => {
+  if (!time12) return '';
+  // If already in 24h format (no AM/PM), return as is
+  if (!time12.includes('AM') && !time12.includes('PM')) return time12;
+  
+  const match = time12.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!match) return time12;
+  
+  let hours = parseInt(match[1]);
+  const minutes = match[2];
+  const period = match[3].toUpperCase();
+  
+  if (period === 'PM' && hours !== 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+  
+  return `${hours.toString().padStart(2, '0')}:${minutes}`;
+};
+
 interface WorshipSet {
   id: string;
   set_name: string;
@@ -305,7 +333,7 @@ const EventosEspeciales = () => {
 
       const nextOrder = programItems.length + 1;
       
-      const timeSlotString = `${itemForm.start_time} - ${itemForm.end_time}`;
+      const timeSlotString = `${convertTo12HourFormat(itemForm.start_time)} - ${convertTo12HourFormat(itemForm.end_time)}`;
       
       const { error } = await supabase
         .from('event_program_items')
@@ -344,11 +372,15 @@ const EventosEspeciales = () => {
   };
 
   const openEditItem = (item: ProgramItem) => {
-    // Parse time_slot to get start and end times
+    // Parse time_slot to get start and end times (format: "9:00 PM - 9:30 PM")
     const times = item.time_slot?.split(' - ') || ['', ''];
+    // Convert 12h format back to 24h for the time inputs
+    const startTime24 = convertTo24HourFormat(times[0]?.trim() || '');
+    const endTime24 = convertTo24HourFormat(times[1]?.trim() || '');
+    
     setItemForm({
-      start_time: times[0] || '',
-      end_time: times[1] || '',
+      start_time: startTime24,
+      end_time: endTime24,
       title: item.title || '',
       description: item.description || '',
       responsible_person: item.responsible_person || '',
@@ -374,7 +406,7 @@ const EventosEspeciales = () => {
       const { error } = await supabase
         .from('event_program_items')
         .update({
-          time_slot: `${itemForm.start_time} - ${itemForm.end_time}`,
+          time_slot: `${convertTo12HourFormat(itemForm.start_time)} - ${convertTo12HourFormat(itemForm.end_time)}`,
           title: itemForm.title,
           description: itemForm.description,
           responsible_person: itemForm.responsible_person,
