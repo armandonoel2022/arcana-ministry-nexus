@@ -305,7 +305,7 @@ const EventosEspeciales = () => {
 
       const nextOrder = programItems.length + 1;
       
-      const timeSlotString = `${itemForm.start_time} a ${itemForm.end_time}`;
+      const timeSlotString = `${itemForm.start_time} - ${itemForm.end_time}`;
       
       const { error } = await supabase
         .from('event_program_items')
