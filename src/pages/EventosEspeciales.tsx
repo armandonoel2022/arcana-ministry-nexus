@@ -305,11 +305,13 @@ const EventosEspeciales = () => {
 
       const nextOrder = programItems.length + 1;
       
+      const timeSlotString = `${itemForm.start_time} a ${itemForm.end_time}`;
+      
       const { error } = await supabase
         .from('event_program_items')
         .insert([{
           event_id: selectedEvent.id,
-          time_slot: `${itemForm.start_time} - ${itemForm.end_time}`,
+          time_slot: timeSlotString,
           title: itemForm.title,
           description: itemForm.description || null,
           responsible_person: itemForm.responsible_person || null,
