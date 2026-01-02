@@ -336,6 +336,11 @@ const OverlayManager: React.FC = () => {
         "blood_donation",
         "extraordinary_rehearsal",
         "ministry_instructions",
+        "pregnancy_reveal",
+        "birth_announcement",
+        "director_change",
+        "special_event",
+        "voice_replacement",
       ];
 
       // Get ALL pending notifications from system_notifications (not just 1)
@@ -409,14 +414,32 @@ const OverlayManager: React.FC = () => {
       if (pendingNotifications && pendingNotifications.length > 0) {
         console.log(`📱 [OverlayManager] ${pendingNotifications.length} overlays pendientes en system_notifications`);
 
-        // Filter out already shown in this session
+        // Filter out already shown in this session AND deduplicate by type+date
+        const seenTypes = new Set<string>();
         const notShownNotifications = pendingNotifications.filter(notification => {
-          const sessionKey = `overlay_shown_session_${notification.id}`;
-          return !sessionStorage.getItem(sessionKey);
+          // Use consistent session key format
+          const sessionKey = `overlay_session_${notification.type}_${notification.id}`;
+          if (sessionStorage.getItem(sessionKey)) {
+            return false;
+          }
+          
+          // For service_overlay, only show ONE per day (deduplicate)
+          if (notification.type === 'service_overlay') {
+            const typeKey = `service_overlay_${todayDateKey}`;
+            if (seenTypes.has(typeKey) || sessionStorage.getItem(`overlay_session_${typeKey}`)) {
+              console.log("📱 [OverlayManager] Ignorando service_overlay duplicado");
+              return false;
+            }
+            seenTypes.add(typeKey);
+            sessionStorage.setItem(`overlay_session_${typeKey}`, "true");
+          }
+          
+          return true;
         });
 
         notShownNotifications.forEach(notification => {
-          sessionStorage.setItem(`overlay_shown_session_${notification.id}`, "true");
+          const sessionKey = `overlay_session_${notification.type}_${notification.id}`;
+          sessionStorage.setItem(sessionKey, "true");
           allOverlaysToShow.push({
             id: notification.id,
             type: notification.type,
