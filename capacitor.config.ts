@@ -1,13 +1,23 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.9ad580d087d143a09d97fed34a5a6a68',
-  appName: 'arcana-ministry-nexus',
+  appId: 'do.com.arcana.app',
+  appName: 'ArcanaApp',
   webDir: 'dist',
-  server: {
-    url: 'https://9ad580d0-87d1-43a0-9d97-fed34a5a6a68.lovableproject.com?forceHideBadge=true',
-    cleartext: true
+  
+  // Configuración específica iOS
+  ios: {
+    scheme: 'ArcanaApp',
+    contentInset: 'automatic',
+    scrollEnabled: true,
+    includePlugins: [
+      '@capacitor/haptics',
+      '@capacitor/local-notifications',
+      '@capacitor/push-notifications',
+      '@capacitor/toast'
+    ]
   },
+  
   plugins: {
     PushNotifications: {
       presentationOptions: ['badge', 'sound', 'alert']
