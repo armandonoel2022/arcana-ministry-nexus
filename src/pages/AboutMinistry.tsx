@@ -1,9 +1,34 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Users, Music, Calendar, Crown, Star, Disc } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const AboutMinistry = () => {
+  const [membersCount, setMembersCount] = useState<number>(0);
+  const [groupsCount, setGroupsCount] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      // Fetch active members count
+      const { count: members } = await supabase
+        .from('members')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true);
+      
+      // Fetch active worship groups count
+      const { count: groups } = await supabase
+        .from('worship_groups')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true);
+      
+      setMembersCount(members || 0);
+      setGroupsCount(groups || 0);
+    };
+
+    fetchStats();
+  }, []);
+
   return (
     <div className="min-h-screen bg-modern-gradient-soft p-6">
       <div className="max-w-4xl mx-auto">
@@ -204,7 +229,7 @@ const AboutMinistry = () => {
               <div className="w-12 h-12 modern-gradient rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg">
                 <Users className="w-6 h-6 text-white" />
               </div>
-              <div className="text-2xl font-bold text-modern-blue-600">3</div>
+              <div className="text-2xl font-bold text-modern-blue-600">{membersCount}</div>
               <div className="text-sm text-muted-foreground">Miembros Activos</div>
             </CardContent>
           </Card>
@@ -214,7 +239,7 @@ const AboutMinistry = () => {
               <div className="w-12 h-12 modern-gradient rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg">
                 <Music className="w-6 h-6 text-white" />
               </div>
-              <div className="text-2xl font-bold text-modern-blue-600">3</div>
+              <div className="text-2xl font-bold text-modern-blue-600">{groupsCount}</div>
               <div className="text-sm text-muted-foreground">Grupos de Alabanza</div>
             </CardContent>
           </Card>
