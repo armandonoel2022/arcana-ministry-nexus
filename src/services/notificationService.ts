@@ -515,9 +515,18 @@ export const ARCANA_PUSH_CONFIG = {
   actions: {
     service_overlay: { click_action: "/agenda-ministerial" },
     daily_verse: { click_action: "/modulo-espiritual" },
+    daily_advice: { click_action: "/modulo-espiritual" },
     birthday: { click_action: "/cumpleanos" },
     director_replacement_request: { click_action: "/reemplazos-director" },
+    director_replacement_response: { click_action: "/reemplazos-director" },
     song_selection: { click_action: "/repertorio-musical" },
+    blood_donation: { click_action: "/notificaciones" },
+    extraordinary_rehearsal: { click_action: "/agenda-ministerial" },
+    ministry_instructions: { click_action: "/notificaciones" },
+    pregnancy_reveal: { click_action: "/notificaciones" },
+    birth_announcement: { click_action: "/notificaciones" },
+    chat_message: { click_action: "/comunicacion" },
+    chat_buzz: { click_action: "/comunicacion" },
   } as Record<string, { click_action: string }>,
 };
 
@@ -538,7 +547,7 @@ export function generatePushPayload(params: {
   tag: string;
   data: Record<string, any>;
 } {
-  const actionConfig = ARCANA_PUSH_CONFIG.actions[params.type] || { click_action: "/" };
+  const actionConfig = ARCANA_PUSH_CONFIG.actions[params.type] || { click_action: "/notificaciones" };
   
   return {
     title: params.title,
@@ -549,9 +558,51 @@ export function generatePushPayload(params: {
     data: {
       type: params.type,
       click_action: actionConfig.click_action,
+      show_overlay: overlayTypes.includes(params.type),
       ...params.metadata,
     },
   };
+}
+
+/**
+ * Enviar notificación al Service Worker para mostrar en background
+ */
+export async function sendServiceWorkerNotification(params: {
+  title: string;
+  message: string;
+  type: NotificationType;
+  metadata?: Record<string, any>;
+}): Promise<boolean> {
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
+    console.log('📬 [NotificationService] Service Worker no disponible');
+    return false;
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    
+    if (registration.active) {
+      const isOverlayType = overlayTypes.includes(params.type);
+      
+      registration.active.postMessage({
+        type: isOverlayType ? 'SHOW_OVERLAY_NOTIFICATION' : 'SHOW_NOTIFICATION',
+        payload: {
+          title: params.title,
+          body: params.message,
+          type: params.type,
+          ...params.metadata
+        }
+      });
+      
+      console.log('📬 [NotificationService] Notificación enviada a SW:', params.type);
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('📬 [NotificationService] Error enviando a SW:', error);
+    return false;
+  }
 }
 
 /**
@@ -576,6 +627,14 @@ async function sendNativePushNotification(params: {
   console.log("📬 [NotificationService] Push preparado (simulado):", {
     recipient: params.userId || "broadcast",
     payload: pushPayload,
+  });
+  
+  // Intentar enviar via Service Worker para web
+  await sendServiceWorkerNotification({
+    title: params.title,
+    message: params.message,
+    type: params.type,
+    metadata: params.metadata,
   });
   
   return Promise.resolve();
