@@ -142,6 +142,80 @@ export const usePushNotifications = () => {
     };
   }, [permission]);
 
+  // Listener para mensajes del Service Worker (Web)
+  useEffect(() => {
+    if (isNativePlatform() || typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
+
+    const handleServiceWorkerMessage = (event: MessageEvent) => {
+      console.log('📱 [PushNotifications] SW message received:', event.data);
+      
+      if (!event.data) return;
+      
+      switch (event.data.type) {
+        case 'NOTIFICATION_CLICK':
+          // Usuario hizo clic en una notificación - mostrar overlay si corresponde
+          const { url, notificationData } = event.data;
+          
+          if (notificationData?.showOverlay && notificationData?.type) {
+            window.dispatchEvent(new CustomEvent('showOverlay', {
+              detail: {
+                id: notificationData.notificationId || `sw-${Date.now()}`,
+                type: notificationData.type,
+                title: notificationData.title || '',
+                message: notificationData.message || '',
+                metadata: notificationData.metadata || {}
+              }
+            }));
+          }
+          
+          // Navegar si es necesario
+          if (url && window.location.pathname !== url) {
+            window.location.href = url;
+          }
+          break;
+          
+        case 'CHECK_PENDING_NOTIFICATIONS':
+          // Disparar evento para que OverlayManager revise notificaciones pendientes
+          window.dispatchEvent(new CustomEvent('checkPendingOverlays'));
+          break;
+      }
+    };
+
+    navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+
+    return () => {
+      navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+    };
+  }, []);
+
+  // Verificar parámetros URL para overlays (cuando app se abre desde notificación)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const showOverlayType = urlParams.get('showOverlay');
+    const notificationId = urlParams.get('notificationId');
+    
+    if (showOverlayType) {
+      console.log('📱 [PushNotifications] Opening overlay from URL:', showOverlayType);
+      
+      // Limpiar parámetros URL sin recargar
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, '', cleanUrl);
+      
+      // Mostrar overlay después de un pequeño delay para que la app se cargue
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('showOverlay', {
+          detail: {
+            id: notificationId || `url-${Date.now()}`,
+            type: showOverlayType,
+            title: '',
+            message: '',
+            metadata: { fromNotification: true }
+          }
+        }));
+      }, 500);
+    }
+  }, []);
+
   const requestPermission = useCallback(async (): Promise<boolean> => {
     if (!isSupported) {
       console.log('📱 [PushNotifications] Not supported');
@@ -277,7 +351,10 @@ export const usePushNotifications = () => {
   const handleIncomingPush = (notification: any) => {
     console.log('📱 [PushNotifications] Processing incoming push:', notification);
     
-    // If app is in foreground on native, show local notification
+    const data = notification.data || {};
+    const notificationType = data.type || 'general';
+    
+    // Si app está en foreground en native, mostrar notificación local
     if (isNativePlatform() && LocalNotifications) {
       LocalNotifications.schedule({
         notifications: [
@@ -286,22 +363,31 @@ export const usePushNotifications = () => {
             body: notification.body || notification.message || '',
             id: Date.now(),
             schedule: { at: new Date(Date.now() + 100) },
-            smallIcon: 'arcana_notification_icon',
-            largeIcon: 'arcana_notification_icon',
+            smallIcon: 'ic_arcana_notification',
+            largeIcon: 'ic_arcana_notification',
             sound: 'notification.wav',
-            extra: notification.data || {}
+            extra: {
+              ...data,
+              showOverlay: data.show_overlay || overlayTypes.includes(notificationType)
+            },
+            // Configuración específica para iOS
+            attachments: undefined,
+            actionTypeId: 'arcana-notification',
+            // Grupo para iOS
+            threadIdentifier: `arcana-${notificationType}`,
+            // Relevancia para iOS 15+
+            relevanceScore: 1.0
           }
         ]
       });
     }
 
-    // Dispatch custom event to trigger overlay if needed
-    const data = notification.data || {};
-    if (data.show_overlay || (data.type && overlayTypes.includes(data.type))) {
+    // Disparar overlay si es un tipo que lo requiere
+    if (data.show_overlay || overlayTypes.includes(notificationType)) {
       window.dispatchEvent(new CustomEvent('showOverlay', {
         detail: {
           id: data.id || `push-${Date.now()}`,
-          type: data.type,
+          type: notificationType,
           title: notification.title || data.title || '',
           message: notification.body || data.message || '',
           metadata: data.metadata || {}
@@ -313,11 +399,27 @@ export const usePushNotifications = () => {
   const handlePushAction = (action: any) => {
     console.log('📱 [PushNotifications] Handling push action:', action);
     
-    const data = action.notification?.data || {};
+    const data = action.notification?.data || action.notification?.extra || {};
+    const notificationType = data.type || 'general';
     
-    // Navigate to appropriate screen based on notification type
+    // Mostrar overlay si está indicado
+    if (data.showOverlay || overlayTypes.includes(notificationType)) {
+      window.dispatchEvent(new CustomEvent('showOverlay', {
+        detail: {
+          id: data.id || `action-${Date.now()}`,
+          type: notificationType,
+          title: action.notification?.title || data.title || '',
+          message: action.notification?.body || data.message || '',
+          metadata: data.metadata || data
+        }
+      }));
+    }
+    
+    // Navegar a la pantalla correspondiente
     if (data.click_action) {
       window.location.href = data.click_action;
+    } else if (data.url) {
+      window.location.href = data.url;
     } else if (data.type && ARCANA_PUSH_CONFIG.actions[data.type as keyof typeof ARCANA_PUSH_CONFIG.actions]) {
       const actionConfig = ARCANA_PUSH_CONFIG.actions[data.type as keyof typeof ARCANA_PUSH_CONFIG.actions];
       window.location.href = actionConfig.click_action;
