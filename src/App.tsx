@@ -51,6 +51,7 @@ import { PendingSongNotifications } from "./components/songs/PendingSongNotifica
 import { SwipeIndicator } from "./components/SwipeIndicator";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { supabase } from "./integrations/supabase/client";
+import deviceTokenService from "./services/deviceTokenService";
 import "./App.css";
 
 const queryClient = new QueryClient();
@@ -161,6 +162,28 @@ function AppContent() {
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
+
+  // Inicializar servicios de push notifications para iOS
+  useEffect(() => {
+    const initializePushServices = async () => {
+      try {
+        // Inicializar servicio de device tokens
+        await deviceTokenService.initialize();
+        
+        // Registrar para push notifications
+        await deviceTokenService.registerForPush();
+        
+        // Verificar tokens pendientes después de login
+        await deviceTokenService.checkPendingToken();
+        
+        console.log('🚀 Push services inicializados');
+      } catch (error) {
+        console.error('❌ Error inicializando push services:', error);
+      }
+    };
+
+    initializePushServices();
+  }, []);
 
   const handleSplashComplete = () => {
     setShowSplash(false);

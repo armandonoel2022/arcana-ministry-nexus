@@ -20,6 +20,7 @@ import {
   Upload,
   Image as ImageIcon,
   Loader2,
+  Smartphone,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { PushTestPanel } from "@/components/admin/PushTestPanel";
 
 interface ScheduledNotification {
   id: string;
@@ -2416,6 +2418,10 @@ const ScheduledNotifications = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Panel de Push Notifications iOS */}
+      <div className="mt-6">
+        <PushTestPanel />
+      </div>
     </div>
   );
 };
