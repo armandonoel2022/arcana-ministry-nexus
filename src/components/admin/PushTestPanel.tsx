@@ -243,12 +243,25 @@ export const PushTestPanel = () => {
         </CardHeader>
         <CardContent>
           {devices.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-8 text-muted-foreground space-y-4">
               <AlertCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>No hay dispositivos iOS registrados</p>
-              <p className="text-sm mt-1">
-                Los dispositivos aparecerán aquí cuando acepten push notifications
-              </p>
+              <p className="font-medium">No hay dispositivos iOS registrados</p>
+              
+              <div className="bg-muted/50 rounded-lg p-4 text-left space-y-3">
+                <p className="text-sm font-medium text-foreground">📱 ¿Cómo registrar tu dispositivo?</p>
+                <ol className="text-sm space-y-2 list-decimal list-inside">
+                  <li>Abre la app en tu <strong>iPhone/iPad</strong> (no en el navegador)</li>
+                  <li>Cuando aparezca el popup de permisos, acepta <strong>"Permitir Notificaciones"</strong></li>
+                  <li>Tu dispositivo aparecerá automáticamente en esta lista</li>
+                </ol>
+                
+                <div className="pt-2 border-t border-border">
+                  <p className="text-xs text-muted-foreground">
+                    <strong>Nota:</strong> Las notificaciones push solo funcionan en la app nativa de iOS. 
+                    En el navegador, se usan notificaciones web que se replican automáticamente como notificaciones locales en iOS.
+                  </p>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
@@ -304,6 +317,28 @@ export const PushTestPanel = () => {
               )}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Card explicativa sobre notificaciones locales */}
+      <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900">
+        <CardContent className="pt-6">
+          <div className="flex gap-3">
+            <div className="text-2xl">💡</div>
+            <div className="space-y-2">
+              <p className="font-medium text-blue-900 dark:text-blue-100">
+                Sistema de Notificaciones Híbrido
+              </p>
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                Las notificaciones del sistema (como la de "Evento Especial" que ves en el navegador) 
+                se replican automáticamente como <strong>notificaciones locales</strong> en iOS cuando abres la app.
+              </p>
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                No necesitas registrar dispositivos para eso - funciona automáticamente leyendo las notificaciones 
+                de Supabase y mostrándolas de forma nativa.
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
