@@ -5,6 +5,15 @@ const config: CapacitorConfig = {
   appName: 'ArcanaApp',
   webDir: 'dist',
   
+  // Servidor interno para manejar rutas SPA (evita 404 en navegación)
+  server: {
+    // Esto hace que todas las rutas se resuelvan al index.html
+    androidScheme: 'https',
+    iosScheme: 'capacitor',
+    // Permite que la app maneje todas las rutas internamente
+    allowNavigation: ['*']
+  },
+  
   // Configuración específica iOS
   ios: {
     scheme: 'ArcanaApp',
@@ -16,7 +25,6 @@ const config: CapacitorConfig = {
       '@capacitor/push-notifications',
       '@capacitor/toast'
     ],
-    // Preferencias para notificaciones en background
     preferredContentMode: 'mobile'
   },
 
@@ -27,20 +35,14 @@ const config: CapacitorConfig = {
   
   plugins: {
     PushNotifications: {
-      // Opciones de presentación para iOS (alerta, badge, sonido)
       presentationOptions: ['badge', 'sound', 'alert'],
-      // Importancia de notificación para Android
       importance: 'high',
     },
     LocalNotifications: {
-      // Icono pequeño para Android (debe estar en res/drawable)
       smallIcon: 'ic_arcana_notification',
-      // Color del icono
       iconColor: '#1E3A5F',
-      // Sonido personalizado
       sound: 'notification.wav'
     },
-    // Configuración de hápticos para zumbidos del chat
     Haptics: {
       enabled: true
     }
