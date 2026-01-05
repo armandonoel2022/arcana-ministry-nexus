@@ -52,6 +52,7 @@ import { SwipeIndicator } from "./components/SwipeIndicator";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { supabase } from "./integrations/supabase/client";
 import deviceTokenService from "./services/deviceTokenService";
+import { useNativeNotificationSync } from "./hooks/useNativeNotificationSync";
 import "./App.css";
 
 const queryClient = new QueryClient();
@@ -76,6 +77,9 @@ function SidebarLayout() {
 
 function AppContent() {
   const { isWomensDay, showOverlay: showWomensDayOverlay, dismissOverlay, themeStyles } = useWomensDayTheme();
+  
+  // Activar sincronización de notificaciones nativas iOS
+  useNativeNotificationSync();
 
   // Apply Women's Day theme styles
   useEffect(() => {
