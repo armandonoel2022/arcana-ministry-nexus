@@ -1,20 +1,26 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
-// Importar LocalNotifications dinámicamente
+// Variable global para LocalNotifications
 let LocalNotifications: any = null;
-
-try {
-  import('@capacitor/local-notifications').then((module) => {
-    LocalNotifications = module.LocalNotifications;
-    console.log('📱 [NativeSync] LocalNotifications loaded');
-  }).catch(() => {
-    console.log('📱 [NativeSync] LocalNotifications not available');
-  });
-} catch (e) {
-  console.log('📱 [NativeSync] Capacitor not available');
-}
+let localNotificationsLoaded = false;
+const loadPromise = new Promise<boolean>((resolve) => {
+  try {
+    import('@capacitor/local-notifications').then((module) => {
+      LocalNotifications = module.LocalNotifications;
+      localNotificationsLoaded = true;
+      console.log('📱 [NativeSync] LocalNotifications loaded');
+      resolve(true);
+    }).catch(() => {
+      console.log('📱 [NativeSync] LocalNotifications not available');
+      resolve(false);
+    });
+  } catch (e) {
+    console.log('📱 [NativeSync] Capacitor not available');
+    resolve(false);
+  }
+});
 
 // Helper para detectar plataforma nativa
 const isNativePlatform = () => {
@@ -72,11 +78,30 @@ function hashCode(str: string): number {
 export const useNativeNotificationSync = () => {
   const { user } = useAuth();
   const syncedNotificationsRef = useRef<Set<string>>(new Set());
+  const pendingNotificationsRef = useRef<SystemNotification[]>([]);
+  const [isReady, setIsReady] = useState(localNotificationsLoaded);
+
+  // Esperar a que LocalNotifications esté disponible
+  useEffect(() => {
+    if (!isReady) {
+      loadPromise.then((loaded) => {
+        setIsReady(loaded);
+        console.log('📱 [NativeSync] Ready state:', loaded);
+      });
+    }
+  }, [isReady]);
 
   // Función para mostrar notificación local nativa
   const showNativeNotification = useCallback(async (notification: SystemNotification) => {
-    if (!isNativePlatform() || !LocalNotifications) {
-      console.log('📱 [NativeSync] Not on native platform or LocalNotifications not available');
+    // Si no está listo, encolar la notificación
+    if (!LocalNotifications) {
+      console.log('📱 [NativeSync] LocalNotifications not ready, queueing:', notification.title);
+      pendingNotificationsRef.current.push(notification);
+      return;
+    }
+
+    if (!isNativePlatform()) {
+      console.log('📱 [NativeSync] Not on native platform');
       return;
     }
 
@@ -100,7 +125,7 @@ export const useNativeNotificationSync = () => {
       const notificationId = hashCode(notification.id);
       const showOverlay = overlayTypes.includes(notification.type);
 
-      console.log(`📱 [NativeSync] Scheduling local notification: ${notification.title}`);
+      console.log(`📱 [NativeSync] Scheduling local notification: ${notification.title} (type: ${notification.type})`);
 
       await LocalNotifications.schedule({
         notifications: [
@@ -133,6 +158,16 @@ export const useNativeNotificationSync = () => {
       console.error('❌ [NativeSync] Error showing native notification:', error);
     }
   }, []);
+
+  // Procesar notificaciones pendientes cuando esté listo
+  useEffect(() => {
+    if (isReady && LocalNotifications && pendingNotificationsRef.current.length > 0) {
+      console.log(`📱 [NativeSync] Processing ${pendingNotificationsRef.current.length} pending notifications`);
+      const pending = [...pendingNotificationsRef.current];
+      pendingNotificationsRef.current = [];
+      pending.forEach(notification => showNativeNotification(notification));
+    }
+  }, [isReady, showNativeNotification]);
 
   // Función para eliminar notificación nativa cuando se marca como leída
   const removeNativeNotification = useCallback(async (notificationId: string) => {
