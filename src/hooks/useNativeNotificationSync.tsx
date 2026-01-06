@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -32,6 +32,7 @@ interface SystemNotification {
   metadata: any;
   created_at: string;
   recipient_id: string | null;
+  is_read: boolean;
 }
 
 // Tipos de notificación que deben mostrar overlay
@@ -57,8 +58,20 @@ const overlayTypes = [
   'womens_day',
 ];
 
+// Función helper para generar hash numérico de un string (ID para notificaciones nativas)
+function hashCode(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash) % 2147483647;
+}
+
 export const useNativeNotificationSync = () => {
   const { user } = useAuth();
+  const syncedNotificationsRef = useRef<Set<string>>(new Set());
 
   // Función para mostrar notificación local nativa
   const showNativeNotification = useCallback(async (notification: SystemNotification) => {
@@ -67,8 +80,13 @@ export const useNativeNotificationSync = () => {
       return;
     }
 
+    // Evitar duplicados
+    if (syncedNotificationsRef.current.has(notification.id)) {
+      console.log('📱 [NativeSync] Notification already synced:', notification.id);
+      return;
+    }
+
     try {
-      // Verificar permisos
       const permStatus = await LocalNotifications.checkPermissions();
       if (permStatus.display !== 'granted') {
         console.log('📱 [NativeSync] Permission not granted, requesting...');
@@ -79,10 +97,7 @@ export const useNativeNotificationSync = () => {
         }
       }
 
-      // Crear ID único para la notificación (debe ser número para iOS)
-      const notificationId = Math.abs(hashCode(notification.id)) % 2147483647;
-
-      // Determinar si debe mostrar overlay
+      const notificationId = hashCode(notification.id);
       const showOverlay = overlayTypes.includes(notification.type);
 
       console.log(`📱 [NativeSync] Scheduling local notification: ${notification.title}`);
@@ -93,11 +108,10 @@ export const useNativeNotificationSync = () => {
             id: notificationId,
             title: notification.title,
             body: notification.message,
-            schedule: { at: new Date(Date.now() + 100) }, // Mostrar inmediatamente
+            schedule: { at: new Date(Date.now() + 100) },
             sound: 'notification.wav',
             smallIcon: 'ic_arcana_notification',
             largeIcon: 'ic_arcana_notification',
-            // Datos extra para cuando el usuario toque la notificación
             extra: {
               notificationId: notification.id,
               type: notification.type,
@@ -106,34 +120,104 @@ export const useNativeNotificationSync = () => {
               title: notification.title,
               message: notification.message,
             },
-            // iOS specific
             threadIdentifier: `arcana-${notification.type}`,
             relevanceScore: notification.priority === 3 ? 1.0 : 0.5,
-            // Action type
             actionTypeId: showOverlay ? 'OPEN_OVERLAY' : 'DEFAULT',
           }
         ]
       });
 
+      syncedNotificationsRef.current.add(notification.id);
       console.log(`✅ [NativeSync] Local notification scheduled: ${notification.title}`);
     } catch (error) {
       console.error('❌ [NativeSync] Error showing native notification:', error);
     }
   }, []);
 
+  // Función para eliminar notificación nativa cuando se marca como leída
+  const removeNativeNotification = useCallback(async (notificationId: string) => {
+    if (!isNativePlatform() || !LocalNotifications) return;
+
+    try {
+      const nativeId = hashCode(notificationId);
+      await LocalNotifications.cancel({ notifications: [{ id: nativeId }] });
+      syncedNotificationsRef.current.delete(notificationId);
+      console.log(`🗑️ [NativeSync] Removed native notification: ${notificationId}`);
+    } catch (error) {
+      console.error('❌ [NativeSync] Error removing native notification:', error);
+    }
+  }, []);
+
+  // Cargar notificaciones no leídas al iniciar
+  useEffect(() => {
+    if (!user || !isNativePlatform()) return;
+
+    const loadUnreadNotifications = async () => {
+      console.log('📱 [NativeSync] Loading unread notifications...');
+      
+      try {
+        const { data: notifications, error } = await supabase
+          .from('system_notifications')
+          .select('*')
+          .or(`recipient_id.eq.${user.id},recipient_id.is.null`)
+          .eq('is_read', false)
+          .order('created_at', { ascending: false })
+          .limit(20);
+
+        if (error) {
+          console.error('❌ [NativeSync] Error loading notifications:', error);
+          return;
+        }
+
+        console.log(`📱 [NativeSync] Found ${notifications?.length || 0} unread notifications`);
+
+        // Mostrar cada notificación no leída como nativa
+        for (const notification of notifications || []) {
+          await showNativeNotification(notification as SystemNotification);
+        }
+      } catch (error) {
+        console.error('❌ [NativeSync] Error in loadUnreadNotifications:', error);
+      }
+    };
+
+    // Esperar a que LocalNotifications esté disponible
+    const checkAndLoad = () => {
+      if (LocalNotifications) {
+        loadUnreadNotifications();
+      } else {
+        setTimeout(checkAndLoad, 500);
+      }
+    };
+
+    checkAndLoad();
+  }, [user, showNativeNotification]);
+
   // Configurar listeners para notificaciones locales
   useEffect(() => {
     if (!isNativePlatform() || !LocalNotifications) return;
 
     const setupListeners = async () => {
-      // Listener cuando el usuario toca una notificación
       await LocalNotifications.addListener('localNotificationActionPerformed', (action: any) => {
         console.log('📱 [NativeSync] Notification action performed:', action);
         
         const extra = action.notification?.extra || {};
         
+        // Marcar como leída en la base de datos
+        if (extra.notificationId) {
+          supabase
+            .from('system_notifications')
+            .update({ is_read: true })
+            .eq('id', extra.notificationId)
+            .then(({ error }) => {
+              if (error) {
+                console.error('❌ [NativeSync] Error marking as read:', error);
+              } else {
+                console.log('✅ [NativeSync] Marked as read:', extra.notificationId);
+              }
+            });
+        }
+        
         if (extra.showOverlay && extra.type) {
-          // Disparar evento para mostrar overlay
           window.dispatchEvent(new CustomEvent('showOverlay', {
             detail: {
               id: extra.notificationId || `native-${Date.now()}`,
@@ -158,7 +242,7 @@ export const useNativeNotificationSync = () => {
     };
   }, []);
 
-  // Suscribirse a cambios en system_notifications
+  // Suscribirse a cambios en system_notifications (INSERT y UPDATE)
   useEffect(() => {
     if (!user) {
       console.log('📱 [NativeSync] No user, skipping subscription');
@@ -169,6 +253,7 @@ export const useNativeNotificationSync = () => {
 
     const channel = supabase
       .channel('native-notification-sync')
+      // Escuchar nuevas notificaciones
       .on(
         'postgres_changes',
         {
@@ -181,14 +266,30 @@ export const useNativeNotificationSync = () => {
           
           const notification = payload.new as SystemNotification;
           
-          // Verificar si la notificación es para este usuario o es broadcast
           if (notification.recipient_id !== null && notification.recipient_id !== user.id) {
             console.log('📱 [NativeSync] Notification not for this user, ignoring');
             return;
           }
 
-          // Mostrar notificación local nativa
           await showNativeNotification(notification);
+        }
+      )
+      // Escuchar cuando se marcan como leídas
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'system_notifications',
+        },
+        async (payload) => {
+          const notification = payload.new as SystemNotification;
+          
+          // Si se marcó como leída, eliminar la notificación nativa
+          if (notification.is_read) {
+            console.log('📱 [NativeSync] Notification marked as read:', notification.id);
+            await removeNativeNotification(notification.id);
+          }
         }
       )
       .subscribe((status) => {
@@ -199,22 +300,12 @@ export const useNativeNotificationSync = () => {
       console.log('📱 [NativeSync] Cleaning up subscription');
       supabase.removeChannel(channel);
     };
-  }, [user, showNativeNotification]);
+  }, [user, showNativeNotification, removeNativeNotification]);
 
   return {
     showNativeNotification,
+    removeNativeNotification,
   };
 };
-
-// Función helper para generar hash numérico de un string
-function hashCode(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return hash;
-}
 
 export default useNativeNotificationSync;

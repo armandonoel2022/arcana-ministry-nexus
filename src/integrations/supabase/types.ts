@@ -2204,6 +2204,8 @@ export type Database = {
           created_at: string
           device_token: string
           id: string
+          is_active: boolean | null
+          last_active: string | null
           platform: string
           updated_at: string
           user_id: string | null
@@ -2212,6 +2214,8 @@ export type Database = {
           created_at?: string
           device_token: string
           id?: string
+          is_active?: boolean | null
+          last_active?: string | null
           platform?: string
           updated_at?: string
           user_id?: string | null
@@ -2220,6 +2224,8 @@ export type Database = {
           created_at?: string
           device_token?: string
           id?: string
+          is_active?: boolean | null
+          last_active?: string | null
           platform?: string
           updated_at?: string
           user_id?: string | null
