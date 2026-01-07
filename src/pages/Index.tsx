@@ -203,7 +203,7 @@ const Index = () => {
           position: relative;
           width: 1000px;
           height: 600px;
-          background: #fff;
+          background: hsl(var(--background));
           border-radius: 30px;
           box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
           margin: 20px;
@@ -236,7 +236,7 @@ const Index = () => {
           align-items: center;
           justify-content: center;
           padding: 30px 20px;
-          background: #fff;
+          background: hsl(var(--background));
           z-index: 2;
           transition: 0.8s ease-in-out;
           overflow-y: auto;
@@ -327,7 +327,7 @@ const Index = () => {
           height: 140px !important;
           border: 2px solid hsl(var(--border)) !important;
           border-radius: 16px !important;
-          background: white !important;
+          background: hsl(var(--card)) !important;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
           position: relative;
           overflow: hidden;
@@ -458,13 +458,13 @@ const Index = () => {
             position: relative;
             width: 100%;
             height: 75%;
-            background: #fff;
+            background: hsl(var(--background));
             padding: 16px 16px 20px 16px;
             overflow-y: auto;
             overflow-x: hidden;
             justify-content: flex-start;
             gap: 16px;
-            border-top-left-radius: 24px; /* Esquinas redondeadas para transición suave */
+            border-top-left-radius: 24px;
             border-top-right-radius: 24px;
           }
 
