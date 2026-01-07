@@ -50,9 +50,9 @@ import SongChangeOverlay from "./components/songs/SongChangeOverlay";
 import { PendingSongNotifications } from "./components/songs/PendingSongNotifications";
 import { SwipeIndicator } from "./components/SwipeIndicator";
 import { OfflineIndicator } from "./components/OfflineIndicator";
-import { supabase } from "./integrations/supabase/client";
-import deviceTokenService from "./services/deviceTokenService";
+
 import { useNativeNotificationSync } from "./hooks/useNativeNotificationSync";
+import { usePushRegistration } from "./hooks/usePushRegistration";
 import "./App.css";
 
 const queryClient = new QueryClient();
@@ -75,11 +75,17 @@ function SidebarLayout() {
   return null;
 }
 
-function AppContent() {
-  const { isWomensDay, showOverlay: showWomensDayOverlay, dismissOverlay, themeStyles } = useWomensDayTheme();
-  
+// Componente que inicializa los servicios de push dentro de la zona protegida
+function PushServicesInitializer() {
+  // Registrar dispositivo para push notifications (se ejecuta solo cuando hay usuario autenticado)
+  usePushRegistration();
   // Activar sincronización de notificaciones nativas iOS
   useNativeNotificationSync();
+  return null;
+}
+
+function AppContent() {
+  const { isWomensDay, showOverlay: showWomensDayOverlay, dismissOverlay, themeStyles } = useWomensDayTheme();
 
   // Apply Women's Day theme styles
   useEffect(() => {
@@ -114,6 +120,7 @@ function AppContent() {
           path="/*"
           element={
             <ProtectedRoute>
+              <PushServicesInitializer />
               <SidebarProvider defaultOpen={false}>
                 <SidebarLayout />
                 <SwipeIndicator />
@@ -166,28 +173,6 @@ function AppContent() {
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
-
-  // Inicializar servicios de push notifications para iOS
-  useEffect(() => {
-    const initializePushServices = async () => {
-      try {
-        // Inicializar servicio de device tokens
-        await deviceTokenService.initialize();
-        
-        // Registrar para push notifications
-        await deviceTokenService.registerForPush();
-        
-        // Verificar tokens pendientes después de login
-        await deviceTokenService.checkPendingToken();
-        
-        console.log('🚀 Push services inicializados');
-      } catch (error) {
-        console.error('❌ Error inicializando push services:', error);
-      }
-    };
-
-    initializePushServices();
-  }, []);
 
   const handleSplashComplete = () => {
     setShowSplash(false);
