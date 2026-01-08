@@ -1,0 +1,1 @@
+DELETE FROM password_reset_requests WHERE user_email = 'ruth5525@gmail.com' AND status = 'pending';
