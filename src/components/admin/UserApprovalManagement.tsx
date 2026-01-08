@@ -127,7 +127,7 @@ const UserApprovalManagement = () => {
     try {
       const provisionalPassword = generateProvisionalPassword();
 
-      // Find user by email and update password requirements
+      // Find user by email
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
@@ -139,6 +139,29 @@ const UserApprovalManagement = () => {
       if (!profile) {
         toast.error('No se encontró un usuario con ese correo electrónico');
         return;
+      }
+
+      // Call Edge Function to actually reset the password
+      const { data: session } = await supabase.auth.getSession();
+      const response = await fetch(
+        'https://hfjtzmnphyizntcjzgar.supabase.co/functions/v1/admin-reset-password',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.session?.access_token}`,
+          },
+          body: JSON.stringify({
+            userId: profile.id,
+            newPassword: provisionalPassword,
+          }),
+        }
+      );
+
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Error al restablecer contraseña');
       }
 
       // Update user to need password change
@@ -159,14 +182,14 @@ const UserApprovalManagement = () => {
         .insert([
           {
             type: 'password_reset',
-            title: 'Contraseña Provisional Generada',
-            message: `Se ha generado una nueva contraseña provisional: ${provisionalPassword}. Debes cambiarla en tu próximo inicio de sesión.`,
+            title: 'Contraseña Restablecida',
+            message: `Tu contraseña ha sido restablecida a: ${provisionalPassword}. Debes cambiarla en tu próximo inicio de sesión.`,
             recipient_id: profile.id,
             notification_category: 'account'
           }
         ]);
 
-      toast.success(`Contraseña provisional generada: ${provisionalPassword}`);
+      toast.success(`Contraseña restablecida exitosamente: ${provisionalPassword}`);
       fetchPasswordResetRequests();
     } catch (error: any) {
       toast.error('Error al procesar solicitud: ' + error.message);
