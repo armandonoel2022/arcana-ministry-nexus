@@ -133,19 +133,24 @@ const UserApprovalManagement = () => {
       const provisionalPassword = generateProvisionalPassword();
 
       // Find user by email and update password requirements
-      const { data: profiles, error: profileError } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', userEmail)
-        .single();
+        .maybeSingle();
 
       if (profileError) throw profileError;
+      
+      if (!profile) {
+        toast.error('No se encontró un usuario con ese correo electrónico');
+        return;
+      }
 
       // Update user to need password change
       await supabase
         .from('profiles')
         .update({ needs_password_change: true })
-        .eq('id', profiles.id);
+        .eq('id', profile.id);
 
       // Mark request as completed
       await supabase
@@ -161,7 +166,7 @@ const UserApprovalManagement = () => {
             type: 'password_reset',
             title: 'Contraseña Provisional Generada',
             message: `Se ha generado una nueva contraseña provisional: ${provisionalPassword}. Debes cambiarla en tu próximo inicio de sesión.`,
-            recipient_id: profiles.id,
+            recipient_id: profile.id,
             notification_category: 'account'
           }
         ]);
