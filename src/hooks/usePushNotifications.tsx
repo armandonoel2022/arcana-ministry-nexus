@@ -319,6 +319,7 @@ export const usePushNotifications = () => {
     if (!user) return;
     
     try {
+      // 1) Guardar en la tabla existente (web/native) para compatibilidad
       const subscriptionData = {
         token,
         platform,
@@ -328,7 +329,7 @@ export const usePushNotifications = () => {
         updated_at: new Date().toISOString()
       };
 
-      const { error } = await supabase
+      const { error: subsError } = await supabase
         .from('user_push_subscriptions')
         .upsert({
           user_id: user.id,
@@ -338,10 +339,32 @@ export const usePushNotifications = () => {
           onConflict: 'user_id'
         });
 
-      if (error) {
-        console.error('📱 [PushNotifications] Error saving device token:', error);
+      if (subsError) {
+        console.error('📱 [PushNotifications] Error saving device token (user_push_subscriptions):', subsError);
       } else {
-        console.log('📱 [PushNotifications] Device token saved successfully');
+        console.log('📱 [PushNotifications] Device token saved successfully (user_push_subscriptions)');
+      }
+
+      // 2) NUEVO: Guardar también en user_devices (requerido por envío de push iOS)
+      if (isNativePlatform()) {
+        const { error: devicesError } = await supabase
+          .from('user_devices')
+          .upsert(
+            {
+              user_id: user.id,
+              device_token: token,
+              platform: 'ios',
+              is_active: true,
+              last_active: new Date().toISOString(),
+            },
+            { onConflict: 'user_id,device_token' }
+          );
+
+        if (devicesError) {
+          console.error('📱 [PushNotifications] Error saving token (user_devices):', devicesError);
+        } else {
+          console.log('📱 [PushNotifications] Token saved successfully (user_devices)');
+        }
       }
     } catch (error) {
       console.error('📱 [PushNotifications] Error in saveDeviceToken:', error);
