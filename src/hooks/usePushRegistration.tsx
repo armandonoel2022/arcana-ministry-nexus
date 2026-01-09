@@ -12,6 +12,7 @@ export const usePushRegistration = () => {
   const { user } = useAuth();
   const hasRegisteredRef = useRef(false);
   const currentTokenRef = useRef<string | null>(null);
+  const lastUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Solo ejecutar en plataforma nativa y cuando hay usuario autenticado
@@ -20,9 +21,16 @@ export const usePushRegistration = () => {
       return;
     }
 
-    // Evitar registros duplicados
+    // Si cambió el usuario, resetear el estado de registro
+    if (lastUserIdRef.current !== user.id) {
+      console.log('📱 [PushReg] User changed, resetting registration state');
+      hasRegisteredRef.current = false;
+      lastUserIdRef.current = user.id;
+    }
+
+    // Evitar registros duplicados para el mismo usuario
     if (hasRegisteredRef.current) {
-      console.log('📱 [PushReg] Already registered');
+      console.log('📱 [PushReg] Already registered for this user');
       return;
     }
 
