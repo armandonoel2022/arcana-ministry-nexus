@@ -54,7 +54,7 @@ export const usePushRegistration = () => {
                 is_active: true,
                 last_active: new Date().toISOString(),
               },
-              { onConflict: 'device_token' }
+              { onConflict: 'user_id,device_token' }
             );
 
             if (error) {
@@ -122,7 +122,7 @@ export const usePushRegistration = () => {
               is_active: true,
               last_active: new Date().toISOString(),
             },
-            { onConflict: 'device_token' }
+            { onConflict: 'user_id,device_token' }
           );
 
           if (!error) {
