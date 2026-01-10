@@ -49,6 +49,7 @@ const OverlayManager: React.FC = () => {
   const scheduledNotificationsChecked = useRef<Set<string>>(new Set());
 
   // Function to save overlay notification to database if it doesn't exist
+  // NOTA: Esta función ya no guarda overlays diarios - esos se manejan externamente
   const saveOverlayToNotifications = useCallback(async (notification: OverlayData) => {
     // Only save if it's a scheduled/test/broadcast overlay (NOT previews)
     const isTemporaryId =
@@ -62,11 +63,11 @@ const OverlayManager: React.FC = () => {
       return;
     }
 
-    // IMPORTANTE: Algunos overlays cargan sus propios datos y deben manejar su propio guardado
-    // para poder incluir los datos reales (no los metadatos vacíos del scheduled_notifications)
-    const selfSavingTypes = ['service_overlay', 'daily_verse', 'daily_advice'];
-    if (selfSavingTypes.includes(notification.type)) {
-      console.log("📱 [OverlayManager] El overlay", notification.type, "maneja su propio guardado con datos reales");
+    // IMPORTANTE: Los overlays diarios NO deben crear duplicados
+    // El sistema programado ya crea las notificaciones en la BD
+    const skipSaveTypes = ['service_overlay', 'daily_verse', 'daily_advice'];
+    if (skipSaveTypes.includes(notification.type)) {
+      console.log("📱 [OverlayManager] Overlay diario - no se crea duplicado en BD:", notification.type);
       return;
     }
 
@@ -103,18 +104,30 @@ const OverlayManager: React.FC = () => {
   const shownInSession = useRef<Set<string>>(new Set());
 
   // Helper to generate a stable key for an overlay (ignoring timestamps in IDs)
+  // IMPORTANTE: Para tipos diarios como daily_verse y daily_advice, usamos tipo+fecha para evitar duplicados
   const getOverlaySessionKey = useCallback((notification: OverlayData): string => {
-    // For scheduled/backup overlays, use type + base ID
-    if (notification.id.startsWith('scheduled-')) {
-      const parts = notification.id.split('-');
-      // scheduled-backup-UUID-timestamp or scheduled-missed-UUID-timestamp
-      const baseId = parts.slice(0, 3).join('-');
-      return `${notification.type}_${baseId}`;
-    }
     // For test/preview, don't track (allow multiple tests)
     if (notification.id.startsWith('preview-') || notification.id.startsWith('test-')) {
       return '';
     }
+    
+    // Obtener fecha de hoy en zona horaria dominicana
+    const dominicanNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
+    const todayKey = dominicanNow.toISOString().split('T')[0];
+    
+    // Para tipos diarios, usar tipo+fecha (no ID) para evitar duplicados del mismo día
+    const dailyTypes = ['daily_verse', 'daily_advice', 'service_overlay'];
+    if (dailyTypes.includes(notification.type)) {
+      return `${notification.type}_${todayKey}`;
+    }
+    
+    // For scheduled/backup overlays, use type + base ID
+    if (notification.id.startsWith('scheduled-')) {
+      const parts = notification.id.split('-');
+      const baseId = parts.slice(0, 3).join('-');
+      return `${notification.type}_${baseId}`;
+    }
+    
     // For regular notifications, use the actual ID
     return `${notification.type}_${notification.id}`;
   }, []);
@@ -205,6 +218,18 @@ const OverlayManager: React.FC = () => {
       }
 
       console.log("📱 [OverlayManager] Mostrando overlay:", notification.type, notification.id);
+
+      // MARCAR COMO LEÍDO EN LA BD INMEDIATAMENTE (para evitar que otros dispositivos/polls lo vuelvan a mostrar)
+      if (notification.id && !notification.id.startsWith("preview-") && !notification.id.startsWith("test-") && !notification.id.startsWith("scheduled-")) {
+        (async () => {
+          try {
+            await supabase.from("system_notifications").update({ is_read: true }).eq("id", notification.id);
+            console.log("📱 [OverlayManager] ✅ Marcado como leído en BD:", notification.id);
+          } catch (err) {
+            console.error("📱 [OverlayManager] Error marcando leído:", err);
+          }
+        })();
+      }
 
     // Special handling for birthday overlays - dispatch to BirthdayOverlay component
     if (notification.type === 'birthday' || notification.type === 'birthday_daily') {
@@ -562,6 +587,33 @@ const OverlayManager: React.FC = () => {
 
   useEffect(() => {
     console.log("📱 [OverlayManager] Inicializando...");
+    
+    // Limpiar claves de sessionStorage de días anteriores para evitar acumulación
+    const dominicanNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
+    const todayKey = dominicanNow.toISOString().split('T')[0];
+    const sessionStorageKeys = Object.keys(sessionStorage);
+    sessionStorageKeys.forEach(key => {
+      if (key.startsWith('overlay_session_')) {
+        // Si la key contiene una fecha y no es la de hoy, eliminarla
+        const dateMatch = key.match(/\d{4}-\d{2}-\d{2}/);
+        if (dateMatch && dateMatch[0] !== todayKey) {
+          sessionStorage.removeItem(key);
+          console.log("🧹 [OverlayManager] Limpiando sessionStorage viejo:", key);
+        }
+      }
+    });
+    
+    // También limpiar localStorage de scheduled_shown de días anteriores
+    const localStorageKeys = Object.keys(localStorage);
+    localStorageKeys.forEach(key => {
+      if (key.startsWith('scheduled_shown_')) {
+        const dateMatch = key.match(/\d{4}-\d{2}-\d{2}/);
+        if (dateMatch && dateMatch[0] !== todayKey) {
+          localStorage.removeItem(key);
+          console.log("🧹 [OverlayManager] Limpiando localStorage viejo:", key);
+        }
+      }
+    });
 
     // Event handler for generic showOverlay event
     const handleShowOverlay = (event: CustomEvent<OverlayData>) => {
@@ -936,9 +988,13 @@ const OverlayManager: React.FC = () => {
 
     switch (overlayType) {
       case "service_overlay":
+        // SIEMPRE skip save si tiene ID real de BD o viene del NotificationCenter
+        // Solo guardar si es preview (ID temporal que no existe en BD)
+        const shouldSaveService = activeOverlay.id?.startsWith("preview-");
         return (
           <ServiceNotificationOverlay
             forceShow={true}
+            skipSaveNotification={!shouldSaveService}
             onClose={handleDismissWithQueue}
             onNavigate={(path) => {
               handleDismissWithQueue();
@@ -952,13 +1008,14 @@ const OverlayManager: React.FC = () => {
         if (!dynamicVerseData) {
           return null; // Esperar a que carguen los datos
         }
-        // Skip saving notification if opened from NotificationCenter
-        const skipVerseNotification = activeOverlay.id?.startsWith("notification-click-");
+        // SIEMPRE skip save si tiene ID real de BD o viene del NotificationCenter
+        // Solo guardar si es preview (ID temporal que no existe en BD)
+        const shouldSaveVerse = activeOverlay.id?.startsWith("preview-");
         return (
           <DailyVerseOverlay
             verseText={dynamicVerseData.text}
             verseReference={dynamicVerseData.reference}
-            skipSaveNotification={skipVerseNotification}
+            skipSaveNotification={!shouldSaveVerse}
             onClose={handleDismissWithQueue}
           />
         );
@@ -968,13 +1025,14 @@ const OverlayManager: React.FC = () => {
         if (!dynamicAdviceData) {
           return null; // Esperar a que carguen los datos
         }
-        // Skip saving notification if opened from NotificationCenter
-        const skipAdviceNotification = activeOverlay.id?.startsWith("notification-click-");
+        // SIEMPRE skip save si tiene ID real de BD o viene del NotificationCenter
+        // Solo guardar si es preview (ID temporal que no existe en BD)
+        const shouldSaveAdvice = activeOverlay.id?.startsWith("preview-");
         return (
           <DailyAdviceOverlay
             title={dynamicAdviceData.title}
             message={dynamicAdviceData.message}
-            skipSaveNotification={skipAdviceNotification}
+            skipSaveNotification={!shouldSaveAdvice}
             onClose={handleDismissWithQueue}
           />
         );

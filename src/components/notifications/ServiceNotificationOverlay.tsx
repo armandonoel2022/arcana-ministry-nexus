@@ -73,6 +73,7 @@ interface ServiceProgramNotification {
 
 interface ServiceNotificationOverlayProps {
   forceShow?: boolean;
+  skipSaveNotification?: boolean; // Si es true, no guarda en BD (ya existe)
   onClose?: () => void;
   onOpenChat?: (initialMessage?: string) => void;
   onNavigate?: (path: string) => void;
@@ -743,6 +744,7 @@ const splitSongTitle = (title: string) => {
 
 const ServiceNotificationOverlay = ({
   forceShow = false,
+  skipSaveNotification = false,
   onClose,
   onOpenChat,
   onNavigate,
@@ -754,7 +756,7 @@ const ServiceNotificationOverlay = ({
   const [confirmedServices, setConfirmedServices] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<"services" | "preparations">("services");
   const serviceCardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-  const [notificationCreated, setNotificationCreated] = useState(false);
+  const [notificationCreated, setNotificationCreated] = useState(skipSaveNotification); // Si skip, ya está "creada"
 
   useEffect(() => {
     console.log("🎯 ServiceNotificationOverlay mounted with forceShow:", forceShow);
