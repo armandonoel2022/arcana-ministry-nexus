@@ -97,6 +97,73 @@ export const usePushNotifications = () => {
     checkSupport();
   }, []);
 
+  // Efecto para guardar token pendiente cuando el usuario se autentica
+  useEffect(() => {
+    const savePendingToken = async () => {
+      if (!user) return;
+      
+      const pendingToken = localStorage.getItem('pending_device_token');
+      if (!pendingToken) return;
+      
+      console.log('📱 [PushNotifications] Usuario autenticado, guardando token pendiente...');
+      
+      try {
+        // Guardar en user_push_subscriptions
+        const subscriptionData = {
+          token: pendingToken,
+          platform: 'native',
+          device_type: isNativePlatform() 
+            ? (getCapacitor()?.getPlatform?.() || 'ios')
+            : 'web',
+          updated_at: new Date().toISOString()
+        };
+
+        const { error: subsError } = await supabase
+          .from('user_push_subscriptions')
+          .upsert({
+            user_id: user.id,
+            subscription: subscriptionData,
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'user_id'
+          });
+
+        if (subsError) {
+          console.error('📱 [PushNotifications] Error guardando token pendiente (subscriptions):', subsError);
+        } else {
+          console.log('📱 [PushNotifications] Token pendiente guardado en user_push_subscriptions');
+        }
+
+        // Guardar en user_devices (para iOS push)
+        const { error: devicesError } = await supabase
+          .from('user_devices')
+          .upsert(
+            {
+              user_id: user.id,
+              device_token: pendingToken,
+              platform: 'ios',
+              is_active: true,
+              last_active: new Date().toISOString(),
+            },
+            { onConflict: 'user_id,device_token' }
+          );
+
+        if (devicesError) {
+          console.error('📱 [PushNotifications] Error guardando token pendiente (devices):', devicesError);
+        } else {
+          console.log('📱 [PushNotifications] Token pendiente guardado en user_devices');
+          // Solo eliminar si ambos guardados fueron exitosos
+          localStorage.removeItem('pending_device_token');
+          setDeviceToken(pendingToken);
+        }
+      } catch (error) {
+        console.error('📱 [PushNotifications] Error procesando token pendiente:', error);
+      }
+    };
+
+    savePendingToken();
+  }, [user]);
+
   // Set up native push listeners when permission is granted
   useEffect(() => {
     if (!isNativePlatform() || permission !== 'granted' || !PushNotifications) return;
@@ -107,7 +174,17 @@ export const usePushNotifications = () => {
         await PushNotifications.addListener('registration', async (token: { value: string }) => {
           console.log('📱 [PushNotifications] Push registration token:', token.value);
           setDeviceToken(token.value);
-          await saveDeviceToken(token.value, 'native');
+          
+          // Siempre guardar token en localStorage para casos donde user aún no está disponible
+          localStorage.setItem('pending_device_token', token.value);
+          console.log('📱 [PushNotifications] Token guardado en localStorage como pendiente');
+          
+          // Intentar guardar inmediatamente si hay usuario
+          if (user) {
+            await saveDeviceToken(token.value, 'native');
+          } else {
+            console.log('📱 [PushNotifications] Usuario no disponible aún, token pendiente para guardar');
+          }
         });
 
         // Registration error
@@ -140,7 +217,7 @@ export const usePushNotifications = () => {
         PushNotifications.removeAllListeners();
       }
     };
-  }, [permission]);
+  }, [permission, user]);
 
   // Listener para mensajes del Service Worker (Web)
   useEffect(() => {

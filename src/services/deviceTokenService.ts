@@ -59,7 +59,24 @@ class DeviceTokenService {
         return;
       }
 
-      // Usar upsert para actualizar si el token ya existe
+      // Guardar en user_push_subscriptions
+      const subscriptionData = {
+        token,
+        platform: 'ios',
+        device_type: 'ios',
+        updated_at: new Date().toISOString()
+      };
+
+      await supabase.from('user_push_subscriptions').upsert(
+        {
+          user_id: user.id,
+          subscription: subscriptionData,
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: 'user_id' }
+      );
+
+      // Usar upsert para actualizar si el token ya existe en user_devices
       const { error } = await supabase.from('user_devices').upsert(
         {
           user_id: user.id,

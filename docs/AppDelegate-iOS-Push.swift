@@ -61,14 +61,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let token = tokenParts.joined()
         print("📱 Device Token recibido: \(token)")
         
-        // Guardar token en Supabase
-        saveDeviceTokenToSupabase(token)
+        // IMPORTANTE: El token se guarda en JavaScript cuando el usuario se autentica
+        // El AppDelegate solo pasa el token a Capacitor, NO directamente a Supabase
+        // porque no tenemos acceso al user_id desde el código nativo
         
-        // Pasar a Capacitor para que lo maneje también
+        // Pasar a Capacitor para que lo maneje con el contexto del usuario
         NotificationCenter.default.post(
             name: .capacitorDidRegisterForRemoteNotifications,
             object: deviceToken
         )
+        
+        // También guardar en UserDefaults para que JavaScript pueda recuperarlo
+        UserDefaults.standard.set(token, forKey: "pending_device_token_native")
+        print("💾 Token guardado en UserDefaults para JavaScript")
     }
     
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
@@ -79,63 +84,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         )
     }
     
-    // MARK: - Guardar Token en Supabase
-    
-    func saveDeviceTokenToSupabase(_ token: String) {
-        print("💾 Guardando token en Supabase: \(token.prefix(20))...")
-        
-        // URL del endpoint REST
-        let urlString = "\(supabaseUrl)/rest/v1/user_devices"
-        
-        guard let url = URL(string: urlString) else {
-            print("❌ URL inválida")
-            return
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(supabaseKey)", forHTTPHeaderField: "Authorization")
-        request.setValue(supabaseKey, forHTTPHeaderField: "apikey")
-        // Upsert: si el token ya existe, actualizarlo
-        request.setValue("resolution=merge-duplicates", forHTTPHeaderField: "Prefer")
-        
-        // Crear payload
-        let payload: [String: Any] = [
-            "device_token": token,
-            "platform": "ios",
-            "is_active": true,
-            "last_active": ISO8601DateFormatter().string(from: Date())
-        ]
-        
-        do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: payload)
-        } catch {
-            print("❌ Error creando JSON: \(error)")
-            return
-        }
-        
-        // Enviar solicitud
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
-                print("❌ Error enviando token: \(error)")
-                return
-            }
-            
-            if let httpResponse = response as? HTTPURLResponse {
-                if httpResponse.statusCode == 201 || httpResponse.statusCode == 200 {
-                    print("✅ Token guardado exitosamente en Supabase")
-                } else {
-                    print("⚠️ Respuesta HTTP: \(httpResponse.statusCode)")
-                    if let data = data, let responseString = String(data: data, encoding: .utf8) {
-                        print("Respuesta: \(responseString)")
-                    }
-                }
-            }
-        }
-        
-        task.resume()
-    }
+    // NOTA: El guardado del token en Supabase se hace desde JavaScript (usePushNotifications)
+    // porque necesitamos el user_id del usuario autenticado, que no está disponible en Swift.
+    // El token se pasa a Capacitor mediante NotificationCenter y se guarda en localStorage
+    // para que JavaScript lo procese cuando el usuario se autentique.
     
     // MARK: - UNUserNotificationCenterDelegate
     
