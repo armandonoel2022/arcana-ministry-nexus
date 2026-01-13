@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { ArcanaBot, BotAction } from "./ArcanaBot";
 import { ArcanaAvatar } from "./ArcanaAvatar";
 import { VoiceNoteRecorder } from "./VoiceNoteRecorder";
 import { SongLimitOverlay } from "./SongLimitOverlay";
+import { SongRepetitionDialog } from "./SongRepetitionDialog";
 import { EmoticonPicker } from "./EmoticonPicker";
 import { VoiceMessagePlayer } from "./VoiceMessagePlayer";
 import { BuzzButton } from "./BuzzButton";
@@ -18,6 +19,7 @@ import { RoomMembersRow } from "./RoomMembersRow";
 import { useEmoticons } from "@/hooks/useEmoticons";
 import { useSounds } from "@/hooks/useSounds";
 import { useMediaUpload } from "@/hooks/useMediaUpload";
+import { useSongRepetitionCheck, SongRepetitionResult } from "@/hooks/useSongRepetitionCheck";
 
 interface ChatRoomData {
   id: string;
@@ -62,6 +64,12 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
   const [songLimitData, setSongLimitData] = useState<{ count: number; serviceName: string } | null>(null);
   const [showEmoticons, setShowEmoticons] = useState(false);
   const [attachedMedia, setAttachedMedia] = useState<any>(null);
+  
+  // Song repetition dialog state
+  const [showRepetitionDialog, setShowRepetitionDialog] = useState(false);
+  const [repetitionResult, setRepetitionResult] = useState<SongRepetitionResult | null>(null);
+  const [pendingAction, setPendingAction] = useState<BotAction | null>(null);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
@@ -70,6 +78,7 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
   const { replaceEmoticons } = useEmoticons();
   const { preloadSounds, playNotification, playSound } = useSounds();
   const { uploadMedia, uploading, progress } = useMediaUpload();
+  const { checkSongRepetition, isChecking: isCheckingRepetition } = useSongRepetitionCheck();
 
   useEffect(() => {
     preloadSounds(); // Precargar sonidos al montar
@@ -543,177 +552,225 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
     }
   };
 
-  const handleActionClick = async (action: BotAction) => {
-    if (action.type === "select_song") {
-      try {
-        console.log("Acción recibida:", action);
+  // Function to actually add the song (called after semaphore check)
+  const addSongToService = useCallback(async (action: BotAction) => {
+    try {
+      const serviceId = action.serviceId;
+      const serviceDate = action.serviceDate;
 
-        // Usar el serviceId que viene en la acción
-        const serviceId = action.serviceId;
-        const serviceDate = action.serviceDate;
-
-        if (!serviceId) {
-          console.error("No serviceId en la acción");
-          toast({
-            title: "Error",
-            description: "No tienes servicios asignados como director",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        console.log("Intentando agregar canción:", {
-          serviceId,
-          songId: action.songId,
-          songName: action.songName,
-        });
-
-        // Verificar si la canción ya existe en el servicio
-        const { data: existing, error: checkError } = await supabase
-          .from("service_songs")
-          .select("id")
-          .eq("service_id", serviceId)
-          .eq("song_id", action.songId)
-          .maybeSingle();
-
-        if (checkError) {
-          console.error("Error verificando canción existente:", checkError);
-          throw checkError;
-        }
-
-        if (existing) {
-          toast({
-            title: "⚠️ Canción ya agregada",
-            description: `"${action.songName}" ya está en este servicio`,
-            variant: "default",
-          });
-          return;
-        }
-
-        // Obtener datos del usuario actual para la notificación
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user?.id).single();
-
-        // Obtener datos de la canción
-        const { data: songData } = await supabase
-          .from("songs")
-          .select("title, artist, key_signature, difficulty_level")
-          .eq("id", action.songId)
-          .single();
-
-        // Insertar en la tabla service_songs
-        console.log("Insertando en service_songs...");
-        const { error } = await supabase.from("service_songs").insert({
-          service_id: serviceId,
-          song_id: action.songId,
-        });
-
-        if (error) {
-          console.error("Error insertando en service_songs:", error);
-          console.error("Detalles del error:", error.message, error.details, error.hint);
-          throw error;
-        }
-
-        console.log("Canción insertada exitosamente");
-
-        // Asegurar que exista también el registro en song_selections (usado por la vista service_selected_songs)
-        console.log("Sincronizando con song_selections...");
-        const { data: existingSelection, error: selCheckError } = await supabase
-          .from("song_selections")
-          .select("id")
-          .eq("service_id", serviceId)
-          .eq("song_id", action.songId)
-          .maybeSingle();
-
-        if (selCheckError) {
-          console.error("Error verificando selección existente:", selCheckError);
-        }
-
-        if (!existingSelection) {
-          const { error: selInsertError } = await supabase.from("song_selections").insert({
-            service_id: serviceId,
-            song_id: action.songId,
-            selected_by: user?.id,
-            selection_reason: (action as any).reason || "Seleccionada por ARCANA",
-          });
-          if (selInsertError) {
-            console.error("Error insertando en song_selections:", selInsertError);
-          }
-        }
-
-        // Obtener todos los miembros activos para enviarles notificación
-        const { data: allMembers } = await supabase.from("profiles").select("id").eq("is_active", true);
-
-        // Obtener datos completos del servicio
-        const { data: fullServiceData } = await supabase.from("services").select("*").eq("id", serviceId).single();
-
-        // Crear notificaciones para todos los miembros
-        if (allMembers && allMembers.length > 0) {
-          const notifications = allMembers.map((member) => ({
-            recipient_id: member.id,
-            type: "song_selection",
-            title: "🎵 Nueva Canción Seleccionada",
-            message: `${profile?.full_name || "Un director"} ha seleccionado "${songData?.title}" para el servicio "${fullServiceData?.title}" del ${new Date(serviceDate!).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}`,
-            notification_category: "repertory",
-            metadata: {
-              service_id: serviceId,
-              service_title: fullServiceData?.title,
-              service_date: serviceDate,
-              service_leader: fullServiceData?.leader,
-              song_id: action.songId,
-              song_title: songData?.title,
-              selected_by: profile?.full_name,
-            },
-          }));
-
-          await supabase.from("system_notifications").insert(notifications);
-        }
-
-        // Contar cuántas canciones tiene ahora el servicio
-        const { data: songCount, error: countError } = await supabase
-          .from("service_songs")
-          .select("id", { count: "exact" })
-          .eq("service_id", serviceId);
-
-        const totalSongs = songCount?.length || 0;
-        console.log("Total de canciones en el servicio:", totalSongs);
-
-        // Obtener nombre del servicio para el overlay
-        const { data: serviceData } = await supabase.from("services").select("title").eq("id", serviceId).single();
-
-        toast({
-          title: "✅ Canción agregada",
-          description: `"${action.songName}" agregada al servicio del ${new Date(serviceDate!).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}`,
-        });
-
-        // Mostrar overlay si se alcanzaron 4, 5 o 6 canciones
-        if (totalSongs >= 4 && totalSongs <= 6) {
-          setSongLimitData({
-            count: totalSongs,
-            serviceName: serviceData?.title || "Sin nombre",
-          });
-          setShowSongLimitOverlay(true);
-        }
-
-        // Send confirmation message from bot
-        await supabase.from("chat_messages").insert({
-          room_id: room.id,
-          user_id: null,
-          message: `✅ Perfecto! Agregué "${action.songName}" al servicio del ${new Date(serviceDate!).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}`,
-          is_bot: true,
-        });
-      } catch (error) {
-        console.error("Error completo agregando canción:", error);
+      if (!serviceId) {
         toast({
           title: "Error",
-          description: `No se pudo agregar la canción: ${error.message || "Error desconocido"}`,
+          description: "No tienes servicios asignados como director",
           variant: "destructive",
         });
+        return;
       }
+
+      // Verificar si la canción ya existe en el servicio
+      const { data: existing, error: checkError } = await supabase
+        .from("service_songs")
+        .select("id")
+        .eq("service_id", serviceId)
+        .eq("song_id", action.songId)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error("Error verificando canción existente:", checkError);
+        throw checkError;
+      }
+
+      if (existing) {
+        toast({
+          title: "⚠️ Canción ya agregada",
+          description: `"${action.songName}" ya está en este servicio`,
+          variant: "default",
+        });
+        return;
+      }
+
+      // Obtener datos del usuario actual para la notificación
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user?.id).single();
+
+      // Obtener datos de la canción
+      const { data: songData } = await supabase
+        .from("songs")
+        .select("title, artist, key_signature, difficulty_level")
+        .eq("id", action.songId)
+        .single();
+
+      // Insertar en la tabla service_songs
+      console.log("Insertando en service_songs...");
+      const { error } = await supabase.from("service_songs").insert({
+        service_id: serviceId,
+        song_id: action.songId,
+      });
+
+      if (error) {
+        console.error("Error insertando en service_songs:", error);
+        throw error;
+      }
+
+      console.log("Canción insertada exitosamente");
+
+      // Asegurar que exista también el registro en song_selections
+      const { data: existingSelection, error: selCheckError } = await supabase
+        .from("song_selections")
+        .select("id")
+        .eq("service_id", serviceId)
+        .eq("song_id", action.songId)
+        .maybeSingle();
+
+      if (!existingSelection && !selCheckError) {
+        await supabase.from("song_selections").insert({
+          service_id: serviceId,
+          song_id: action.songId,
+          selected_by: user?.id,
+          selection_reason: (action as any).reason || "Seleccionada por ARCANA",
+        });
+      }
+
+      // Obtener todos los miembros activos para enviarles notificación
+      const { data: allMembers } = await supabase.from("profiles").select("id").eq("is_active", true);
+
+      // Obtener datos completos del servicio
+      const { data: fullServiceData } = await supabase.from("services").select("*").eq("id", serviceId).single();
+
+      // Crear notificaciones para todos los miembros
+      if (allMembers && allMembers.length > 0) {
+        const notifications = allMembers.map((member) => ({
+          recipient_id: member.id,
+          type: "song_selection",
+          title: "🎵 Nueva Canción Seleccionada",
+          message: `${profile?.full_name || "Un director"} ha seleccionado "${songData?.title}" para el servicio "${fullServiceData?.title}" del ${new Date(serviceDate!).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}`,
+          notification_category: "repertory",
+          metadata: {
+            service_id: serviceId,
+            service_title: fullServiceData?.title,
+            service_date: serviceDate,
+            service_leader: fullServiceData?.leader,
+            song_id: action.songId,
+            song_title: songData?.title,
+            selected_by: profile?.full_name,
+          },
+        }));
+
+        await supabase.from("system_notifications").insert(notifications);
+      }
+
+      // Contar cuántas canciones tiene ahora el servicio
+      const { data: songCount } = await supabase
+        .from("service_songs")
+        .select("id", { count: "exact" })
+        .eq("service_id", serviceId);
+
+      const totalSongs = songCount?.length || 0;
+      console.log("Total de canciones en el servicio:", totalSongs);
+
+      // Obtener nombre del servicio para el overlay
+      const { data: serviceData } = await supabase.from("services").select("title").eq("id", serviceId).single();
+
+      toast({
+        title: "✅ Canción agregada",
+        description: `"${action.songName}" agregada al servicio del ${new Date(serviceDate!).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}`,
+      });
+
+      // Mostrar overlay si se alcanzaron 4, 5 o 6 canciones
+      if (totalSongs >= 4 && totalSongs <= 6) {
+        setSongLimitData({
+          count: totalSongs,
+          serviceName: serviceData?.title || "Sin nombre",
+        });
+        setShowSongLimitOverlay(true);
+      }
+
+      // Send confirmation message from bot
+      await supabase.from("chat_messages").insert({
+        room_id: room.id,
+        user_id: null,
+        message: `✅ Perfecto! Agregué "${action.songName}" al servicio del ${new Date(serviceDate!).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}`,
+        is_bot: true,
+      });
+    } catch (error: any) {
+      console.error("Error completo agregando canción:", error);
+      toast({
+        title: "Error",
+        description: `No se pudo agregar la canción: ${error.message || "Error desconocido"}`,
+        variant: "destructive",
+      });
+    }
+  }, [room.id, toast]);
+
+  // Handle action click - now with semaphore check
+  const handleActionClick = async (action: BotAction) => {
+    if (action.type === "select_song") {
+      console.log("🚦 Iniciando verificación semáforo para:", action.songName);
+      
+      const serviceId = action.serviceId;
+      const serviceDate = action.serviceDate;
+
+      if (!serviceId || !serviceDate) {
+        toast({
+          title: "Error",
+          description: "No tienes servicios asignados como director",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Store the pending action and show the dialog
+      setPendingAction(action);
+      setShowRepetitionDialog(true);
+      setRepetitionResult(null);
+
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "No se pudo identificar al usuario",
+          variant: "destructive",
+        });
+        setShowRepetitionDialog(false);
+        return;
+      }
+
+      // Check song repetition
+      const result = await checkSongRepetition(
+        action.songId,
+        user.id,
+        serviceId,
+        serviceDate
+      );
+
+      console.log("🚦 Resultado del semáforo:", result);
+      setRepetitionResult(result);
     }
   };
+
+  // Handle confirm from repetition dialog
+  const handleRepetitionConfirm = useCallback(() => {
+    if (pendingAction) {
+      addSongToService(pendingAction);
+    }
+    setShowRepetitionDialog(false);
+    setPendingAction(null);
+    setRepetitionResult(null);
+  }, [pendingAction, addSongToService]);
+
+  // Handle cancel from repetition dialog
+  const handleRepetitionCancel = useCallback(() => {
+    setShowRepetitionDialog(false);
+    setPendingAction(null);
+    setRepetitionResult(null);
+    toast({
+      title: "Selección cancelada",
+      description: "Puedes elegir otra canción",
+    });
+  }, [toast]);
 
   if (loading) {
     return <div className="text-center py-8">Cargando mensajes...</div>;
@@ -732,6 +789,21 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
           }}
         />
       )}
+
+      {/* Song Repetition Semaphore Dialog */}
+      <SongRepetitionDialog
+        isOpen={showRepetitionDialog}
+        onClose={() => {
+          setShowRepetitionDialog(false);
+          setPendingAction(null);
+          setRepetitionResult(null);
+        }}
+        songName={pendingAction?.songName || ""}
+        result={repetitionResult}
+        isChecking={isCheckingRepetition}
+        onConfirm={handleRepetitionConfirm}
+        onCancel={handleRepetitionCancel}
+      />
 
       {/* Avatar animado de ARCANA */}
       <ArcanaAvatar isActive={arcanaActive} expression={arcanaExpression} position="bottom-right" />
