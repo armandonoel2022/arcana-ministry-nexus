@@ -1,12 +1,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Users, Music, Calendar, Crown, Star, Disc } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Heart, Users, Music, Calendar, Crown, Star, Disc, TrafficCone, ChevronDown, ChevronUp, BookOpen } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { SONG_REPETITION_RULES } from "@/hooks/useSongRepetitionCheck";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const AboutMinistry = () => {
   const [membersCount, setMembersCount] = useState<number>(0);
   const [groupsCount, setGroupsCount] = useState<number>(0);
+  const [showRules, setShowRules] = useState(false);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -40,6 +44,111 @@ const AboutMinistry = () => {
           <h1 className="text-3xl font-bold modern-gradient-text mb-2">Acerca del Ministerio ADN</h1>
           <p className="text-muted-foreground">Arca de Noé - Ministerio de Alabanza y Adoración</p>
         </div>
+
+        {/* Sistema Semáforo - Reglas de Lógica */}
+        <Collapsible open={showRules} onOpenChange={setShowRules} className="mb-6">
+          <Card className="modern-card overflow-hidden">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 flex items-center justify-center">
+                      <TrafficCone className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg text-modern-blue-600 flex items-center gap-2">
+                        <BookOpen className="w-4 h-4" />
+                        {SONG_REPETITION_RULES.title}
+                      </CardTitle>
+                      <CardDescription className="text-sm">
+                        Haz clic para ver las reglas del sistema
+                      </CardDescription>
+                    </div>
+                  </div>
+                  {showRules ? (
+                    <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                  )}
+                </div>
+              </CardHeader>
+            </CollapsibleTrigger>
+            
+            <CollapsibleContent>
+              <CardContent className="space-y-6 pt-0">
+                {/* Descripción */}
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <p className="text-foreground text-sm leading-relaxed">
+                    {SONG_REPETITION_RULES.description}
+                  </p>
+                </div>
+
+                {/* Reglas del semáforo */}
+                <div>
+                  <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <span className="text-lg">🚦</span>
+                    Significado de los colores
+                  </h4>
+                  <div className="space-y-3">
+                    {SONG_REPETITION_RULES.rules.map((rule, index) => (
+                      <div 
+                        key={index}
+                        className={`p-4 rounded-lg border-l-4 ${
+                          rule.color === 'green' 
+                            ? 'bg-green-50 dark:bg-green-950/30 border-green-500' 
+                            : rule.color === 'yellow'
+                            ? 'bg-yellow-50 dark:bg-yellow-950/30 border-yellow-500'
+                            : 'bg-red-50 dark:bg-red-950/30 border-red-500'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <span className="text-2xl">{rule.emoji}</span>
+                          <div className="flex-1">
+                            <h5 className={`font-semibold mb-1 ${
+                              rule.color === 'green' 
+                                ? 'text-green-800 dark:text-green-200' 
+                                : rule.color === 'yellow'
+                                ? 'text-yellow-800 dark:text-yellow-200'
+                                : 'text-red-800 dark:text-red-200'
+                            }`}>
+                              {rule.title}
+                            </h5>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              <strong>Condición:</strong> {rule.condition}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              <strong>Acción:</strong> {rule.action}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Criterios de evaluación */}
+                <div>
+                  <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <span className="text-lg">📊</span>
+                    Criterios de Evaluación
+                  </h4>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    {SONG_REPETITION_RULES.criteria.map((criterion, index) => (
+                      <div key={index} className="p-4 bg-muted/30 rounded-lg border border-border">
+                        <h5 className="font-semibold text-modern-blue-600 mb-2">
+                          {criterion.title}
+                        </h5>
+                        <p className="text-sm text-muted-foreground">
+                          {criterion.description}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
         {/* Historia Expandida */}
         <Card className="mb-6 modern-card">

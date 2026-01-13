@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { useSongRepetitionCheck, SongRepetitionResult } from '@/hooks/useSongRepetitionCheck';
+import TrafficLightIndicator from './TrafficLightIndicator';
 
 interface Service {
   id: string;
@@ -47,6 +49,47 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
   const [reason, setReason] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [servicesLoaded, setServicesLoaded] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [repetitionResult, setRepetitionResult] = useState<SongRepetitionResult | null>(null);
+  const [forceAllow, setForceAllow] = useState(false);
+
+  const { checkSongRepetition, isChecking } = useSongRepetitionCheck();
+
+  // Obtener el usuario actual
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUserId(user.id);
+      }
+    };
+    getUser();
+  }, []);
+
+  // Verificar repetición cuando se selecciona un servicio
+  useEffect(() => {
+    const checkRepetition = async () => {
+      if (!selectedService || !currentUserId) {
+        setRepetitionResult(null);
+        return;
+      }
+
+      const selectedServiceData = services.find(s => s.id === selectedService);
+      if (!selectedServiceData) return;
+
+      const result = await checkSongRepetition(
+        song.id,
+        currentUserId,
+        selectedService,
+        selectedServiceData.service_date
+      );
+      
+      setRepetitionResult(result);
+      setForceAllow(false); // Reset cuando cambia el servicio
+    };
+
+    checkRepetition();
+  }, [selectedService, currentUserId, song.id, services]);
 
   const loadUpcomingServices = async () => {
     if (servicesLoaded) return;
@@ -130,6 +173,12 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
       return;
     }
 
+    // Verificar si el semáforo está en rojo y no se ha forzado
+    if (repetitionResult?.color === 'red' && !repetitionResult.canProceed && !forceAllow) {
+      toast.error('Por favor confirma que deseas continuar o elige otra canción');
+      return;
+    }
+
     setIsLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -210,6 +259,8 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
       setOpen(false);
       setSelectedService('');
       setReason('');
+      setRepetitionResult(null);
+      setForceAllow(false);
     } catch (error) {
       console.error('Error selecting song:', error);
       toast.error('Error al seleccionar la canción');
@@ -240,12 +291,40 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
     }
   };
 
+  const handleContinueAnyway = () => {
+    setForceAllow(true);
+    toast.info('Puedes continuar con la selección', {
+      description: 'Recuerda considerar variar el repertorio en futuras ocasiones'
+    });
+  };
+
+  const handleChooseAnother = () => {
+    setOpen(false);
+    setSelectedService('');
+    setRepetitionResult(null);
+    toast.info('Considera explorar otras canciones del repertorio');
+  };
+
+  // Determinar si el botón debe estar deshabilitado
+  const isSubmitDisabled = () => {
+    if (isLoading || !selectedService) return true;
+    if (repetitionResult?.color === 'red' && !repetitionResult.canProceed && !forceAllow) return true;
+    return false;
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      setOpen(isOpen);
+      if (!isOpen) {
+        setSelectedService('');
+        setRepetitionResult(null);
+        setForceAllow(false);
+      }
+    }}>
       <DialogTrigger asChild onClick={loadUpcomingServices}>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Music className="w-5 h-5" />
@@ -352,6 +431,17 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
               )}
             </div>
 
+            {/* Traffic Light Indicator */}
+            {selectedService && (
+              <TrafficLightIndicator
+                result={repetitionResult}
+                isChecking={isChecking}
+                onContinueAnyway={handleContinueAnyway}
+                onChooseAnother={handleChooseAnother}
+                showActions={!forceAllow}
+              />
+            )}
+
             <div>
               <label className="text-sm font-medium mb-2 block">
                 Notas adicionales (opcional)
@@ -368,7 +458,7 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
           <div className="flex gap-2 pt-4">
             <Button 
               onClick={() => handleSelectSong(false)}
-              disabled={isLoading || !selectedService}
+              disabled={isSubmitDisabled()}
               variant="outline"
               className="flex-1"
             >
@@ -376,7 +466,7 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
             </Button>
             <Button
               onClick={() => handleSelectSong(true)}
-              disabled={isLoading || !selectedService}
+              disabled={isSubmitDisabled()}
               className="flex-1"
             >
               <Bell className="w-4 h-4 mr-2" />
