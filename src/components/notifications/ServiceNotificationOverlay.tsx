@@ -1379,20 +1379,42 @@ const ServiceNotificationOverlay = ({
       const songsSection = document.createElement("div");
       songsSection.style.marginBottom = "32px";
 
-      const songsTitle = document.createElement("h3");
-      songsTitle.textContent = "Canciones Seleccionadas";
-      songsTitle.style.fontSize = "20px";
-      songsTitle.style.fontWeight = "bold";
-      songsTitle.style.color = "#15803d";
-      songsTitle.style.marginBottom = "20px";
-      songsTitle.style.textAlign = "center";
-      songsTitle.style.textDecoration = "underline";
-
-      songsSection.appendChild(songsTitle);
-
       const worshipSongs = service.selected_songs?.filter((s) => s.song_order >= 1 && s.song_order <= 4) || [];
       const offeringsSongs = service.selected_songs?.filter((s) => s.song_order === 5) || [];
       const communionSongs = service.selected_songs?.filter((s) => s.song_order === 6) || [];
+
+      // Solo mostrar sección de canciones si hay alguna canción seleccionada
+      const hasAnySongs = worshipSongs.length > 0 || offeringsSongs.length > 0 || communionSongs.length > 0;
+      
+      if (hasAnySongs) {
+        const songsTitle = document.createElement("h3");
+        songsTitle.textContent = "Canciones Seleccionadas";
+        songsTitle.style.fontSize = "20px";
+        songsTitle.style.fontWeight = "bold";
+        songsTitle.style.color = "#15803d";
+        songsTitle.style.marginBottom = "20px";
+        songsTitle.style.textAlign = "center";
+        songsTitle.style.textDecoration = "underline";
+        songsSection.appendChild(songsTitle);
+      } else {
+        // Si no hay canciones, mostrar mensaje
+        const noSongsMessage = document.createElement("div");
+        noSongsMessage.style.textAlign = "center";
+        noSongsMessage.style.padding = "16px";
+        noSongsMessage.style.backgroundColor = "#f3f4f6";
+        noSongsMessage.style.borderRadius = "12px";
+        noSongsMessage.style.marginBottom = "16px";
+        
+        const noSongsText = document.createElement("p");
+        noSongsText.textContent = "No hay canciones seleccionadas aún";
+        noSongsText.style.color = "#6b7280";
+        noSongsText.style.fontSize = "16px";
+        noSongsText.style.fontStyle = "italic";
+        noSongsText.style.margin = "0";
+        
+        noSongsMessage.appendChild(noSongsText);
+        songsSection.appendChild(noSongsMessage);
+      }
 
       if (worshipSongs.length > 0) {
         const songsList = document.createElement("div");
