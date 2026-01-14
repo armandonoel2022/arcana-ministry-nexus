@@ -1,11 +1,21 @@
 import React from 'react';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { Button } from '@/components/ui/button';
-import { Bell, BellOff, Loader2 } from 'lucide-react';
+import { Bell, BellOff, Loader2, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 export const PushNotificationPermission: React.FC = () => {
-  const { isSupported, permission, isRegistering, requestPermission } = usePushNotifications();
+  const { isSupported, permission, isRegistering, deviceToken, requestPermission, forceReRegister } = usePushNotifications();
+  const [isReRegistering, setIsReRegistering] = React.useState(false);
+
+  const handleForceReRegister = async () => {
+    setIsReRegistering(true);
+    try {
+      await forceReRegister();
+    } finally {
+      setIsReRegistering(false);
+    }
+  };
 
   if (!isSupported) {
     return (
@@ -40,6 +50,40 @@ export const PushNotificationPermission: React.FC = () => {
   }
 
   if (permission === 'granted') {
+    // Check if device token is registered
+    if (!deviceToken) {
+      return (
+        <Card className="bg-amber-50 border-amber-200">
+          <CardContent className="p-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <Bell className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              <div className="text-xs text-amber-800 font-medium">
+                ⚠️ Notificaciones activadas pero dispositivo no registrado
+              </div>
+            </div>
+            <Button
+              onClick={handleForceReRegister}
+              disabled={isReRegistering}
+              className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+              size="sm"
+            >
+              {isReRegistering ? (
+                <>
+                  <Loader2 className="w-3 h-3 mr-2 animate-spin" />
+                  Registrando...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-3 h-3 mr-2" />
+                  Registrar dispositivo
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      );
+    }
+
     return (
       <Card className="bg-green-50 border-green-200">
         <CardContent className="p-3">
