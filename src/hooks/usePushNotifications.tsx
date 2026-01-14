@@ -97,11 +97,44 @@ export const usePushNotifications = () => {
     checkSupport();
   }, []);
 
-  // Efecto para guardar token pendiente cuando el usuario se autentica
+  // Efecto para cargar token existente y guardar token pendiente cuando el usuario se autentica
   useEffect(() => {
-    const savePendingToken = async () => {
+    const loadExistingTokenAndSavePending = async () => {
       if (!user) return;
       
+      // Primero intentar cargar el token existente desde la base de datos
+      try {
+        const { data: existingDevice } = await supabase
+          .from('user_devices')
+          .select('device_token')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+          .maybeSingle();
+        
+        if (existingDevice?.device_token) {
+          console.log('📱 [PushNotifications] Token existente cargado desde DB');
+          setDeviceToken(existingDevice.device_token);
+        }
+        
+        // También revisar en user_push_subscriptions para web
+        const { data: existingSubscription } = await supabase
+          .from('user_push_subscriptions')
+          .select('subscription')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (existingSubscription?.subscription) {
+          const sub = existingSubscription.subscription as any;
+          if (sub.token || sub.endpoint) {
+            console.log('📱 [PushNotifications] Subscription existente cargada desde DB');
+            setDeviceToken(sub.token || sub.endpoint?.substring(0, 50) || 'web-registered');
+          }
+        }
+      } catch (error) {
+        console.error('📱 [PushNotifications] Error cargando token existente:', error);
+      }
+      
+      // Luego procesar token pendiente si existe
       const pendingToken = localStorage.getItem('pending_device_token');
       if (!pendingToken) return;
       
@@ -161,7 +194,7 @@ export const usePushNotifications = () => {
       }
     };
 
-    savePendingToken();
+    loadExistingTokenAndSavePending();
   }, [user]);
 
   // Set up native push listeners when permission is granted
@@ -720,11 +753,24 @@ export const usePushNotifications = () => {
         // Web - re-register service worker
         console.log('📱 [PushNotifications] Force re-registering web push...');
         const success = await registerServiceWorker();
-        setIsRegistering(false);
         
         if (success) {
+          // Cargar el token/subscription recién guardado desde la DB
+          const { data: subscription } = await supabase
+            .from('user_push_subscriptions')
+            .select('subscription')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          
+          if (subscription?.subscription) {
+            const sub = subscription.subscription as any;
+            setDeviceToken(sub.endpoint?.substring(0, 50) || 'web-registered');
+          }
+          
           toast.success('Dispositivo registrado correctamente');
         }
+        
+        setIsRegistering(false);
         return success;
       }
       
