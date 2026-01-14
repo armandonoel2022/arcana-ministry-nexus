@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Bell, BellOff, Smartphone, TestTube } from 'lucide-react';
+import { Bell, BellOff, Smartphone, TestTube, RefreshCw } from 'lucide-react';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { toast } from 'sonner';
 
@@ -13,10 +13,12 @@ export const PushNotificationSettings = () => {
     deviceToken,
     requestPermission, 
     unsubscribe,
-    sendLocalNotification 
+    sendLocalNotification,
+    forceReRegister
   } = usePushNotifications();
   const [isUnsubscribing, setIsUnsubscribing] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
+  const [isReRegistering, setIsReRegistering] = useState(false);
 
   // Listen for navigation messages from service worker
   useEffect(() => {
@@ -55,6 +57,25 @@ export const PushNotificationSettings = () => {
       toast.success('Notificaciones desactivadas');
     } else {
       toast.error('No se pudo desactivar las notificaciones');
+    }
+  };
+
+  const handleForceReRegister = async () => {
+    setIsReRegistering(true);
+    try {
+      const success = await forceReRegister();
+      if (success) {
+        toast.success('¡Dispositivo registrado!', {
+          description: 'Tu token ha sido guardado correctamente'
+        });
+      } else {
+        toast.error('No se pudo registrar el dispositivo');
+      }
+    } catch (error) {
+      console.error('Error re-registering:', error);
+      toast.error('Error al registrar dispositivo');
+    } finally {
+      setIsReRegistering(false);
     }
   };
 
@@ -168,10 +189,24 @@ export const PushNotificationSettings = () => {
               <span>
                 {deviceToken 
                   ? `Token registrado: ${deviceToken.substring(0, 20)}...`
-                  : 'Dispositivo registrado para notificaciones'
+                  : '⚠️ Token no registrado - usa el botón de re-registrar'
                 }
               </span>
             </div>
+
+            {/* Re-register button (when token is missing) */}
+            {!deviceToken && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleForceReRegister}
+                disabled={isReRegistering || isRegistering}
+                className="w-full bg-amber-100 hover:bg-amber-200 text-amber-900 dark:bg-amber-900 dark:hover:bg-amber-800 dark:text-amber-100"
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${isReRegistering ? 'animate-spin' : ''}`} />
+                {isReRegistering ? 'Registrando...' : 'Re-registrar dispositivo'}
+              </Button>
+            )}
 
             {/* Test button */}
             <Button

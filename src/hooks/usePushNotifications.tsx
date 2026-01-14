@@ -675,6 +675,69 @@ export const usePushNotifications = () => {
     }
   }, [permission]);
 
+  // Force re-register device token (useful when token wasn't saved properly)
+  const forceReRegister = useCallback(async (): Promise<boolean> => {
+    if (!isSupported || !user) {
+      console.log('📱 [PushNotifications] Cannot force re-register: not supported or no user');
+      return false;
+    }
+
+    setIsRegistering(true);
+    
+    try {
+      if (isNativePlatform()) {
+        console.log('📱 [PushNotifications] Force re-registering native device...');
+        
+        if (PushNotifications) {
+          // Remove all listeners first to avoid duplicates
+          await PushNotifications.removeAllListeners();
+          
+          // Re-setup listeners
+          await PushNotifications.addListener('registration', async (token: { value: string }) => {
+            console.log('📱 [PushNotifications] Force re-register - Token received:', token.value);
+            setDeviceToken(token.value);
+            
+            // Save immediately
+            await saveDeviceToken(token.value, 'native');
+            localStorage.setItem('pending_device_token', token.value);
+            
+            toast.success('Dispositivo registrado correctamente');
+          });
+          
+          await PushNotifications.addListener('registrationError', (error: any) => {
+            console.error('📱 [PushNotifications] Force re-register error:', error);
+            toast.error('Error al registrar dispositivo');
+          });
+          
+          // Trigger registration
+          await PushNotifications.register();
+          console.log('📱 [PushNotifications] Force re-register triggered');
+          
+          setIsRegistering(false);
+          return true;
+        }
+      } else {
+        // Web - re-register service worker
+        console.log('📱 [PushNotifications] Force re-registering web push...');
+        const success = await registerServiceWorker();
+        setIsRegistering(false);
+        
+        if (success) {
+          toast.success('Dispositivo registrado correctamente');
+        }
+        return success;
+      }
+      
+      setIsRegistering(false);
+      return false;
+    } catch (error) {
+      console.error('📱 [PushNotifications] Error in forceReRegister:', error);
+      toast.error('Error al registrar dispositivo');
+      setIsRegistering(false);
+      return false;
+    }
+  }, [isSupported, user]);
+
   return {
     isSupported,
     permission,
@@ -682,7 +745,8 @@ export const usePushNotifications = () => {
     deviceToken,
     requestPermission,
     unsubscribe,
-    sendLocalNotification
+    sendLocalNotification,
+    forceReRegister
   };
 };
 
