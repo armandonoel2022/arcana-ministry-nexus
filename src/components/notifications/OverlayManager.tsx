@@ -13,6 +13,7 @@ import BirthAnnouncementOverlay from "./BirthAnnouncementOverlay";
 import DirectorChangeOverlay from "./DirectorChangeOverlay";
 import SpecialEventOverlay from "./SpecialEventOverlay";
 import VoiceReplacementOverlay from "./VoiceReplacementOverlay";
+import QuarantineServiceOverlay from "./QuarantineServiceOverlay";
 import { toast } from "sonner";
 import { createBroadcastNotification, NotificationType } from "@/services/notificationService";
 
@@ -1160,6 +1161,19 @@ const OverlayManager: React.FC = () => {
             groupName={metadata.group_name || "Grupo de Alabanza"}
             status={metadata.status || "pending"}
             reason={metadata.reason}
+            onClose={handleDismissWithQueue}
+          />
+        );
+
+      case "quarantine_service":
+        return (
+          <QuarantineServiceOverlay
+            forceShow={true}
+            serviceDate={metadata.service_date}
+            serviceTime={metadata.service_time || "7:00 PM"}
+            serviceDay={metadata.service_day}
+            location={metadata.location || "Templo Principal"}
+            specialMessage={metadata.special_message || metadata.message}
             onClose={handleDismissWithQueue}
           />
         );
