@@ -58,7 +58,8 @@ const daysOfWeek = [
 ];
 
 const notificationTypes = [
-  { value: "service_overlay", label: "Overlay de Servicios" },
+  { value: "service_overlay", label: "Overlay de Servicios (Domingos)" },
+  { value: "quarantine_service", label: "Servicio de Cuarentena (Mié/Sáb)" },
   { value: "daily_verse", label: "Versículo del Día" },
   { value: "daily_advice", label: "Consejo del Día" },
   { value: "death_announcement", label: "Anuncio de Fallecimiento" },
@@ -137,6 +138,11 @@ const ScheduledNotifications = () => {
       baby_weight: "",
       baby_height: "",
       birth_message: "",
+      // Quarantine service fields
+      service_date: "",
+      service_time: "7:00 PM",
+      service_day: "wednesday", // "wednesday" or "saturday"
+      special_message: "",
     },
   });
 
@@ -462,6 +468,11 @@ const ScheduledNotifications = () => {
         baby_weight: notification.metadata?.baby_weight || "",
         baby_height: notification.metadata?.baby_height || "",
         birth_message: notification.metadata?.birth_message || "",
+        // Quarantine service fields
+        service_date: notification.metadata?.service_date || "",
+        service_time: notification.metadata?.service_time || "7:00 PM",
+        service_day: notification.metadata?.service_day || "wednesday",
+        special_message: notification.metadata?.special_message || "",
       },
     });
     setSelectedDays(notification.days_of_week || [1]);
@@ -513,6 +524,11 @@ const ScheduledNotifications = () => {
         baby_weight: "",
         baby_height: "",
         birth_message: "",
+        // Quarantine service fields
+        service_date: "",
+        service_time: "7:00 PM",
+        service_day: "wednesday",
+        special_message: "",
       },
     });
     setSelectedDays([]);
@@ -535,6 +551,7 @@ const ScheduledNotifications = () => {
   const getTypeColor = (type: string) => {
     const colors = {
       service_overlay: "bg-blue-100 text-blue-800 border-blue-200",
+      quarantine_service: "bg-amber-100 text-amber-800 border-amber-200",
       daily_verse: "bg-green-100 text-green-800 border-green-200",
       daily_advice: "bg-yellow-100 text-yellow-800 border-yellow-200",
       death_announcement: "bg-gray-100 text-gray-800 border-gray-200",
@@ -625,6 +642,27 @@ const ScheduledNotifications = () => {
                   title: "Programa de Servicios",
                   message: "",
                   metadata: {},
+                },
+              }),
+            );
+            return;
+          }
+
+          case "quarantine_service": {
+            window.dispatchEvent(
+              new CustomEvent("showOverlay", {
+                detail: {
+                  id: `preview-quarantine-${Date.now()}`,
+                  type: "quarantine_service",
+                  title: "Servicio de Cuarentena",
+                  message: metadata.special_message || "",
+                  metadata: {
+                    service_date: metadata.service_date || "",
+                    service_time: metadata.service_time || "7:00 PM",
+                    service_day: metadata.service_day || "wednesday",
+                    location: metadata.location || "Templo Principal",
+                    special_message: metadata.special_message || "",
+                  },
                 },
               }),
             );
@@ -741,6 +779,7 @@ const ScheduledNotifications = () => {
   useEffect(() => {
     const typeNames: Record<string, string> = {
       service_overlay: "Overlay de Servicios",
+      quarantine_service: "Servicio de Cuarentena",
       daily_verse: "Versículo del Día",
       daily_advice: "Consejo del Día",
       death_announcement: "Anuncio de Fallecimiento",

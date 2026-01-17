@@ -33,6 +33,7 @@ export type NotificationType =
   | "special_event"
   | "pregnancy_reveal"
   | "birth_announcement"
+  | "quarantine_service"
   | "general"
   | "system";
 
@@ -92,6 +93,7 @@ const typeToCategory: Record<NotificationType, NotificationCategory> = {
   special_event: "overlay",
   pregnancy_reveal: "overlay",
   birth_announcement: "overlay",
+  quarantine_service: "overlay",
   general: "general",
   system: "general",
 };
@@ -113,6 +115,7 @@ const overlayTypes: NotificationType[] = [
   "special_event",
   "pregnancy_reveal",
   "birth_announcement",
+  "quarantine_service",
 ];
 
 /**
