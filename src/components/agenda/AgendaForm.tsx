@@ -239,6 +239,7 @@ export const AgendaForm: React.FC<AgendaFormProps> = ({ onSuccess }) => {
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="regular">Regular</SelectItem>
+                    <SelectItem value="cuarentena">Cuarentena</SelectItem>
                     <SelectItem value="especial">Especial</SelectItem>
                     <SelectItem value="conferencia">Conferencia</SelectItem>
                     <SelectItem value="evento">Evento</SelectItem>
