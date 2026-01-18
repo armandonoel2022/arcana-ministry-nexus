@@ -28,9 +28,9 @@ interface QuarantineServiceOverlayProps {
   specialMessage?: string;
 }
 
-// Fechas de la cuarentena
-const QUARANTINE_START = new Date("2025-01-12");
-const QUARANTINE_END = new Date("2025-02-21");
+// Fechas de la cuarentena (2026)
+const QUARANTINE_START = new Date("2026-01-12");
+const QUARANTINE_END = new Date("2026-02-21");
 
 const QuarantineServiceOverlay: React.FC<QuarantineServiceOverlayProps> = ({
   forceShow = false,

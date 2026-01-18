@@ -239,7 +239,12 @@ const GROUP_CONFIG = {
 };
 
 // Helper function to get service time from title - moved outside component for use in createServiceAgendaNotification
-const getServiceTime = (serviceTitle: string): string => {
+const getServiceTime = (serviceTitle: string, serviceType?: string): string => {
+  // Servicios de cuarentena son a las 7:00 PM
+  if (serviceType === 'cuarentena') {
+    return "7:00 PM";
+  }
+  
   if (
     serviceTitle.toLowerCase().includes("primera") ||
     serviceTitle.toLowerCase().includes("8:00") ||
@@ -252,6 +257,12 @@ const getServiceTime = (serviceTitle: string): string => {
     serviceTitle.toLowerCase().includes("segundo")
   ) {
     return "10:45 AM";
+  } else if (
+    serviceTitle.toLowerCase().includes("7:00") ||
+    serviceTitle.toLowerCase().includes("cuarentena") ||
+    serviceTitle.toLowerCase().includes("oración")
+  ) {
+    return "7:00 PM";
   }
   return serviceTitle;
 };
@@ -1791,9 +1802,10 @@ const ServiceNotificationOverlay = ({
 
   // Nuevo diseño de ServiceCard mejorado
   const ServiceCard = ({ service }: { service: WeekendService }) => {
-    const serviceTime = getServiceTime(service.title);
+    const serviceTime = getServiceTime(service.title, service.service_type);
     const directorMember = service.group_members.find((m) => m.is_leader);
     const responsibleVoices = getResponsibleVoices(service.group_members).slice(0, 6);
+    const isQuarantine = service.service_type === 'cuarentena';
 
     const worshipSongs = service.selected_songs?.filter((s) => s.song_order >= 1 && s.song_order <= 4) || [];
     const offeringsSongs = service.selected_songs?.filter((s) => s.song_order === 5) || [];
@@ -1802,28 +1814,56 @@ const ServiceNotificationOverlay = ({
     return (
       <div
         ref={(el) => (serviceCardRefs.current[service.id] = el)}
-        className="bg-white/90 rounded-xl p-6 border border-blue-200 shadow-lg mx-auto"
+        className={`rounded-xl p-6 shadow-lg mx-auto ${
+          isQuarantine 
+            ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-amber-500/30' 
+            : 'bg-white/90 border border-blue-200'
+        }`}
         style={{ maxWidth: "600px" }}
       >
+        {/* Quarantine Badge */}
+        {isQuarantine && (
+          <div className="flex items-center justify-center gap-2 mb-4 -mt-2">
+            <span 
+              className="px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5"
+              style={{
+                background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+                color: "#1a1a2e",
+              }}
+            >
+              ⚠️ CUARENTENA
+            </span>
+            <span className="text-amber-400 text-xs">7:00 PM</span>
+          </div>
+        )}
+
         {/* Service Header */}
         <div className="flex items-center gap-3 mb-6">
           <div
             className="w-3 h-8 rounded-full"
             style={{
-              background: `linear-gradient(to bottom, ${service.worship_groups?.color_theme || "#3B82F6"}99, ${service.worship_groups?.color_theme || "#3B82F6"})`,
+              background: isQuarantine 
+                ? "linear-gradient(to bottom, #f59e0b99, #f59e0b)"
+                : `linear-gradient(to bottom, ${service.worship_groups?.color_theme || "#3B82F6"}99, ${service.worship_groups?.color_theme || "#3B82F6"})`,
             }}
           ></div>
           <div>
-            <h3 className="text-xl font-bold text-blue-900">{service.title}</h3>
-            <div className="flex items-center gap-2 mt-1">
+            <h3 className={`text-xl font-bold ${isQuarantine ? 'text-white' : 'text-blue-900'}`}>
+              {service.title}
+            </h3>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span
                 className="text-sm font-medium px-2 py-1 rounded-full text-white"
-                style={{ backgroundColor: service.worship_groups?.color_theme || "#3B82F6" }}
+                style={{ 
+                  backgroundColor: isQuarantine 
+                    ? '#f59e0b' 
+                    : (service.worship_groups?.color_theme || "#3B82F6") 
+                }}
               >
                 {service.worship_groups?.name || "Grupo de Alabanza"}
               </span>
-              <span className="text-sm text-gray-500">•</span>
-              <span className="text-sm text-gray-600">
+              <span className={`text-sm ${isQuarantine ? 'text-gray-400' : 'text-gray-500'}`}>•</span>
+              <span className={`text-sm ${isQuarantine ? 'text-gray-300' : 'text-gray-600'}`}>
                 {service.special_activity
                   ? `Sección especial: ${service.special_activity}`
                   : "Sección especial: Ninguna"}
@@ -1836,10 +1876,16 @@ const ServiceNotificationOverlay = ({
           {/* Left Column - Director and Songs */}
           <div className="space-y-4">
             {/* Director */}
-            <div className="bg-blue-50 rounded-lg p-4">
-              <div className="text-sm font-semibold text-blue-800 mb-3">Director/a de Alabanza</div>
+            <div className={`rounded-lg p-4 ${isQuarantine ? 'bg-amber-900/30' : 'bg-blue-50'}`}>
+              <div className={`text-sm font-semibold mb-3 ${isQuarantine ? 'text-amber-300' : 'text-blue-800'}`}>
+                Director/a de Alabanza
+              </div>
               <div className="flex items-center gap-3">
-                <div className="w-16 h-16 rounded-full border-3 border-blue-300 shadow-lg overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600">
+                <div className={`w-16 h-16 rounded-full border-3 shadow-lg overflow-hidden ${
+                  isQuarantine 
+                    ? 'border-amber-400 bg-gradient-to-r from-amber-500 to-amber-600' 
+                    : 'border-blue-300 bg-gradient-to-r from-blue-500 to-blue-600'
+                }`}>
                   <img
                     src={service.director_profile?.photo_url || directorMember?.profiles?.photo_url}
                     alt={service.leader}
@@ -1856,8 +1902,12 @@ const ServiceNotificationOverlay = ({
                   </div>
                 </div>
                 <div>
-                  <div className="font-semibold text-gray-900">{service.leader}</div>
-                  <div className="text-sm text-blue-600">Líder del Servicio</div>
+                  <div className={`font-semibold ${isQuarantine ? 'text-white' : 'text-gray-900'}`}>
+                    {service.leader}
+                  </div>
+                  <div className={`text-sm ${isQuarantine ? 'text-amber-400' : 'text-blue-600'}`}>
+                    Líder del Servicio
+                  </div>
                 </div>
               </div>
 
@@ -2008,14 +2058,20 @@ const ServiceNotificationOverlay = ({
           {/* Right Column - Voices */}
           <div>
             {responsibleVoices.length > 0 && (
-              <div className="bg-blue-50 rounded-lg p-4 h-full">
-                <div className="text-sm font-semibold text-blue-800 mb-3">Responsables de Voces</div>
+              <div className={`rounded-lg p-4 h-full ${isQuarantine ? 'bg-amber-900/30' : 'bg-blue-50'}`}>
+                <div className={`text-sm font-semibold mb-3 ${isQuarantine ? 'text-amber-300' : 'text-blue-800'}`}>
+                  Responsables de Voces
+                </div>
                 <div className="grid grid-cols-1 gap-3">
                   {responsibleVoices.map((member) => {
                     const { firstName, lastName } = splitName(member.profiles?.full_name || "");
                     return (
                       <div key={member.id} className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full border-2 border-blue-200 overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600">
+                        <div className={`w-12 h-12 rounded-full border-2 overflow-hidden ${
+                          isQuarantine 
+                            ? 'border-amber-400 bg-gradient-to-r from-amber-500 to-amber-600' 
+                            : 'border-blue-200 bg-gradient-to-r from-blue-500 to-blue-600'
+                        }`}>
                           <img
                             src={member.profiles?.photo_url}
                             alt={member.profiles?.full_name}
@@ -2032,9 +2088,17 @@ const ServiceNotificationOverlay = ({
                           </div>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="text-sm font-medium text-gray-900">{firstName}</div>
-                          {lastName && <div className="text-xs text-gray-600">{lastName}</div>}
-                          <div className="text-xs text-blue-600">{member.instrument}</div>
+                          <div className={`text-sm font-medium ${isQuarantine ? 'text-white' : 'text-gray-900'}`}>
+                            {firstName}
+                          </div>
+                          {lastName && (
+                            <div className={`text-xs ${isQuarantine ? 'text-gray-400' : 'text-gray-600'}`}>
+                              {lastName}
+                            </div>
+                          )}
+                          <div className={`text-xs ${isQuarantine ? 'text-amber-400' : 'text-blue-600'}`}>
+                            {member.instrument}
+                          </div>
                         </div>
                       </div>
                     );
@@ -2069,6 +2133,9 @@ const ServiceNotificationOverlay = ({
     return null;
   }
 
+  // Detectar si algún servicio es de cuarentena
+  const hasQuarantineService = services.some(s => s.service_type === 'cuarentena');
+
   return (
     <div className="fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto">
       <div className="min-h-screen flex items-start justify-center py-8">
@@ -2079,16 +2146,48 @@ const ServiceNotificationOverlay = ({
               : "animate-out slide-out-to-top-4 fade-out duration-300"
           }`}
         >
+          {/* Quarantine Banner */}
+          {hasQuarantineService && (
+            <div 
+              className="mb-2 rounded-t-xl p-3 flex items-center justify-center gap-2 text-white"
+              style={{
+                background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+              }}
+            >
+              <span className="text-lg">⚠️</span>
+              <span className="font-semibold text-sm">PERÍODO DE CUARENTENA</span>
+              <span className="text-xs opacity-90 ml-2">(12 Enero - 21 Febrero 2026)</span>
+            </div>
+          )}
+
           {/* Fixed Header */}
-          <div className="bg-white rounded-t-xl p-4 border-b border-border sticky top-4 z-10 shadow-md">
+          <div 
+            className={`p-4 border-b border-border sticky top-4 z-10 shadow-md ${
+              hasQuarantineService ? 'rounded-none' : 'rounded-t-xl'
+            }`}
+            style={{
+              background: hasQuarantineService 
+                ? "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" 
+                : "white"
+            }}
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                <div 
+                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{
+                    background: hasQuarantineService 
+                      ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
+                      : "linear-gradient(to right, #a855f7, #ec4899)"
+                  }}
+                >
                   <Bell className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-foreground">Programa de Servicios</h2>
-                  <p className="text-muted-foreground text-sm">
+                  <h2 className={`text-xl font-bold ${hasQuarantineService ? 'text-white' : 'text-foreground'}`}>
+                    {hasQuarantineService ? 'Servicio de Cuarentena' : 'Programa de Servicios'}
+                  </h2>
+                  <p className={`text-sm ${hasQuarantineService ? 'text-amber-200' : 'text-muted-foreground'}`}>
                     {format(new Date(services[0].service_date), "EEEE, dd 'de' MMMM", { locale: es })}
                   </p>
                 </div>
@@ -2096,13 +2195,17 @@ const ServiceNotificationOverlay = ({
 
               {/* Tabs */}
               <div className="flex items-center gap-4">
-                <div className="flex bg-gray-100 rounded-lg p-1">
+                <div className={`flex rounded-lg p-1 ${hasQuarantineService ? 'bg-white/10' : 'bg-gray-100'}`}>
                   <button
                     onClick={() => setActiveTab("services")}
                     className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                       activeTab === "services"
-                        ? "bg-white text-gray-900 shadow-sm"
-                        : "text-gray-600 hover:text-gray-900"
+                        ? hasQuarantineService 
+                          ? "bg-amber-500 text-white shadow-sm"
+                          : "bg-white text-gray-900 shadow-sm"
+                        : hasQuarantineService
+                          ? "text-white/70 hover:text-white"
+                          : "text-gray-600 hover:text-gray-900"
                     }`}
                   >
                     Servicios
@@ -2111,8 +2214,12 @@ const ServiceNotificationOverlay = ({
                     onClick={() => setActiveTab("preparations")}
                     className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                       activeTab === "preparations"
-                        ? "bg-white text-gray-900 shadow-sm"
-                        : "text-gray-600 hover:text-gray-900"
+                        ? hasQuarantineService 
+                          ? "bg-amber-500 text-white shadow-sm"
+                          : "bg-white text-gray-900 shadow-sm"
+                        : hasQuarantineService
+                          ? "text-white/70 hover:text-white"
+                          : "text-gray-600 hover:text-gray-900"
                     }`}
                   >
                     Preparación
@@ -2120,7 +2227,14 @@ const ServiceNotificationOverlay = ({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={saveToNotifications} className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={saveToNotifications} 
+                    className={`flex items-center gap-2 ${
+                      hasQuarantineService ? 'border-amber-400 text-amber-400 hover:bg-amber-400/20' : ''
+                    }`}
+                  >
                     <Save className="w-4 h-4" />
                     Guardar en Notificaciones
                   </Button>
@@ -2128,7 +2242,7 @@ const ServiceNotificationOverlay = ({
                     variant="ghost"
                     size="sm"
                     onClick={closeOverlay}
-                    className="text-destructive hover:text-destructive"
+                    className={hasQuarantineService ? 'text-white hover:text-red-300' : 'text-destructive hover:text-destructive'}
                   >
                     <X className="w-4 h-4" />
                   </Button>

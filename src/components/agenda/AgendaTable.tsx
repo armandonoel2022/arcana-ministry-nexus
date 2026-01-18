@@ -324,6 +324,8 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
 
   const getServiceTypeColor = (type: string) => {
     switch (type) {
+      case "cuarentena":
+        return "bg-amber-100 text-amber-800";
       case "especial":
         return "bg-purple-100 text-purple-800";
       case "conferencia":
