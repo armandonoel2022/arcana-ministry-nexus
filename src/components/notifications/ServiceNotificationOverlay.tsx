@@ -884,42 +884,47 @@ const ServiceNotificationOverlay = ({
     }
   };
 
-  const getNextWeekend = () => {
+  // Obtener rango de servicios próximos (incluye miércoles para cuarentena)
+  const getUpcomingServicesRange = () => {
     const now = new Date();
-    const currentDay = getDay(now);
+    const currentDay = getDay(now); // 0=Domingo, 1=Lunes, ..., 3=Miércoles, 6=Sábado
     const currentHour = now.getHours();
 
-    let targetSunday: Date;
+    // Buscar desde hoy hasta el próximo domingo (máximo 7 días)
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
 
+    // Si es domingo después de mediodía, empezar desde mañana
+    if (currentDay === 0 && currentHour >= 12) {
+      start.setDate(start.getDate() + 1);
+    }
+
+    // Buscar hasta el próximo domingo
+    let targetSunday: Date;
     if (currentDay === 0) {
       if (currentHour < 12) {
         targetSunday = new Date(now);
-        targetSunday.setHours(0, 0, 0, 0);
       } else {
         targetSunday = new Date(now);
         targetSunday.setDate(now.getDate() + 7);
-        targetSunday.setHours(0, 0, 0, 0);
       }
     } else {
       const daysUntilSunday = (7 - currentDay) % 7 || 7;
       targetSunday = new Date(now);
       targetSunday.setDate(now.getDate() + daysUntilSunday);
-      targetSunday.setHours(0, 0, 0, 0);
     }
 
-    const friday = new Date(targetSunday);
-    friday.setDate(targetSunday.getDate() - 2);
-    friday.setHours(0, 0, 0, 0);
+    const end = new Date(targetSunday);
+    end.setHours(23, 59, 59, 999);
 
-    const sunday = new Date(targetSunday);
-    sunday.setHours(23, 59, 59, 999);
+    console.log(`📅 Buscando servicios desde ${start.toLocaleDateString()} hasta ${end.toLocaleDateString()}`);
 
-    return { start: friday, end: sunday };
+    return { start, end };
   };
 
   const fetchWeekendServices = async () => {
     try {
-      const { start, end } = getNextWeekend();
+      const { start, end } = getUpcomingServicesRange();
 
       const { data, error } = await supabase
         .from("services")
