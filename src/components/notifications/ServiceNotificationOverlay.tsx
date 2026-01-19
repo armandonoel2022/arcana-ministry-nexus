@@ -1226,35 +1226,60 @@ const ServiceNotificationOverlay = ({
         return;
       }
 
+      const isQuarantine = service.service_type === 'cuarentena';
+
       // Crear un contenedor específico para la descarga
       const container = document.createElement("div");
       container.style.width = "600px";
-      container.style.backgroundColor = "#ffffff";
       container.style.padding = "32px";
       container.style.fontFamily = "system-ui, -apple-system, sans-serif";
-      container.style.color = "#1f2937";
       container.style.lineHeight = "1.5";
+
+      // Estilos según tipo de servicio
+      if (isQuarantine) {
+        container.style.background = "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)";
+        container.style.color = "#f5f5f5";
+      } else {
+        container.style.backgroundColor = "#ffffff";
+        container.style.color = "#1f2937";
+      }
 
       // Header con mejor espaciado
       const header = document.createElement("div");
       header.style.marginBottom = "32px";
       header.style.textAlign = "center";
 
+      // Banner de cuarentena
+      if (isQuarantine) {
+        const quarantineBanner = document.createElement("div");
+        quarantineBanner.style.background = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
+        quarantineBanner.style.color = "#1a1a2e";
+        quarantineBanner.style.padding = "12px 24px";
+        quarantineBanner.style.borderRadius = "12px";
+        quarantineBanner.style.marginBottom = "24px";
+        quarantineBanner.style.fontWeight = "bold";
+        quarantineBanner.style.fontSize = "18px";
+        quarantineBanner.style.textAlign = "center";
+        quarantineBanner.style.boxShadow = "0 4px 15px rgba(245, 158, 11, 0.3)";
+        quarantineBanner.textContent = "⚠️ SERVICIO DE CUARENTENA";
+        header.appendChild(quarantineBanner);
+      }
+
       const title = document.createElement("h1");
-      title.textContent = "Programa de Servicios";
+      title.textContent = isQuarantine ? "Culto de Oración" : "Programa de Servicios";
       title.style.fontSize = "28px";
       title.style.fontWeight = "bold";
-      title.style.color = "#111827";
       title.style.marginBottom = "8px";
       title.style.letterSpacing = "-0.025em";
+      title.style.color = isQuarantine ? "#fcd34d" : "#111827";
 
       const dateTime = document.createElement("p");
       const serviceDate = format(new Date(service.service_date), "EEEE, dd 'de' MMMM", { locale: es });
       dateTime.textContent = serviceDate;
       dateTime.style.fontSize = "18px";
-      dateTime.style.color = "#6b7280";
       dateTime.style.textTransform = "capitalize";
       dateTime.style.fontWeight = "500";
+      dateTime.style.color = isQuarantine ? "#fbbf24" : "#6b7280";
 
       header.appendChild(title);
       header.appendChild(dateTime);
@@ -1262,7 +1287,7 @@ const ServiceNotificationOverlay = ({
       // Línea separadora
       const separator = document.createElement("hr");
       separator.style.border = "none";
-      separator.style.borderTop = "2px solid #e5e7eb";
+      separator.style.borderTop = isQuarantine ? "2px solid rgba(251, 191, 36, 0.3)" : "2px solid #e5e7eb";
       separator.style.margin = "24px 0";
       separator.style.width = "100%";
 
@@ -1274,11 +1299,11 @@ const ServiceNotificationOverlay = ({
       serviceInfo.style.textAlign = "center";
 
       const time = document.createElement("h2");
-      time.textContent = getServiceTime(service.title);
+      time.textContent = getServiceTime(service.title, service.service_type);
       time.style.fontSize = "24px";
       time.style.fontWeight = "bold";
-      time.style.color = "#1f2937";
       time.style.marginBottom = "12px";
+      time.style.color = isQuarantine ? "#fcd34d" : "#1f2937";
 
       const groupInfo = document.createElement("div");
       groupInfo.style.display = "flex";
@@ -1290,8 +1315,8 @@ const ServiceNotificationOverlay = ({
 
       const groupName = document.createElement("span");
       groupName.textContent = service.worship_groups?.name || "Grupo de Alabanza";
-      groupName.style.backgroundColor = service.worship_groups?.color_theme || "#3B82F6";
-      groupName.style.color = "white";
+      groupName.style.backgroundColor = isQuarantine ? "#f59e0b" : (service.worship_groups?.color_theme || "#3B82F6");
+      groupName.style.color = isQuarantine ? "#1a1a2e" : "white";
       groupName.style.padding = "6px 16px";
       groupName.style.borderRadius = "9999px";
       groupName.style.fontSize = "16px";
@@ -1301,10 +1326,10 @@ const ServiceNotificationOverlay = ({
       const activity = document.createElement("span");
       activity.textContent = service.special_activity
         ? `Sección especial: ${service.special_activity}`
-        : "Sección especial: Ninguna";
-      activity.style.color = "#6b7280";
+        : isQuarantine ? "Culto de Oración" : "Sección especial: Ninguna";
       activity.style.fontSize = "16px";
       activity.style.fontWeight = "500";
+      activity.style.color = isQuarantine ? "#fbbf24" : "#6b7280";
 
       groupInfo.appendChild(groupName);
       groupInfo.appendChild(activity);
@@ -1321,9 +1346,9 @@ const ServiceNotificationOverlay = ({
       directorTitle.textContent = "Director/a de Alabanza";
       directorTitle.style.fontSize = "20px";
       directorTitle.style.fontWeight = "bold";
-      directorTitle.style.color = "#1e40af";
       directorTitle.style.marginBottom = "20px";
       directorTitle.style.textDecoration = "underline";
+      directorTitle.style.color = isQuarantine ? "#fbbf24" : "#1e40af";
 
       const directorContent = document.createElement("div");
       directorContent.style.display = "flex";
@@ -1336,9 +1361,11 @@ const ServiceNotificationOverlay = ({
       directorAvatar.style.width = "80px";
       directorAvatar.style.height = "80px";
       directorAvatar.style.borderRadius = "50%";
-      directorAvatar.style.border = "4px solid #93c5fd";
+      directorAvatar.style.border = isQuarantine ? "4px solid #fbbf24" : "4px solid #93c5fd";
       directorAvatar.style.overflow = "hidden";
-      directorAvatar.style.background = "linear-gradient(to right, #3b82f6, #2563eb)";
+      directorAvatar.style.background = isQuarantine 
+        ? "linear-gradient(to right, #f59e0b, #d97706)" 
+        : "linear-gradient(to right, #3b82f6, #2563eb)";
       directorAvatar.style.display = "flex";
       directorAvatar.style.alignItems = "center";
       directorAvatar.style.justifyContent = "center";
@@ -1372,15 +1399,15 @@ const ServiceNotificationOverlay = ({
       const directorName = document.createElement("div");
       directorName.textContent = service.leader;
       directorName.style.fontWeight = "bold";
-      directorName.style.color = "#1f2937";
       directorName.style.fontSize = "20px";
       directorName.style.marginBottom = "4px";
+      directorName.style.color = isQuarantine ? "#f5f5f5" : "#1f2937";
 
       const directorRole = document.createElement("div");
       directorRole.textContent = "Líder del Servicio";
-      directorRole.style.color = "#3b82f6";
       directorRole.style.fontSize = "16px";
       directorRole.style.fontWeight = "600";
+      directorRole.style.color = isQuarantine ? "#fbbf24" : "#3b82f6";
 
       directorInfo.appendChild(directorName);
       directorInfo.appendChild(directorRole);
@@ -1407,26 +1434,27 @@ const ServiceNotificationOverlay = ({
         songsTitle.textContent = "Canciones Seleccionadas";
         songsTitle.style.fontSize = "20px";
         songsTitle.style.fontWeight = "bold";
-        songsTitle.style.color = "#15803d";
         songsTitle.style.marginBottom = "20px";
         songsTitle.style.textAlign = "center";
         songsTitle.style.textDecoration = "underline";
+        songsTitle.style.color = isQuarantine ? "#fbbf24" : "#15803d";
         songsSection.appendChild(songsTitle);
       } else {
         // Si no hay canciones, mostrar mensaje
         const noSongsMessage = document.createElement("div");
         noSongsMessage.style.textAlign = "center";
         noSongsMessage.style.padding = "16px";
-        noSongsMessage.style.backgroundColor = "#f3f4f6";
         noSongsMessage.style.borderRadius = "12px";
         noSongsMessage.style.marginBottom = "16px";
+        noSongsMessage.style.backgroundColor = isQuarantine ? "rgba(251, 191, 36, 0.1)" : "#f3f4f6";
+        noSongsMessage.style.border = isQuarantine ? "1px solid rgba(251, 191, 36, 0.3)" : "none";
         
         const noSongsText = document.createElement("p");
         noSongsText.textContent = "No hay canciones seleccionadas aún";
-        noSongsText.style.color = "#6b7280";
         noSongsText.style.fontSize = "16px";
         noSongsText.style.fontStyle = "italic";
         noSongsText.style.margin = "0";
+        noSongsText.style.color = isQuarantine ? "#fbbf24" : "#6b7280";
         
         noSongsMessage.appendChild(noSongsText);
         songsSection.appendChild(noSongsMessage);
@@ -1447,16 +1475,16 @@ const ServiceNotificationOverlay = ({
           songItem.style.alignItems = "flex-start";
           songItem.style.gap = "16px";
           songItem.style.padding = "12px";
-          songItem.style.backgroundColor = "#f0fdf4";
           songItem.style.borderRadius = "12px";
-          songItem.style.border = "1px solid #dcfce7";
+          songItem.style.backgroundColor = isQuarantine ? "rgba(251, 191, 36, 0.1)" : "#f0fdf4";
+          songItem.style.border = isQuarantine ? "1px solid rgba(251, 191, 36, 0.3)" : "1px solid #dcfce7";
 
           const number = document.createElement("div");
           number.textContent = (index + 1).toString();
           number.style.width = "32px";
           number.style.height = "32px";
-          number.style.backgroundColor = "#22c55e";
-          number.style.color = "white";
+          number.style.backgroundColor = isQuarantine ? "#f59e0b" : "#22c55e";
+          number.style.color = isQuarantine ? "#1a1a2e" : "white";
           number.style.borderRadius = "50%";
           number.style.display = "flex";
           number.style.alignItems = "center";
@@ -1472,18 +1500,18 @@ const ServiceNotificationOverlay = ({
           const songFirstLine = document.createElement("div");
           songFirstLine.textContent = firstLine;
           songFirstLine.style.fontWeight = "bold";
-          songFirstLine.style.color = "#1f2937";
           songFirstLine.style.fontSize = "18px";
           songFirstLine.style.marginBottom = "4px";
+          songFirstLine.style.color = isQuarantine ? "#fcd34d" : "#1f2937";
 
           songContent.appendChild(songFirstLine);
 
           if (secondLine) {
             const songSecondLine = document.createElement("div");
             songSecondLine.textContent = secondLine;
-            songSecondLine.style.color = "#1f2937";
             songSecondLine.style.fontSize = "18px";
             songSecondLine.style.marginBottom = "8px";
+            songSecondLine.style.color = isQuarantine ? "#f5f5f5" : "#1f2937";
             songContent.appendChild(songSecondLine);
           }
 
@@ -1493,17 +1521,17 @@ const ServiceNotificationOverlay = ({
 
             const artistFirst = document.createElement("div");
             artistFirst.textContent = artistFirstName;
-            artistFirst.style.color = "#6b7280";
             artistFirst.style.fontSize = "16px";
             artistFirst.style.fontWeight = "500";
+            artistFirst.style.color = isQuarantine ? "#fbbf24" : "#6b7280";
 
             artistContainer.appendChild(artistFirst);
 
             if (artistLastName) {
               const artistLast = document.createElement("div");
               artistLast.textContent = artistLastName;
-              artistLast.style.color = "#9ca3af";
               artistLast.style.fontSize = "14px";
+              artistLast.style.color = isQuarantine ? "#d4a026" : "#9ca3af";
               artistContainer.appendChild(artistLast);
             }
 
@@ -1523,16 +1551,16 @@ const ServiceNotificationOverlay = ({
         const offeringSection = document.createElement("div");
         offeringSection.style.marginTop = "16px";
         offeringSection.style.padding = "12px";
-        offeringSection.style.backgroundColor = "#fefce8";
         offeringSection.style.borderRadius = "12px";
-        offeringSection.style.border = "1px solid #fde047";
+        offeringSection.style.backgroundColor = isQuarantine ? "rgba(245, 158, 11, 0.15)" : "#fefce8";
+        offeringSection.style.border = isQuarantine ? "1px solid rgba(245, 158, 11, 0.4)" : "1px solid #fde047";
 
         const offeringTitle = document.createElement("div");
         offeringTitle.textContent = "Canción de Ofrendas";
         offeringTitle.style.fontSize = "16px";
         offeringTitle.style.fontWeight = "bold";
-        offeringTitle.style.color = "#92400e";
         offeringTitle.style.marginBottom = "8px";
+        offeringTitle.style.color = isQuarantine ? "#fcd34d" : "#92400e";
 
         const { firstLine, secondLine } = splitSongTitle(offeringsSongs[0].title);
         const { firstName: artistFirstName, lastName: artistLastName } = splitName(offeringsSongs[0].artist || "");
@@ -1543,32 +1571,32 @@ const ServiceNotificationOverlay = ({
         const offeringFirstLine = document.createElement("div");
         offeringFirstLine.textContent = firstLine;
         offeringFirstLine.style.fontWeight = "bold";
-        offeringFirstLine.style.color = "#1f2937";
         offeringFirstLine.style.fontSize = "16px";
+        offeringFirstLine.style.color = isQuarantine ? "#f5f5f5" : "#1f2937";
 
         offeringContent.appendChild(offeringFirstLine);
 
         if (secondLine) {
           const offeringSecondLine = document.createElement("div");
           offeringSecondLine.textContent = secondLine;
-          offeringSecondLine.style.color = "#1f2937";
           offeringSecondLine.style.fontSize = "16px";
+          offeringSecondLine.style.color = isQuarantine ? "#e5e5e5" : "#1f2937";
           offeringContent.appendChild(offeringSecondLine);
         }
 
         if (offeringsSongs[0].artist) {
           const artistDiv = document.createElement("div");
           artistDiv.textContent = artistFirstName;
-          artistDiv.style.color = "#6b7280";
           artistDiv.style.fontSize = "14px";
           artistDiv.style.marginTop = "4px";
+          artistDiv.style.color = isQuarantine ? "#fbbf24" : "#6b7280";
           offeringContent.appendChild(artistDiv);
 
           if (artistLastName) {
             const artistLast = document.createElement("div");
             artistLast.textContent = artistLastName;
-            artistLast.style.color = "#9ca3af";
             artistLast.style.fontSize = "12px";
+            artistLast.style.color = isQuarantine ? "#d4a026" : "#9ca3af";
             offeringContent.appendChild(artistLast);
           }
         }
@@ -1583,16 +1611,16 @@ const ServiceNotificationOverlay = ({
         const communionSection = document.createElement("div");
         communionSection.style.marginTop = "16px";
         communionSection.style.padding = "12px";
-        communionSection.style.backgroundColor = "#fae8ff";
         communionSection.style.borderRadius = "12px";
-        communionSection.style.border = "1px solid #e9d5ff";
+        communionSection.style.backgroundColor = isQuarantine ? "rgba(168, 85, 247, 0.15)" : "#fae8ff";
+        communionSection.style.border = isQuarantine ? "1px solid rgba(168, 85, 247, 0.4)" : "1px solid #e9d5ff";
 
         const communionTitle = document.createElement("div");
         communionTitle.textContent = "Canción de Comunión";
         communionTitle.style.fontSize = "16px";
         communionTitle.style.fontWeight = "bold";
-        communionTitle.style.color = "#6b21a8";
         communionTitle.style.marginBottom = "8px";
+        communionTitle.style.color = isQuarantine ? "#c084fc" : "#6b21a8";
 
         const { firstLine, secondLine } = splitSongTitle(communionSongs[0].title);
         const { firstName: artistFirstName, lastName: artistLastName } = splitName(communionSongs[0].artist || "");
@@ -1603,32 +1631,32 @@ const ServiceNotificationOverlay = ({
         const communionFirstLine = document.createElement("div");
         communionFirstLine.textContent = firstLine;
         communionFirstLine.style.fontWeight = "bold";
-        communionFirstLine.style.color = "#1f2937";
         communionFirstLine.style.fontSize = "16px";
+        communionFirstLine.style.color = isQuarantine ? "#f5f5f5" : "#1f2937";
 
         communionContent.appendChild(communionFirstLine);
 
         if (secondLine) {
           const communionSecondLine = document.createElement("div");
           communionSecondLine.textContent = secondLine;
-          communionSecondLine.style.color = "#1f2937";
           communionSecondLine.style.fontSize = "16px";
+          communionSecondLine.style.color = isQuarantine ? "#e5e5e5" : "#1f2937";
           communionContent.appendChild(communionSecondLine);
         }
 
         if (communionSongs[0].artist) {
           const artistDiv = document.createElement("div");
           artistDiv.textContent = artistFirstName;
-          artistDiv.style.color = "#6b7280";
           artistDiv.style.fontSize = "14px";
           artistDiv.style.marginTop = "4px";
+          artistDiv.style.color = isQuarantine ? "#c084fc" : "#6b7280";
           communionContent.appendChild(artistDiv);
 
           if (artistLastName) {
             const artistLast = document.createElement("div");
             artistLast.textContent = artistLastName;
-            artistLast.style.color = "#9ca3af";
             artistLast.style.fontSize = "12px";
+            artistLast.style.color = isQuarantine ? "#a855f7" : "#9ca3af";
             communionContent.appendChild(artistLast);
           }
         }
@@ -1645,10 +1673,10 @@ const ServiceNotificationOverlay = ({
       voicesTitle.textContent = "Responsables de Voces";
       voicesTitle.style.fontSize = "20px";
       voicesTitle.style.fontWeight = "bold";
-      voicesTitle.style.color = "#1e40af";
       voicesTitle.style.marginBottom = "20px";
       voicesTitle.style.textAlign = "center";
       voicesTitle.style.textDecoration = "underline";
+      voicesTitle.style.color = isQuarantine ? "#fbbf24" : "#1e40af";
 
       voicesSection.appendChild(voicesTitle);
 
@@ -1668,18 +1696,20 @@ const ServiceNotificationOverlay = ({
           voiceItem.style.alignItems = "center";
           voiceItem.style.gap = "16px";
           voiceItem.style.padding = "12px";
-          voiceItem.style.backgroundColor = "#dbeafe";
           voiceItem.style.borderRadius = "12px";
-          voiceItem.style.border = "1px solid #93c5fd";
+          voiceItem.style.backgroundColor = isQuarantine ? "rgba(251, 191, 36, 0.1)" : "#dbeafe";
+          voiceItem.style.border = isQuarantine ? "1px solid rgba(251, 191, 36, 0.3)" : "1px solid #93c5fd";
 
           // Voice Avatar
           const voiceAvatar = document.createElement("div");
           voiceAvatar.style.width = "60px";
           voiceAvatar.style.height = "60px";
           voiceAvatar.style.borderRadius = "50%";
-          voiceAvatar.style.border = "3px solid #93c5fd";
+          voiceAvatar.style.border = isQuarantine ? "3px solid #fbbf24" : "3px solid #93c5fd";
           voiceAvatar.style.overflow = "hidden";
-          voiceAvatar.style.background = "linear-gradient(to right, #3b82f6, #2563eb)";
+          voiceAvatar.style.background = isQuarantine 
+            ? "linear-gradient(to right, #f59e0b, #d97706)" 
+            : "linear-gradient(to right, #3b82f6, #2563eb)";
           voiceAvatar.style.display = "flex";
           voiceAvatar.style.alignItems = "center";
           voiceAvatar.style.justifyContent = "center";
@@ -1715,26 +1745,26 @@ const ServiceNotificationOverlay = ({
           const voiceName = document.createElement("div");
           voiceName.textContent = firstName;
           voiceName.style.fontWeight = "bold";
-          voiceName.style.color = "#1f2937";
           voiceName.style.fontSize = "18px";
           voiceName.style.marginBottom = "2px";
+          voiceName.style.color = isQuarantine ? "#f5f5f5" : "#1f2937";
 
           voiceInfo.appendChild(voiceName);
 
           if (lastName) {
             const voiceLastName = document.createElement("div");
             voiceLastName.textContent = lastName;
-            voiceLastName.style.color = "#6b7280";
             voiceLastName.style.fontSize = "16px";
             voiceLastName.style.marginBottom = "4px";
+            voiceLastName.style.color = isQuarantine ? "#d4d4d4" : "#6b7280";
             voiceInfo.appendChild(voiceLastName);
           }
 
           const voiceInstrument = document.createElement("div");
           voiceInstrument.textContent = member.instrument;
-          voiceInstrument.style.color = "#3b82f6";
           voiceInstrument.style.fontSize = "16px";
           voiceInstrument.style.fontWeight = "600";
+          voiceInstrument.style.color = isQuarantine ? "#fbbf24" : "#3b82f6";
 
           voiceInfo.appendChild(voiceInstrument);
 
@@ -1782,7 +1812,7 @@ const ServiceNotificationOverlay = ({
 
       // Capture as image
       const canvas = await html2canvas(container, {
-        backgroundColor: "#ffffff",
+        backgroundColor: isQuarantine ? "#1a1a2e" : "#ffffff",
         scale: 2,
         useCORS: true,
         allowTaint: true,
@@ -1792,9 +1822,12 @@ const ServiceNotificationOverlay = ({
       // Clean up
       document.body.removeChild(wrapper);
 
-      // Download
+      // Download with appropriate filename
       const link = document.createElement("a");
-      link.download = `${serviceTitle.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_${new Date().getTime()}.png`;
+      const filename = isQuarantine 
+        ? `cuarentena_${format(new Date(service.service_date), "yyyy-MM-dd")}.png`
+        : `${serviceTitle.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_${new Date().getTime()}.png`;
+      link.download = filename;
       link.href = canvas.toDataURL("image/png");
       link.click();
 
