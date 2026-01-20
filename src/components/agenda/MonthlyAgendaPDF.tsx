@@ -288,21 +288,30 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
         const dayName = format(serviceDate, "EEEE", { locale: es });
         const capitalizedDayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
         const timeFormatted = formatTime12h(service.service_date);
-        const orderName = getOrderName(service.month_order);
-        const specialEvent = getSpecialEvent(service.month_order);
+        const orderName = service.month_order ? getOrderName(service.month_order) : '';
+        const specialEvent = service.month_order ? getSpecialEvent(service.month_order) : 'Ninguno';
         const groupName = service.worship_groups?.name || "Sin asignar";
+        
+        // Detectar si es servicio de cuarentena
+        const isQuarantineService = service.service_type?.toLowerCase().includes('cuarentena');
+        
+        // Colores específicos para cuarentena
+        const cardBgColor: [number, number, number] = isQuarantineService ? [45, 27, 3] : [255, 255, 255];
+        const cardTextColor: [number, number, number] = isQuarantineService ? [251, 191, 36] : darkBlue;
+        const cardBorderColor: [number, number, number] = isQuarantineService ? [180, 83, 9] : [226, 232, 240];
+        const dayBgColor: [number, number, number] = isQuarantineService ? [180, 83, 9] : primaryBlue;
 
         // Card background con sombra suave
-        doc.setFillColor(255, 255, 255);
+        doc.setFillColor(...cardBgColor);
         doc.roundedRect(margin, yPosition, pageWidth - margin * 2, cardHeight, 3, 3, "F");
         
         // Borde sutil
-        doc.setDrawColor(226, 232, 240);
+        doc.setDrawColor(...cardBorderColor);
         doc.setLineWidth(0.3);
         doc.roundedRect(margin, yPosition, pageWidth - margin * 2, cardHeight, 3, 3, "S");
 
         // Número del día (destacado a la izquierda)
-        doc.setFillColor(...primaryBlue);
+        doc.setFillColor(...dayBgColor);
         doc.roundedRect(margin + 3, yPosition + 3, 18, cardHeight - 6, 2, 2, "F");
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(16);
@@ -327,7 +336,7 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
             doc.addImage(directorImage, "JPEG", photoX, photoY, photoSize, photoSize);
             
             // Borde circular
-            doc.setDrawColor(...primaryBlue);
+            doc.setDrawColor(...(isQuarantineService ? accentGold : primaryBlue));
             doc.setLineWidth(0.8);
             doc.circle(photoX + photoSize / 2, photoY + photoSize / 2, photoSize / 2, "S");
           } catch {
@@ -342,7 +351,7 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
           // Placeholder circular con iniciales
           doc.setFillColor(226, 232, 240);
           doc.circle(photoX + photoSize / 2, photoY + photoSize / 2, photoSize / 2, "F");
-          doc.setDrawColor(...primaryBlue);
+          doc.setDrawColor(...(isQuarantineService ? accentGold : primaryBlue));
           doc.setLineWidth(0.5);
           doc.circle(photoX + photoSize / 2, photoY + photoSize / 2, photoSize / 2, "S");
           doc.setTextColor(71, 85, 105);
@@ -356,14 +365,20 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
         const textX = photoX + photoSize + 8;
         const textMaxWidth = pageWidth - textX - margin - 50;
         
-        // Línea 1: Orden + Tipo de servicio (el título ya incluye la hora)
-        doc.setTextColor(...darkBlue);
+        // Línea 1: Tipo de servicio con formato según tipo
+        doc.setTextColor(...cardTextColor);
         doc.setFontSize(10);
         doc.setFont("helvetica", "bold");
-        doc.text(`${orderName} Domingo • ${service.title}`, textX, yPosition + 10);
+        
+        if (isQuarantineService) {
+          doc.text(`CUARENTENA • ${capitalizedDayName} • ${service.title}`, textX, yPosition + 10);
+        } else {
+          doc.text(`${orderName} Domingo • ${service.title}`, textX, yPosition + 10);
+        }
 
         // Línea 2: Director de alabanza
-        doc.setTextColor(71, 85, 105);
+        const directorTextColor: [number, number, number] = isQuarantineService ? [251, 191, 36] : [71, 85, 105];
+        doc.setTextColor(...directorTextColor);
         doc.setFontSize(9);
         doc.setFont("helvetica", "normal");
         doc.text(`Director: ${service.leader}`, textX, yPosition + 17);
@@ -378,11 +393,12 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
           return [71, 85, 105]; // slate-600 default
         };
 
-        const groupColor = getGroupColor(groupName);
+        const groupColor: [number, number, number] = isQuarantineService ? [251, 191, 36] : getGroupColor(groupName);
+        const corosLabelColor: [number, number, number] = isQuarantineService ? [200, 150, 30] : [71, 85, 105];
         
         doc.setFontSize(8);
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(71, 85, 105);
+        doc.setTextColor(...corosLabelColor);
         doc.text("Coros: ", textX, yPosition + 24);
         
         const corosWidth = doc.getTextWidth("Coros: ");
@@ -390,9 +406,9 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
         doc.setTextColor(...groupColor);
         doc.text(groupName, textX + corosWidth, yPosition + 24);
 
-        // Evento especial (a la derecha, más compacto)
+        // Evento especial (a la derecha, más compacto) - Solo para servicios dominicales
         const eventX = pageWidth - margin - 5;
-        if (specialEvent !== "Ninguno") {
+        if (!isQuarantineService && specialEvent !== "Ninguno") {
           doc.setFillColor(...accentGold);
           const eventWidth = doc.getTextWidth(specialEvent) + 8;
           doc.roundedRect(eventX - eventWidth - 2, yPosition + 8, eventWidth + 4, 12, 2, 2, "F");
@@ -400,6 +416,16 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
           doc.setFontSize(7);
           doc.setFont("helvetica", "bold");
           doc.text(specialEvent, eventX, yPosition + 15, { align: "right" });
+        } else if (isQuarantineService) {
+          // Badge de cuarentena
+          doc.setFillColor(180, 83, 9);
+          const badgeText = "CUARENTENA";
+          const badgeWidth = doc.getTextWidth(badgeText) + 8;
+          doc.roundedRect(eventX - badgeWidth - 2, yPosition + 8, badgeWidth + 4, 12, 2, 2, "F");
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(7);
+          doc.setFont("helvetica", "bold");
+          doc.text(badgeText, eventX, yPosition + 15, { align: "right" });
         } else {
           doc.setTextColor(148, 163, 184);
           doc.setFontSize(7);
