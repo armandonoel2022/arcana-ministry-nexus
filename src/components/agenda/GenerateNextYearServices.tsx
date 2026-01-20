@@ -32,7 +32,6 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
 
   const detectNextYearAndAvailable = async () => {
     try {
-      // Obtener todos los servicios para determinar años existentes
       const { data: allServices, error: servicesError } = await supabase
         .from('services')
         .select('service_date')
@@ -40,21 +39,18 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
 
       if (servicesError) throw servicesError;
 
-      // Extraer años únicos que realmente existen
       const yearsInDb = [...new Set(
         (allServices || []).map(s => new Date(s.service_date).getFullYear())
       )].sort((a, b) => a - b);
       
       setExistingYears(yearsInDb);
 
-      // Determinar el próximo año a generar
       if (allServices && allServices.length > 0) {
         const lastYear = new Date(allServices[0].service_date).getFullYear();
         const next = lastYear + 1;
         setNextYear(next);
         setSelectedYear(next);
         
-        // Lista de años para generar: próximos 5 años desde el último
         const futureYears = [];
         for (let i = 0; i <= 5; i++) {
           futureYears.push(next + i);
@@ -65,7 +61,6 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
         setNextYear(currentYear);
         setSelectedYear(currentYear);
         
-        // Si no hay datos, empezar desde el año actual
         const futureYears = [];
         for (let i = 0; i <= 5; i++) {
           futureYears.push(currentYear + i);
@@ -97,7 +92,6 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
       'Keyla Yanira Medrano Medrano': 'KEYLA',
       'Eliabi Joana Sierra Castillo': 'ALEIDA'
     },
-    // Orden de rotación según la imagen
     ROTATION: [
       'Armando Noel Charle',
       'Damaris Castillo Jimenez',
@@ -115,7 +109,6 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
     const sundays = [];
     
     for (let month = 0; month < 12; month++) {
-      const firstDay = new Date(year, month, 1);
       const lastDay = new Date(year, month + 1, 0);
       
       for (let day = 1; day <= lastDay.getDate(); day++) {
@@ -129,27 +122,60 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
     return sundays;
   };
 
+  // Obtener todos los miércoles del año (para cuarentena después del 21 de febrero)
+  const getQuarantineWednesdays = (year: number) => {
+    const wednesdays = [];
+    const cutoffDate = new Date(year, 1, 21); // 21 de febrero
+    
+    for (let month = 0; month < 12; month++) {
+      const lastDay = new Date(year, month + 1, 0);
+      
+      for (let day = 1; day <= lastDay.getDate(); day++) {
+        const date = new Date(year, month, day);
+        if (date.getDay() === 3 && date > cutoffDate) { // Miércoles después del 21 feb
+          wednesdays.push(date);
+        }
+      }
+    }
+    
+    return wednesdays;
+  };
+
+  // Obtener todos los sábados hasta el 21 de febrero (para cuarentena)
+  const getQuarantineSaturdays = (year: number) => {
+    const saturdays = [];
+    const cutoffDate = new Date(year, 1, 21); // 21 de febrero
+    const startOfYear = new Date(year, 0, 1);
+    
+    for (let day = 1; day <= 60; day++) { // Primeros ~60 días del año
+      const date = new Date(year, 0, day);
+      if (date > cutoffDate) break;
+      if (date.getDay() === 6) { // Sábado
+        saturdays.push(date);
+      }
+    }
+    
+    return saturdays;
+  };
+
   const getGroupRotation = async (sundayIndex: number, year: number) => {
-    // Rotación: Aleida → Keyla → Massy
-    // Cada domingo, un grupo descansa
     const rotation = [
       { service1: 'ALEIDA', service2: 'KEYLA', rest: 'MASSY' },
       { service1: 'MASSY', service2: 'ALEIDA', rest: 'KEYLA' },
       { service1: 'KEYLA', service2: 'MASSY', rest: 'ALEIDA' }
     ];
     
-    // Si es el primer domingo del año, verificar último domingo del año anterior
     if (sundayIndex === 0) {
       const { data: lastYearServices } = await supabase
         .from('services')
         .select('assigned_group_id, service_date')
         .gte('service_date', `${year - 1}-12-01`)
         .lt('service_date', `${year}-01-01`)
+        .eq('service_type', 'Servicio Dominical')
         .order('service_date', { ascending: false })
         .limit(2);
 
       if (lastYearServices && lastYearServices.length === 2) {
-        // Identificar qué grupos cantaron en el último domingo del año anterior
         const lastGroups = lastYearServices.map(s => {
           if (s.assigned_group_id === GROUPS.ALEIDA) return 'ALEIDA';
           if (s.assigned_group_id === GROUPS.KEYLA) return 'KEYLA';
@@ -157,14 +183,12 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
           return null;
         }).filter(Boolean);
 
-        // Determinar cuál grupo descansó
         const allGroups: ('ALEIDA' | 'KEYLA' | 'MASSY')[] = ['ALEIDA', 'KEYLA', 'MASSY'];
         const restedGroup = allGroups.find(g => !lastGroups.includes(g));
 
-        // El que descansó ahora va al servicio 1, continuar rotación
-        if (restedGroup === 'ALEIDA') return rotation[0]; // Aleida + Keyla
-        if (restedGroup === 'KEYLA') return rotation[2]; // Keyla + Massy
-        if (restedGroup === 'MASSY') return rotation[1]; // Massy + Aleida
+        if (restedGroup === 'ALEIDA') return rotation[0];
+        if (restedGroup === 'KEYLA') return rotation[2];
+        if (restedGroup === 'MASSY') return rotation[1];
       }
     }
     
@@ -173,18 +197,17 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
 
   const getDirectorForService = (
     serviceIndex: number, 
-    serviceTime: '08:00' | '10:45',
+    serviceTime: '08:00' | '10:45' | '19:00',
     groupName: string,
     usedDirectorsToday: Set<string>,
     groupRotation: { service1: string; service2: string; rest: string }
   ) => {
-    // Usar la rotación de los 9 directores basada en el índice de SERVICIO (no domingo)
-    // Esto distribuye mejor los directores a lo largo del mes
     let selectedDirector = DIRECTORS.ROTATION[serviceIndex % DIRECTORS.ROTATION.length];
     
-    // Verificar restricciones de horario para el director seleccionado
+    // Para servicios de cuarentena (19:00), no aplicar restricción de solo 8AM
+    const isQuarantineService = serviceTime === '19:00';
+    
     if (serviceTime === '10:45' && DIRECTORS.ONLY_8AM.includes(selectedDirector)) {
-      // Este director solo puede a las 8 AM, buscar el siguiente disponible
       for (let i = 1; i < DIRECTORS.ROTATION.length; i++) {
         const nextIndex = (serviceIndex + i) % DIRECTORS.ROTATION.length;
         const nextDirector = DIRECTORS.ROTATION[nextIndex];
@@ -196,14 +219,12 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
       }
     }
     
-    // Verificar si el director ya fue usado hoy (evitar duplicados en el mismo día)
     if (usedDirectorsToday.has(selectedDirector)) {
-      // Buscar siguiente director disponible
       for (let i = 1; i < DIRECTORS.ROTATION.length; i++) {
         const nextIndex = (serviceIndex + i) % DIRECTORS.ROTATION.length;
         const nextDirector = DIRECTORS.ROTATION[nextIndex];
         
-        const isAvailableForTime = serviceTime === '08:00' || !DIRECTORS.ONLY_8AM.includes(nextDirector);
+        const isAvailableForTime = serviceTime === '08:00' || isQuarantineService || !DIRECTORS.ONLY_8AM.includes(nextDirector);
         if (!usedDirectorsToday.has(nextDirector) && isAvailableForTime) {
           selectedDirector = nextDirector;
           break;
@@ -211,27 +232,18 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
       }
     }
     
-    // OPTIMIZACIÓN: Si el director seleccionado es líder de un grupo
-    // Y su grupo está cantando HOY (no descansa)
-    // Intentar asignarlo al mismo servicio que su grupo para evitar doble turno
     const isGroupLeader = Object.keys(DIRECTORS.GROUP_LEADERS).includes(selectedDirector);
     
-    if (isGroupLeader) {
+    if (isGroupLeader && !isQuarantineService) {
       const leaderGroupName = DIRECTORS.GROUP_LEADERS[selectedDirector as keyof typeof DIRECTORS.GROUP_LEADERS] as 'ALEIDA' | 'KEYLA' | 'MASSY';
       const isGroupResting = groupRotation.rest === leaderGroupName;
       
-      // Si el grupo NO está descansando, verificar en qué servicio canta
       if (!isGroupResting) {
-        // Si el grupo canta en service1 (08:00) y estamos asignando 10:45, o viceversa
-        // Intentar cambiar al director por otro para que coincida con su grupo
         const groupSingsAt8AM = groupRotation.service1 === leaderGroupName;
         const groupSingsAt1045AM = groupRotation.service2 === leaderGroupName;
         
-        // Si hay conflicto de horario (líder asignado a hora diferente de su grupo)
         if ((serviceTime === '08:00' && groupSingsAt1045AM) || 
             (serviceTime === '10:45' && groupSingsAt8AM)) {
-          // Intentar encontrar otro director para este servicio
-          // Pero solo si hay alguien disponible
           for (let i = 1; i < DIRECTORS.ROTATION.length; i++) {
             const nextIndex = (serviceIndex + i) % DIRECTORS.ROTATION.length;
             const alternateDirector = DIRECTORS.ROTATION[nextIndex];
@@ -259,36 +271,36 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
     
     try {
       const sundays = getAllSundaysOfYear(selectedYear);
+      const quarantineSaturdays = getQuarantineSaturdays(selectedYear);
+      const quarantineWednesdays = getQuarantineWednesdays(selectedYear);
+      
       const services = [];
-      let currentServiceIndex = 0; // Índice de servicio que se resetea cada mes
+      let currentServiceIndex = 0;
+      let quarantineServiceIndex = 0;
       let lastMonth = -1;
 
+      const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+      // Generar servicios dominicales
       for (let i = 0; i < sundays.length; i++) {
         const sunday = sundays[i];
         const currentMonth = sunday.getMonth();
         
-        // Resetear el índice de servicio al inicio de cada mes
         if (currentMonth !== lastMonth) {
           currentServiceIndex = 0;
           lastMonth = currentMonth;
         }
         
         const rotation = await getGroupRotation(i, selectedYear);
-        
-        // Conjunto de directores ya usados en este domingo
         const usedDirectorsToday = new Set<string>();
         
-        // Servicio 8:00 AM - Usar currentServiceIndex para la rotación
+        // Servicio 8:00 AM
         const service1Group = rotation.service1;
         const director1 = getDirectorForService(currentServiceIndex, '08:00', service1Group, usedDirectorsToday, rotation);
         usedDirectorsToday.add(director1);
         
-        // Obtener el mes en español
-        const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                           'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
         const monthName = monthNames[sunday.getMonth()];
-        
-        // Calcular el número de domingo del mes (1º, 2º, 3º, 4º, 5º)
         const sundaysInMonth = sundays.filter(s => s.getMonth() === sunday.getMonth());
         const monthOrder = sundaysInMonth.findIndex(s => s.getTime() === sunday.getTime()) + 1;
         
@@ -304,10 +316,9 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
           month_order: monthOrder
         });
         
-        // Incrementar índice para el siguiente servicio
         currentServiceIndex++;
 
-        // Servicio 10:45 AM - Usar el nuevo índice
+        // Servicio 10:45 AM
         const service2Group = rotation.service2;
         const director2 = getDirectorForService(currentServiceIndex, '10:45', service2Group, usedDirectorsToday, rotation);
         
@@ -323,8 +334,77 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
           month_order: monthOrder
         });
         
-        // Incrementar índice para el próximo domingo
         currentServiceIndex++;
+      }
+
+      // Generar servicios de cuarentena (sábados hasta 21 de febrero)
+      for (const saturday of quarantineSaturdays) {
+        // Encontrar qué grupo descansa el fin de semana más cercano
+        const nearestSunday = new Date(saturday);
+        nearestSunday.setDate(nearestSunday.getDate() + 1); // Domingo siguiente
+        
+        const sundayIndex = sundays.findIndex(s => 
+          s.getFullYear() === nearestSunday.getFullYear() &&
+          s.getMonth() === nearestSunday.getMonth() &&
+          s.getDate() === nearestSunday.getDate()
+        );
+        
+        const rotation = sundayIndex >= 0 ? await getGroupRotation(sundayIndex, selectedYear) : { service1: 'ALEIDA', service2: 'KEYLA', rest: 'MASSY' };
+        const restingGroup = rotation.rest as 'ALEIDA' | 'KEYLA' | 'MASSY';
+        
+        const usedDirectorsToday = new Set<string>();
+        const director = getDirectorForService(quarantineServiceIndex, '19:00', restingGroup, usedDirectorsToday, rotation);
+        
+        const monthName = monthNames[saturday.getMonth()];
+        
+        services.push({
+          title: '07:00 p.m.',
+          service_date: new Date(saturday.getTime() + 19 * 60 * 60 * 1000).toISOString(),
+          leader: director,
+          assigned_group_id: GROUPS[restingGroup],
+          service_type: 'cuarentena',
+          location: 'Templo Principal',
+          is_confirmed: false,
+          month_name: monthName,
+          month_order: null
+        });
+        
+        quarantineServiceIndex++;
+      }
+
+      // Generar servicios de cuarentena (miércoles después del 21 de febrero)
+      for (const wednesday of quarantineWednesdays) {
+        // Encontrar qué grupo descansa el fin de semana anterior
+        const previousSunday = new Date(wednesday);
+        previousSunday.setDate(previousSunday.getDate() - (wednesday.getDay() + 4) % 7); // Domingo anterior
+        
+        const sundayIndex = sundays.findIndex(s => 
+          s.getFullYear() === previousSunday.getFullYear() &&
+          s.getMonth() === previousSunday.getMonth() &&
+          s.getDate() === previousSunday.getDate()
+        );
+        
+        const rotation = sundayIndex >= 0 ? await getGroupRotation(sundayIndex, selectedYear) : { service1: 'ALEIDA', service2: 'KEYLA', rest: 'MASSY' };
+        const restingGroup = rotation.rest as 'ALEIDA' | 'KEYLA' | 'MASSY';
+        
+        const usedDirectorsToday = new Set<string>();
+        const director = getDirectorForService(quarantineServiceIndex, '19:00', restingGroup, usedDirectorsToday, rotation);
+        
+        const monthName = monthNames[wednesday.getMonth()];
+        
+        services.push({
+          title: '07:00 p.m.',
+          service_date: new Date(wednesday.getTime() + 19 * 60 * 60 * 1000).toISOString(),
+          leader: director,
+          assigned_group_id: GROUPS[restingGroup],
+          service_type: 'cuarentena',
+          location: 'Templo Principal',
+          is_confirmed: false,
+          month_name: monthName,
+          month_order: null
+        });
+        
+        quarantineServiceIndex++;
       }
 
       const { error } = await supabase
@@ -333,14 +413,15 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
 
       if (error) throw error;
 
-      toast.success(`Se generaron ${services.length} servicios para el año ${selectedYear}`, {
-        description: `${sundays.length} domingos con 2 servicios cada uno`
+      const sundayCount = sundays.length * 2;
+      const quarantineCount = quarantineSaturdays.length + quarantineWednesdays.length;
+      
+      toast.success(`Se generaron ${services.length} servicios para ${selectedYear}`, {
+        description: `${sundayCount} dominicales + ${quarantineCount} cuarentena (${quarantineSaturdays.length} sábados + ${quarantineWednesdays.length} miércoles)`
       });
 
-      // Actualizar los años disponibles
       await detectNextYearAndAvailable();
       
-      // Notificar al componente padre para refrescar la tabla
       if (onDataUpdate) {
         onDataUpdate();
       }
@@ -374,10 +455,8 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
 
       toast.success(`Se eliminaron todos los servicios del año ${selectedYear}`);
 
-      // Actualizar los años disponibles
       await detectNextYearAndAvailable();
       
-      // Notificar al componente padre para refrescar la tabla
       if (onDataUpdate) {
         onDataUpdate();
       }
@@ -433,15 +512,17 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
               </div>
               
               <div className="space-y-2">
-                <p>Esta acción generará automáticamente todos los domingos del {selectedYear} con:</p>
+                <p>Esta acción generará automáticamente todos los servicios del {selectedYear} con:</p>
                 <ul className="list-disc list-inside space-y-1 text-sm">
-                  <li>Dos servicios por domingo (8:00 AM y 10:45 AM)</li>
+                  <li>Dos servicios dominicales (8:00 AM y 10:45 AM)</li>
+                  <li><strong>Cuarentena sábados</strong> (hasta 21 de febrero) a las 7:00 PM</li>
+                  <li><strong>Cuarentena miércoles</strong> (después del 21 de febrero) a las 7:00 PM</li>
+                  <li>El grupo que descansa el fin de semana hace coros en cuarentena</li>
                   <li>Rotación de grupos: Aleida → Keyla → Massy</li>
                   <li>Rotación de directores con restricciones de horario</li>
-                  <li>Coordinación de directores con sus grupos</li>
                 </ul>
                 <p className="text-amber-600 font-medium mt-4">
-                  Se crearán aproximadamente 104 servicios. ¿Desea continuar?
+                  Se crearán aproximadamente 150+ servicios. ¿Desea continuar?
                 </p>
               </div>
             </AlertDialogDescription>
@@ -472,7 +553,7 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar Servicios del Año</AlertDialogTitle>
+            <AlertDialogTitle className="text-destructive">Eliminar Servicios del Año</AlertDialogTitle>
             <AlertDialogDescription className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
@@ -493,18 +574,19 @@ const GenerateNextYearServices: React.FC<GenerateNextYearServicesProps> = ({ onD
                 </select>
               </div>
               
-              <div className="space-y-2">
-                <p className="text-red-600 font-medium">
-                  ⚠️ Esta acción eliminará permanentemente todos los servicios del año {selectedYear}.
-                </p>
-                <p>Esta operación no se puede deshacer. ¿Está seguro que desea continuar?</p>
-              </div>
+              <p className="text-red-600 font-medium">
+                ⚠️ Esta acción eliminará TODOS los servicios del año {selectedYear}. 
+                Esta acción no se puede deshacer.
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={deleteYear} className="bg-red-600 hover:bg-red-700">
-              Eliminar
+            <AlertDialogAction 
+              onClick={deleteYear}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar Año
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
