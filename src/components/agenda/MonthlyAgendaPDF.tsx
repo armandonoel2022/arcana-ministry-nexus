@@ -235,6 +235,9 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
       const darkBlue: [number, number, number] = [30, 64, 175];
       const lightBg: [number, number, number] = [248, 250, 252];
       const accentGold: [number, number, number] = [234, 179, 8];
+      const quarantineBg: [number, number, number] = [254, 243, 199]; // amber-100
+      const quarantineBorder: [number, number, number] = [217, 119, 6]; // amber-600
+      const quarantineText: [number, number, number] = [146, 64, 14]; // amber-800
 
       // Fondo suave
       doc.setFillColor(...lightBg);
@@ -273,11 +276,11 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
       const contentStartY = margin + headerHeight + 10;
       const footerHeight = 15;
       const availableHeight = pageHeight - contentStartY - footerHeight - margin;
-      const cardSpacing = 6;
+      const cardSpacing = 5;
       const numServices = services.length;
       const totalSpacing = (numServices - 1) * cardSpacing;
-      const cardHeight = Math.min(38, (availableHeight - totalSpacing) / numServices);
-      const photoSize = Math.min(28, cardHeight - 6);
+      const cardHeight = Math.min(32, (availableHeight - totalSpacing) / numServices);
+      const photoSize = Math.min(24, cardHeight - 6);
 
       let yPosition = contentStartY;
 
@@ -295,34 +298,34 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
         // Detectar si es servicio de cuarentena
         const isQuarantineService = service.service_type?.toLowerCase().includes('cuarentena');
         
-        // Colores específicos para cuarentena
-        const cardBgColor: [number, number, number] = isQuarantineService ? [45, 27, 3] : [255, 255, 255];
-        const cardTextColor: [number, number, number] = isQuarantineService ? [251, 191, 36] : darkBlue;
-        const cardBorderColor: [number, number, number] = isQuarantineService ? [180, 83, 9] : [226, 232, 240];
-        const dayBgColor: [number, number, number] = isQuarantineService ? [180, 83, 9] : primaryBlue;
+        // Colores específicos para cuarentena (ahora con fondo claro para mejor legibilidad)
+        const cardBgColor: [number, number, number] = isQuarantineService ? quarantineBg : [255, 255, 255];
+        const cardTextColor: [number, number, number] = isQuarantineService ? quarantineText : darkBlue;
+        const cardBorderColor: [number, number, number] = isQuarantineService ? quarantineBorder : [226, 232, 240];
+        const dayBgColor: [number, number, number] = isQuarantineService ? quarantineBorder : primaryBlue;
 
         // Card background con sombra suave
         doc.setFillColor(...cardBgColor);
         doc.roundedRect(margin, yPosition, pageWidth - margin * 2, cardHeight, 3, 3, "F");
         
-        // Borde sutil
+        // Borde sutil (más grueso para cuarentena)
         doc.setDrawColor(...cardBorderColor);
-        doc.setLineWidth(0.3);
+        doc.setLineWidth(isQuarantineService ? 0.8 : 0.3);
         doc.roundedRect(margin, yPosition, pageWidth - margin * 2, cardHeight, 3, 3, "S");
 
         // Número del día (destacado a la izquierda)
         doc.setFillColor(...dayBgColor);
-        doc.roundedRect(margin + 3, yPosition + 3, 18, cardHeight - 6, 2, 2, "F");
+        doc.roundedRect(margin + 3, yPosition + 3, 16, cardHeight - 6, 2, 2, "F");
         doc.setTextColor(255, 255, 255);
-        doc.setFontSize(16);
+        doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
-        doc.text(dayNumber.toString(), margin + 12, yPosition + cardHeight / 2 + 1, { align: "center" });
-        doc.setFontSize(7);
+        doc.text(dayNumber.toString(), margin + 11, yPosition + cardHeight / 2, { align: "center" });
+        doc.setFontSize(6);
         doc.setFont("helvetica", "normal");
-        doc.text(capitalizedDayName.substring(0, 3).toUpperCase(), margin + 12, yPosition + cardHeight / 2 + 6, { align: "center" });
+        doc.text(capitalizedDayName.substring(0, 3).toUpperCase(), margin + 11, yPosition + cardHeight / 2 + 5, { align: "center" });
 
         // Foto del director (circular)
-        const photoX = margin + 25;
+        const photoX = margin + 22;
         const photoY = yPosition + (cardHeight - photoSize) / 2;
         
         const directorImage = directorImagesBase64[service.leader];
@@ -336,7 +339,7 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
             doc.addImage(directorImage, "JPEG", photoX, photoY, photoSize, photoSize);
             
             // Borde circular
-            doc.setDrawColor(...(isQuarantineService ? accentGold : primaryBlue));
+            doc.setDrawColor(...(isQuarantineService ? quarantineBorder : primaryBlue));
             doc.setLineWidth(0.8);
             doc.circle(photoX + photoSize / 2, photoY + photoSize / 2, photoSize / 2, "S");
           } catch {
@@ -351,37 +354,36 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
           // Placeholder circular con iniciales
           doc.setFillColor(226, 232, 240);
           doc.circle(photoX + photoSize / 2, photoY + photoSize / 2, photoSize / 2, "F");
-          doc.setDrawColor(...(isQuarantineService ? accentGold : primaryBlue));
+          doc.setDrawColor(...(isQuarantineService ? quarantineBorder : primaryBlue));
           doc.setLineWidth(0.5);
           doc.circle(photoX + photoSize / 2, photoY + photoSize / 2, photoSize / 2, "S");
           doc.setTextColor(71, 85, 105);
-          doc.setFontSize(10);
+          doc.setFontSize(9);
           doc.setFont("helvetica", "bold");
           const initials = service.leader.split(' ').map(n => n[0]).join('').substring(0, 2);
           doc.text(initials, photoX + photoSize / 2, photoY + photoSize / 2 + 3, { align: "center" });
         }
 
         // Información del servicio
-        const textX = photoX + photoSize + 8;
-        const textMaxWidth = pageWidth - textX - margin - 50;
+        const textX = photoX + photoSize + 6;
         
         // Línea 1: Tipo de servicio con formato según tipo
         doc.setTextColor(...cardTextColor);
-        doc.setFontSize(10);
+        doc.setFontSize(9);
         doc.setFont("helvetica", "bold");
         
         if (isQuarantineService) {
-          doc.text(`CUARENTENA • ${capitalizedDayName} • ${service.title}`, textX, yPosition + 10);
+          doc.text(`CUARENTENA • ${capitalizedDayName} ${timeFormatted}`, textX, yPosition + 9);
         } else {
-          doc.text(`${orderName} Domingo • ${service.title}`, textX, yPosition + 10);
+          doc.text(`${orderName} Domingo • ${service.title}`, textX, yPosition + 9);
         }
 
         // Línea 2: Director de alabanza
-        const directorTextColor: [number, number, number] = isQuarantineService ? [251, 191, 36] : [71, 85, 105];
+        const directorTextColor: [number, number, number] = isQuarantineService ? [120, 53, 15] : [71, 85, 105];
         doc.setTextColor(...directorTextColor);
-        doc.setFontSize(9);
+        doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
-        doc.text(`Director: ${service.leader}`, textX, yPosition + 17);
+        doc.text(`Director: ${service.leader}`, textX, yPosition + 16);
 
         // Línea 3: Grupo coral con color distintivo
         // Determinar color según el nombre del grupo
@@ -393,44 +395,44 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
           return [71, 85, 105]; // slate-600 default
         };
 
-        const groupColor: [number, number, number] = isQuarantineService ? [251, 191, 36] : getGroupColor(groupName);
-        const corosLabelColor: [number, number, number] = isQuarantineService ? [200, 150, 30] : [71, 85, 105];
+        const groupColor: [number, number, number] = isQuarantineService ? quarantineText : getGroupColor(groupName);
+        const corosLabelColor: [number, number, number] = isQuarantineService ? [120, 53, 15] : [71, 85, 105];
         
-        doc.setFontSize(8);
+        doc.setFontSize(7);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(...corosLabelColor);
-        doc.text("Coros: ", textX, yPosition + 24);
+        doc.text("Coros: ", textX, yPosition + 22);
         
         const corosWidth = doc.getTextWidth("Coros: ");
         doc.setFont("helvetica", "bold");
         doc.setTextColor(...groupColor);
-        doc.text(groupName, textX + corosWidth, yPosition + 24);
+        doc.text(groupName, textX + corosWidth, yPosition + 22);
 
-        // Evento especial (a la derecha, más compacto) - Solo para servicios dominicales
+        // Evento especial / Badge a la derecha
         const eventX = pageWidth - margin - 5;
-        if (!isQuarantineService && specialEvent !== "Ninguno") {
+        if (isQuarantineService) {
+          // Badge de cuarentena con mejor contraste
+          doc.setFillColor(...quarantineBorder);
+          const badgeText = "7:00 PM";
+          doc.setFontSize(7);
+          const badgeWidth = doc.getTextWidth(badgeText) + 6;
+          doc.roundedRect(eventX - badgeWidth - 2, yPosition + cardHeight / 2 - 5, badgeWidth + 4, 10, 2, 2, "F");
+          doc.setTextColor(255, 255, 255);
+          doc.setFont("helvetica", "bold");
+          doc.text(badgeText, eventX, yPosition + cardHeight / 2 + 1, { align: "right" });
+        } else if (specialEvent !== "Ninguno") {
           doc.setFillColor(...accentGold);
-          const eventWidth = doc.getTextWidth(specialEvent) + 8;
-          doc.roundedRect(eventX - eventWidth - 2, yPosition + 8, eventWidth + 4, 12, 2, 2, "F");
+          doc.setFontSize(6);
+          const eventWidth = doc.getTextWidth(specialEvent) + 6;
+          doc.roundedRect(eventX - eventWidth - 2, yPosition + cardHeight / 2 - 5, eventWidth + 4, 10, 2, 2, "F");
           doc.setTextColor(255, 255, 255);
-          doc.setFontSize(7);
           doc.setFont("helvetica", "bold");
-          doc.text(specialEvent, eventX, yPosition + 15, { align: "right" });
-        } else if (isQuarantineService) {
-          // Badge de cuarentena
-          doc.setFillColor(180, 83, 9);
-          const badgeText = "CUARENTENA";
-          const badgeWidth = doc.getTextWidth(badgeText) + 8;
-          doc.roundedRect(eventX - badgeWidth - 2, yPosition + 8, badgeWidth + 4, 12, 2, 2, "F");
-          doc.setTextColor(255, 255, 255);
-          doc.setFontSize(7);
-          doc.setFont("helvetica", "bold");
-          doc.text(badgeText, eventX, yPosition + 15, { align: "right" });
+          doc.text(specialEvent, eventX, yPosition + cardHeight / 2 + 1, { align: "right" });
         } else {
           doc.setTextColor(148, 163, 184);
-          doc.setFontSize(7);
+          doc.setFontSize(6);
           doc.setFont("helvetica", "italic");
-          doc.text("Sin evento especial", eventX, yPosition + 15, { align: "right" });
+          doc.text("Sin evento", eventX, yPosition + cardHeight / 2 + 1, { align: "right" });
         }
 
         yPosition += cardHeight + cardSpacing;
