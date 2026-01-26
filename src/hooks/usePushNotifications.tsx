@@ -725,26 +725,38 @@ export const usePushNotifications = () => {
           // Remove all listeners first to avoid duplicates
           await PushNotifications.removeAllListeners();
           
-          // Re-setup listeners
-          await PushNotifications.addListener('registration', async (token: { value: string }) => {
-            console.log('📱 [PushNotifications] Force re-register - Token received:', token.value);
-            setDeviceToken(token.value);
+          // Create a promise that resolves when token is received
+          const tokenPromise = new Promise<string>((resolve, reject) => {
+            const timeoutId = setTimeout(() => {
+              reject(new Error('Token registration timeout'));
+            }, 15000); // 15 second timeout
             
-            // Save immediately
-            await saveDeviceToken(token.value, 'native');
-            localStorage.setItem('pending_device_token', token.value);
+            PushNotifications.addListener('registration', async (token: { value: string }) => {
+              clearTimeout(timeoutId);
+              console.log('📱 [PushNotifications] Force re-register - Token received:', token.value);
+              
+              // Save immediately
+              await saveDeviceToken(token.value, 'native');
+              localStorage.setItem('pending_device_token', token.value);
+              
+              resolve(token.value);
+            });
             
-            toast.success('Dispositivo registrado correctamente');
-          });
-          
-          await PushNotifications.addListener('registrationError', (error: any) => {
-            console.error('📱 [PushNotifications] Force re-register error:', error);
-            toast.error('Error al registrar dispositivo');
+            PushNotifications.addListener('registrationError', (error: any) => {
+              clearTimeout(timeoutId);
+              console.error('📱 [PushNotifications] Force re-register error:', error);
+              reject(error);
+            });
           });
           
           // Trigger registration
           await PushNotifications.register();
-          console.log('📱 [PushNotifications] Force re-register triggered');
+          console.log('📱 [PushNotifications] Force re-register triggered, waiting for token...');
+          
+          // Wait for token
+          const receivedToken = await tokenPromise;
+          setDeviceToken(receivedToken);
+          toast.success('✅ Dispositivo registrado correctamente');
           
           setIsRegistering(false);
           return true;
@@ -767,7 +779,7 @@ export const usePushNotifications = () => {
             setDeviceToken(sub.endpoint?.substring(0, 50) || 'web-registered');
           }
           
-          toast.success('Dispositivo registrado correctamente');
+          toast.success('✅ Dispositivo registrado correctamente');
         }
         
         setIsRegistering(false);
@@ -778,7 +790,7 @@ export const usePushNotifications = () => {
       return false;
     } catch (error) {
       console.error('📱 [PushNotifications] Error in forceReRegister:', error);
-      toast.error('Error al registrar dispositivo');
+      toast.error('Error al registrar dispositivo: ' + (error as Error).message);
       setIsRegistering(false);
       return false;
     }
