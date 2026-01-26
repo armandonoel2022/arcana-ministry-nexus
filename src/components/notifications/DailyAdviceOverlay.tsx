@@ -117,6 +117,24 @@ export const DailyAdviceOverlay = ({ title: propTitle, message: propMessage, ski
   const handleShare = async () => {
     const shareText = `💡 Consejo del Día: ${title}\n\n"${message}"\n\n— ARCANA`;
     
+    // Try native share API first (works on mobile and modern browsers)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Consejo del Día: ${title} - ARCANA`,
+          text: shareText,
+        });
+        toast.success('Compartido exitosamente');
+        return;
+      } catch (error) {
+        // User cancelled or share failed, fall back to clipboard
+        if ((error as Error).name !== 'AbortError') {
+          console.log('Share failed, falling back to clipboard:', error);
+        }
+      }
+    }
+    
+    // Fallback: copy to clipboard
     await navigator.clipboard.writeText(shareText);
     toast.success('Copiado al portapapeles');
   };
