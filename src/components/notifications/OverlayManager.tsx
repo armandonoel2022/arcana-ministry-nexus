@@ -440,24 +440,27 @@ const OverlayManager: React.FC = () => {
       if (pendingNotifications && pendingNotifications.length > 0) {
         console.log(`📱 [OverlayManager] ${pendingNotifications.length} overlays pendientes en system_notifications`);
 
-        // Filter out already shown in this session AND deduplicate by type+date
+        // Filter out already shown in this session AND deduplicate by type+date for ALL daily types
         const seenTypes = new Set<string>();
+        const dailyTypes = ['service_overlay', 'daily_verse', 'daily_advice'];
+        
         const notShownNotifications = pendingNotifications.filter(notification => {
-          // Use consistent session key format
-          const sessionKey = `overlay_session_${notification.type}_${notification.id}`;
-          if (sessionStorage.getItem(sessionKey)) {
-            return false;
-          }
-          
-          // For service_overlay, only show ONE per day (deduplicate)
-          if (notification.type === 'service_overlay') {
-            const typeKey = `service_overlay_${todayDateKey}`;
+          // For daily types, use type+date key for deduplication (ONLY ONE PER DAY)
+          if (dailyTypes.includes(notification.type)) {
+            const typeKey = `${notification.type}_${todayDateKey}`;
             if (seenTypes.has(typeKey) || sessionStorage.getItem(`overlay_session_${typeKey}`)) {
-              console.log("📱 [OverlayManager] Ignorando service_overlay duplicado");
+              console.log(`📱 [OverlayManager] Ignorando ${notification.type} duplicado del día`);
               return false;
             }
             seenTypes.add(typeKey);
             sessionStorage.setItem(`overlay_session_${typeKey}`, "true");
+            return true;
+          }
+          
+          // For other types, use standard session key format
+          const sessionKey = `overlay_session_${notification.type}_${notification.id}`;
+          if (sessionStorage.getItem(sessionKey)) {
+            return false;
           }
           
           return true;
