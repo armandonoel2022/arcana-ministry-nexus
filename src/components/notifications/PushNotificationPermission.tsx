@@ -14,6 +14,7 @@ export const PushNotificationPermission: React.FC = () => {
   const { isSupported, permission, isRegistering, deviceToken, requestPermission, forceReRegister } = usePushNotifications();
   const [isReRegistering, setIsReRegistering] = useState(false);
   const [registrationAttempted, setRegistrationAttempted] = useState(false);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
   // Auto-attempt registration for native platforms when permissions are granted but no token
   useEffect(() => {
@@ -24,12 +25,22 @@ export const PushNotificationPermission: React.FC = () => {
     }
   }, [permission, deviceToken, registrationAttempted, isReRegistering]);
 
+  // Reset success state when deviceToken changes
+  useEffect(() => {
+    if (deviceToken) {
+      setRegistrationSuccess(true);
+      console.log('📱 [PushPermission] Token detected, showing success state');
+    }
+  }, [deviceToken]);
+
   const handleForceReRegister = async () => {
     setIsReRegistering(true);
+    setRegistrationSuccess(false);
     try {
       const success = await forceReRegister();
       if (success) {
         console.log('📱 [PushPermission] Registration successful');
+        setRegistrationSuccess(true);
       } else {
         console.log('📱 [PushPermission] Registration returned false');
       }
@@ -42,8 +53,12 @@ export const PushNotificationPermission: React.FC = () => {
 
   const handleRequestPermission = async () => {
     setIsReRegistering(true);
+    setRegistrationSuccess(false);
     try {
-      await requestPermission();
+      const success = await requestPermission();
+      if (success) {
+        setRegistrationSuccess(true);
+      }
     } finally {
       setIsReRegistering(false);
       setRegistrationAttempted(true);
