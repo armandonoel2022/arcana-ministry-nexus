@@ -70,6 +70,15 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
   const [repetitionResult, setRepetitionResult] = useState<SongRepetitionResult | null>(null);
   const [pendingAction, setPendingAction] = useState<BotAction | null>(null);
   
+  // Multi-song selection state - accumulate songs before sending notification
+  const [pendingSongs, setPendingSongs] = useState<Array<{
+    songId: string;
+    songName: string;
+    serviceId: string;
+    serviceDate: string;
+  }>>([]);
+  const [isAddingMultipleSongs, setIsAddingMultipleSongs] = useState(false);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
@@ -552,8 +561,8 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
     }
   };
 
-  // Function to actually add the song (called after semaphore check)
-  const addSongToService = useCallback(async (action: BotAction) => {
+  // Function to add song to database WITHOUT sending notification
+  const addSongToServiceSilent = useCallback(async (action: BotAction): Promise<boolean> => {
     try {
       const serviceId = action.serviceId;
       const serviceDate = action.serviceDate;
@@ -564,7 +573,7 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
           description: "No tienes servicios asignados como director",
           variant: "destructive",
         });
-        return;
+        return false;
       }
 
       // Verificar si la canción ya existe en el servicio
@@ -586,21 +595,13 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
           description: `"${action.songName}" ya está en este servicio`,
           variant: "default",
         });
-        return;
+        return false;
       }
 
-      // Obtener datos del usuario actual para la notificación
+      // Obtener datos del usuario actual
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user?.id).single();
-
-      // Obtener datos de la canción
-      const { data: songData } = await supabase
-        .from("songs")
-        .select("title, artist, key_signature, difficulty_level")
-        .eq("id", action.songId)
-        .single();
 
       // Insertar en la tabla service_songs
       console.log("Insertando en service_songs...");
@@ -633,27 +634,70 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
         });
       }
 
-      // Obtener todos los miembros activos para enviarles notificación
+      // Send confirmation message from bot
+      await supabase.from("chat_messages").insert({
+        room_id: room.id,
+        user_id: null,
+        message: `✅ Agregué "${action.songName}" al servicio del ${new Date(serviceDate!).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}`,
+        is_bot: true,
+      });
+
+      return true;
+    } catch (error: any) {
+      console.error("Error completo agregando canción:", error);
+      toast({
+        title: "Error",
+        description: `No se pudo agregar la canción: ${error.message || "Error desconocido"}`,
+        variant: "destructive",
+      });
+      return false;
+    }
+  }, [room.id, toast]);
+
+  // Function to send notification for all accumulated songs
+  const sendSongsNotification = useCallback(async (songs: Array<{ songId: string; songName: string; serviceId: string; serviceDate: string }>) => {
+    if (songs.length === 0) return;
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user?.id).single();
+      
+      // Get service data
+      const serviceId = songs[0].serviceId;
+      const serviceDate = songs[0].serviceDate;
+      const { data: fullServiceData } = await supabase.from("services").select("*").eq("id", serviceId).single();
+      
+      // Get all song titles
+      const songTitles = songs.map(s => s.songName);
+      const songIds = songs.map(s => s.songId);
+      
+      // Build notification message
+      const songListText = songTitles.length === 1 
+        ? `"${songTitles[0]}"` 
+        : songTitles.slice(0, -1).map(t => `"${t}"`).join(", ") + ` y "${songTitles[songTitles.length - 1]}"`;
+      
+      const pluralText = songTitles.length === 1 ? "la canción" : `${songTitles.length} canciones`;
+      
+      // Get all active members for notification
       const { data: allMembers } = await supabase.from("profiles").select("id").eq("is_active", true);
 
-      // Obtener datos completos del servicio
-      const { data: fullServiceData } = await supabase.from("services").select("*").eq("id", serviceId).single();
-
-      // Crear notificaciones para todos los miembros
+      // Create notifications for all members
       if (allMembers && allMembers.length > 0) {
         const notifications = allMembers.map((member) => ({
           recipient_id: member.id,
           type: "song_selection",
-          title: "🎵 Nueva Canción Seleccionada",
-          message: `${profile?.full_name || "Un director"} ha seleccionado "${songData?.title}" para el servicio "${fullServiceData?.title}" del ${new Date(serviceDate!).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}`,
+          title: songTitles.length === 1 ? "🎵 Nueva Canción Seleccionada" : `🎵 ${songTitles.length} Canciones Seleccionadas`,
+          message: `${profile?.full_name || "Un director"} ha seleccionado ${songListText} para el servicio "${fullServiceData?.title}" del ${new Date(serviceDate).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}`,
           notification_category: "repertory",
           metadata: {
             service_id: serviceId,
             service_title: fullServiceData?.title,
             service_date: serviceDate,
             service_leader: fullServiceData?.leader,
-            song_id: action.songId,
-            song_title: songData?.title,
+            song_ids: songIds,
+            song_titles: songTitles,
             selected_by: profile?.full_name,
           },
         }));
@@ -661,7 +705,7 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
         await supabase.from("system_notifications").insert(notifications);
       }
 
-      // Contar cuántas canciones tiene ahora el servicio
+      // Count total songs in service now
       const { data: songCount } = await supabase
         .from("service_songs")
         .select("id", { count: "exact" })
@@ -670,15 +714,15 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
       const totalSongs = songCount?.length || 0;
       console.log("Total de canciones en el servicio:", totalSongs);
 
-      // Obtener nombre del servicio para el overlay
+      // Get service name for overlay
       const { data: serviceData } = await supabase.from("services").select("title").eq("id", serviceId).single();
 
       toast({
-        title: "✅ Canción agregada",
-        description: `"${action.songName}" agregada al servicio del ${new Date(serviceDate!).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}`,
+        title: songTitles.length === 1 ? "✅ Canción agregada" : `✅ ${songTitles.length} canciones agregadas`,
+        description: `Se agregaron ${pluralText} al servicio del ${new Date(serviceDate).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}`,
       });
 
-      // Mostrar overlay si se alcanzaron 4, 5 o 6 canciones
+      // Show overlay if 4, 5 or 6 songs reached
       if (totalSongs >= 4 && totalSongs <= 6) {
         setSongLimitData({
           count: totalSongs,
@@ -687,18 +731,19 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
         setShowSongLimitOverlay(true);
       }
 
-      // Send confirmation message from bot
+      // Send summary message from bot
       await supabase.from("chat_messages").insert({
         room_id: room.id,
         user_id: null,
-        message: `✅ Perfecto! Agregué "${action.songName}" al servicio del ${new Date(serviceDate!).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}`,
+        message: `📋 Resumen: Se ${songTitles.length === 1 ? 'agregó' : 'agregaron'} ${songListText} al servicio del ${new Date(serviceDate).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}. Notificación enviada a todos los miembros.`,
         is_bot: true,
       });
+
     } catch (error: any) {
-      console.error("Error completo agregando canción:", error);
+      console.error("Error enviando notificación:", error);
       toast({
         title: "Error",
-        description: `No se pudo agregar la canción: ${error.message || "Error desconocido"}`,
+        description: `No se pudo enviar la notificación: ${error.message || "Error desconocido"}`,
         variant: "destructive",
       });
     }
@@ -751,26 +796,85 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
     }
   };
 
-  // Handle confirm from repetition dialog
-  const handleRepetitionConfirm = useCallback(() => {
+  // Handle confirm from repetition dialog - now supports multi-song flow
+  const handleRepetitionConfirm = useCallback(async (addAnother: boolean) => {
     if (pendingAction) {
-      addSongToService(pendingAction);
+      // Add song to database (without notification)
+      const success = await addSongToServiceSilent(pendingAction);
+      
+      if (success) {
+        // Add to pending songs list
+        const newPendingSong = {
+          songId: pendingAction.songId,
+          songName: pendingAction.songName,
+          serviceId: pendingAction.serviceId!,
+          serviceDate: pendingAction.serviceDate!,
+        };
+        
+        if (addAnother) {
+          // User wants to add more songs
+          setPendingSongs(prev => [...prev, newPendingSong]);
+          setIsAddingMultipleSongs(true);
+          setShowRepetitionDialog(false);
+          setPendingAction(null);
+          setRepetitionResult(null);
+          
+          // Send message prompting for next song
+          await supabase.from("chat_messages").insert({
+            room_id: room.id,
+            user_id: null,
+            message: `🎵 ¡Listo! Puedes agregar otra canción. Escríbeme el nombre de la canción que buscas o selecciona del repertorio.`,
+            is_bot: true,
+          });
+        } else {
+          // User is done - send notification for all songs
+          const allSongs = [...pendingSongs, newPendingSong];
+          await sendSongsNotification(allSongs);
+          
+          // Reset state
+          setPendingSongs([]);
+          setIsAddingMultipleSongs(false);
+          setShowRepetitionDialog(false);
+          setPendingAction(null);
+          setRepetitionResult(null);
+        }
+      } else {
+        // Song wasn't added successfully
+        setShowRepetitionDialog(false);
+        setPendingAction(null);
+        setRepetitionResult(null);
+      }
     }
-    setShowRepetitionDialog(false);
-    setPendingAction(null);
-    setRepetitionResult(null);
-  }, [pendingAction, addSongToService]);
+  }, [pendingAction, pendingSongs, addSongToServiceSilent, sendSongsNotification, room.id]);
+
+  // Handle search another song with ARCANA
+  const handleSearchAnother = useCallback(() => {
+    // Focus input and set a placeholder message
+    if (inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.placeholder = "Escribe el nombre de la canción...";
+    }
+  }, []);
 
   // Handle cancel from repetition dialog
-  const handleRepetitionCancel = useCallback(() => {
+  const handleRepetitionCancel = useCallback(async () => {
+    // If there are pending songs and user cancels, send notification for what we have
+    if (pendingSongs.length > 0) {
+      await sendSongsNotification(pendingSongs);
+      setPendingSongs([]);
+      setIsAddingMultipleSongs(false);
+    }
+    
     setShowRepetitionDialog(false);
     setPendingAction(null);
     setRepetitionResult(null);
     toast({
       title: "Selección cancelada",
-      description: "Puedes elegir otra canción",
+      description: pendingSongs.length > 0 
+        ? "Se enviaron las notificaciones de las canciones ya agregadas"
+        : "Puedes elegir otra canción",
     });
-  }, [toast]);
+  }, [toast, pendingSongs, sendSongsNotification]);
 
   if (loading) {
     return <div className="text-center py-8">Cargando mensajes...</div>;
@@ -803,6 +907,8 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
         isChecking={isCheckingRepetition}
         onConfirm={handleRepetitionConfirm}
         onCancel={handleRepetitionCancel}
+        onSearchAnother={handleSearchAnother}
+        pendingSongsCount={pendingSongs.length}
       />
 
       {/* Avatar animado de ARCANA */}

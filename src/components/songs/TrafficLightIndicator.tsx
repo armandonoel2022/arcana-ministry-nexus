@@ -97,7 +97,7 @@ const TrafficLightIndicator: React.FC<TrafficLightIndicatorProps> = ({
         </div>
       </div>
 
-      {/* Action Buttons for Red State */}
+      {/* Action Buttons for Red State ONLY */}
       {showActions && result.color === 'red' && !result.canProceed && (
         <div className="flex gap-2 pt-2 border-t border-red-200 dark:border-red-800">
           <Button
