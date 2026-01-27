@@ -708,6 +708,40 @@ export const usePushNotifications = () => {
     }
   }, [permission]);
 
+  // Helper: Check for native token stored in UserDefaults via Preferences
+  const checkNativeToken = async (): Promise<string | null> => {
+    try {
+      // En iOS, el AppDelegate guarda el token en UserDefaults
+      // Capacitor Preferences puede acceder a UserDefaults
+      const { Preferences } = await import('@capacitor/preferences');
+      
+      // Intentar leer desde Capacitor Preferences (que mapea a UserDefaults)
+      const { value: nativeToken } = await Preferences.get({ key: 'apns_device_token' });
+      if (nativeToken) {
+        console.log('📱 [PushNotifications] Token encontrado en Preferences:', nativeToken.substring(0, 20) + '...');
+        return nativeToken;
+      }
+      
+      // Fallback: también revisar pending_device_token_native
+      const { value: pendingNative } = await Preferences.get({ key: 'pending_device_token_native' });
+      if (pendingNative) {
+        console.log('📱 [PushNotifications] Token pendiente nativo encontrado:', pendingNative.substring(0, 20) + '...');
+        return pendingNative;
+      }
+    } catch (e) {
+      console.log('📱 [PushNotifications] Preferences plugin no disponible');
+    }
+    
+    // Fallback final: localStorage
+    const localToken = localStorage.getItem('pending_device_token');
+    if (localToken) {
+      console.log('📱 [PushNotifications] Token encontrado en localStorage:', localToken.substring(0, 20) + '...');
+      return localToken;
+    }
+    
+    return null;
+  };
+
   // Force re-register device token (useful when token wasn't saved properly)
   const forceReRegister = useCallback(async (): Promise<boolean> => {
     if (!isSupported || !user) {
@@ -725,11 +759,28 @@ export const usePushNotifications = () => {
           // Remove all listeners first to avoid duplicates
           await PushNotifications.removeAllListeners();
           
-          // Create a promise that resolves when token is received
+          // PRIMERO: Verificar si ya hay un token en UserDefaults/Preferences
+          const existingNativeToken = await checkNativeToken();
+          if (existingNativeToken) {
+            console.log('📱 [PushNotifications] Usando token existente de native storage');
+            await saveDeviceToken(existingNativeToken, 'native');
+            setDeviceToken(existingNativeToken);
+            toast.success('✅ Dispositivo registrado correctamente');
+            setIsRegistering(false);
+            return true;
+          }
+          
+          // Si no hay token existente, intentar registrar con APNs
           const tokenPromise = new Promise<string>((resolve, reject) => {
-            const timeoutId = setTimeout(() => {
-              reject(new Error('Token registration timeout'));
-            }, 15000); // 15 second timeout
+            const timeoutId = setTimeout(async () => {
+              // Antes de fallar, intentar leer de nuevo el token nativo
+              const lastChanceToken = await checkNativeToken();
+              if (lastChanceToken) {
+                resolve(lastChanceToken);
+              } else {
+                reject(new Error('Token timeout - verifica AppDelegate.swift'));
+              }
+            }, 10000); // 10 second timeout
             
             PushNotifications.addListener('registration', async (token: { value: string }) => {
               clearTimeout(timeoutId);
