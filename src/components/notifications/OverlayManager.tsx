@@ -39,11 +39,37 @@ declare global {
   }
 }
 
+// Key para persistir estado de inicialización durante la sesión
+const OVERLAY_INIT_KEY = 'overlay_manager_initialized_session';
+
+// Helper para verificar si es una verdadera "nueva sesión" de la app
+const isNewAppSession = (): boolean => {
+  const initData = sessionStorage.getItem(OVERLAY_INIT_KEY);
+  if (!initData) return true;
+  
+  try {
+    const { timestamp } = JSON.parse(initData);
+    // Si han pasado más de 30 minutos desde la última inicialización, es nueva sesión
+    const thirtyMinutes = 30 * 60 * 1000;
+    return Date.now() - timestamp > thirtyMinutes;
+  } catch {
+    return true;
+  }
+};
+
+const markAppSessionInitialized = (): void => {
+  sessionStorage.setItem(OVERLAY_INIT_KEY, JSON.stringify({
+    timestamp: Date.now(),
+    initialized: true
+  }));
+};
+
 const OverlayManager: React.FC = () => {
   const navigate = useNavigate();
   const [activeOverlay, setActiveOverlay] = useState<OverlayData | null>(null);
   const [overlayType, setOverlayType] = useState<string | null>(null);
-  const hasInitialized = useRef(false);
+  // Solo marcar como "no inicializado" si es una nueva sesión real
+  const hasInitialized = useRef(!isNewAppSession());
   const currentUserId = useRef<string | null>(null);
   const isMounted = useRef(true);
   const lastScheduledCheck = useRef<number>(0);
@@ -329,9 +355,9 @@ const OverlayManager: React.FC = () => {
 
   // Check for pending overlays AND missed scheduled notifications when component mounts
   const checkPendingOverlays = useCallback(async () => {
-    // Prevent multiple initializations
+    // Prevent multiple initializations - AHORA USANDO PERSISTENCIA DE SESIÓN
     if (hasInitialized.current) {
-      console.log("📱 [OverlayManager] Ya inicializado, ignorando");
+      console.log("📱 [OverlayManager] Ya inicializado en esta sesión, ignorando verificación de overlays");
       return;
     }
 
@@ -346,7 +372,9 @@ const OverlayManager: React.FC = () => {
 
       currentUserId.current = user.id;
       hasInitialized.current = true;
-      console.log("📱 [OverlayManager] Verificando overlays pendientes para usuario:", user.id);
+      // Persistir que ya inicializamos en esta sesión
+      markAppSessionInitialized();
+      console.log("📱 [OverlayManager] ✅ Primera inicialización de sesión para usuario:", user.id);
 
       // Only get overlay types that should show as modal overlays (NOT regular notifications)
       const overlayTypes = [
@@ -506,12 +534,13 @@ const OverlayManager: React.FC = () => {
   }, [showOverlay, processNextOverlay, getDefaultTitle]);
 
   // Función MEJORADA para verificar notificaciones programadas - SISTEMA DE BACKUP
+  // Solo se ejecuta cuando HAY una coincidencia de hora exacta
   const checkScheduledNotifications = useCallback(async () => {
     if (!isMounted.current) return;
 
     const now = Date.now();
-    // Evitar verificar demasiado frecuentemente (mínimo 30 segundos)
-    if (now - lastScheduledCheck.current < 30000) {
+    // Evitar verificar demasiado frecuentemente (mínimo 60 segundos para reducir ruido)
+    if (now - lastScheduledCheck.current < 60000) {
       return;
     }
 
@@ -530,7 +559,8 @@ const OverlayManager: React.FC = () => {
       const currentTimeFormatted = `${String(currentHour).padStart(2, "0")}:${String(currentMinute).padStart(2, "0")}`;
       const currentTimeWithSeconds = `${currentTimeFormatted}:00`;
 
-      console.log("⏰ [OverlayManager-Backup] Verificando a las:", currentTimeWithSeconds, "Día:", currentDay);
+      // Solo loguear si estamos en un minuto donde PUEDE haber coincidencia
+      // (reducir spam de logs)
 
       // Buscar notificaciones programadas para HOY
       const { data: scheduledNotifications, error } = await supabase
@@ -544,8 +574,8 @@ const OverlayManager: React.FC = () => {
         return;
       }
 
+      // Solo loguear si encontramos algo Y hay coincidencia de tiempo
       if (scheduledNotifications && scheduledNotifications.length > 0) {
-        console.log("⏰ [OverlayManager] Notificaciones encontradas para hoy:", scheduledNotifications.length);
 
         for (const notification of scheduledNotifications) {
           const notificationTime = notification.time;
@@ -590,44 +620,53 @@ const OverlayManager: React.FC = () => {
   }, [showOverlay, getDefaultTitle]);
 
   useEffect(() => {
-    console.log("📱 [OverlayManager] Inicializando...");
+    // Solo loguear si es primera vez en la sesión
+    if (isNewAppSession()) {
+      console.log("📱 [OverlayManager] Inicializando nueva sesión...");
+    }
     
     // Limpiar claves de sessionStorage de días anteriores para evitar acumulación
     const dominicanNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
     const todayKey = dominicanNow.toISOString().split('T')[0];
     const sessionStorageKeys = Object.keys(sessionStorage);
+    let cleanedCount = 0;
     sessionStorageKeys.forEach(key => {
       if (key.startsWith('overlay_session_')) {
         // Si la key contiene una fecha y no es la de hoy, eliminarla
         const dateMatch = key.match(/\d{4}-\d{2}-\d{2}/);
         if (dateMatch && dateMatch[0] !== todayKey) {
           sessionStorage.removeItem(key);
-          console.log("🧹 [OverlayManager] Limpiando sessionStorage viejo:", key);
+          cleanedCount++;
         }
       }
     });
+    if (cleanedCount > 0) {
+      console.log("🧹 [OverlayManager] Limpiados", cleanedCount, "registros de sesión antiguos");
+    }
     
     // También limpiar localStorage de scheduled_shown de días anteriores
     const localStorageKeys = Object.keys(localStorage);
+    let localCleanedCount = 0;
     localStorageKeys.forEach(key => {
       if (key.startsWith('scheduled_shown_')) {
         const dateMatch = key.match(/\d{4}-\d{2}-\d{2}/);
         if (dateMatch && dateMatch[0] !== todayKey) {
           localStorage.removeItem(key);
-          console.log("🧹 [OverlayManager] Limpiando localStorage viejo:", key);
+          localCleanedCount++;
         }
       }
     });
+    if (localCleanedCount > 0) {
+      console.log("🧹 [OverlayManager] Limpiados", localCleanedCount, "registros localStorage antiguos");
+    }
 
     // Event handler for generic showOverlay event
     const handleShowOverlay = (event: CustomEvent<OverlayData>) => {
-      console.log("📱 [OverlayManager] Evento showOverlay recibido:", event.detail);
       showOverlay(event.detail);
     };
 
     // Event handler for service overlay
     const handleShowServiceOverlay = () => {
-      console.log("📱 [OverlayManager] Evento showServiceOverlay recibido");
       showOverlay({
         id: `preview-service-${Date.now()}`,
         type: "service_overlay",
@@ -639,7 +678,6 @@ const OverlayManager: React.FC = () => {
 
     // Event handler for verse overlay
     const handleShowVerseOverlay = (event: CustomEvent<{ verseText: string; verseReference: string }>) => {
-      console.log("📱 [OverlayManager] Evento showVerseOverlay recibido:", event.detail);
       showOverlay({
         id: `preview-verse-${Date.now()}`,
         type: "daily_verse",
@@ -654,7 +692,6 @@ const OverlayManager: React.FC = () => {
 
     // Event handler for advice overlay
     const handleShowAdviceOverlay = (event: CustomEvent<{ title: string; message: string }>) => {
-      console.log("📱 [OverlayManager] Evento showAdviceOverlay recibido:", event.detail);
       showOverlay({
         id: `preview-advice-${Date.now()}`,
         type: "daily_advice",
@@ -669,7 +706,6 @@ const OverlayManager: React.FC = () => {
 
     // Event handler for blood donation overlay
     const handleShowBloodDonationOverlay = (event: CustomEvent<any>) => {
-      console.log("📱 [OverlayManager] Evento showBloodDonationOverlay recibido:", event.detail);
       showOverlay({
         id: `preview-blood-${Date.now()}`,
         type: "blood_donation",
@@ -681,7 +717,6 @@ const OverlayManager: React.FC = () => {
 
     // Event handler for rehearsal overlay
     const handleShowRehearsalOverlay = (event: CustomEvent<any>) => {
-      console.log("📱 [OverlayManager] Evento showRehearsalOverlay recibido:", event.detail);
       showOverlay({
         id: `preview-rehearsal-${Date.now()}`,
         type: "extraordinary_rehearsal",
@@ -693,7 +728,6 @@ const OverlayManager: React.FC = () => {
 
     // Event handler for instructions overlay
     const handleShowInstructionsOverlay = (event: CustomEvent<any>) => {
-      console.log("📱 [OverlayManager] Evento showInstructionsOverlay recibido:", event.detail);
       showOverlay({
         id: `preview-instructions-${Date.now()}`,
         type: "ministry_instructions",
@@ -705,7 +739,6 @@ const OverlayManager: React.FC = () => {
 
     // Event handler for general announcement overlay
     const handleShowAnnouncementOverlay = (event: CustomEvent<any>) => {
-      console.log("📱 [OverlayManager] Evento showAnnouncementOverlay recibido:", event.detail);
       showOverlay({
         id: `preview-announcement-${Date.now()}`,
         type: event.detail.type || "meeting_announcement",
@@ -793,21 +826,19 @@ const OverlayManager: React.FC = () => {
       }
     };
 
-    // Start checking scheduled notifications as backup cada 30 segundos
+    // Start checking scheduled notifications as backup cada 60 segundos (reducido para menos ruido)
     const startScheduledCheck = () => {
       if (scheduledCheckInterval) return;
-      console.log("⏰ [OverlayManager] Iniciando sistema de backup cada 30 segundos");
-      scheduledCheckInterval = setInterval(checkScheduledNotifications, 30000);
-      // Check immediately
-      setTimeout(() => checkScheduledNotifications(), 5000);
+      scheduledCheckInterval = setInterval(checkScheduledNotifications, 60000);
+      // Check immediately (pero solo una vez)
+      setTimeout(() => checkScheduledNotifications(), 10000);
     };
 
-    // Start polling for system_notifications
+    // Start polling for system_notifications - cada 30 segundos (reducido de 15)
     const startPolling = () => {
       if (pollInterval) return;
-      console.log("📱 [OverlayManager] Iniciando polling de system_notifications cada 15 segundos");
-      pollInterval = setInterval(checkForNewNotifications, 15000);
-      checkForNewNotifications();
+      pollInterval = setInterval(checkForNewNotifications, 30000);
+      // No hacer check inmediato ya que checkPendingOverlays() ya busca overlays pendientes
     };
 
     // Setup Realtime for instant notifications
@@ -817,7 +848,6 @@ const OverlayManager: React.FC = () => {
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      console.log("📱 [OverlayManager] Configurando sistema de overlays para usuario:", user.id);
       currentUserId.current = user.id;
 
       // Use Realtime WITHOUT filter - check recipient client-side
@@ -832,11 +862,9 @@ const OverlayManager: React.FC = () => {
           },
           (payload) => {
             const notification = payload.new as any;
-            console.log("📱 [OverlayManager] Notificación recibida via Realtime:", notification);
 
             // Check if notification is for this user or broadcast
             if (notification.recipient_id && notification.recipient_id !== user.id) {
-              console.log("📱 [OverlayManager] Notificación no es para este usuario");
               return;
             }
 
@@ -845,7 +873,7 @@ const OverlayManager: React.FC = () => {
               const sessionKey = `overlay_shown_session_${notification.id}`;
               if (!sessionStorage.getItem(sessionKey)) {
                 sessionStorage.setItem(sessionKey, "true");
-                console.log("📱 [OverlayManager] ✅ Mostrando overlay via Realtime:", notification.type);
+                console.log("📱 [OverlayManager] ✅ Nueva notificación via Realtime:", notification.type);
                 showOverlay({
                   id: notification.id,
                   type: notification.type,
@@ -857,12 +885,7 @@ const OverlayManager: React.FC = () => {
             }
           },
         )
-        .subscribe((status) => {
-          console.log("📱 [OverlayManager] Estado Realtime:", status);
-          if (status === "SUBSCRIBED") {
-            console.log("📱 [OverlayManager] ✅ Realtime conectado");
-          }
-        });
+        .subscribe();
 
       // Start all checks
       startScheduledCheck();
@@ -873,7 +896,6 @@ const OverlayManager: React.FC = () => {
 
     // Cleanup
     return () => {
-      console.log("📱 [OverlayManager] Limpiando listeners...");
       isMounted.current = false;
       window.removeEventListener("showOverlay", handleShowOverlay as EventListener);
       window.removeEventListener("showServiceOverlay", handleShowServiceOverlay as EventListener);
