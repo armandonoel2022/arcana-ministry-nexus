@@ -88,6 +88,27 @@ export function useLiveKit(config: LiveKitConfig) {
       return true;
     }
 
+    // If already connecting, wait for it
+    if (roomRef.current?.state === ConnectionState.Connecting) {
+      console.log('Already connecting to LiveKit, waiting...');
+      return new Promise<boolean>((resolve) => {
+        const checkInterval = setInterval(() => {
+          if (roomRef.current?.state === ConnectionState.Connected) {
+            clearInterval(checkInterval);
+            resolve(true);
+          } else if (roomRef.current?.state === ConnectionState.Disconnected) {
+            clearInterval(checkInterval);
+            resolve(false);
+          }
+        }, 100);
+        // Timeout after 10 seconds
+        setTimeout(() => {
+          clearInterval(checkInterval);
+          resolve(false);
+        }, 10000);
+      });
+    }
+
     const tokenData = await getToken();
     if (!tokenData) return false;
 
@@ -152,14 +173,10 @@ export function useLiveKit(config: LiveKitConfig) {
         }
       });
 
-      await room.connect(tokenData.url, tokenData.token);
       roomRef.current = room;
+      await room.connect(tokenData.url, tokenData.token);
 
-      toast({
-        title: '🔗 Conectado a sala LiveKit',
-        description: `Sala: rehearsal-${config.sessionId}`,
-      });
-
+      console.log('LiveKit connected successfully');
       return true;
     } catch (error) {
       console.error('Error connecting to LiveKit:', error);
@@ -188,50 +205,92 @@ export function useLiveKit(config: LiveKitConfig) {
 
   // Start recording with NTP-synced timestamp
   const startRecording = useCallback(async () => {
+    // First, ensure we have a connection
     if (!roomRef.current || roomRef.current.state !== ConnectionState.Connected) {
+      console.log('LiveKit: Not connected, attempting to connect...');
       const connected = await connect();
-      if (!connected) return false;
+      if (!connected) {
+        console.error('LiveKit: Failed to connect');
+        return false;
+      }
+    }
+
+    // Double-check connection state after potential connect
+    if (roomRef.current?.state !== ConnectionState.Connected) {
+      console.error('LiveKit: Still not connected after connect attempt');
+      toast({
+        title: 'Error de conexión',
+        description: 'Por favor intenta de nuevo',
+        variant: 'destructive',
+      });
+      return false;
     }
 
     try {
-      // Create local audio track
+      console.log('LiveKit: Creating local audio track...');
+      
+      // Create local audio track with explicit constraints
       const localTrack = await createLocalAudioTrack({
         echoCancellation: false,
         noiseSuppression: false,
         autoGainControl: false,
+        sampleRate: 48000,
+        channelCount: 1,
       });
 
       localTrackRef.current = localTrack;
+      console.log('LiveKit: Local track created, publishing...');
 
       // Publish to room
       await roomRef.current!.localParticipant.publishTrack(localTrack);
+      console.log('LiveKit: Track published');
 
       // Set up MediaRecorder for local recording
       const stream = new MediaStream([localTrack.mediaStreamTrack]);
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      
+      // Check supported MIME types
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+        ? 'audio/webm;codecs=opus' 
+        : MediaRecorder.isTypeSupported('audio/webm') 
+          ? 'audio/webm' 
+          : 'audio/mp4';
+      
+      console.log('LiveKit: Using MIME type:', mimeType);
+      
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
       audioChunksRef.current = [];
 
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
           audioChunksRef.current.push(e.data);
+          console.log('LiveKit: Audio chunk received, size:', e.data.size);
         }
       };
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const recordedTrack: RecordedTrack = {
-          blob,
-          startOffset: recordingStartTimeRef.current,
-          participantId: config.userId,
-          participantName: config.userName,
-        };
-        setRecordedTracks((prev) => [...prev, recordedTrack]);
+        console.log('LiveKit: MediaRecorder stopped, chunks:', audioChunksRef.current.length);
+        if (audioChunksRef.current.length > 0) {
+          const blob = new Blob(audioChunksRef.current, { type: mimeType });
+          console.log('LiveKit: Created blob, size:', blob.size);
+          const recordedTrack: RecordedTrack = {
+            blob,
+            startOffset: recordingStartTimeRef.current,
+            participantId: config.userId,
+            participantName: config.userName,
+          };
+          setRecordedTracks((prev) => [...prev, recordedTrack]);
+        } else {
+          console.warn('LiveKit: No audio chunks recorded');
+        }
+      };
+
+      mediaRecorder.onerror = (e) => {
+        console.error('LiveKit: MediaRecorder error:', e);
       };
 
       // Start recording with NTP-synced timestamp
-      // LiveKit provides synchronized timestamps via room.serverInfo
       recordingStartTimeRef.current = Date.now();
-      mediaRecorder.start();
+      mediaRecorder.start(1000); // Collect data every second
       mediaRecorderRef.current = mediaRecorder;
 
       setIsRecording(true);
@@ -239,6 +298,7 @@ export function useLiveKit(config: LiveKitConfig) {
         setRecordingTime((t) => t + 1);
       }, 1000);
 
+      console.log('LiveKit: Recording started');
       toast({
         title: '🎙️ Grabando...',
         description: 'Audio sincronizado con LiveKit',
@@ -249,7 +309,7 @@ export function useLiveKit(config: LiveKitConfig) {
       console.error('Error starting recording:', error);
       toast({
         title: 'Error al grabar',
-        description: 'No se pudo iniciar la grabación',
+        description: error instanceof Error ? error.message : 'No se pudo iniciar la grabación',
         variant: 'destructive',
       });
       return false;
