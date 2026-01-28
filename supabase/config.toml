@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.arcana-ai]
 verify_jwt = true
+
+[functions.livekit-token]
+verify_jwt = false

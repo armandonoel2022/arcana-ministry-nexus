@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Play, Pause, Square, SkipBack, Mic, Volume2, VolumeX, Trash2, Upload, RotateCcw } from "lucide-react";
+import { Play, Pause, Square, SkipBack, Mic, Volume2, VolumeX, Trash2, Upload, RotateCcw, Radio, Wifi, WifiOff } from "lucide-react";
 import WaveSurfer from "wavesurfer.js";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useLiveKit } from "@/hooks/useLiveKit";
+import { Badge } from "@/components/ui/badge";
 
 interface Track {
   id: string;
@@ -44,8 +46,17 @@ export default function DAWInterface({
   onTrackUpdate,
   onTracksRefresh,
 }: DAWProps) {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const { toast } = useToast();
+  
+  // LiveKit integration for synchronized recording
+  const liveKit = useLiveKit({
+    sessionId,
+    userId: user?.id || '',
+    userName: userProfile?.full_name || 'Usuario',
+  });
+
+  const [useLiveKitMode, setUseLiveKitMode] = useState(true); // Default to LiveKit mode
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -398,13 +409,30 @@ export default function DAWInterface({
     }
   };
 
-  // 🟥 Grabación con medición de latencia real
+  // 🟥 Grabación con LiveKit (sincronizada) o local (fallback)
   const startRecording = async () => {
-    if (isRecording) {
+    if (isRecording || liveKit.isRecording) {
       toast({ title: "Ya estás grabando", variant: "destructive" });
       return;
     }
 
+    // Use LiveKit mode for synchronized recording
+    if (useLiveKitMode) {
+      const success = await liveKit.startRecording();
+      if (success) {
+        // Start playback if not already playing
+        if (!isPlaying) {
+          await schedulePrecisionPlayback();
+          setIsPlaying(true);
+          updateProgress();
+        }
+        setRecordedStartOffset(currentTime);
+        setIsRecording(true);
+      }
+      return;
+    }
+
+    // Fallback: Local recording (original logic)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -469,7 +497,23 @@ export default function DAWInterface({
     }
   };
 
-  const stopRecording = () => {
+  const stopRecording = async () => {
+    if (useLiveKitMode && liveKit.isRecording) {
+      liveKit.stopRecording();
+      setIsRecording(false);
+      handleGlobalStop();
+      
+      // Auto-publish the LiveKit recorded track
+      const lastTrack = liveKit.getLastRecordedTrack();
+      if (lastTrack) {
+        toast({ title: "📤 Publicando pista sincronizada..." });
+        await autoPublishRecording(lastTrack.blob);
+        liveKit.clearRecordedTracks();
+      }
+      return;
+    }
+
+    // Fallback: Local recording stop
     mediaRecorderRef.current?.stop();
     setIsRecording(false);
     setRecordingTime(0);
@@ -890,8 +934,31 @@ export default function DAWInterface({
 
         {/* Controles adicionales y grabación */}
         <div className="flex flex-col items-center gap-4">
-          {/* Opciones de procesamiento */}
-          <div className="flex items-center gap-4 text-sm">
+          {/* LiveKit status y opciones de procesamiento */}
+          <div className="flex items-center gap-4 text-sm flex-wrap justify-center">
+            {/* LiveKit Connection Toggle */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant={useLiveKitMode ? "default" : "outline"}
+                size="sm"
+                onClick={() => setUseLiveKitMode(!useLiveKitMode)}
+                className="gap-2"
+              >
+                {useLiveKitMode ? <Wifi className="h-4 w-4" /> : <WifiOff className="h-4 w-4" />}
+                <span className="hidden sm:inline">LiveKit Sync</span>
+              </Button>
+              {useLiveKitMode && (
+                <Badge variant={liveKit.isConnected ? "default" : "secondary"} className="text-xs">
+                  {liveKit.isConnected ? "🔗 Conectado" : "⏳ Desconectado"}
+                </Badge>
+              )}
+              {liveKit.remoteParticipants.size > 0 && (
+                <Badge variant="outline" className="text-xs">
+                  👥 {liveKit.remoteParticipants.size} participante(s)
+                </Badge>
+              )}
+            </div>
+
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -938,9 +1005,9 @@ export default function DAWInterface({
                 </Button>
               </div>
             </div>
-          ) : isRecording ? (
+          ) : (isRecording || liveKit.isRecording) ? (
             <Button onClick={stopRecording} variant="destructive" size="lg" className="gap-2">
-              <Square className="h-5 w-5" /> Detener ({formatTime(recordingTime)})
+              <Square className="h-5 w-5" /> Detener ({formatTime(useLiveKitMode ? liveKit.recordingTime : recordingTime)})
             </Button>
           ) : null}
         </div>
