@@ -128,13 +128,26 @@ export default function DAWInterface({
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
+    
+    // Pre-connect to LiveKit for faster recording start
+    if (useLiveKitMode && user?.id) {
+      console.log('DAW: Pre-connecting to LiveKit...');
+      liveKit.connect().then((connected) => {
+        if (connected) {
+          console.log('DAW: Pre-connected to LiveKit successfully');
+        }
+      });
+    }
+    
     return () => {
       recordingWavesurferRef.current?.destroy();
       streamRef.current?.getTracks().forEach((track) => track.stop());
       Object.values(audioNodesRef.current).forEach(({ source }) => source.disconnect());
       audioContextRef.current?.close();
+      // Disconnect from LiveKit
+      liveKit.disconnect();
     };
-  }, []);
+  }, [useLiveKitMode, user?.id]);
 
   // Aplicar filtros de audio para reducción de ruido
   const applyAudioFilters = (audio: HTMLAudioElement, trackId: string) => {
@@ -418,6 +431,11 @@ export default function DAWInterface({
 
     // Use LiveKit mode for synchronized recording
     if (useLiveKitMode) {
+      // Show connecting feedback if not connected
+      if (!liveKit.isConnected) {
+        toast({ title: "🔗 Conectando a LiveKit...", description: "Preparando grabación sincronizada" });
+      }
+      
       const success = await liveKit.startRecording();
       if (success) {
         // Start playback if not already playing
@@ -428,6 +446,8 @@ export default function DAWInterface({
         }
         setRecordedStartOffset(currentTime);
         setIsRecording(true);
+      } else {
+        toast({ title: "Error al iniciar grabación", description: "Intenta de nuevo", variant: "destructive" });
       }
       return;
     }
