@@ -523,13 +523,41 @@ export default function DAWInterface({
       setIsRecording(false);
       handleGlobalStop();
       
-      // Auto-publish the LiveKit recorded track
-      const lastTrack = liveKit.getLastRecordedTrack();
-      if (lastTrack) {
-        toast({ title: "📤 Publicando pista sincronizada..." });
-        await autoPublishRecording(lastTrack.blob);
-        liveKit.clearRecordedTracks();
-      }
+      // Wait for the MediaRecorder to finish processing and state to update
+      toast({ title: "⏹️ Procesando grabación...", description: "Espera un momento" });
+      
+      // Poll for the recorded track with timeout
+      let attempts = 0;
+      const maxAttempts = 20; // 2 seconds max wait
+      const checkForTrack = async () => {
+        const lastTrack = liveKit.getLastRecordedTrack();
+        if (lastTrack && lastTrack.blob.size > 0) {
+          console.log('DAW: Got recorded track, size:', lastTrack.blob.size);
+          toast({ title: "📤 Publicando pista sincronizada..." });
+          await autoPublishRecording(lastTrack.blob);
+          liveKit.clearRecordedTracks();
+          return true;
+        }
+        return false;
+      };
+      
+      // Initial check
+      if (await checkForTrack()) return;
+      
+      // Polling with delay
+      const pollInterval = setInterval(async () => {
+        attempts++;
+        if (await checkForTrack()) {
+          clearInterval(pollInterval);
+          return;
+        }
+        if (attempts >= maxAttempts) {
+          clearInterval(pollInterval);
+          console.warn('DAW: No recording found after waiting');
+          toast({ title: "⚠️ No se encontró grabación", description: "Intenta grabar de nuevo", variant: "destructive" });
+        }
+      }, 100);
+      
       return;
     }
 
