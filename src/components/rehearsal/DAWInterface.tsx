@@ -541,44 +541,21 @@ export default function DAWInterface({
 
   const stopRecording = async () => {
     if (useLiveKitMode && liveKit.isRecording) {
-      liveKit.stopRecording();
       setIsRecording(false);
       handleGlobalStop();
       
-      // Wait for the MediaRecorder to finish processing and state to update
-      toast({ title: "⏹️ Procesando grabación...", description: "Espera un momento" });
+      // stopRecording now returns a Promise with the blob directly
+      const blob = await liveKit.stopRecording();
       
-      // Poll for the recorded track with timeout
-      let attempts = 0;
-      const maxAttempts = 20; // 2 seconds max wait
-      const checkForTrack = async () => {
-        const lastTrack = liveKit.getLastRecordedTrack();
-        if (lastTrack && lastTrack.blob.size > 0) {
-          console.log('DAW: Got recorded track, size:', lastTrack.blob.size);
-          toast({ title: "📤 Publicando pista sincronizada..." });
-          await autoPublishRecording(lastTrack.blob);
-          liveKit.clearRecordedTracks();
-          return true;
-        }
-        return false;
-      };
-      
-      // Initial check
-      if (await checkForTrack()) return;
-      
-      // Polling with delay
-      const pollInterval = setInterval(async () => {
-        attempts++;
-        if (await checkForTrack()) {
-          clearInterval(pollInterval);
-          return;
-        }
-        if (attempts >= maxAttempts) {
-          clearInterval(pollInterval);
-          console.warn('DAW: No recording found after waiting');
-          toast({ title: "⚠️ No se encontró grabación", description: "Intenta grabar de nuevo", variant: "destructive" });
-        }
-      }, 100);
+      if (blob && blob.size > 0) {
+        console.log('DAW: Got recorded blob directly, size:', blob.size);
+        toast({ title: "📤 Publicando pista sincronizada..." });
+        await autoPublishRecording(blob);
+        liveKit.clearRecordedTracks();
+      } else {
+        console.warn('DAW: No recording blob returned');
+        toast({ title: "⚠️ No se encontró grabación", description: "Intenta grabar de nuevo", variant: "destructive" });
+      }
       
       return;
     }
