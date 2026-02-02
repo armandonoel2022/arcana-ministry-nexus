@@ -316,30 +316,63 @@ export function useLiveKit(config: LiveKitConfig) {
     }
   }, [connect, config.userId, config.userName, toast]);
 
-  // Stop recording
-  const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+  // Stop recording and return the blob directly via Promise
+  const stopRecording = useCallback((): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') {
+        console.warn('LiveKit: No active recording to stop');
+        resolve(null);
+        return;
+      }
+
+      const mimeType = mediaRecorderRef.current.mimeType;
+      
+      // Override onstop to resolve the promise with the blob
+      mediaRecorderRef.current.onstop = () => {
+        console.log('LiveKit: MediaRecorder stopped, chunks:', audioChunksRef.current.length);
+        
+        if (audioChunksRef.current.length > 0) {
+          const blob = new Blob(audioChunksRef.current, { type: mimeType });
+          console.log('LiveKit: Created blob, size:', blob.size);
+          
+          const recordedTrack: RecordedTrack = {
+            blob,
+            startOffset: recordingStartTimeRef.current,
+            participantId: config.userId,
+            participantName: config.userName,
+          };
+          setRecordedTracks((prev) => [...prev, recordedTrack]);
+          
+          // Resolve with the blob directly
+          resolve(blob);
+        } else {
+          console.warn('LiveKit: No audio chunks recorded');
+          resolve(null);
+        }
+      };
+
+      // Actually stop the recorder
       mediaRecorderRef.current.stop();
-    }
 
-    if (localTrackRef.current) {
-      roomRef.current?.localParticipant.unpublishTrack(localTrackRef.current);
-      localTrackRef.current.stop();
-      localTrackRef.current = null;
-    }
+      if (localTrackRef.current) {
+        roomRef.current?.localParticipant.unpublishTrack(localTrackRef.current);
+        localTrackRef.current.stop();
+        localTrackRef.current = null;
+      }
 
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
 
-    setIsRecording(false);
-    setRecordingTime(0);
+      setIsRecording(false);
+      setRecordingTime(0);
 
-    toast({
-      title: '⏹️ Grabación detenida',
+      toast({
+        title: '⏹️ Procesando grabación...',
+      });
     });
-  }, [toast]);
+  }, [config.userId, config.userName, toast]);
 
   // Get last recorded track
   const getLastRecordedTrack = useCallback((): RecordedTrack | null => {
