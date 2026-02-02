@@ -103,8 +103,9 @@ export default function DAWInterface({
   const masterStartRef = useRef<number | null>(null);
   const startAtGlobalRef = useRef<number>(0);
 
-  const LATENCY_COMPENSATION = 0.25; // for recording alignment
-  const LOOKAHEAD = 0.2; // schedule ahead for stable sync
+  const LATENCY_COMPENSATION = 0.15; // Reduced - compensate for recording input delay
+  const LOOKAHEAD = 0.05; // Reduced for tighter sync
+  const PLAYBACK_OFFSET = -0.1; // Compensate for playback latency on voice tracks
 
   const voiceTracks = tracks.filter((t) => !t.is_backing_track);
   const allTracks = [
@@ -353,13 +354,15 @@ export default function DAWInterface({
       chain.gain.gain.value = track.is_muted ? 0 : track.volume_level;
 
       const offset = getEffectiveOffset(track);
-      const localTime = track.is_backing_track ? currentTime : currentTime - offset;
+      // Apply playback latency compensation for voice tracks
+      const effectiveOffset = track.is_backing_track ? 0 : offset + PLAYBACK_OFFSET;
+      const localTime = track.is_backing_track ? currentTime : currentTime - effectiveOffset;
 
       let when = globalStart;
       let startOffset = Math.max(localTime, 0);
 
       if (!track.is_backing_track && localTime < 0) {
-        when = globalStart + -localTime;
+        when = globalStart + Math.abs(localTime);
         startOffset = 0;
       }
 
