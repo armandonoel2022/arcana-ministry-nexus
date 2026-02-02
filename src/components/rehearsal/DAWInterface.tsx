@@ -67,6 +67,8 @@ export default function DAWInterface({
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [recordedStartOffset, setRecordedStartOffset] = useState<number>(0);
   const [showRecordingPreview, setShowRecordingPreview] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [isPreparing, setIsPreparing] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -422,30 +424,50 @@ export default function DAWInterface({
     }
   };
 
-  // 🟥 Grabación con LiveKit (sincronizada) o local (fallback)
-  const startRecording = async () => {
-    if (isRecording || liveKit.isRecording) {
-      toast({ title: "Ya estás grabando", variant: "destructive" });
+  // 🎬 Iniciar grabación con cuenta regresiva
+  const initiateRecording = async () => {
+    if (isRecording || liveKit.isRecording || isPreparing) {
       return;
     }
 
+    setIsPreparing(true);
+    
+    // Pre-connect to LiveKit if needed
+    if (useLiveKitMode && !liveKit.isConnected) {
+      toast({ title: "🔗 Preparando...", description: "Conectando para grabación sincronizada" });
+      await liveKit.connect();
+    }
+
+    // Reset to beginning if at start or no backing track
+    if (currentTime === 0 || !backingTrackUrl) {
+      syncAllTracksTo(0);
+    }
+
+    // Countdown 3-2-1
+    for (let i = 3; i >= 1; i--) {
+      setCountdown(i);
+      await new Promise(resolve => setTimeout(resolve, 800));
+    }
+    setCountdown(null);
+    
+    // Now actually start recording
+    await startRecordingInternal();
+    setIsPreparing(false);
+  };
+
+  // 🟥 Grabación interna (llamada después del countdown)
+  const startRecordingInternal = async () => {
     // Use LiveKit mode for synchronized recording
     if (useLiveKitMode) {
-      // Show connecting feedback if not connected
-      if (!liveKit.isConnected) {
-        toast({ title: "🔗 Conectando a LiveKit...", description: "Preparando grabación sincronizada" });
-      }
-      
       const success = await liveKit.startRecording();
       if (success) {
-        // Start playback if not already playing
-        if (!isPlaying) {
-          await schedulePrecisionPlayback();
-          setIsPlaying(true);
-          updateProgress();
-        }
+        // ALWAYS start playback with recording
+        await schedulePrecisionPlayback();
+        setIsPlaying(true);
+        updateProgress();
         setRecordedStartOffset(currentTime);
         setIsRecording(true);
+        toast({ title: "🎙️ ¡Grabando!", description: "La pista base está sonando" });
       } else {
         toast({ title: "Error al iniciar grabación", description: "Intenta de nuevo", variant: "destructive" });
       }
@@ -1018,16 +1040,32 @@ export default function DAWInterface({
             </label>
           </div>
 
+          {/* Cuenta regresiva overlay */}
+          {countdown !== null && (
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 pointer-events-none">
+              <div className="text-9xl font-bold text-white animate-pulse">
+                {countdown}
+              </div>
+            </div>
+          )}
+
           {/* Botón de grabación prominente */}
-          {!isRecording && !showRecordingPreview ? (
+          {!isRecording && !liveKit.isRecording && !showRecordingPreview && !isPreparing ? (
             <div className="flex flex-col items-center gap-4 w-full">
-              <Button 
-                onClick={startRecording} 
-                size="lg"
-                className="h-16 w-16 rounded-full bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg"
-              >
-                <Mic className="h-8 w-8" />
-              </Button>
+              <div className="flex flex-col items-center gap-2">
+                <Button 
+                  onClick={initiateRecording} 
+                  size="lg"
+                  className="h-20 w-20 rounded-full bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg hover:scale-105 transition-transform"
+                >
+                  <Mic className="h-10 w-10" />
+                </Button>
+                <p className="text-sm text-muted-foreground text-center">
+                  {backingTrackUrl 
+                    ? "Toca para grabar junto a la pista base" 
+                    : "Toca para empezar a grabar"}
+                </p>
+              </div>
               
               {/* Botones secundarios */}
               <div className="flex gap-3 flex-wrap justify-center">
@@ -1053,10 +1091,33 @@ export default function DAWInterface({
                 </Button>
               </div>
             </div>
+          ) : isPreparing ? (
+            <div className="flex flex-col items-center gap-2">
+              <div className="h-20 w-20 rounded-full bg-amber-500/20 flex items-center justify-center animate-pulse">
+                <Mic className="h-10 w-10 text-amber-500" />
+              </div>
+              <p className="text-sm text-muted-foreground">Preparando...</p>
+            </div>
           ) : (isRecording || liveKit.isRecording) ? (
-            <Button onClick={stopRecording} variant="destructive" size="lg" className="gap-2">
-              <Square className="h-5 w-5" /> Detener ({formatTime(useLiveKitMode ? liveKit.recordingTime : recordingTime)})
-            </Button>
+            <div className="flex flex-col items-center gap-3">
+              <div className="relative">
+                <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-30" />
+                <Button 
+                  onClick={stopRecording} 
+                  size="lg"
+                  className="h-20 w-20 rounded-full bg-gradient-to-br from-red-600 to-red-700 shadow-lg relative z-10"
+                >
+                  <Square className="h-8 w-8" />
+                </Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                <span className="font-mono text-lg font-semibold text-red-600">
+                  GRABANDO {formatTime(useLiveKitMode ? liveKit.recordingTime : recordingTime)}
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground">Presiona para detener</p>
+            </div>
           ) : null}
         </div>
       </div>
