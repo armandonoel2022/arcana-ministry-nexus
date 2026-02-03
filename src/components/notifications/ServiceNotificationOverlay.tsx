@@ -884,40 +884,28 @@ const ServiceNotificationOverlay = ({
     }
   };
 
-  // Obtener rango de servicios próximos (incluye miércoles para cuarentena)
+  // Obtener rango de servicios próximos (incluye miércoles, sábados para cuarentena)
   const getUpcomingServicesRange = () => {
     const now = new Date();
     const currentDay = getDay(now); // 0=Domingo, 1=Lunes, ..., 3=Miércoles, 6=Sábado
     const currentHour = now.getHours();
 
-    // Buscar desde hoy hasta el próximo domingo (máximo 7 días)
+    // Buscar desde ahora (no desde medianoche, para excluir servicios ya pasados del día)
     const start = new Date(now);
-    start.setHours(0, 0, 0, 0);
 
-    // Si es domingo después de mediodía, empezar desde mañana
+    // Si es domingo después de mediodía, empezar desde mañana a las 00:00
     if (currentDay === 0 && currentHour >= 12) {
       start.setDate(start.getDate() + 1);
+      start.setHours(0, 0, 0, 0);
     }
 
-    // Buscar hasta el próximo domingo
-    let targetSunday: Date;
-    if (currentDay === 0) {
-      if (currentHour < 12) {
-        targetSunday = new Date(now);
-      } else {
-        targetSunday = new Date(now);
-        targetSunday.setDate(now.getDate() + 7);
-      }
-    } else {
-      const daysUntilSunday = (7 - currentDay) % 7 || 7;
-      targetSunday = new Date(now);
-      targetSunday.setDate(now.getDate() + daysUntilSunday);
-    }
-
-    const end = new Date(targetSunday);
+    // Durante cuarentena (enero-febrero), buscar servicios de los próximos 7 días completos
+    // para incluir miércoles, sábados y domingos
+    const end = new Date(now);
+    end.setDate(end.getDate() + 7); // Siempre buscar 7 días adelante
     end.setHours(23, 59, 59, 999);
 
-    console.log(`📅 Buscando servicios desde ${start.toLocaleDateString()} hasta ${end.toLocaleDateString()}`);
+    console.log(`📅 Buscando servicios desde ${start.toISOString()} hasta ${end.toISOString()}`);
 
     return { start, end };
   };
