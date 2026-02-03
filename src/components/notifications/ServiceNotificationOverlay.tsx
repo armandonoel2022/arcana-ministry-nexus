@@ -1871,7 +1871,7 @@ const ServiceNotificationOverlay = ({
             >
               ⚠️ CUARENTENA
             </span>
-            <span className="text-amber-400 text-xs">7:00 PM</span>
+            <span className="text-amber-400 text-xs">{serviceTime}</span>
           </div>
         )}
 
