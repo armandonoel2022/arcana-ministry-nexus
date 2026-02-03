@@ -239,31 +239,43 @@ const GROUP_CONFIG = {
 };
 
 // Helper function to get service time from title - moved outside component for use in createServiceAgendaNotification
+// IMPORTANTE: El título tiene prioridad sobre el service_type para determinar la hora
 const getServiceTime = (serviceTitle: string, serviceType?: string): string => {
-  // Servicios de cuarentena son a las 7:00 PM
-  if (serviceType === 'cuarentena') {
-    return "7:00 PM";
-  }
+  const titleLower = serviceTitle.toLowerCase();
   
+  // Primero verificar el título - tiene prioridad
   if (
-    serviceTitle.toLowerCase().includes("primera") ||
-    serviceTitle.toLowerCase().includes("8:00") ||
-    serviceTitle.toLowerCase().includes("primer")
+    titleLower.includes("primera") ||
+    titleLower.includes("8:00") ||
+    titleLower.includes("08:00") ||
+    titleLower.includes("primer")
   ) {
     return "8:00 AM";
   } else if (
-    serviceTitle.toLowerCase().includes("segunda") ||
-    serviceTitle.toLowerCase().includes("10:45") ||
-    serviceTitle.toLowerCase().includes("segundo")
+    titleLower.includes("segunda") ||
+    titleLower.includes("10:45") ||
+    titleLower.includes("segundo")
   ) {
     return "10:45 AM";
   } else if (
-    serviceTitle.toLowerCase().includes("7:00") ||
-    serviceTitle.toLowerCase().includes("cuarentena") ||
-    serviceTitle.toLowerCase().includes("oración")
+    titleLower.includes("9:00") ||
+    titleLower.includes("09:00")
+  ) {
+    return "9:00 AM";
+  } else if (
+    titleLower.includes("7:00") ||
+    titleLower.includes("07:00") ||
+    titleLower.includes("oración")
   ) {
     return "7:00 PM";
   }
+  
+  // Si el título no da pistas, usar el tipo de servicio como fallback
+  // Solo para servicios de cuarentena entre semana (miércoles/sábado)
+  if (serviceType === 'cuarentena' && !titleLower.includes("a.m.")) {
+    return "7:00 PM";
+  }
+  
   return serviceTitle;
 };
 
