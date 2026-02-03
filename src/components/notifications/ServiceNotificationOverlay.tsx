@@ -1823,15 +1823,33 @@ const ServiceNotificationOverlay = ({
       document.body.removeChild(wrapper);
 
       // Download with appropriate filename
-      const link = document.createElement("a");
       const filename = isQuarantine 
         ? `cuarentena_${format(new Date(service.service_date), "yyyy-MM-dd")}.png`
         : `${serviceTitle.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_${new Date().getTime()}.png`;
-      link.download = filename;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-
-      toast.success("Imagen descargada exitosamente");
+      
+      // Convert to blob for better download compatibility
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          toast.error("Error al generar la imagen");
+          return;
+        }
+        
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        
+        // Cleanup after a short delay
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }, 100);
+        
+        toast.success("Imagen descargada exitosamente");
+      }, "image/png", 1.0);
     } catch (error) {
       console.error("Error downloading service image:", error);
       toast.error("Error al descargar la imagen");
