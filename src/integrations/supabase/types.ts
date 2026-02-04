@@ -2899,6 +2899,8 @@ export type Database = {
         Returns: boolean
       }
       is_administrator: { Args: { _user_id: string }; Returns: boolean }
+      is_member_available: { Args: { p_member_id: string }; Returns: boolean }
+      is_member_discharged: { Args: { p_member_id: string }; Returns: boolean }
       is_member_of_room: {
         Args: { _room_id: string; _user_id: string }
         Returns: boolean

@@ -18,7 +18,7 @@ export type LeaveStatus = 'pendiente' | 'aprobada' | 'rechazada' | 'cancelada' |
 
 export interface MemberLeave {
   id: string;
-  profile_id: string;
+  member_id: string;
   leave_type: LeaveType;
   status: LeaveStatus;
   reason: string | null;
@@ -33,10 +33,11 @@ export interface MemberLeave {
   notes: string | null;
   created_at: string;
   updated_at: string;
-  // Joined data
-  profile?: {
+  // Joined data from members table
+  member?: {
     id: string;
-    full_name: string;
+    nombres: string;
+    apellidos: string;
     photo_url: string | null;
     email: string | null;
   };
@@ -49,7 +50,7 @@ export interface MemberLeave {
 }
 
 export interface CreateLeaveData {
-  profile_id: string;
+  member_id: string;
   leave_type: LeaveType;
   reason?: string;
   reason_visible?: boolean;
@@ -104,7 +105,7 @@ export function useMemberLeaves() {
         .from('member_leaves')
         .select(`
           *,
-          profile:profiles!member_leaves_profile_id_fkey(id, full_name, photo_url, email),
+          member:members!member_leaves_member_id_fkey(id, nombres, apellidos, photo_url, email),
           requester:profiles!member_leaves_requested_by_fkey(full_name),
           approver:profiles!member_leaves_approved_by_fkey(full_name)
         `)
@@ -124,25 +125,25 @@ export function useMemberLeaves() {
     }
   }, [toast]);
 
-  const getActiveLeaveForMember = useCallback((profileId: string): MemberLeave | null => {
+  const getActiveLeaveForMember = useCallback((memberId: string): MemberLeave | null => {
     const today = new Date().toISOString().split('T')[0];
     return leaves.find(
       (leave) =>
-        leave.profile_id === profileId &&
+        leave.member_id === memberId &&
         leave.status === 'aprobada' &&
         leave.start_date <= today &&
         (leave.end_date === null || leave.end_date >= today)
     ) || null;
   }, [leaves]);
 
-  const isMemberOnLeave = useCallback((profileId: string): boolean => {
-    return getActiveLeaveForMember(profileId) !== null;
+  const isMemberOnLeave = useCallback((memberId: string): boolean => {
+    return getActiveLeaveForMember(memberId) !== null;
   }, [getActiveLeaveForMember]);
 
-  const isMemberDischarged = useCallback((profileId: string): boolean => {
+  const isMemberDischarged = useCallback((memberId: string): boolean => {
     return leaves.some(
       (leave) =>
-        leave.profile_id === profileId &&
+        leave.member_id === memberId &&
         leave.status === 'aprobada' &&
         leave.leave_type === 'baja_definitiva'
     );
