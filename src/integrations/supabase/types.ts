@@ -1021,8 +1021,8 @@ export type Database = {
           id: string
           is_indefinite: boolean
           leave_type: Database["public"]["Enums"]["leave_type"]
+          member_id: string
           notes: string | null
-          profile_id: string
           reason: string | null
           reason_visible: boolean
           rejection_reason: string | null
@@ -1039,8 +1039,8 @@ export type Database = {
           id?: string
           is_indefinite?: boolean
           leave_type: Database["public"]["Enums"]["leave_type"]
+          member_id: string
           notes?: string | null
-          profile_id: string
           reason?: string | null
           reason_visible?: boolean
           rejection_reason?: string | null
@@ -1057,8 +1057,8 @@ export type Database = {
           id?: string
           is_indefinite?: boolean
           leave_type?: Database["public"]["Enums"]["leave_type"]
+          member_id?: string
           notes?: string | null
-          profile_id?: string
           reason?: string | null
           reason_visible?: boolean
           rejection_reason?: string | null
@@ -1076,10 +1076,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "member_leaves_profile_id_fkey"
-            columns: ["profile_id"]
+            foreignKeyName: "member_leaves_member_id_fkey"
+            columns: ["member_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "members"
             referencedColumns: ["id"]
           },
           {
@@ -2899,14 +2899,6 @@ export type Database = {
         Returns: boolean
       }
       is_administrator: { Args: { _user_id: string }; Returns: boolean }
-      is_member_available: {
-        Args: { member_profile_id: string }
-        Returns: boolean
-      }
-      is_member_discharged: {
-        Args: { member_profile_id: string }
-        Returns: boolean
-      }
       is_member_of_room: {
         Args: { _room_id: string; _user_id: string }
         Returns: boolean
