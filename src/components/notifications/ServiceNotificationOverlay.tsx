@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays, startOfWeek, endOfWeek, getDay, isWithinInterval, parseISO } from "date-fns";
-import { getInactiveMemberIds } from "@/services/memberStatusService";
+import { getInactiveMemberIds, clearInactiveMembersCache } from "@/services/memberStatusService";
 
 // Helper function to parse service dates correctly without timezone offset issues
 // service_date comes as "2026-02-09 12:00:00+00" from the database
@@ -429,8 +429,15 @@ const createNextServiceNotification = async (services: WeekendService[]) => {
   }
 };
 
+// Función para cargar miembros inactivos (siempre usa el servicio con caché propio)
+const loadInactiveMemberIds = async (): Promise<Set<string>> => {
+  const inactiveIds = await getInactiveMemberIds();
+  console.log("📋 Miembros inactivos cargados:", inactiveIds.size, [...inactiveIds]);
+  return inactiveIds;
+};
+
 // Función COMPLEJA para determinar miembros del grupo basado en todas las reglas
-const getGroupMembers = (
+const getGroupMembersRaw = (
   groupName: string,
   serviceTime: string,
   director: string,
@@ -679,6 +686,34 @@ const getGroupMembers = (
   return [];
 };
 
+// Función wrapper que filtra miembros inactivos
+const getGroupMembers = (
+  groupName: string,
+  serviceTime: string,
+  director: string,
+  previousService?: { director: string; time: string },
+  nextService?: { director: string; time: string },
+  inactiveMemberIds?: Set<string>,
+) => {
+  const members = getGroupMembersRaw(groupName, serviceTime, director, previousService, nextService);
+  
+  // Si no hay IDs inactivos cargados, retornar todos los miembros
+  if (!inactiveMemberIds || inactiveMemberIds.size === 0) {
+    return members;
+  }
+  
+  // Filtrar miembros que están en licencia
+  const activeMembers = members.filter(member => {
+    const isInactive = inactiveMemberIds.has(member.id);
+    if (isInactive) {
+      console.log(`🚫 Miembro en licencia excluido del overlay: ${member.name}`);
+    }
+    return !isInactive;
+  });
+  
+  return activeMembers;
+};
+
 // Función MEJORADA para separar nombres y apellidos usando datos reales
 const splitName = (fullName: string) => {
   if (!fullName) return { firstName: "", lastName: "" };
@@ -861,8 +896,12 @@ const ServiceNotificationOverlay = ({
     }
   }, [services, notificationCreated]);
 
-  const showServiceProgramOverlay = (metadata: ServiceProgramNotification) => {
+  const showServiceProgramOverlay = async (metadata: ServiceProgramNotification) => {
     if (metadata.services && Array.isArray(metadata.services)) {
+      // Limpiar y recargar miembros inactivos para tener datos frescos
+      clearInactiveMembersCache();
+      const inactiveMemberIds = await loadInactiveMemberIds();
+      
       // Primero extraer info de directores para poder pasarla como previous/next
       const servicesWithDirectorInfo = metadata.services.map((service: any) => ({
         director: service.director?.name || service.director || "Por asignar",
@@ -879,8 +918,8 @@ const ServiceNotificationOverlay = ({
         const previousService = index > 0 ? servicesWithDirectorInfo[index - 1] : undefined;
         const nextService = index < servicesWithDirectorInfo.length - 1 ? servicesWithDirectorInfo[index + 1] : undefined;
 
-        // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS CON CONTEXTO
-        const members = getGroupMembers(groupName, serviceTime, directorName, previousService, nextService);
+        // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS CON CONTEXTO (filtrando inactivos)
+        const members = getGroupMembers(groupName, serviceTime, directorName, previousService, nextService, inactiveMemberIds);
 
         return {
           id: service.id || Date.now().toString(),
@@ -970,6 +1009,11 @@ const ServiceNotificationOverlay = ({
   const fetchWeekendServices = async () => {
     try {
       const { start, end } = getUpcomingServicesRange();
+
+      // Limpiar y recargar miembros inactivos para tener datos frescos
+      clearInactiveMembersCache();
+      const inactiveMemberIds = await loadInactiveMemberIds();
+      console.log("📋 Miembros inactivos para filtrar:", [...inactiveMemberIds]);
 
       const { data, error } = await supabase
         .from("services")
@@ -1070,8 +1114,8 @@ const ServiceNotificationOverlay = ({
             const previousService = serviceIndex > 0 ? servicesDirectorInfo[serviceIndex - 1] : undefined;
             const nextService = serviceIndex < servicesDirectorInfo.length - 1 ? servicesDirectorInfo[serviceIndex + 1] : undefined;
 
-            // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS CON CONTEXTO
-            members = getGroupMembers(groupName, serviceTime, directorName, previousService, nextService);
+            // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS CON CONTEXTO (filtrando inactivos)
+            members = getGroupMembers(groupName, serviceTime, directorName, previousService, nextService, inactiveMemberIds);
 
             console.log(
               `Miembros finales para ${groupName} (director: ${directorName}, prev: ${previousService?.director}, next: ${nextService?.director}):`,
