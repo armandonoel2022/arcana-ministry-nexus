@@ -115,43 +115,56 @@ const LeaveNotificationOverlay: React.FC<LeaveNotificationOverlayProps> = ({
     }
   };
 
-  const handleShare = async () => {
-    if (!contentRef.current) return;
+  const generateImage = async (): Promise<Blob | null> => {
+    if (!contentRef.current) return null;
 
     try {
       const canvas = await html2canvas(contentRef.current, {
         backgroundColor: null,
         scale: 2,
+        useCORS: true,
       });
 
-      canvas.toBlob(async (blob) => {
-        if (!blob) return;
-
-        const file = new File([blob], 'licencia-ministerio.png', { type: 'image/png' });
-
-        if (navigator.share && navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: 'Notificación de Licencia',
-              text: `${getMemberFullName()} ${getLeaveMessage()}`,
-            });
-          } catch (err) {
-            // User cancelled or error
-            console.log('Share cancelled');
-          }
-        } else {
-          // Fallback: download the image
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'licencia-ministerio.png';
-          a.click();
-          URL.revokeObjectURL(url);
-        }
+      return new Promise((resolve) => {
+        canvas.toBlob((blob) => resolve(blob), 'image/png');
       });
     } catch (error) {
       console.error('Error generating image:', error);
+      return null;
+    }
+  };
+
+  const handleDownload = async () => {
+    const blob = await generateImage();
+    if (!blob) return;
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `licencia-${getMemberFullName().replace(/\s+/g, '-').toLowerCase()}.png`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleShare = async () => {
+    const blob = await generateImage();
+    if (!blob) return;
+
+    const file = new File([blob], 'licencia-ministerio.png', { type: 'image/png' });
+
+    if (navigator.share && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: 'Notificación de Licencia',
+          text: `${getMemberFullName()} ${getLeaveMessage()}`,
+        });
+      } catch (err) {
+        console.log('Share cancelled');
+      }
+    } else {
+      // Fallback: download the image
+      handleDownload();
     }
   };
 
@@ -272,18 +285,27 @@ const LeaveNotificationOverlay: React.FC<LeaveNotificationOverlayProps> = ({
         </div>
 
         {/* Botones fuera del área de captura */}
-        <div className="flex gap-3 mt-4">
-          <Button
-            onClick={handleShare}
-            className="flex-1 bg-white/90 hover:bg-white text-gray-800 border-0 py-6"
-          >
-            <Share2 className="w-5 h-5 mr-2" />
-            Compartir
-          </Button>
+        <div className="flex flex-col gap-3 mt-4">
+          <div className="flex gap-3">
+            <Button
+              onClick={handleDownload}
+              className="flex-1 bg-white hover:bg-gray-100 text-gray-800 border-0 py-5 shadow-lg"
+            >
+              <Download className="w-5 h-5 mr-2" />
+              Descargar
+            </Button>
+            <Button
+              onClick={handleShare}
+              className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white border-0 py-5 shadow-lg"
+            >
+              <Share2 className="w-5 h-5 mr-2" />
+              Compartir
+            </Button>
+          </div>
           <Button
             onClick={onClose}
             variant="outline"
-            className="flex-1 bg-transparent border-white/30 text-white hover:bg-white/20 py-6"
+            className="w-full bg-transparent border-white/40 text-white hover:bg-white/20 py-5"
           >
             <X className="w-5 h-5 mr-2" />
             Cerrar
