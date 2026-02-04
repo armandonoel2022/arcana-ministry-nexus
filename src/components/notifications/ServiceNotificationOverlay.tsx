@@ -589,21 +589,45 @@ const getGroupMembers = (
     let mic3Member = MEMBER_IDS.FREDDERID_ABRAHAN;
     let mic4Member = MEMBER_IDS.ROSELY_MONTERO;
 
-    if (is8AM) {
-      // A las 8:00 AM: Maria del A. Santana (mic #4) y Guarionex Garcia (mic #3)
-      mic4Member = MEMBER_IDS.MARIA_SANTANA;
+    // Detectar si Maria Del A. Pérez Santana dirige en el otro servicio del día
+    // Si ella dirige a las 10:45, no puede estar en las 8:00 (va con Guarionex)
+    const mariaDirectsOtherService = 
+      (prevDirectorLower.includes("maria") && prevDirectorLower.includes("santana")) ||
+      (nextDirectorLower.includes("maria") && nextDirectorLower.includes("santana")) ||
+      prevDirectorLower.includes("pérez santana") ||
+      nextDirectorLower.includes("pérez santana");
 
-      if (isGuarionex || guarionexInPrevOrNext) {
-        // Si Guarionex es director o dirigió antes/después, Fredderid hace coros
-        mic3Member = MEMBER_IDS.FREDDERID_ABRAHAN;
+    if (is8AM) {
+      if (mariaDirectsOtherService) {
+        // Si Maria dirige en el otro servicio (10:45), ella y Guarionex van juntos allá
+        // En las 8:00 AM deben estar Abrahan Valera y Rosely Montero
+        mic3Member = MEMBER_IDS.FREDDERID_ABRAHAN; // Abrahan Valera
+        mic4Member = MEMBER_IDS.ROSELY_MONTERO;
       } else {
-        // Si Guarionex no es director, él hace coros a las 8 AM
-        mic3Member = MEMBER_IDS.GUARIONEX_GARCIA;
+        // Comportamiento normal: Maria y Guarionex van a las 8:00 AM
+        mic4Member = MEMBER_IDS.MARIA_SANTANA;
+
+        if (isGuarionex || guarionexInPrevOrNext) {
+          // Si Guarionex es director o dirigió antes/después, Fredderid hace coros
+          mic3Member = MEMBER_IDS.FREDDERID_ABRAHAN;
+        } else {
+          // Si Guarionex no es director, él hace coros a las 8 AM
+          mic3Member = MEMBER_IDS.GUARIONEX_GARCIA;
+        }
       }
     } else if (is1045AM) {
-      // A las 10:45 AM: Rosely Montero (mic #4) y Fredderid Abrahan (mic #3)
-      mic4Member = MEMBER_IDS.ROSELY_MONTERO;
-      mic3Member = MEMBER_IDS.FREDDERID_ABRAHAN;
+      if (mariaDirectsOtherService || 
+          directorLower.includes("maria") || 
+          directorLower.includes("pérez santana")) {
+        // Si Maria dirige este servicio, ella y Guarionex vienen aquí
+        // Maria como directora no va en los coros
+        mic3Member = MEMBER_IDS.GUARIONEX_GARCIA;
+        mic4Member = MEMBER_IDS.ROSELY_MONTERO;
+      } else {
+        // Comportamiento normal: Rosely y Fredderid a las 10:45 AM
+        mic4Member = MEMBER_IDS.ROSELY_MONTERO;
+        mic3Member = MEMBER_IDS.FREDDERID_ABRAHAN;
+      }
     }
 
     return [
