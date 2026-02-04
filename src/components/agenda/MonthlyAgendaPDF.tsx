@@ -190,19 +190,55 @@ export const MonthlyAgendaPDF: React.FC<MonthlyAgendaPDFProps> = ({ availableYea
         .from("members")
         .select("nombres, apellidos, photo_url");
 
-      // Crear mapa de fotos de directores
+      // Crear mapa de fotos de directores con búsqueda flexible
       const directorPhotos: { [key: string]: string | null } = {};
       
+      // Función para normalizar nombres (quitar acentos y convertir a minúsculas)
+      const normalizeName = (name: string) => {
+        return name
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .trim();
+      };
+      
+      // Función para buscar coincidencia flexible de nombres
+      const findMemberByName = (leaderName: string) => {
+        const normalizedLeader = normalizeName(leaderName);
+        const leaderParts = normalizedLeader.split(' ').filter(p => p.length > 0);
+        
+        return members?.find((m) => {
+          const fullName = normalizeName(`${m.nombres} ${m.apellidos}`);
+          const memberParts = fullName.split(' ').filter(p => p.length > 0);
+          
+          // Coincidencia exacta
+          if (fullName === normalizedLeader) return true;
+          
+          // Verificar si todos los términos del leader están en el nombre del miembro
+          const allLeaderPartsMatch = leaderParts.every(part => 
+            memberParts.some(memberPart => memberPart.includes(part) || part.includes(memberPart))
+          );
+          
+          // Verificar si al menos 2 partes coinciden (para nombres como "Armando Noel" vs "Armando Noel Charle")
+          const matchingParts = leaderParts.filter(part => 
+            memberParts.some(memberPart => memberPart === part)
+          );
+          
+          return allLeaderPartsMatch || matchingParts.length >= 2;
+        });
+      };
+      
       for (const leader of uniqueLeaders) {
+        // Primero buscar en profiles (coincidencia exacta)
         const profile = profiles?.find(
-          (p) => p.full_name.toLowerCase() === leader.toLowerCase()
+          (p) => normalizeName(p.full_name) === normalizeName(leader)
         );
+        
         if (profile?.photo_url) {
           directorPhotos[leader] = profile.photo_url;
         } else {
-          const member = members?.find(
-            (m) => `${m.nombres} ${m.apellidos}`.toLowerCase() === leader.toLowerCase()
-          );
+          // Buscar en members con coincidencia flexible
+          const member = findMemberByName(leader);
           directorPhotos[leader] = member?.photo_url || null;
         }
       }
