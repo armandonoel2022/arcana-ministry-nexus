@@ -169,47 +169,49 @@ const LeaveNotificationOverlay: React.FC<LeaveNotificationOverlayProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <div className="w-full max-w-md">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 animate-in fade-in duration-300 overflow-y-auto">
+      <div className="w-full max-w-sm sm:max-w-md my-auto">
         {/* Contenido capturado para la imagen */}
         <div
           ref={contentRef}
-          className={`bg-gradient-to-b ${getGradientColors()} rounded-3xl shadow-2xl relative overflow-hidden`}
+          className={`bg-gradient-to-b ${getGradientColors()} rounded-2xl sm:rounded-3xl shadow-2xl relative overflow-hidden`}
         >
-          {/* Decoraciones */}
-          <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/4" />
-          <div className="absolute bottom-20 left-0 w-32 h-32 bg-white/10 rounded-full -translate-x-1/2" />
+          {/* Decoraciones - más pequeñas en móvil */}
+          <div className="absolute top-0 right-0 w-24 sm:w-40 h-24 sm:h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/4" />
+          <div className="absolute bottom-16 left-0 w-20 sm:w-32 h-20 sm:h-32 bg-white/10 rounded-full -translate-x-1/2" />
 
-          {/* Header */}
-          <div className="relative p-6 pb-4">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden">
-                <img src={arcanaLogo} alt="Logo" className="w-12 h-12 object-contain" />
+          {/* Header - compacto y centrado */}
+          <div className="relative p-4 sm:p-6 pb-2 sm:pb-4">
+            <div className="flex flex-col items-center text-center gap-2 mb-3 sm:mb-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden">
+                <img src={arcanaLogo} alt="Logo" className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
               </div>
-              <div className="flex-1">
-                <p className="text-white/80 text-sm font-medium uppercase tracking-wide">
+              <div>
+                <p className="text-white/80 text-xs sm:text-sm font-medium uppercase tracking-wide">
                   Comunicado Oficial
                 </p>
-                <p className="text-white font-semibold">Ministerio de Alabanza</p>
+                <p className="text-white font-semibold text-sm sm:text-base">Ministerio de Alabanza</p>
               </div>
             </div>
 
             {/* Tipo de licencia */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 rounded-full mb-4">
-              <span className="text-2xl">{getIcon()}</span>
-              <span className="text-white font-semibold">
-                {LEAVE_TYPE_LABELS[leave.leave_type]}
-              </span>
+            <div className="flex justify-center">
+              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/20 rounded-full">
+                <span className="text-xl sm:text-2xl">{getIcon()}</span>
+                <span className="text-white font-semibold text-sm sm:text-base">
+                  {LEAVE_TYPE_LABELS[leave.leave_type]}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Contenido principal */}
-          <div className="px-6">
-            <div className="bg-white/90 rounded-2xl p-6 shadow-lg">
+          {/* Contenido principal - más compacto */}
+          <div className="px-3 sm:px-6">
+            <div className="bg-white/90 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg">
               {/* Foto y nombre */}
-              <div className="flex flex-col items-center text-center mb-6">
+              <div className="flex flex-col items-center text-center mb-3 sm:mb-4">
                 <div
-                  className={`w-24 h-24 rounded-full overflow-hidden border-4 shadow-lg mb-4 ${
+                  className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-3 sm:border-4 shadow-lg mb-2 sm:mb-3 ${
                     leave.leave_type === 'baja_definitiva'
                       ? 'border-gray-300 grayscale'
                       : 'border-white'
@@ -223,91 +225,89 @@ const LeaveNotificationOverlay: React.FC<LeaveNotificationOverlayProps> = ({
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                      <span className="text-3xl font-bold text-gray-500">
+                      <span className="text-2xl sm:text-3xl font-bold text-gray-500">
                         {getMemberInitials()}
                       </span>
                     </div>
                   )}
                 </div>
-                <h2 className="text-xl font-bold text-gray-800">{getMemberFullName()}</h2>
-                <p className="text-gray-600 mt-2">{getLeaveMessage()}</p>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-800">{getMemberFullName()}</h2>
+                <p className="text-gray-600 text-sm sm:text-base mt-1">{getLeaveMessage()}</p>
               </div>
 
-              {/* Fechas */}
-              <div className="space-y-3 border-t pt-4">
-                <div className="flex items-center justify-center gap-4 text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    <span className="text-sm">Desde: {formatDate(leave.start_date)}</span>
-                  </div>
+              {/* Fechas - más compactas */}
+              <div className="space-y-1.5 sm:space-y-2 border-t pt-3 sm:pt-4">
+                <div className="flex items-center justify-center gap-2 text-gray-600">
+                  <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="text-xs sm:text-sm">Desde: {formatDate(leave.start_date)}</span>
                 </div>
                 {leave.is_indefinite ? (
                   <div className="flex items-center justify-center gap-2 text-gray-600">
-                    <Clock className="w-4 h-4" />
-                    <span className="text-sm">Duración indefinida</span>
+                    <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="text-xs sm:text-sm">Duración indefinida</span>
                   </div>
                 ) : leave.end_date ? (
                   <div className="flex items-center justify-center gap-2 text-gray-600">
-                    <Calendar className="w-4 h-4" />
-                    <span className="text-sm">Hasta: {formatDate(leave.end_date)}</span>
+                    <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="text-xs sm:text-sm">Hasta: {formatDate(leave.end_date)}</span>
                   </div>
                 ) : null}
               </div>
 
               {/* Razón (si es visible) */}
               {leave.reason && leave.reason_visible && (
-                <div className="mt-4 pt-4 border-t">
-                  <p className="text-sm text-gray-600 text-center italic">"{leave.reason}"</p>
+                <div className="mt-3 pt-3 sm:mt-4 sm:pt-4 border-t">
+                  <p className="text-xs sm:text-sm text-gray-600 text-center italic">"{leave.reason}"</p>
                 </div>
               )}
 
-              {/* Mensaje de apoyo */}
+              {/* Mensaje de apoyo - más compacto */}
               {leave.leave_type !== 'disciplina' &&
                 leave.leave_type !== 'suspension' &&
                 leave.leave_type !== 'baja_definitiva' && (
-                  <div className="mt-6 flex items-center justify-center gap-2 text-gray-500">
-                    <Heart className="w-4 h-4 text-red-400" />
-                    <span className="text-sm">
-                      Oramos por su pronta recuperación y regreso
+                  <div className="mt-3 sm:mt-4 flex items-center justify-center gap-1.5 sm:gap-2 text-gray-500">
+                    <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-400" />
+                    <span className="text-xs sm:text-sm text-center">
+                      Oramos por su pronta recuperación
                     </span>
-                    <Heart className="w-4 h-4 text-red-400" />
+                    <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-400" />
                   </div>
                 )}
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="p-6 pt-4 text-center">
-            <p className="text-white/60 text-xs">
+          {/* Footer - más compacto */}
+          <div className="p-3 sm:p-4 text-center">
+            <p className="text-white/60 text-[10px] sm:text-xs">
               Ministerio Arca de Noé • {format(new Date(), 'yyyy')}
             </p>
           </div>
         </div>
 
         {/* Botones fuera del área de captura */}
-        <div className="flex flex-col gap-3 mt-4">
-          <div className="flex gap-3">
+        <div className="flex flex-col gap-2 sm:gap-3 mt-3 sm:mt-4">
+          <div className="flex gap-2 sm:gap-3">
             <Button
               onClick={handleDownload}
-              className="flex-1 bg-white hover:bg-gray-100 text-gray-800 border-0 py-5 shadow-lg"
+              className="flex-1 bg-white hover:bg-gray-100 text-gray-800 border-0 py-3 sm:py-4 shadow-lg text-sm sm:text-base"
             >
-              <Download className="w-5 h-5 mr-2" />
+              <Download className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
               Descargar
             </Button>
             <Button
               onClick={handleShare}
-              className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white border-0 py-5 shadow-lg"
+              className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white border-0 py-3 sm:py-4 shadow-lg text-sm sm:text-base"
             >
-              <Share2 className="w-5 h-5 mr-2" />
+              <Share2 className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
               Compartir
             </Button>
           </div>
           <Button
             onClick={onClose}
             variant="outline"
-            className="w-full bg-transparent border-white/40 text-white hover:bg-white/20 py-5"
+            className="w-full bg-transparent border-white/40 text-white hover:bg-white/20 py-3 sm:py-4 text-sm sm:text-base"
           >
-            <X className="w-5 h-5 mr-2" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
             Cerrar
           </Button>
         </div>
