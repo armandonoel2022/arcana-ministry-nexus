@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays, startOfWeek, endOfWeek, getDay, isWithinInterval, parseISO } from "date-fns";
+import { getInactiveMemberIds } from "@/services/memberStatusService";
 
 // Helper function to parse service dates correctly without timezone offset issues
 // service_date comes as "2026-02-09 12:00:00+00" from the database
