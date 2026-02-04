@@ -2,14 +2,17 @@ import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Users, Plus, Search, Upload, Database, UserPlus, FileText, Download, Settings } from "lucide-react";
+import { Users, Plus, Search, Upload, Database, UserPlus, FileText, Download, Settings, UserMinus } from "lucide-react";
 import MembersList from "@/components/members/MembersList";
 import AddMemberForm from "@/components/members/AddMemberForm";
 import MembersCSVUpload from "@/components/members/MembersCSVUpload";
 import BulkMemberInsert from "@/components/members/BulkMemberInsert";
+import MemberLeavesTab from "@/components/members/MemberLeavesTab";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const Integrantes = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const { isAdmin } = usePermissions();
 
   const handleDataUpdate = () => {
     setRefreshTrigger((prev) => prev + 1);
@@ -38,7 +41,7 @@ const Integrantes = () => {
         <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 w-full">
           <Tabs defaultValue="view" className="w-full">
             {/* Tabs Responsivos */}
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 bg-gray-100/80 backdrop-blur-md border border-gray-200 rounded-xl p-1 h-auto gap-1 mb-4 sm:mb-6">
+            <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-3 sm:grid-cols-5' : 'grid-cols-2 sm:grid-cols-4'} bg-gray-100/80 backdrop-blur-md border border-gray-200 rounded-xl p-1 h-auto gap-1 mb-4 sm:mb-6`}>
               <TabsTrigger
                 value="view"
                 className="flex items-center justify-center gap-1 sm:gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg text-gray-700 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200 flex-1 min-w-0"
@@ -67,6 +70,15 @@ const Integrantes = () => {
                 <Upload className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                 <span className="truncate">CSV</span>
               </TabsTrigger>
+              {isAdmin && (
+                <TabsTrigger
+                  value="leaves"
+                  className="flex items-center justify-center gap-1 sm:gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-lg text-gray-700 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200 flex-1 min-w-0"
+                >
+                  <UserMinus className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                  <span className="truncate">Licencias</span>
+                </TabsTrigger>
+              )}
             </TabsList>
 
             {/* Contenido de los Tabs */}
@@ -153,6 +165,13 @@ const Integrantes = () => {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {/* Tab de Licencias (solo admin) */}
+            {isAdmin && (
+              <TabsContent value="leaves" className="space-y-4 mt-4 w-full">
+                <MemberLeavesTab />
+              </TabsContent>
+            )}
           </Tabs>
         </div>
       </div>

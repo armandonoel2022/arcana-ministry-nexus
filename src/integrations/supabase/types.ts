@@ -1012,6 +1012,85 @@ export type Database = {
           },
         ]
       }
+      member_leaves: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          end_date: string | null
+          id: string
+          is_indefinite: boolean
+          leave_type: Database["public"]["Enums"]["leave_type"]
+          notes: string | null
+          profile_id: string
+          reason: string | null
+          reason_visible: boolean
+          rejection_reason: string | null
+          requested_by: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["leave_status"]
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          is_indefinite?: boolean
+          leave_type: Database["public"]["Enums"]["leave_type"]
+          notes?: string | null
+          profile_id: string
+          reason?: string | null
+          reason_visible?: boolean
+          rejection_reason?: string | null
+          requested_by?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["leave_status"]
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          is_indefinite?: boolean
+          leave_type?: Database["public"]["Enums"]["leave_type"]
+          notes?: string | null
+          profile_id?: string
+          reason?: string | null
+          reason_visible?: boolean
+          rejection_reason?: string | null
+          requested_by?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["leave_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_leaves_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_leaves_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_leaves_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       members: {
         Row: {
           apellidos: string
@@ -2820,6 +2899,14 @@ export type Database = {
         Returns: boolean
       }
       is_administrator: { Args: { _user_id: string }; Returns: boolean }
+      is_member_available: {
+        Args: { member_profile_id: string }
+        Returns: boolean
+      }
+      is_member_discharged: {
+        Args: { member_profile_id: string }
+        Returns: boolean
+      }
       is_member_of_room: {
         Args: { _room_id: string; _user_id: string }
         Returns: boolean
@@ -2882,6 +2969,22 @@ export type Database = {
         | "trumpet"
         | "violin"
         | "other"
+      leave_status:
+        | "pendiente"
+        | "aprobada"
+        | "rechazada"
+        | "cancelada"
+        | "finalizada"
+      leave_type:
+        | "enfermedad"
+        | "maternidad"
+        | "estudios"
+        | "trabajo"
+        | "vacaciones"
+        | "disciplina"
+        | "suspension"
+        | "baja_definitiva"
+        | "otra"
       member_group:
         | "directiva"
         | "directores_alabanza"
@@ -3106,6 +3209,24 @@ export const Constants = {
         "trumpet",
         "violin",
         "other",
+      ],
+      leave_status: [
+        "pendiente",
+        "aprobada",
+        "rechazada",
+        "cancelada",
+        "finalizada",
+      ],
+      leave_type: [
+        "enfermedad",
+        "maternidad",
+        "estudios",
+        "trabajo",
+        "vacaciones",
+        "disciplina",
+        "suspension",
+        "baja_definitiva",
+        "otra",
       ],
       member_group: [
         "directiva",
