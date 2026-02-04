@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -26,32 +25,33 @@ import {
 } from '@/hooks/useMemberLeaves';
 import { usePermissions } from '@/hooks/usePermissions';
 
-interface Profile {
+interface Member {
   id: string;
-  full_name: string;
+  nombres: string;
+  apellidos: string;
   photo_url: string | null;
 }
 
 interface MemberLeaveFormProps {
-  profileId?: string; // Si se pasa, es para un miembro específico
+  memberId?: string; // Si se pasa, es para un miembro específico
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
 const MemberLeaveForm: React.FC<MemberLeaveFormProps> = ({
-  profileId,
+  memberId,
   onSuccess,
   onCancel,
 }) => {
   const { createLeave } = useMemberLeaves();
   const { isAdmin } = usePermissions();
   
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [loadingProfiles, setLoadingProfiles] = useState(true);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   
   // Form state
-  const [selectedProfileId, setSelectedProfileId] = useState(profileId || '');
+  const [selectedMemberId, setSelectedMemberId] = useState(memberId || '');
   const [leaveType, setLeaveType] = useState<LeaveType | ''>('');
   const [reason, setReason] = useState('');
   const [reasonVisible, setReasonVisible] = useState(false);
@@ -72,34 +72,34 @@ const MemberLeaveForm: React.FC<MemberLeaveFormProps> = ({
       );
 
   useEffect(() => {
-    const fetchProfiles = async () => {
+    const fetchMembers = async () => {
       try {
         const { data, error } = await supabase
-          .from('profiles')
-          .select('id, full_name, photo_url')
+          .from('members')
+          .select('id, nombres, apellidos, photo_url')
           .eq('is_active', true)
-          .order('full_name');
+          .order('apellidos');
 
         if (error) throw error;
-        setProfiles(data || []);
+        setMembers(data || []);
       } catch (error) {
-        console.error('Error fetching profiles:', error);
+        console.error('Error fetching members:', error);
       } finally {
-        setLoadingProfiles(false);
+        setLoadingMembers(false);
       }
     };
 
-    if (!profileId) {
-      fetchProfiles();
+    if (!memberId) {
+      fetchMembers();
     } else {
-      setLoadingProfiles(false);
+      setLoadingMembers(false);
     }
-  }, [profileId]);
+  }, [memberId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedProfileId || !leaveType) return;
+    if (!selectedMemberId || !leaveType) return;
 
     // Validar que 'otra' requiere razón
     if (leaveType === 'otra' && !reason.trim()) {
@@ -109,7 +109,7 @@ const MemberLeaveForm: React.FC<MemberLeaveFormProps> = ({
     setSubmitting(true);
 
     const leaveData: CreateLeaveData = {
-      profile_id: selectedProfileId,
+      member_id: selectedMemberId,
       leave_type: leaveType as LeaveType,
       reason: reason.trim() || undefined,
       reason_visible: reasonVisible,
@@ -131,25 +131,25 @@ const MemberLeaveForm: React.FC<MemberLeaveFormProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Selector de miembro */}
-      {!profileId && (
+      {!memberId && (
         <div className="space-y-2">
-          <Label htmlFor="profile">Integrante</Label>
-          {loadingProfiles ? (
+          <Label htmlFor="member">Integrante</Label>
+          {loadingMembers ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
               Cargando...
             </div>
           ) : (
-            <Select value={selectedProfileId} onValueChange={setSelectedProfileId}>
+            <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar integrante" />
               </SelectTrigger>
               <SelectContent>
-                {profiles.map((profile) => (
-                  <SelectItem key={profile.id} value={profile.id}>
+                {members.map((member) => (
+                  <SelectItem key={member.id} value={member.id}>
                     <div className="flex items-center gap-2">
                       <UserCircle className="w-4 h-4" />
-                      {profile.full_name}
+                      {member.nombres} {member.apellidos}
                     </div>
                   </SelectItem>
                 ))}
@@ -323,7 +323,7 @@ const MemberLeaveForm: React.FC<MemberLeaveFormProps> = ({
         )}
         <Button
           type="submit"
-          disabled={submitting || !selectedProfileId || !leaveType}
+          disabled={submitting || !selectedMemberId || !leaveType}
           className="flex-1"
         >
           {submitting ? (

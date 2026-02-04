@@ -21,6 +21,22 @@ const LeaveNotificationOverlay: React.FC<LeaveNotificationOverlayProps> = ({
 }) => {
   const contentRef = useRef<HTMLDivElement>(null);
 
+  // Helper para obtener el nombre completo del miembro
+  const getMemberFullName = (): string => {
+    if (leave.member) {
+      return `${leave.member.nombres} ${leave.member.apellidos}`;
+    }
+    return 'Miembro';
+  };
+
+  // Helper para obtener las iniciales del miembro
+  const getMemberInitials = (): string => {
+    if (leave.member) {
+      return `${leave.member.nombres[0] || ''}${leave.member.apellidos[0] || ''}`;
+    }
+    return '??';
+  };
+
   const formatDate = (dateStr: string) => {
     try {
       const date = new Date(dateStr);
@@ -118,7 +134,7 @@ const LeaveNotificationOverlay: React.FC<LeaveNotificationOverlayProps> = ({
             await navigator.share({
               files: [file],
               title: 'Notificación de Licencia',
-              text: `${leave.profile?.full_name} ${getLeaveMessage()}`,
+              text: `${getMemberFullName()} ${getLeaveMessage()}`,
             });
           } catch (err) {
             // User cancelled or error
@@ -186,21 +202,21 @@ const LeaveNotificationOverlay: React.FC<LeaveNotificationOverlayProps> = ({
                       : 'border-white'
                   }`}
                 >
-                  {leave.profile?.photo_url ? (
+                  {leave.member?.photo_url ? (
                     <img
-                      src={leave.profile.photo_url}
-                      alt={leave.profile.full_name}
+                      src={leave.member.photo_url}
+                      alt={getMemberFullName()}
                       className="w-full h-full object-cover"
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
                       <span className="text-3xl font-bold text-gray-500">
-                        {leave.profile?.full_name?.charAt(0)}
+                        {getMemberInitials()}
                       </span>
                     </div>
                   )}
                 </div>
-                <h2 className="text-xl font-bold text-gray-800">{leave.profile?.full_name}</h2>
+                <h2 className="text-xl font-bold text-gray-800">{getMemberFullName()}</h2>
                 <p className="text-gray-600 mt-2">{getLeaveMessage()}</p>
               </div>
 

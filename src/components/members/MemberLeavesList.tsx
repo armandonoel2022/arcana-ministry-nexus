@@ -51,12 +51,12 @@ import LeaveNotificationOverlay from '@/components/notifications/LeaveNotificati
 
 interface MemberLeavesListProps {
   showOnlyActive?: boolean;
-  profileId?: string; // Filtrar por miembro específico
+  memberId?: string; // Filtrar por miembro específico
 }
 
 const MemberLeavesList: React.FC<MemberLeavesListProps> = ({
   showOnlyActive = false,
-  profileId,
+  memberId,
 }) => {
   const { leaves, loading, approveLeave, rejectLeave, endLeave, deleteLeave } = useMemberLeaves();
   const { isAdmin } = usePermissions();
@@ -70,11 +70,27 @@ const MemberLeavesList: React.FC<MemberLeavesListProps> = ({
 
   const today = new Date().toISOString().split('T')[0];
 
+  // Helper para obtener el nombre completo del miembro
+  const getMemberFullName = (leave: MemberLeave): string => {
+    if (leave.member) {
+      return `${leave.member.nombres} ${leave.member.apellidos}`;
+    }
+    return 'Miembro desconocido';
+  };
+
+  // Helper para obtener las iniciales del miembro
+  const getMemberInitials = (leave: MemberLeave): string => {
+    if (leave.member) {
+      return `${leave.member.nombres[0] || ''}${leave.member.apellidos[0] || ''}`;
+    }
+    return '??';
+  };
+
   // Filtrar licencias
   let filteredLeaves = leaves;
 
-  if (profileId) {
-    filteredLeaves = filteredLeaves.filter((l) => l.profile_id === profileId);
+  if (memberId) {
+    filteredLeaves = filteredLeaves.filter((l) => l.member_id === memberId);
   }
 
   if (showOnlyActive) {
@@ -97,7 +113,7 @@ const MemberLeavesList: React.FC<MemberLeavesListProps> = ({
   if (searchTerm) {
     const term = searchTerm.toLowerCase();
     filteredLeaves = filteredLeaves.filter((l) =>
-      l.profile?.full_name?.toLowerCase().includes(term)
+      getMemberFullName(l).toLowerCase().includes(term)
     );
   }
 
@@ -214,15 +230,15 @@ const MemberLeavesList: React.FC<MemberLeavesListProps> = ({
                       }`}
                     >
                       <AvatarImage
-                        src={leave.profile?.photo_url || undefined}
-                        alt={leave.profile?.full_name}
+                        src={leave.member?.photo_url || undefined}
+                        alt={getMemberFullName(leave)}
                       />
                       <AvatarFallback>
-                        {leave.profile?.full_name?.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+                        {getMemberInitials(leave)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <h4 className="font-semibold truncate">{leave.profile?.full_name}</h4>
+                      <h4 className="font-semibold truncate">{getMemberFullName(leave)}</h4>
                       <div className="flex items-center gap-2 flex-wrap">
                         <Badge className={LEAVE_TYPE_COLORS[leave.leave_type]}>
                           {LEAVE_TYPE_LABELS[leave.leave_type]}
