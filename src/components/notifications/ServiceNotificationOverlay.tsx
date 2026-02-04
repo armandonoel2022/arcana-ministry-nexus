@@ -22,6 +22,26 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays, startOfWeek, endOfWeek, getDay, isWithinInterval, parseISO } from "date-fns";
+
+// Helper function to parse service dates correctly without timezone offset issues
+// service_date comes as "2026-02-09 12:00:00+00" from the database
+// We need to extract just the date part and parse it correctly
+const parseServiceDate = (dateString: string): Date => {
+  if (!dateString) return new Date();
+  
+  // If it's an ISO string with time, use parseISO
+  if (dateString.includes('T') || dateString.includes(' ')) {
+    // Extract just the date part (YYYY-MM-DD) to avoid timezone issues
+    const datePart = dateString.split('T')[0].split(' ')[0];
+    // Parse as local date by creating date with year, month, day components
+    const [year, month, day] = datePart.split('-').map(Number);
+    return new Date(year, month - 1, day, 12, 0, 0); // Set to noon to avoid any edge cases
+  }
+  
+  // If it's just a date string (YYYY-MM-DD), parse components directly
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0);
+};
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
@@ -284,7 +304,7 @@ const createServiceAgendaNotification = async (services: WeekendService[]) => {
   try {
     console.log("🎯 Creando notificación de agenda para", services.length, "servicios");
 
-    const serviceDate = format(new Date(services[0].service_date), "EEEE, dd 'de' MMMM", { locale: es });
+    const serviceDate = format(parseServiceDate(services[0].service_date), "EEEE, dd 'de' MMMM", { locale: es });
     const title = `Agenda de Servicios - ${serviceDate}`;
 
     // Crear mensaje RESUMIDO para push notifications
@@ -361,10 +381,10 @@ const createNextServiceNotification = async (services: WeekendService[]) => {
 
     // Elegir el próximo servicio por fecha
     const nextService = [...services].sort(
-      (a, b) => new Date(a.service_date).getTime() - new Date(b.service_date).getTime(),
+      (a, b) => parseServiceDate(a.service_date).getTime() - parseServiceDate(b.service_date).getTime(),
     )[0];
 
-    const serviceDate = format(new Date(nextService.service_date), "EEEE, dd 'de' MMMM", { locale: es });
+    const serviceDate = format(parseServiceDate(nextService.service_date), "EEEE, dd 'de' MMMM", { locale: es });
     const leader = nextService.leader || "Por asignar";
     const groupName = nextService.worship_groups?.name || "Grupo de Alabanza";
 
@@ -1168,7 +1188,7 @@ const ServiceNotificationOverlay = ({
   };
 
   const handleAskArcana = (service: WeekendService) => {
-    const message = `Necesito ayuda para prepararme para el servicio "${service.title}" del ${format(new Date(service.service_date), "EEEE, dd 'de' MMMM", { locale: es })}. ¿Qué canciones debo practicar?`;
+    const message = `Necesito ayuda para prepararme para el servicio "${service.title}" del ${format(parseServiceDate(service.service_date), "EEEE, dd 'de' MMMM", { locale: es })}. ¿Qué canciones debo practicar?`;
     onOpenChat?.(message);
     closeOverlay();
   };
@@ -1274,7 +1294,7 @@ const ServiceNotificationOverlay = ({
       title.style.color = isQuarantine ? "#fcd34d" : "#111827";
 
       const dateTime = document.createElement("p");
-      const serviceDate = format(new Date(service.service_date), "EEEE, dd 'de' MMMM", { locale: es });
+      const serviceDate = format(parseServiceDate(service.service_date), "EEEE, dd 'de' MMMM", { locale: es });
       dateTime.textContent = serviceDate;
       dateTime.style.fontSize = "18px";
       dateTime.style.textTransform = "capitalize";
@@ -1824,7 +1844,7 @@ const ServiceNotificationOverlay = ({
 
       // Download with appropriate filename
       const filename = isQuarantine 
-        ? `cuarentena_${format(new Date(service.service_date), "yyyy-MM-dd")}.png`
+        ? `cuarentena_${format(parseServiceDate(service.service_date), "yyyy-MM-dd")}.png`
         : `${serviceTitle.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_${new Date().getTime()}.png`;
       
       // Convert to blob for better download compatibility
@@ -2244,7 +2264,7 @@ const ServiceNotificationOverlay = ({
                     {hasQuarantineService ? 'Servicio de Cuarentena' : 'Programa de Servicios'}
                   </h2>
                   <p className={`text-sm ${hasQuarantineService ? 'text-amber-200' : 'text-muted-foreground'}`}>
-                    {format(new Date(services[0].service_date), "EEEE, dd 'de' MMMM", { locale: es })}
+                    {format(parseServiceDate(services[0].service_date), "EEEE, dd 'de' MMMM", { locale: es })}
                   </p>
                 </div>
               </div>
