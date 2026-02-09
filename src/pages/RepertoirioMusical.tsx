@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Music, Plus, Search, Upload, ArrowLeft } from "lucide-react";
+import { Music, Plus, Search, Upload, ArrowLeft, FileJson, Settings } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { useSearchParams } from 'react-router-dom';
 import AddSongForm from '@/components/songs/AddSongForm';
 import CSVUpload from '@/components/songs/CSVUpload';
+import JSONUpload from '@/components/songs/JSONUpload';
 import SongCatalog from '@/components/songs/SongCatalog';
 import RepertoiryCategorySelector from '@/components/songs/RepertoiryCategorySelector';
+import HimnarioMigrationButton from '@/components/songs/HimnarioMigrationButton';
 
 const RepertoirioMusical = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -101,22 +103,25 @@ const RepertoirioMusical = () => {
           </div>
 
           <Tabs defaultValue="view" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="view" className="flex items-center gap-2">
                 <Search className="w-4 h-4" />
-                <span className="hidden sm:inline">Ver Repertorio</span>
-                <span className="sm:hidden">Ver</span>
+                <span className="hidden sm:inline">Ver</span>
               </TabsTrigger>
               <TabsTrigger value="add" className="flex items-center gap-2">
                 <Plus className="w-4 h-4" />
                 <span className="hidden sm:inline">Agregar</span>
-                <span className="sm:hidden">+</span>
               </TabsTrigger>
               <TabsTrigger value="upload" className="flex items-center gap-2">
                 <Upload className="w-4 h-4" />
                 <span className="hidden sm:inline">Cargar</span>
-                <span className="sm:hidden">CSV</span>
               </TabsTrigger>
+              {userRole === 'administrator' && (
+                <TabsTrigger value="tools" className="flex items-center gap-2">
+                  <Settings className="w-4 h-4" />
+                  <span className="hidden sm:inline">Herramientas</span>
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="view" className="space-y-4">
@@ -131,9 +136,16 @@ const RepertoirioMusical = () => {
               <AddSongForm onSongAdded={handleDataUpdate} />
             </TabsContent>
 
-            <TabsContent value="upload" className="space-y-4">
+            <TabsContent value="upload" className="space-y-6">
+              <JSONUpload onUploadComplete={handleDataUpdate} defaultCategory={selectedCategory} />
               <CSVUpload onUploadComplete={handleDataUpdate} />
             </TabsContent>
+
+            {userRole === 'administrator' && (
+              <TabsContent value="tools" className="space-y-4">
+                <HimnarioMigrationButton onMigrationComplete={handleDataUpdate} />
+              </TabsContent>
+            )}
           </Tabs>
         </>
       )}
