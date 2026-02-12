@@ -571,7 +571,7 @@ export const usePushNotifications = () => {
       await navigator.serviceWorker.ready;
       console.log('📱 [PushNotifications] Service Worker ready');
 
-      let subscription = await registration.pushManager.getSubscription();
+      let subscription = await (registration as any).pushManager.getSubscription();
       
       if (!subscription) {
         console.log('📱 [PushNotifications] Creating new push subscription...');
@@ -579,7 +579,7 @@ export const usePushNotifications = () => {
         // VAPID key - in production, generate your own keys with: npx web-push generate-vapid-keys
         const vapidPublicKey = 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U';
         
-        subscription = await registration.pushManager.subscribe({
+        subscription = await (registration as any).pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
         });
@@ -630,7 +630,7 @@ export const usePushNotifications = () => {
         }
       } else {
         const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.getSubscription();
+        const subscription = await (registration as any).pushManager.getSubscription();
         
         if (subscription) {
           await subscription.unsubscribe();
