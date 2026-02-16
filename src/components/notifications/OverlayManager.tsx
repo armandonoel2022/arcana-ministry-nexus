@@ -1094,6 +1094,7 @@ const OverlayManager: React.FC = () => {
             time={metadata.rehearsal_time || ""}
             location={metadata.location}
             additionalNotes={metadata.additional_notes}
+            specialEventName={metadata.special_event_name}
             onClose={handleDismissWithQueue}
           />
         );
