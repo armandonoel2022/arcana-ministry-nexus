@@ -1926,11 +1926,12 @@ const ServiceNotificationOverlay = ({
             memberItem.style.display = "flex";
             memberItem.style.alignItems = "center";
             memberItem.style.gap = "10px";
+            memberItem.style.minWidth = "0";
 
             // Avatar
             const avatar = document.createElement("div");
-            avatar.style.width = "44px";
-            avatar.style.height = "44px";
+            avatar.style.width = "40px";
+            avatar.style.height = "40px";
             avatar.style.borderRadius = "50%";
             avatar.style.border = "2px solid rgba(225,29,72,0.5)";
             avatar.style.overflow = "hidden";
@@ -1940,7 +1941,7 @@ const ServiceNotificationOverlay = ({
             avatar.style.justifyContent = "center";
             avatar.style.color = "white";
             avatar.style.fontWeight = "bold";
-            avatar.style.fontSize = "14px";
+            avatar.style.fontSize = "13px";
             avatar.style.flexShrink = "0";
 
             const img = document.createElement("img");
@@ -1969,27 +1970,25 @@ const ServiceNotificationOverlay = ({
             const nameEl = document.createElement("div");
             nameEl.textContent = firstName;
             nameEl.style.fontWeight = "600";
-            nameEl.style.fontSize = "14px";
+            nameEl.style.fontSize = "13px";
             nameEl.style.color = "white";
-            nameEl.style.overflow = "hidden";
-            nameEl.style.textOverflow = "ellipsis";
-            nameEl.style.whiteSpace = "nowrap";
+            nameEl.style.wordBreak = "break-word";
+            nameEl.style.lineHeight = "1.2";
             info.appendChild(nameEl);
 
             if (lastName) {
               const lastNameEl = document.createElement("div");
               lastNameEl.textContent = lastName;
-              lastNameEl.style.fontSize = "12px";
-              lastNameEl.style.color = "rgba(255,255,255,0.5)";
-              lastNameEl.style.overflow = "hidden";
-              lastNameEl.style.textOverflow = "ellipsis";
-              lastNameEl.style.whiteSpace = "nowrap";
+              lastNameEl.style.fontSize = "11px";
+              lastNameEl.style.color = "rgba(255,255,255,0.6)";
+              lastNameEl.style.wordBreak = "break-word";
+              lastNameEl.style.lineHeight = "1.2";
               info.appendChild(lastNameEl);
             }
 
             const voiceType = document.createElement("div");
             voiceType.textContent = member.instrument?.split(' • ')[0] || "";
-            voiceType.style.fontSize = "12px";
+            voiceType.style.fontSize = "11px";
             voiceType.style.color = "#fda4af";
             info.appendChild(voiceType);
 
