@@ -686,6 +686,76 @@ const getGroupMembersRaw = (
   return [];
 };
 
+// Función para obtener TODOS los miembros de todos los grupos (para servicios especiales)
+const getAllGroupMembersRaw = (
+  inactiveMemberIds?: Set<string>,
+): { id: string; name: string; voice: string; role: string; mic: string; photo_url: string; group: string }[] => {
+  const allMembers: { id: string; name: string; voice: string; role: string; mic: string; photo_url: string; group: string }[] = [];
+  
+  // Grupo de Aleida
+  const aleidaMembers = [
+    MEMBER_IDS.ALEIDA_BATISTA, MEMBER_IDS.ELIABI_JOANA, 
+    MEMBER_IDS.FELIX_NICOLAS, MEMBER_IDS.ARMANDO_NOEL,
+    MEMBER_IDS.FIOR_DALIZA, MEMBER_IDS.RUTH_ESMAILIN,
+  ];
+  aleidaMembers.forEach(id => {
+    if (!inactiveMemberIds?.has(id)) {
+      allMembers.push({
+        id,
+        name: ALL_MEMBERS[id]?.name || "",
+        voice: ALL_MEMBERS[id]?.voice || "",
+        role: "Corista",
+        mic: "",
+        photo_url: ALL_MEMBERS[id]?.photo_url || "",
+        group: "Grupo de Aleida",
+      });
+    }
+  });
+
+  // Grupo de Keyla
+  const keylaMembers = [
+    MEMBER_IDS.KEYLA_YANIRA, MEMBER_IDS.YINDHIA_CAROLINA,
+    MEMBER_IDS.ARIZONI_LIRIANO, MEMBER_IDS.DENNY_ALBERTO,
+    MEMBER_IDS.AIDA_LORENA, MEMBER_IDS.SUGEY_GONZALEZ,
+  ];
+  keylaMembers.forEach(id => {
+    if (!inactiveMemberIds?.has(id)) {
+      allMembers.push({
+        id,
+        name: ALL_MEMBERS[id]?.name || "",
+        voice: ALL_MEMBERS[id]?.voice || "",
+        role: "Corista",
+        mic: "",
+        photo_url: ALL_MEMBERS[id]?.photo_url || "",
+        group: "Grupo de Keyla",
+      });
+    }
+  });
+
+  // Grupo de Massy
+  const massyMembers = [
+    MEMBER_IDS.DAMARIS_CASTILLO, MEMBER_IDS.JISELL_AMADA,
+    MEMBER_IDS.FREDDERID_ABRAHAN, MEMBER_IDS.GUARIONEX_GARCIA,
+    MEMBER_IDS.ROSELY_MONTERO, MEMBER_IDS.RODES_ESTHER,
+    MEMBER_IDS.MARIA_SANTANA,
+  ];
+  massyMembers.forEach(id => {
+    if (!inactiveMemberIds?.has(id)) {
+      allMembers.push({
+        id,
+        name: ALL_MEMBERS[id]?.name || "",
+        voice: ALL_MEMBERS[id]?.voice || "",
+        role: "Corista",
+        mic: "",
+        photo_url: ALL_MEMBERS[id]?.photo_url || "",
+        group: "Grupo de Massy",
+      });
+    }
+  });
+
+  return allMembers;
+};
+
 // Función wrapper que filtra miembros inactivos
 const getGroupMembers = (
   groupName: string,
@@ -1097,6 +1167,11 @@ const ServiceNotificationOverlay = ({
               }
             }
 
+            // Detectar si es un servicio especial donde participan TODOS los grupos
+            const isSpecialAllGroups = 
+              service.service_type === 'especial' || 
+              (service.leader && service.leader.toUpperCase() === 'TODOS');
+
             // Obtener miembros del grupo usando la nueva función
             let groupName = "Grupo de Aleida";
             if (service.worship_groups) {
@@ -1114,8 +1189,15 @@ const ServiceNotificationOverlay = ({
             const previousService = serviceIndex > 0 ? servicesDirectorInfo[serviceIndex - 1] : undefined;
             const nextService = serviceIndex < servicesDirectorInfo.length - 1 ? servicesDirectorInfo[serviceIndex + 1] : undefined;
 
-            // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS CON CONTEXTO (filtrando inactivos)
-            members = getGroupMembers(groupName, serviceTime, directorName, previousService, nextService, inactiveMemberIds);
+            if (isSpecialAllGroups) {
+              // Para servicios especiales: obtener TODOS los miembros de todos los grupos
+              const allMembers = getAllGroupMembersRaw(inactiveMemberIds);
+              members = allMembers;
+              console.log(`🌟 Servicio especial detectado: ${service.special_activity || service.title} - ${allMembers.length} miembros de todos los grupos`);
+            } else {
+              // USAR LA NUEVA FUNCIÓN PARA OBTENER MIEMBROS CON CONTEXTO (filtrando inactivos)
+              members = getGroupMembers(groupName, serviceTime, directorName, previousService, nextService, inactiveMemberIds);
+            }
 
             console.log(
               `Miembros finales para ${groupName} (director: ${directorName}, prev: ${previousService?.director}, next: ${nextService?.director}):`,
@@ -1173,24 +1255,44 @@ const ServiceNotificationOverlay = ({
 
             const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG] || GROUP_CONFIG["Grupo de Aleida"];
 
+            // Para servicios especiales, incluir info del grupo en el instrument
+            const membersList = isSpecialAllGroups
+              ? members.map((member: any, index: number) => ({
+                  id: `member-${service.id}-${index}`,
+                  user_id: member.id,
+                  instrument: `${member.voice} • ${member.group}`,
+                  is_leader: false,
+                  profiles: {
+                    id: member.id,
+                    full_name: getFormattedName(member.name),
+                    photo_url: member.photo_url,
+                  },
+                }))
+              : members.map((member: any, index: number) => ({
+                  id: `member-${service.id}-${index}`,
+                  user_id: member.id,
+                  instrument: `${member.voice} - ${member.mic}`,
+                  is_leader: false,
+                  profiles: {
+                    id: member.id,
+                    full_name: getFormattedName(member.name),
+                    photo_url: member.photo_url,
+                  },
+                }));
+
             return {
               ...service,
-              leader: directorProfile?.full_name || service.leader,
-              group_members: members.map((member, index) => ({
-                id: `member-${service.id}-${index}`,
-                user_id: member.id,
-                instrument: `${member.voice} - ${member.mic}`,
-                is_leader: false,
-                profiles: {
-                  id: member.id,
-                  full_name: getFormattedName(member.name),
-                  photo_url: member.photo_url,
-                },
-              })),
+              leader: isSpecialAllGroups ? "TODOS" : (directorProfile?.full_name || service.leader),
+              group_members: membersList,
               selected_songs: selectedSongs,
-              director_profile: directorProfile,
-              worship_groups:
-                Array.isArray(service.worship_groups) && service.worship_groups.length > 0
+              director_profile: isSpecialAllGroups ? null : directorProfile,
+              worship_groups: isSpecialAllGroups
+                ? {
+                    id: "all",
+                    name: "Todos los Grupos",
+                    color_theme: "#E11D48", // Rose/red for special events
+                  }
+                : Array.isArray(service.worship_groups) && service.worship_groups.length > 0
                   ? {
                       ...service.worship_groups[0],
                       color_theme: groupConfig.color_theme,
@@ -1949,8 +2051,9 @@ const ServiceNotificationOverlay = ({
   const ServiceCard = ({ service }: { service: WeekendService }) => {
     const serviceTime = getServiceTime(service.title, service.service_type);
     const directorMember = service.group_members.find((m) => m.is_leader);
-    const responsibleVoices = getResponsibleVoices(service.group_members).slice(0, 6);
+    const responsibleVoices = getResponsibleVoices(service.group_members);
     const isQuarantine = service.service_type === 'cuarentena';
+    const isSpecialEvent = service.service_type === 'especial' || service.leader === 'TODOS';
 
     const worshipSongs = service.selected_songs?.filter((s) => s.song_order >= 1 && s.song_order <= 4) || [];
     const offeringsSongs = service.selected_songs?.filter((s) => s.song_order === 5) || [];
@@ -1960,14 +2063,35 @@ const ServiceNotificationOverlay = ({
       <div
         ref={(el) => (serviceCardRefs.current[service.id] = el)}
         className={`rounded-xl p-6 shadow-lg mx-auto ${
-          isQuarantine 
-            ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-amber-500/30' 
-            : 'bg-white/90 border border-blue-200'
+          isSpecialEvent
+            ? 'bg-gradient-to-br from-rose-900 to-rose-800 border-2 border-rose-400/40'
+            : isQuarantine 
+              ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-amber-500/30' 
+              : 'bg-white/90 border border-blue-200'
         }`}
         style={{ maxWidth: "600px" }}
       >
+        {/* Special Event Badge */}
+        {isSpecialEvent && (
+          <div className="flex flex-col items-center justify-center gap-2 mb-4 -mt-2">
+            <span 
+              className="px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5"
+              style={{
+                background: "linear-gradient(135deg, #E11D48 0%, #BE123C 100%)",
+                color: "white",
+              }}
+            >
+              🌟 SERVICIO ESPECIAL
+            </span>
+            <span className="text-rose-200 text-sm font-semibold text-center">
+              {service.special_activity || "Evento Especial"}
+            </span>
+            <span className="text-rose-300/80 text-xs">{serviceTime}</span>
+          </div>
+        )}
+
         {/* Quarantine Badge */}
-        {isQuarantine && (
+        {isQuarantine && !isSpecialEvent && (
           <div className="flex items-center justify-center gap-2 mb-4 -mt-2">
             <span 
               className="px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5"
@@ -1987,36 +2111,142 @@ const ServiceNotificationOverlay = ({
           <div
             className="w-3 h-8 rounded-full"
             style={{
-              background: isQuarantine 
-                ? "linear-gradient(to bottom, #f59e0b99, #f59e0b)"
-                : `linear-gradient(to bottom, ${service.worship_groups?.color_theme || "#3B82F6"}99, ${service.worship_groups?.color_theme || "#3B82F6"})`,
+              background: isSpecialEvent
+                ? "linear-gradient(to bottom, #E11D4899, #E11D48)"
+                : isQuarantine 
+                  ? "linear-gradient(to bottom, #f59e0b99, #f59e0b)"
+                  : `linear-gradient(to bottom, ${service.worship_groups?.color_theme || "#3B82F6"}99, ${service.worship_groups?.color_theme || "#3B82F6"})`,
             }}
           ></div>
           <div>
-            <h3 className={`text-xl font-bold ${isQuarantine ? 'text-white' : 'text-blue-900'}`}>
-              {service.title}
+            <h3 className={`text-xl font-bold ${isSpecialEvent ? 'text-white' : isQuarantine ? 'text-white' : 'text-blue-900'}`}>
+              {isSpecialEvent ? (service.special_activity || service.title) : service.title}
             </h3>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span
                 className="text-sm font-medium px-2 py-1 rounded-full text-white"
                 style={{ 
-                  backgroundColor: isQuarantine 
-                    ? '#f59e0b' 
-                    : (service.worship_groups?.color_theme || "#3B82F6") 
+                  backgroundColor: isSpecialEvent 
+                    ? '#E11D48'
+                    : isQuarantine 
+                      ? '#f59e0b' 
+                      : (service.worship_groups?.color_theme || "#3B82F6") 
                 }}
               >
-                {service.worship_groups?.name || "Grupo de Alabanza"}
+                {isSpecialEvent ? "Todos los Grupos" : (service.worship_groups?.name || "Grupo de Alabanza")}
               </span>
-              <span className={`text-sm ${isQuarantine ? 'text-gray-400' : 'text-gray-500'}`}>•</span>
-              <span className={`text-sm ${isQuarantine ? 'text-gray-300' : 'text-gray-600'}`}>
-                {service.special_activity
-                  ? `Sección especial: ${service.special_activity}`
-                  : "Sección especial: Ninguna"}
-              </span>
+              {!isSpecialEvent && (
+                <>
+                  <span className={`text-sm ${isQuarantine ? 'text-gray-400' : 'text-gray-500'}`}>•</span>
+                  <span className={`text-sm ${isQuarantine ? 'text-gray-300' : 'text-gray-600'}`}>
+                    {service.special_activity
+                      ? `Sección especial: ${service.special_activity}`
+                      : "Sección especial: Ninguna"}
+                  </span>
+                </>
+              )}
+              {isSpecialEvent && (
+                <>
+                  <span className="text-sm text-rose-300/60">•</span>
+                  <span className="text-sm text-rose-200">{service.location || "Templo Principal"}</span>
+                </>
+              )}
             </div>
           </div>
         </div>
 
+        {/* SPECIAL EVENT: Show all members grouped by their group */}
+        {isSpecialEvent ? (
+          <div className="space-y-4">
+            {/* Special event info banner */}
+            <div 
+              className="rounded-lg p-4 text-center"
+              style={{
+                background: "linear-gradient(135deg, rgba(225,29,72,0.2) 0%, rgba(190,18,60,0.1) 100%)",
+                border: "1px solid rgba(225,29,72,0.3)",
+              }}
+            >
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Users className="h-5 w-5 text-rose-300" />
+                <span className="text-rose-200 font-semibold text-sm">Participan todos los integrantes</span>
+              </div>
+              <p className="text-white/70 text-xs">
+                Todos los grupos de alabanza participan en este servicio especial
+              </p>
+            </div>
+
+            {/* Members grouped by group */}
+            {["Grupo de Aleida", "Grupo de Keyla", "Grupo de Massy"].map(groupKey => {
+              const groupMembers = responsibleVoices.filter(m => 
+                m.instrument?.includes(groupKey)
+              );
+              if (groupMembers.length === 0) return null;
+              
+              const groupColorMap: Record<string, string> = {
+                "Grupo de Aleida": "#3B82F6",
+                "Grupo de Keyla": "#8B5CF6", 
+                "Grupo de Massy": "#EC4899",
+              };
+              
+              return (
+                <div key={groupKey} className="rounded-lg p-4" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span 
+                      className="px-2 py-0.5 rounded-full text-xs font-semibold text-white"
+                      style={{ backgroundColor: groupColorMap[groupKey] || "#3B82F6" }}
+                    >
+                      {groupKey}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {groupMembers.map((member) => {
+                      const { firstName, lastName } = splitName(member.profiles?.full_name || "");
+                      return (
+                        <div key={member.id} className="flex items-center gap-2">
+                          <div className="w-10 h-10 rounded-full border-2 border-rose-400/50 overflow-hidden bg-gradient-to-r from-rose-500 to-rose-600 flex-shrink-0">
+                            <img
+                              src={member.profiles?.photo_url}
+                              alt={member.profiles?.full_name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = "none";
+                                const fallback = target.nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = "flex";
+                              }}
+                            />
+                            <div className="w-full h-full hidden items-center justify-center text-white text-xs font-bold">
+                              {getInitials(member.profiles?.full_name || "NN")}
+                            </div>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs font-medium text-white truncate">{firstName}</div>
+                            {lastName && <div className="text-[10px] text-gray-400 truncate">{lastName}</div>}
+                            <div className="text-[10px] text-rose-300">{member.instrument?.split(' • ')[0]}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Action Buttons for special event */}
+            <div className="service-action-buttons flex flex-wrap gap-2 mt-6 pt-4 border-t border-rose-400/20">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => downloadServiceImage(service.id, service.title)}
+                className="flex items-center gap-2 border-rose-400 text-rose-300 hover:bg-rose-400/20"
+              >
+                <Download className="w-4 h-4" />
+                Descargar
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
         <div className="grid md:grid-cols-2 gap-6">
           {/* Left Column - Director and Songs */}
           <div className="space-y-4">
@@ -2266,6 +2496,8 @@ const ServiceNotificationOverlay = ({
             Descargar
           </Button>
         </div>
+          </>
+        )}
       </div>
     );
   };
@@ -2278,8 +2510,9 @@ const ServiceNotificationOverlay = ({
     return null;
   }
 
-  // Detectar si algún servicio es de cuarentena
+  // Detectar si algún servicio es de cuarentena o especial
   const hasQuarantineService = services.some(s => s.service_type === 'cuarentena');
+  const hasSpecialEvent = services.some(s => s.service_type === 'especial' || s.leader === 'TODOS');
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto">
@@ -2291,8 +2524,21 @@ const ServiceNotificationOverlay = ({
               : "animate-out slide-out-to-top-4 fade-out duration-300"
           }`}
         >
+          {/* Special Event Banner */}
+          {hasSpecialEvent && !hasQuarantineService && (
+            <div 
+              className="mb-2 rounded-t-xl p-3 flex items-center justify-center gap-2 text-white"
+              style={{
+                background: "linear-gradient(135deg, #E11D48 0%, #BE123C 100%)",
+              }}
+            >
+              <span className="text-lg">🌟</span>
+              <span className="font-semibold text-sm">SERVICIO ESPECIAL</span>
+            </div>
+          )}
+
           {/* Quarantine Banner */}
-          {hasQuarantineService && (
+          {hasQuarantineService && !hasSpecialEvent && (
             <div 
               className="mb-2 rounded-t-xl p-3 flex items-center justify-center gap-2 text-white"
               style={{
@@ -2308,12 +2554,14 @@ const ServiceNotificationOverlay = ({
           {/* Fixed Header */}
           <div 
             className={`p-4 border-b border-border sticky top-4 z-10 shadow-md ${
-              hasQuarantineService ? 'rounded-none' : 'rounded-t-xl'
+              (hasQuarantineService || hasSpecialEvent) ? 'rounded-none' : 'rounded-t-xl'
             }`}
             style={{
-              background: hasQuarantineService 
-                ? "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" 
-                : "white"
+              background: hasSpecialEvent
+                ? "linear-gradient(135deg, #881337 0%, #9f1239 100%)"
+                : hasQuarantineService 
+                  ? "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" 
+                  : "white"
             }}
           >
             <div className="flex items-center justify-between">
@@ -2321,18 +2569,20 @@ const ServiceNotificationOverlay = ({
                 <div 
                   className="w-10 h-10 rounded-full flex items-center justify-center"
                   style={{
-                    background: hasQuarantineService 
-                      ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
-                      : "linear-gradient(to right, #a855f7, #ec4899)"
+                    background: hasSpecialEvent
+                      ? "linear-gradient(135deg, #E11D48 0%, #BE123C 100%)"
+                      : hasQuarantineService 
+                        ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
+                        : "linear-gradient(to right, #a855f7, #ec4899)"
                   }}
                 >
                   <Bell className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className={`text-xl font-bold ${hasQuarantineService ? 'text-white' : 'text-foreground'}`}>
-                    {hasQuarantineService ? 'Servicio de Cuarentena' : 'Programa de Servicios'}
+                  <h2 className={`text-xl font-bold ${(hasQuarantineService || hasSpecialEvent) ? 'text-white' : 'text-foreground'}`}>
+                    {hasSpecialEvent ? 'Servicio Especial' : hasQuarantineService ? 'Servicio de Cuarentena' : 'Programa de Servicios'}
                   </h2>
-                  <p className={`text-sm ${hasQuarantineService ? 'text-amber-200' : 'text-muted-foreground'}`}>
+                  <p className={`text-sm ${hasSpecialEvent ? 'text-rose-200' : hasQuarantineService ? 'text-amber-200' : 'text-muted-foreground'}`}>
                     {format(parseServiceDate(services[0].service_date), "EEEE, dd 'de' MMMM", { locale: es })}
                   </p>
                 </div>
