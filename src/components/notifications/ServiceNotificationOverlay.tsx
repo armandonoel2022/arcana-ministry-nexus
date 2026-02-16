@@ -1418,6 +1418,7 @@ const ServiceNotificationOverlay = ({
       }
 
       const isQuarantine = service.service_type === 'cuarentena';
+      const isSpecialEvent = service.service_type === 'especial' || service.leader === 'TODOS';
 
       // Crear un contenedor específico para la descarga
       const container = document.createElement("div");
@@ -1427,7 +1428,10 @@ const ServiceNotificationOverlay = ({
       container.style.lineHeight = "1.5";
 
       // Estilos según tipo de servicio
-      if (isQuarantine) {
+      if (isSpecialEvent) {
+        container.style.background = "linear-gradient(135deg, #881337 0%, #9f1239 50%, #be123c 100%)";
+        container.style.color = "#f5f5f5";
+      } else if (isQuarantine) {
         container.style.background = "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)";
         container.style.color = "#f5f5f5";
       } else {
@@ -1440,8 +1444,21 @@ const ServiceNotificationOverlay = ({
       header.style.marginBottom = "32px";
       header.style.textAlign = "center";
 
-      // Banner de cuarentena
-      if (isQuarantine) {
+      // Banner especial
+      if (isSpecialEvent) {
+        const specialBanner = document.createElement("div");
+        specialBanner.style.background = "linear-gradient(135deg, #E11D48 0%, #BE123C 100%)";
+        specialBanner.style.color = "white";
+        specialBanner.style.padding = "12px 24px";
+        specialBanner.style.borderRadius = "12px";
+        specialBanner.style.marginBottom = "24px";
+        specialBanner.style.fontWeight = "bold";
+        specialBanner.style.fontSize = "18px";
+        specialBanner.style.textAlign = "center";
+        specialBanner.style.boxShadow = "0 4px 15px rgba(225, 29, 72, 0.3)";
+        specialBanner.textContent = "🌟 SERVICIO ESPECIAL";
+        header.appendChild(specialBanner);
+      } else if (isQuarantine) {
         const quarantineBanner = document.createElement("div");
         quarantineBanner.style.background = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
         quarantineBanner.style.color = "#1a1a2e";
@@ -1457,12 +1474,15 @@ const ServiceNotificationOverlay = ({
       }
 
       const title = document.createElement("h1");
-      title.textContent = isQuarantine ? "Culto de Oración" : "Programa de Servicios";
+      title.textContent = isSpecialEvent 
+        ? (service.special_activity || "Servicio Especial")
+        : isQuarantine ? "Culto de Oración" : "Programa de Servicios";
       title.style.fontSize = "28px";
       title.style.fontWeight = "bold";
       title.style.marginBottom = "8px";
       title.style.letterSpacing = "-0.025em";
-      title.style.color = isQuarantine ? "#fcd34d" : "#111827";
+      title.style.color = (isSpecialEvent || isQuarantine) ? "#fcd34d" : "#111827";
+      if (isSpecialEvent) title.style.color = "#fecdd3";
 
       const dateTime = document.createElement("p");
       const serviceDate = format(parseServiceDate(service.service_date), "EEEE, dd 'de' MMMM", { locale: es });
@@ -1470,7 +1490,7 @@ const ServiceNotificationOverlay = ({
       dateTime.style.fontSize = "18px";
       dateTime.style.textTransform = "capitalize";
       dateTime.style.fontWeight = "500";
-      dateTime.style.color = isQuarantine ? "#fbbf24" : "#6b7280";
+      dateTime.style.color = isSpecialEvent ? "#fda4af" : isQuarantine ? "#fbbf24" : "#6b7280";
 
       header.appendChild(title);
       header.appendChild(dateTime);
@@ -1478,13 +1498,15 @@ const ServiceNotificationOverlay = ({
       // Línea separadora
       const separator = document.createElement("hr");
       separator.style.border = "none";
-      separator.style.borderTop = isQuarantine ? "2px solid rgba(251, 191, 36, 0.3)" : "2px solid #e5e7eb";
+      separator.style.borderTop = isSpecialEvent 
+        ? "2px solid rgba(253, 164, 175, 0.3)" 
+        : isQuarantine ? "2px solid rgba(251, 191, 36, 0.3)" : "2px solid #e5e7eb";
       separator.style.margin = "24px 0";
       separator.style.width = "100%";
 
       header.appendChild(separator);
 
-      // Service Info con mejor estructura
+      // Service Info
       const serviceInfo = document.createElement("div");
       serviceInfo.style.marginBottom = "32px";
       serviceInfo.style.textAlign = "center";
@@ -1494,7 +1516,7 @@ const ServiceNotificationOverlay = ({
       time.style.fontSize = "24px";
       time.style.fontWeight = "bold";
       time.style.marginBottom = "12px";
-      time.style.color = isQuarantine ? "#fcd34d" : "#1f2937";
+      time.style.color = isSpecialEvent ? "#fecdd3" : isQuarantine ? "#fcd34d" : "#1f2937";
 
       const groupInfo = document.createElement("div");
       groupInfo.style.display = "flex";
@@ -1504,121 +1526,144 @@ const ServiceNotificationOverlay = ({
       groupInfo.style.marginBottom = "8px";
       groupInfo.style.flexWrap = "wrap";
 
-      const groupName = document.createElement("span");
-      groupName.textContent = service.worship_groups?.name || "Grupo de Alabanza";
-      groupName.style.backgroundColor = isQuarantine ? "#f59e0b" : (service.worship_groups?.color_theme || "#3B82F6");
-      groupName.style.color = isQuarantine ? "#1a1a2e" : "white";
-      groupName.style.padding = "6px 16px";
-      groupName.style.borderRadius = "9999px";
-      groupName.style.fontSize = "16px";
-      groupName.style.fontWeight = "600";
-      groupName.style.letterSpacing = "-0.025em";
+      const groupNameEl = document.createElement("span");
+      groupNameEl.textContent = isSpecialEvent ? "Todos los Grupos" : (service.worship_groups?.name || "Grupo de Alabanza");
+      groupNameEl.style.backgroundColor = isSpecialEvent ? "#E11D48" : isQuarantine ? "#f59e0b" : (service.worship_groups?.color_theme || "#3B82F6");
+      groupNameEl.style.color = isSpecialEvent ? "white" : isQuarantine ? "#1a1a2e" : "white";
+      groupNameEl.style.padding = "6px 16px";
+      groupNameEl.style.borderRadius = "9999px";
+      groupNameEl.style.fontSize = "16px";
+      groupNameEl.style.fontWeight = "600";
+      groupNameEl.style.letterSpacing = "-0.025em";
 
       const activity = document.createElement("span");
       activity.textContent = service.special_activity
-        ? `Sección especial: ${service.special_activity}`
+        ? (isSpecialEvent ? service.special_activity : `Sección especial: ${service.special_activity}`)
         : isQuarantine ? "Culto de Oración" : "Sección especial: Ninguna";
       activity.style.fontSize = "16px";
       activity.style.fontWeight = "500";
-      activity.style.color = isQuarantine ? "#fbbf24" : "#6b7280";
+      activity.style.color = isSpecialEvent ? "#fda4af" : isQuarantine ? "#fbbf24" : "#6b7280";
 
-      groupInfo.appendChild(groupName);
+      groupInfo.appendChild(groupNameEl);
       groupInfo.appendChild(activity);
 
       serviceInfo.appendChild(time);
       serviceInfo.appendChild(groupInfo);
 
-      // Director Section con mejor espaciado
+      // Director Section (only for non-special events)
       const directorSection = document.createElement("div");
-      directorSection.style.marginBottom = "32px";
-      directorSection.style.textAlign = "center";
+      if (!isSpecialEvent) {
+        directorSection.style.marginBottom = "32px";
+        directorSection.style.textAlign = "center";
 
-      const directorTitle = document.createElement("h3");
-      directorTitle.textContent = "Director/a de Alabanza";
-      directorTitle.style.fontSize = "20px";
-      directorTitle.style.fontWeight = "bold";
-      directorTitle.style.marginBottom = "20px";
-      directorTitle.style.textDecoration = "underline";
-      directorTitle.style.color = isQuarantine ? "#fbbf24" : "#1e40af";
+        const directorTitle = document.createElement("h3");
+        directorTitle.textContent = "Director/a de Alabanza";
+        directorTitle.style.fontSize = "20px";
+        directorTitle.style.fontWeight = "bold";
+        directorTitle.style.marginBottom = "20px";
+        directorTitle.style.textDecoration = "underline";
+        directorTitle.style.color = isQuarantine ? "#fbbf24" : "#1e40af";
 
-      const directorContent = document.createElement("div");
-      directorContent.style.display = "flex";
-      directorContent.style.flexDirection = "column";
-      directorContent.style.alignItems = "center";
-      directorContent.style.gap = "16px";
+        const directorContent = document.createElement("div");
+        directorContent.style.display = "flex";
+        directorContent.style.flexDirection = "column";
+        directorContent.style.alignItems = "center";
+        directorContent.style.gap = "16px";
 
-      // Director Avatar
-      const directorAvatar = document.createElement("div");
-      directorAvatar.style.width = "80px";
-      directorAvatar.style.height = "80px";
-      directorAvatar.style.borderRadius = "50%";
-      directorAvatar.style.border = isQuarantine ? "4px solid #fbbf24" : "4px solid #93c5fd";
-      directorAvatar.style.overflow = "hidden";
-      directorAvatar.style.background = isQuarantine 
-        ? "linear-gradient(to right, #f59e0b, #d97706)" 
-        : "linear-gradient(to right, #3b82f6, #2563eb)";
-      directorAvatar.style.display = "flex";
-      directorAvatar.style.alignItems = "center";
-      directorAvatar.style.justifyContent = "center";
-      directorAvatar.style.color = "white";
-      directorAvatar.style.fontWeight = "bold";
-      directorAvatar.style.fontSize = "24px";
+        const directorAvatar = document.createElement("div");
+        directorAvatar.style.width = "80px";
+        directorAvatar.style.height = "80px";
+        directorAvatar.style.borderRadius = "50%";
+        directorAvatar.style.border = isQuarantine ? "4px solid #fbbf24" : "4px solid #93c5fd";
+        directorAvatar.style.overflow = "hidden";
+        directorAvatar.style.background = isQuarantine 
+          ? "linear-gradient(to right, #f59e0b, #d97706)" 
+          : "linear-gradient(to right, #3b82f6, #2563eb)";
+        directorAvatar.style.display = "flex";
+        directorAvatar.style.alignItems = "center";
+        directorAvatar.style.justifyContent = "center";
+        directorAvatar.style.color = "white";
+        directorAvatar.style.fontWeight = "bold";
+        directorAvatar.style.fontSize = "24px";
 
-      const directorImg = document.createElement("img");
-      directorImg.src = service.director_profile?.photo_url || "";
-      directorImg.style.width = "100%";
-      directorImg.style.height = "100%";
-      directorImg.style.objectFit = "cover";
-      directorImg.onerror = () => {
-        directorImg.style.display = "none";
-        const initials = document.createElement("div");
-        initials.textContent = getInitials(service.leader);
-        initials.style.display = "flex";
-        initials.style.alignItems = "center";
-        initials.style.justifyContent = "center";
-        initials.style.width = "100%";
-        initials.style.height = "100%";
-        directorAvatar.appendChild(initials);
-      };
+        const directorImg = document.createElement("img");
+        directorImg.src = service.director_profile?.photo_url || "";
+        directorImg.style.width = "100%";
+        directorImg.style.height = "100%";
+        directorImg.style.objectFit = "cover";
+        directorImg.onerror = () => {
+          directorImg.style.display = "none";
+          const initials = document.createElement("div");
+          initials.textContent = getInitials(service.leader);
+          initials.style.display = "flex";
+          initials.style.alignItems = "center";
+          initials.style.justifyContent = "center";
+          initials.style.width = "100%";
+          initials.style.height = "100%";
+          directorAvatar.appendChild(initials);
+        };
 
-      directorAvatar.appendChild(directorImg);
+        directorAvatar.appendChild(directorImg);
 
-      // Director Info
-      const directorInfo = document.createElement("div");
-      directorInfo.style.textAlign = "center";
+        const directorInfoEl = document.createElement("div");
+        directorInfoEl.style.textAlign = "center";
 
-      const directorName = document.createElement("div");
-      directorName.textContent = service.leader;
-      directorName.style.fontWeight = "bold";
-      directorName.style.fontSize = "20px";
-      directorName.style.marginBottom = "4px";
-      directorName.style.color = isQuarantine ? "#f5f5f5" : "#1f2937";
+        const directorName = document.createElement("div");
+        directorName.textContent = service.leader;
+        directorName.style.fontWeight = "bold";
+        directorName.style.fontSize = "20px";
+        directorName.style.marginBottom = "4px";
+        directorName.style.color = isQuarantine ? "#f5f5f5" : "#1f2937";
 
-      const directorRole = document.createElement("div");
-      directorRole.textContent = "Líder del Servicio";
-      directorRole.style.fontSize = "16px";
-      directorRole.style.fontWeight = "600";
-      directorRole.style.color = isQuarantine ? "#fbbf24" : "#3b82f6";
+        const directorRole = document.createElement("div");
+        directorRole.textContent = "Líder del Servicio";
+        directorRole.style.fontSize = "16px";
+        directorRole.style.fontWeight = "600";
+        directorRole.style.color = isQuarantine ? "#fbbf24" : "#3b82f6";
 
-      directorInfo.appendChild(directorName);
-      directorInfo.appendChild(directorRole);
+        directorInfoEl.appendChild(directorName);
+        directorInfoEl.appendChild(directorRole);
 
-      directorContent.appendChild(directorAvatar);
-      directorContent.appendChild(directorInfo);
+        directorContent.appendChild(directorAvatar);
+        directorContent.appendChild(directorInfoEl);
 
-      directorSection.appendChild(directorTitle);
-      directorSection.appendChild(directorContent);
+        directorSection.appendChild(directorTitle);
+        directorSection.appendChild(directorContent);
+      } else {
+        // For special events: "Participan todos los integrantes" info
+        directorSection.style.marginBottom = "32px";
+        directorSection.style.textAlign = "center";
+        directorSection.style.padding = "16px";
+        directorSection.style.borderRadius = "12px";
+        directorSection.style.background = "rgba(225,29,72,0.2)";
+        directorSection.style.border = "1px solid rgba(225,29,72,0.3)";
 
-      // Songs Section con mejor estructura
+        const infoText = document.createElement("div");
+        infoText.textContent = "👥 Participan todos los integrantes del ministerio";
+        infoText.style.fontSize = "16px";
+        infoText.style.fontWeight = "600";
+        infoText.style.color = "#fecdd3";
+      
+        const subText = document.createElement("div");
+        subText.textContent = "Todos los grupos de alabanza participan en este servicio especial";
+        subText.style.fontSize = "14px";
+        subText.style.color = "rgba(255,255,255,0.7)";
+        subText.style.marginTop = "8px";
+
+        directorSection.appendChild(infoText);
+        directorSection.appendChild(subText);
+      }
+
+      // Songs Section
       const songsSection = document.createElement("div");
       songsSection.style.marginBottom = "32px";
 
       const worshipSongs = service.selected_songs?.filter((s) => s.song_order >= 1 && s.song_order <= 4) || [];
       const offeringsSongs = service.selected_songs?.filter((s) => s.song_order === 5) || [];
       const communionSongs = service.selected_songs?.filter((s) => s.song_order === 6) || [];
-
-      // Solo mostrar sección de canciones si hay alguna canción seleccionada
       const hasAnySongs = worshipSongs.length > 0 || offeringsSongs.length > 0 || communionSongs.length > 0;
+      
+      const isDark = isSpecialEvent || isQuarantine;
       
       if (hasAnySongs) {
         const songsTitle = document.createElement("h3");
@@ -1628,24 +1673,22 @@ const ServiceNotificationOverlay = ({
         songsTitle.style.marginBottom = "20px";
         songsTitle.style.textAlign = "center";
         songsTitle.style.textDecoration = "underline";
-        songsTitle.style.color = isQuarantine ? "#fbbf24" : "#15803d";
+        songsTitle.style.color = isSpecialEvent ? "#fda4af" : isQuarantine ? "#fbbf24" : "#15803d";
         songsSection.appendChild(songsTitle);
       } else {
-        // Si no hay canciones, mostrar mensaje
         const noSongsMessage = document.createElement("div");
         noSongsMessage.style.textAlign = "center";
         noSongsMessage.style.padding = "16px";
         noSongsMessage.style.borderRadius = "12px";
         noSongsMessage.style.marginBottom = "16px";
-        noSongsMessage.style.backgroundColor = isQuarantine ? "rgba(251, 191, 36, 0.1)" : "#f3f4f6";
-        noSongsMessage.style.border = isQuarantine ? "1px solid rgba(251, 191, 36, 0.3)" : "none";
+        noSongsMessage.style.backgroundColor = isDark ? "rgba(255,255,255,0.1)" : "#f3f4f6";
         
         const noSongsText = document.createElement("p");
         noSongsText.textContent = "No hay canciones seleccionadas aún";
         noSongsText.style.fontSize = "16px";
         noSongsText.style.fontStyle = "italic";
         noSongsText.style.margin = "0";
-        noSongsText.style.color = isQuarantine ? "#fbbf24" : "#6b7280";
+        noSongsText.style.color = isDark ? "rgba(255,255,255,0.6)" : "#6b7280";
         
         noSongsMessage.appendChild(noSongsText);
         songsSection.appendChild(noSongsMessage);
@@ -1667,15 +1710,15 @@ const ServiceNotificationOverlay = ({
           songItem.style.gap = "16px";
           songItem.style.padding = "12px";
           songItem.style.borderRadius = "12px";
-          songItem.style.backgroundColor = isQuarantine ? "rgba(251, 191, 36, 0.1)" : "#f0fdf4";
-          songItem.style.border = isQuarantine ? "1px solid rgba(251, 191, 36, 0.3)" : "1px solid #dcfce7";
+          songItem.style.backgroundColor = isSpecialEvent ? "rgba(253,164,175,0.1)" : isQuarantine ? "rgba(251, 191, 36, 0.1)" : "#f0fdf4";
+          songItem.style.border = isSpecialEvent ? "1px solid rgba(253,164,175,0.3)" : isQuarantine ? "1px solid rgba(251, 191, 36, 0.3)" : "1px solid #dcfce7";
 
           const number = document.createElement("div");
           number.textContent = (index + 1).toString();
           number.style.width = "32px";
           number.style.height = "32px";
-          number.style.backgroundColor = isQuarantine ? "#f59e0b" : "#22c55e";
-          number.style.color = isQuarantine ? "#1a1a2e" : "white";
+          number.style.backgroundColor = isSpecialEvent ? "#E11D48" : isQuarantine ? "#f59e0b" : "#22c55e";
+          number.style.color = "white";
           number.style.borderRadius = "50%";
           number.style.display = "flex";
           number.style.alignItems = "center";
@@ -1693,7 +1736,8 @@ const ServiceNotificationOverlay = ({
           songFirstLine.style.fontWeight = "bold";
           songFirstLine.style.fontSize = "18px";
           songFirstLine.style.marginBottom = "4px";
-          songFirstLine.style.color = isQuarantine ? "#fcd34d" : "#1f2937";
+          songFirstLine.style.color = isDark ? "#fcd34d" : "#1f2937";
+          if (isSpecialEvent) songFirstLine.style.color = "#fecdd3";
 
           songContent.appendChild(songFirstLine);
 
@@ -1702,7 +1746,7 @@ const ServiceNotificationOverlay = ({
             songSecondLine.textContent = secondLine;
             songSecondLine.style.fontSize = "18px";
             songSecondLine.style.marginBottom = "8px";
-            songSecondLine.style.color = isQuarantine ? "#f5f5f5" : "#1f2937";
+            songSecondLine.style.color = isDark ? "#f5f5f5" : "#1f2937";
             songContent.appendChild(songSecondLine);
           }
 
@@ -1714,7 +1758,7 @@ const ServiceNotificationOverlay = ({
             artistFirst.textContent = artistFirstName;
             artistFirst.style.fontSize = "16px";
             artistFirst.style.fontWeight = "500";
-            artistFirst.style.color = isQuarantine ? "#fbbf24" : "#6b7280";
+            artistFirst.style.color = isSpecialEvent ? "#fda4af" : isQuarantine ? "#fbbf24" : "#6b7280";
 
             artistContainer.appendChild(artistFirst);
 
@@ -1722,7 +1766,7 @@ const ServiceNotificationOverlay = ({
               const artistLast = document.createElement("div");
               artistLast.textContent = artistLastName;
               artistLast.style.fontSize = "14px";
-              artistLast.style.color = isQuarantine ? "#d4a026" : "#9ca3af";
+              artistLast.style.color = isSpecialEvent ? "#fb7185" : isQuarantine ? "#d4a026" : "#9ca3af";
               artistContainer.appendChild(artistLast);
             }
 
@@ -1743,18 +1787,17 @@ const ServiceNotificationOverlay = ({
         offeringSection.style.marginTop = "16px";
         offeringSection.style.padding = "12px";
         offeringSection.style.borderRadius = "12px";
-        offeringSection.style.backgroundColor = isQuarantine ? "rgba(245, 158, 11, 0.15)" : "#fefce8";
-        offeringSection.style.border = isQuarantine ? "1px solid rgba(245, 158, 11, 0.4)" : "1px solid #fde047";
+        offeringSection.style.backgroundColor = isSpecialEvent ? "rgba(253,164,175,0.15)" : isQuarantine ? "rgba(245, 158, 11, 0.15)" : "#fefce8";
+        offeringSection.style.border = isSpecialEvent ? "1px solid rgba(253,164,175,0.4)" : isQuarantine ? "1px solid rgba(245, 158, 11, 0.4)" : "1px solid #fde047";
 
         const offeringTitle = document.createElement("div");
         offeringTitle.textContent = "Canción de Ofrendas";
         offeringTitle.style.fontSize = "16px";
         offeringTitle.style.fontWeight = "bold";
         offeringTitle.style.marginBottom = "8px";
-        offeringTitle.style.color = isQuarantine ? "#fcd34d" : "#92400e";
+        offeringTitle.style.color = isSpecialEvent ? "#fda4af" : isQuarantine ? "#fcd34d" : "#92400e";
 
         const { firstLine, secondLine } = splitSongTitle(offeringsSongs[0].title);
-        const { firstName: artistFirstName, lastName: artistLastName } = splitName(offeringsSongs[0].artist || "");
 
         const offeringContent = document.createElement("div");
         offeringContent.style.paddingLeft = "8px";
@@ -1763,7 +1806,7 @@ const ServiceNotificationOverlay = ({
         offeringFirstLine.textContent = firstLine;
         offeringFirstLine.style.fontWeight = "bold";
         offeringFirstLine.style.fontSize = "16px";
-        offeringFirstLine.style.color = isQuarantine ? "#f5f5f5" : "#1f2937";
+        offeringFirstLine.style.color = isDark ? "#f5f5f5" : "#1f2937";
 
         offeringContent.appendChild(offeringFirstLine);
 
@@ -1771,25 +1814,8 @@ const ServiceNotificationOverlay = ({
           const offeringSecondLine = document.createElement("div");
           offeringSecondLine.textContent = secondLine;
           offeringSecondLine.style.fontSize = "16px";
-          offeringSecondLine.style.color = isQuarantine ? "#e5e5e5" : "#1f2937";
+          offeringSecondLine.style.color = isDark ? "#e5e5e5" : "#1f2937";
           offeringContent.appendChild(offeringSecondLine);
-        }
-
-        if (offeringsSongs[0].artist) {
-          const artistDiv = document.createElement("div");
-          artistDiv.textContent = artistFirstName;
-          artistDiv.style.fontSize = "14px";
-          artistDiv.style.marginTop = "4px";
-          artistDiv.style.color = isQuarantine ? "#fbbf24" : "#6b7280";
-          offeringContent.appendChild(artistDiv);
-
-          if (artistLastName) {
-            const artistLast = document.createElement("div");
-            artistLast.textContent = artistLastName;
-            artistLast.style.fontSize = "12px";
-            artistLast.style.color = isQuarantine ? "#d4a026" : "#9ca3af";
-            offeringContent.appendChild(artistLast);
-          }
         }
 
         offeringSection.appendChild(offeringTitle);
@@ -1803,53 +1829,35 @@ const ServiceNotificationOverlay = ({
         communionSection.style.marginTop = "16px";
         communionSection.style.padding = "12px";
         communionSection.style.borderRadius = "12px";
-        communionSection.style.backgroundColor = isQuarantine ? "rgba(168, 85, 247, 0.15)" : "#fae8ff";
-        communionSection.style.border = isQuarantine ? "1px solid rgba(168, 85, 247, 0.4)" : "1px solid #e9d5ff";
+        communionSection.style.backgroundColor = isSpecialEvent ? "rgba(192,132,252,0.15)" : isQuarantine ? "rgba(168, 85, 247, 0.15)" : "#fae8ff";
+        communionSection.style.border = isSpecialEvent ? "1px solid rgba(192,132,252,0.4)" : isQuarantine ? "1px solid rgba(168, 85, 247, 0.4)" : "1px solid #e9d5ff";
 
         const communionTitle = document.createElement("div");
         communionTitle.textContent = "Canción de Comunión";
         communionTitle.style.fontSize = "16px";
         communionTitle.style.fontWeight = "bold";
         communionTitle.style.marginBottom = "8px";
-        communionTitle.style.color = isQuarantine ? "#c084fc" : "#6b21a8";
+        communionTitle.style.color = isSpecialEvent ? "#c084fc" : isQuarantine ? "#c084fc" : "#6b21a8";
 
-        const { firstLine, secondLine } = splitSongTitle(communionSongs[0].title);
-        const { firstName: artistFirstName, lastName: artistLastName } = splitName(communionSongs[0].artist || "");
+        const { firstLine: cFirstLine, secondLine: cSecondLine } = splitSongTitle(communionSongs[0].title);
 
         const communionContent = document.createElement("div");
         communionContent.style.paddingLeft = "8px";
 
         const communionFirstLine = document.createElement("div");
-        communionFirstLine.textContent = firstLine;
+        communionFirstLine.textContent = cFirstLine;
         communionFirstLine.style.fontWeight = "bold";
         communionFirstLine.style.fontSize = "16px";
-        communionFirstLine.style.color = isQuarantine ? "#f5f5f5" : "#1f2937";
+        communionFirstLine.style.color = isDark ? "#f5f5f5" : "#1f2937";
 
         communionContent.appendChild(communionFirstLine);
 
-        if (secondLine) {
+        if (cSecondLine) {
           const communionSecondLine = document.createElement("div");
-          communionSecondLine.textContent = secondLine;
+          communionSecondLine.textContent = cSecondLine;
           communionSecondLine.style.fontSize = "16px";
-          communionSecondLine.style.color = isQuarantine ? "#e5e5e5" : "#1f2937";
+          communionSecondLine.style.color = isDark ? "#e5e5e5" : "#1f2937";
           communionContent.appendChild(communionSecondLine);
-        }
-
-        if (communionSongs[0].artist) {
-          const artistDiv = document.createElement("div");
-          artistDiv.textContent = artistFirstName;
-          artistDiv.style.fontSize = "14px";
-          artistDiv.style.marginTop = "4px";
-          artistDiv.style.color = isQuarantine ? "#c084fc" : "#6b7280";
-          communionContent.appendChild(artistDiv);
-
-          if (artistLastName) {
-            const artistLast = document.createElement("div");
-            artistLast.textContent = artistLastName;
-            artistLast.style.fontSize = "12px";
-            artistLast.style.color = isQuarantine ? "#a855f7" : "#9ca3af";
-            communionContent.appendChild(artistLast);
-          }
         }
 
         communionSection.appendChild(communionTitle);
@@ -1857,117 +1865,268 @@ const ServiceNotificationOverlay = ({
         songsSection.appendChild(communionSection);
       }
 
-      // Voices Section con mejor estructura
+      // Voices Section
       const voicesSection = document.createElement("div");
 
-      const voicesTitle = document.createElement("h3");
-      voicesTitle.textContent = "Responsables de Voces";
-      voicesTitle.style.fontSize = "20px";
-      voicesTitle.style.fontWeight = "bold";
-      voicesTitle.style.marginBottom = "20px";
-      voicesTitle.style.textAlign = "center";
-      voicesTitle.style.textDecoration = "underline";
-      voicesTitle.style.color = isQuarantine ? "#fbbf24" : "#1e40af";
+      if (isSpecialEvent) {
+        // SPECIAL EVENT: Show all members grouped by group
+        const voicesTitle = document.createElement("h3");
+        voicesTitle.textContent = "Integrantes del Ministerio";
+        voicesTitle.style.fontSize = "20px";
+        voicesTitle.style.fontWeight = "bold";
+        voicesTitle.style.marginBottom = "20px";
+        voicesTitle.style.textAlign = "center";
+        voicesTitle.style.textDecoration = "underline";
+        voicesTitle.style.color = "#fecdd3";
+        voicesSection.appendChild(voicesTitle);
 
-      voicesSection.appendChild(voicesTitle);
+        const groupColorMap: Record<string, string> = {
+          "Grupo de Aleida": "#3B82F6",
+          "Grupo de Keyla": "#8B5CF6",
+          "Grupo de Massy": "#EC4899",
+        };
 
-      const responsibleVoices = getResponsibleVoices(service.group_members).slice(0, 6);
+        const allVoices = getResponsibleVoices(service.group_members);
 
-      if (responsibleVoices.length > 0) {
-        const voicesList = document.createElement("div");
-        voicesList.style.display = "flex";
-        voicesList.style.flexDirection = "column";
-        voicesList.style.gap = "16px";
+        ["Grupo de Aleida", "Grupo de Keyla", "Grupo de Massy"].forEach(groupKey => {
+          const groupMembers = allVoices.filter(m => m.instrument?.includes(groupKey));
+          if (groupMembers.length === 0) return;
 
-        responsibleVoices.forEach((member) => {
-          const { firstName, lastName } = splitName(member.profiles?.full_name || "");
+          // Group container
+          const groupContainer = document.createElement("div");
+          groupContainer.style.marginBottom = "20px";
+          groupContainer.style.padding = "16px";
+          groupContainer.style.borderRadius = "12px";
+          groupContainer.style.background = "rgba(255,255,255,0.05)";
+          groupContainer.style.border = "1px solid rgba(255,255,255,0.1)";
 
-          const voiceItem = document.createElement("div");
-          voiceItem.style.display = "flex";
-          voiceItem.style.alignItems = "center";
-          voiceItem.style.gap = "16px";
-          voiceItem.style.padding = "12px";
-          voiceItem.style.borderRadius = "12px";
-          voiceItem.style.backgroundColor = isQuarantine ? "rgba(251, 191, 36, 0.1)" : "#dbeafe";
-          voiceItem.style.border = isQuarantine ? "1px solid rgba(251, 191, 36, 0.3)" : "1px solid #93c5fd";
+          // Group label
+          const groupLabel = document.createElement("span");
+          groupLabel.textContent = groupKey;
+          groupLabel.style.display = "inline-block";
+          groupLabel.style.padding = "4px 12px";
+          groupLabel.style.borderRadius = "9999px";
+          groupLabel.style.fontSize = "14px";
+          groupLabel.style.fontWeight = "600";
+          groupLabel.style.color = "white";
+          groupLabel.style.backgroundColor = groupColorMap[groupKey] || "#3B82F6";
+          groupLabel.style.marginBottom = "12px";
+          groupContainer.appendChild(groupLabel);
 
-          // Voice Avatar
-          const voiceAvatar = document.createElement("div");
-          voiceAvatar.style.width = "60px";
-          voiceAvatar.style.height = "60px";
-          voiceAvatar.style.borderRadius = "50%";
-          voiceAvatar.style.border = isQuarantine ? "3px solid #fbbf24" : "3px solid #93c5fd";
-          voiceAvatar.style.overflow = "hidden";
-          voiceAvatar.style.background = isQuarantine 
-            ? "linear-gradient(to right, #f59e0b, #d97706)" 
-            : "linear-gradient(to right, #3b82f6, #2563eb)";
-          voiceAvatar.style.display = "flex";
-          voiceAvatar.style.alignItems = "center";
-          voiceAvatar.style.justifyContent = "center";
-          voiceAvatar.style.color = "white";
-          voiceAvatar.style.fontWeight = "bold";
-          voiceAvatar.style.fontSize = "18px";
-          voiceAvatar.style.flexShrink = "0";
+          // Members grid (2 columns)
+          const membersGrid = document.createElement("div");
+          membersGrid.style.display = "grid";
+          membersGrid.style.gridTemplateColumns = "1fr 1fr";
+          membersGrid.style.gap = "12px";
 
-          const voiceImg = document.createElement("img");
-          voiceImg.src = member.profiles?.photo_url || "";
-          voiceImg.style.width = "100%";
-          voiceImg.style.height = "100%";
-          voiceImg.style.objectFit = "cover";
-          voiceImg.onerror = () => {
-            voiceImg.style.display = "none";
-            const initials = document.createElement("div");
-            initials.textContent = getInitials(member.profiles?.full_name || "NN");
-            initials.style.display = "flex";
-            initials.style.alignItems = "center";
-            initials.style.justifyContent = "center";
-            initials.style.width = "100%";
-            initials.style.height = "100%";
-            voiceAvatar.appendChild(initials);
-          };
+          groupMembers.forEach(member => {
+            const { firstName, lastName } = splitName(member.profiles?.full_name || "");
 
-          voiceAvatar.appendChild(voiceImg);
+            const memberItem = document.createElement("div");
+            memberItem.style.display = "flex";
+            memberItem.style.alignItems = "center";
+            memberItem.style.gap = "10px";
 
-          // Voice Info
-          const voiceInfo = document.createElement("div");
-          voiceInfo.style.flex = "1";
-          voiceInfo.style.minWidth = "0";
+            // Avatar
+            const avatar = document.createElement("div");
+            avatar.style.width = "44px";
+            avatar.style.height = "44px";
+            avatar.style.borderRadius = "50%";
+            avatar.style.border = "2px solid rgba(225,29,72,0.5)";
+            avatar.style.overflow = "hidden";
+            avatar.style.background = "linear-gradient(to right, #E11D48, #BE123C)";
+            avatar.style.display = "flex";
+            avatar.style.alignItems = "center";
+            avatar.style.justifyContent = "center";
+            avatar.style.color = "white";
+            avatar.style.fontWeight = "bold";
+            avatar.style.fontSize = "14px";
+            avatar.style.flexShrink = "0";
 
-          const voiceName = document.createElement("div");
-          voiceName.textContent = firstName;
-          voiceName.style.fontWeight = "bold";
-          voiceName.style.fontSize = "18px";
-          voiceName.style.marginBottom = "2px";
-          voiceName.style.color = isQuarantine ? "#f5f5f5" : "#1f2937";
+            const img = document.createElement("img");
+            img.src = member.profiles?.photo_url || "";
+            img.style.width = "100%";
+            img.style.height = "100%";
+            img.style.objectFit = "cover";
+            img.onerror = () => {
+              img.style.display = "none";
+              const init = document.createElement("div");
+              init.textContent = getInitials(member.profiles?.full_name || "NN");
+              init.style.display = "flex";
+              init.style.alignItems = "center";
+              init.style.justifyContent = "center";
+              init.style.width = "100%";
+              init.style.height = "100%";
+              avatar.appendChild(init);
+            };
+            avatar.appendChild(img);
 
-          voiceInfo.appendChild(voiceName);
+            // Info
+            const info = document.createElement("div");
+            info.style.minWidth = "0";
+            info.style.flex = "1";
 
-          if (lastName) {
-            const voiceLastName = document.createElement("div");
-            voiceLastName.textContent = lastName;
-            voiceLastName.style.fontSize = "16px";
-            voiceLastName.style.marginBottom = "4px";
-            voiceLastName.style.color = isQuarantine ? "#d4d4d4" : "#6b7280";
-            voiceInfo.appendChild(voiceLastName);
-          }
+            const nameEl = document.createElement("div");
+            nameEl.textContent = firstName;
+            nameEl.style.fontWeight = "600";
+            nameEl.style.fontSize = "14px";
+            nameEl.style.color = "white";
+            nameEl.style.overflow = "hidden";
+            nameEl.style.textOverflow = "ellipsis";
+            nameEl.style.whiteSpace = "nowrap";
+            info.appendChild(nameEl);
 
-          const voiceInstrument = document.createElement("div");
-          voiceInstrument.textContent = member.instrument;
-          voiceInstrument.style.fontSize = "16px";
-          voiceInstrument.style.fontWeight = "600";
-          voiceInstrument.style.color = isQuarantine ? "#fbbf24" : "#3b82f6";
+            if (lastName) {
+              const lastNameEl = document.createElement("div");
+              lastNameEl.textContent = lastName;
+              lastNameEl.style.fontSize = "12px";
+              lastNameEl.style.color = "rgba(255,255,255,0.5)";
+              lastNameEl.style.overflow = "hidden";
+              lastNameEl.style.textOverflow = "ellipsis";
+              lastNameEl.style.whiteSpace = "nowrap";
+              info.appendChild(lastNameEl);
+            }
 
-          voiceInfo.appendChild(voiceInstrument);
+            const voiceType = document.createElement("div");
+            voiceType.textContent = member.instrument?.split(' • ')[0] || "";
+            voiceType.style.fontSize = "12px";
+            voiceType.style.color = "#fda4af";
+            info.appendChild(voiceType);
 
-          voiceItem.appendChild(voiceAvatar);
-          voiceItem.appendChild(voiceInfo);
-          voicesList.appendChild(voiceItem);
+            memberItem.appendChild(avatar);
+            memberItem.appendChild(info);
+            membersGrid.appendChild(memberItem);
+          });
+
+          groupContainer.appendChild(membersGrid);
+          voicesSection.appendChild(groupContainer);
         });
+      } else {
+        // Regular service: show responsible voices
+        const voicesTitle = document.createElement("h3");
+        voicesTitle.textContent = "Responsables de Voces";
+        voicesTitle.style.fontSize = "20px";
+        voicesTitle.style.fontWeight = "bold";
+        voicesTitle.style.marginBottom = "20px";
+        voicesTitle.style.textAlign = "center";
+        voicesTitle.style.textDecoration = "underline";
+        voicesTitle.style.color = isQuarantine ? "#fbbf24" : "#1e40af";
 
-        voicesSection.appendChild(voicesList);
+        voicesSection.appendChild(voicesTitle);
+
+        const responsibleVoices = getResponsibleVoices(service.group_members).slice(0, 6);
+
+        if (responsibleVoices.length > 0) {
+          const voicesList = document.createElement("div");
+          voicesList.style.display = "flex";
+          voicesList.style.flexDirection = "column";
+          voicesList.style.gap = "16px";
+
+          responsibleVoices.forEach((member) => {
+            const { firstName, lastName } = splitName(member.profiles?.full_name || "");
+
+            const voiceItem = document.createElement("div");
+            voiceItem.style.display = "flex";
+            voiceItem.style.alignItems = "center";
+            voiceItem.style.gap = "16px";
+            voiceItem.style.padding = "12px";
+            voiceItem.style.borderRadius = "12px";
+            voiceItem.style.backgroundColor = isQuarantine ? "rgba(251, 191, 36, 0.1)" : "#dbeafe";
+            voiceItem.style.border = isQuarantine ? "1px solid rgba(251, 191, 36, 0.3)" : "1px solid #93c5fd";
+
+            const voiceAvatar = document.createElement("div");
+            voiceAvatar.style.width = "60px";
+            voiceAvatar.style.height = "60px";
+            voiceAvatar.style.borderRadius = "50%";
+            voiceAvatar.style.border = isQuarantine ? "3px solid #fbbf24" : "3px solid #93c5fd";
+            voiceAvatar.style.overflow = "hidden";
+            voiceAvatar.style.background = isQuarantine 
+              ? "linear-gradient(to right, #f59e0b, #d97706)" 
+              : "linear-gradient(to right, #3b82f6, #2563eb)";
+            voiceAvatar.style.display = "flex";
+            voiceAvatar.style.alignItems = "center";
+            voiceAvatar.style.justifyContent = "center";
+            voiceAvatar.style.color = "white";
+            voiceAvatar.style.fontWeight = "bold";
+            voiceAvatar.style.fontSize = "18px";
+            voiceAvatar.style.flexShrink = "0";
+
+            const voiceImg = document.createElement("img");
+            voiceImg.src = member.profiles?.photo_url || "";
+            voiceImg.style.width = "100%";
+            voiceImg.style.height = "100%";
+            voiceImg.style.objectFit = "cover";
+            voiceImg.onerror = () => {
+              voiceImg.style.display = "none";
+              const initials = document.createElement("div");
+              initials.textContent = getInitials(member.profiles?.full_name || "NN");
+              initials.style.display = "flex";
+              initials.style.alignItems = "center";
+              initials.style.justifyContent = "center";
+              initials.style.width = "100%";
+              initials.style.height = "100%";
+              voiceAvatar.appendChild(initials);
+            };
+
+            voiceAvatar.appendChild(voiceImg);
+
+            const voiceInfo = document.createElement("div");
+            voiceInfo.style.flex = "1";
+            voiceInfo.style.minWidth = "0";
+
+            const voiceName = document.createElement("div");
+            voiceName.textContent = firstName;
+            voiceName.style.fontWeight = "bold";
+            voiceName.style.fontSize = "18px";
+            voiceName.style.marginBottom = "2px";
+            voiceName.style.color = isQuarantine ? "#f5f5f5" : "#1f2937";
+
+            voiceInfo.appendChild(voiceName);
+
+            if (lastName) {
+              const voiceLastName = document.createElement("div");
+              voiceLastName.textContent = lastName;
+              voiceLastName.style.fontSize = "16px";
+              voiceLastName.style.marginBottom = "4px";
+              voiceLastName.style.color = isQuarantine ? "#d4d4d4" : "#6b7280";
+              voiceInfo.appendChild(voiceLastName);
+            }
+
+            const voiceInstrument = document.createElement("div");
+            voiceInstrument.textContent = member.instrument;
+            voiceInstrument.style.fontSize = "16px";
+            voiceInstrument.style.fontWeight = "600";
+            voiceInstrument.style.color = isQuarantine ? "#fbbf24" : "#3b82f6";
+
+            voiceInfo.appendChild(voiceInstrument);
+
+            voiceItem.appendChild(voiceAvatar);
+            voiceItem.appendChild(voiceInfo);
+            voicesList.appendChild(voiceItem);
+          });
+
+          voicesSection.appendChild(voicesList);
+        }
       }
 
-      // Assemble container con mejor espaciado
+      // Footer for special events
+      if (isSpecialEvent) {
+        const footer = document.createElement("div");
+        footer.style.marginTop = "24px";
+        footer.style.textAlign = "center";
+        footer.style.padding = "12px";
+        footer.style.borderTop = "1px solid rgba(253,164,175,0.2)";
+        
+        const footerText = document.createElement("p");
+        footerText.textContent = "Ministerio de Alabanza Arca de Noé • " + format(new Date(), 'yyyy');
+        footerText.style.fontSize = "12px";
+        footerText.style.color = "rgba(255,255,255,0.4)";
+        footer.appendChild(footerText);
+        
+        voicesSection.appendChild(footer);
+      }
+
+      // Assemble container
       container.appendChild(header);
       container.appendChild(serviceInfo);
       container.appendChild(directorSection);
