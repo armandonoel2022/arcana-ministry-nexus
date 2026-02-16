@@ -1,8 +1,9 @@
 import React from 'react';
-import { X, Music, Calendar, Clock } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { X, Calendar, Clock, Users, Flame } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import arcanaLogo from '@/assets/arca-noe-logo.png';
 
 interface ExtraordinaryRehearsalOverlayProps {
   activityName: string;
@@ -10,6 +11,7 @@ interface ExtraordinaryRehearsalOverlayProps {
   time: string;
   location?: string;
   additionalNotes?: string;
+  specialEventName?: string;
   onClose: () => void;
 }
 
@@ -19,11 +21,11 @@ const ExtraordinaryRehearsalOverlay = ({
   time,
   location,
   additionalNotes,
+  specialEventName,
   onClose 
 }: ExtraordinaryRehearsalOverlayProps) => {
   const formattedDate = format(new Date(date), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
   
-  // Convertir hora de formato 24h a 12h con AM/PM
   const formatTime = (time24: string) => {
     if (!time24) return "";
     const [hours, minutes] = time24.split(':');
@@ -34,69 +36,120 @@ const ExtraordinaryRehearsalOverlay = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-      <Card className="w-full max-w-2xl bg-indigo-500 border-2 border-indigo-400 shadow-2xl">
-        <div className="relative p-8">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-            aria-label="Cerrar"
-          >
-            <X className="w-5 h-5" />
-          </button>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+      <div className="w-full max-w-md bg-gradient-to-b from-amber-700 via-amber-800 to-amber-900 rounded-3xl shadow-2xl relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/4" />
+        <div className="absolute bottom-20 left-0 w-32 h-32 bg-white/10 rounded-full -translate-x-1/2" />
+        <div className="absolute top-1/2 right-0 w-24 h-24 bg-amber-500/20 rounded-full translate-x-1/2" />
 
-          <div className="flex items-center gap-4 mb-6">
-            <Music className="w-16 h-16 text-white" />
-            <div>
-              <p className="text-sm font-medium text-white opacity-90">Ensayo Extraordinario</p>
-              <h2 className="text-3xl font-bold mt-1 text-white">{activityName}</h2>
+        {/* Close button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClose}
+          className="absolute top-4 right-4 rounded-full text-white/80 hover:text-white hover:bg-white/20 z-10"
+        >
+          <X className="w-5 h-5" />
+        </Button>
+
+        {/* Header */}
+        <div className="relative p-6 pb-4">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden">
+              <img src={arcanaLogo} alt="Logo" className="w-14 h-14 object-contain" />
+            </div>
+            <div className="flex-1">
+              <p className="text-amber-200/90 text-sm font-medium uppercase tracking-wide">Ensayo Extraordinario</p>
+              <div className="flex items-center gap-2 mt-1">
+                <Users className="w-4 h-4 text-amber-300" />
+                <span className="text-amber-200 text-xs font-semibold">TODOS LOS GRUPOS</span>
+              </div>
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="p-6 rounded-lg bg-white shadow-md space-y-4">
-              <div className="flex items-start gap-3">
-                <Calendar className="w-6 h-6 flex-shrink-0 mt-0.5 text-indigo-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Fecha</p>
-                  <p className="text-xl font-semibold text-gray-800 capitalize">{formattedDate}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <Clock className="w-6 h-6 flex-shrink-0 mt-0.5 text-indigo-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Hora</p>
-                  <p className="text-xl font-semibold text-gray-800">{formatTime(time)}</p>
-                </div>
-              </div>
-
-              {location && (
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl flex-shrink-0">📍</span>
-                  <div>
-                    <p className="text-sm text-gray-600">Lugar</p>
-                    <p className="text-xl font-semibold text-gray-800">{location}</p>
-                  </div>
-                </div>
-              )}
-
-              {additionalNotes && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="text-sm text-gray-600 mb-2">Notas adicionales</p>
-                  <p className="text-base leading-relaxed whitespace-pre-wrap text-gray-700">{additionalNotes}</p>
-                </div>
-              )}
+          {/* Icon */}
+          <div className="flex justify-center mb-4">
+            <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center shadow-lg">
+              <Flame className="w-10 h-10 text-amber-200" />
             </div>
           </div>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-white opacity-90">
-              Tu asistencia es importante • Confirma tu participación
-            </p>
+          {/* Title */}
+          <h2 className="text-2xl md:text-3xl font-bold text-white text-center leading-tight">
+            {activityName}
+          </h2>
+
+          {specialEventName && (
+            <div className="mt-3 flex justify-center">
+              <span className="bg-amber-500/30 text-amber-100 text-xs font-semibold px-4 py-1.5 rounded-full border border-amber-400/30">
+                🌟 {specialEventName}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Details card */}
+        <div className="px-6">
+          <div className="bg-white/90 rounded-2xl p-5 shadow-lg space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-amber-700" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Fecha</p>
+                <p className="font-semibold text-gray-800 capitalize">{formattedDate}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                <Clock className="w-5 h-5 text-amber-700" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Hora</p>
+                <p className="font-semibold text-gray-800">{formatTime(time)}</p>
+              </div>
+            </div>
+
+            {location && (
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                  <span className="text-lg">📍</span>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Lugar</p>
+                  <p className="font-semibold text-gray-800">{location}</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      </Card>
+
+        {/* Motivational message */}
+        <div className="px-6 mt-4">
+          <div className="bg-white/15 rounded-xl p-4 border border-amber-400/20">
+            <p className="text-amber-100 text-center text-sm leading-relaxed">
+              🙏 Recordemos que la adoración requiere preparación.
+            </p>
+            {additionalNotes && (
+              <p className="text-white/80 text-center text-sm mt-2 leading-relaxed whitespace-pre-wrap">
+                {additionalNotes}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Action button */}
+        <div className="p-6 pt-5">
+          <Button
+            onClick={onClose}
+            className="w-full bg-white/20 hover:bg-white/30 text-white border-2 border-white/30 py-6 text-lg font-semibold rounded-xl shadow-lg backdrop-blur-sm"
+          >
+            ¡Entendido!
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
