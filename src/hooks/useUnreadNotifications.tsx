@@ -14,18 +14,19 @@ export const useUnreadNotifications = () => {
 
     const fetchUnreadCount = async () => {
       try {
-        const { data, error } = await supabase
+        // Contar notificaciones personales (recipient_id = user.id) Y broadcast (recipient_id IS NULL)
+        const { count, error } = await supabase
           .from("system_notifications")
-          .select("id", { count: "exact" })
+          .select("id", { count: "exact", head: true })
           .eq("is_read", false)
-          .eq("recipient_id", user.id);
+          .or(`recipient_id.eq.${user.id},recipient_id.is.null`);
 
         if (error) {
           console.error("Error fetching unread notifications:", error);
           return;
         }
 
-        setUnreadCount(data?.length || 0);
+        setUnreadCount(count || 0);
       } catch (error) {
         console.error("Error in fetchUnreadCount:", error);
       }
@@ -33,7 +34,7 @@ export const useUnreadNotifications = () => {
 
     fetchUnreadCount();
 
-    // Suscribirse a cambios en tiempo real - solo para este usuario
+    // Suscribirse a cambios en tiempo real - notificaciones personales Y broadcast
     const channel = supabase
       .channel(`notifications-changes-${user.id}`)
       .on(
@@ -43,6 +44,18 @@ export const useUnreadNotifications = () => {
           schema: "public",
           table: "system_notifications",
           filter: `recipient_id=eq.${user.id}`,
+        },
+        () => {
+          fetchUnreadCount();
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "system_notifications",
+          filter: `recipient_id=is.null`,
         },
         () => {
           fetchUnreadCount();
