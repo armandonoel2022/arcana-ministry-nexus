@@ -5,7 +5,6 @@ import { X, Lightbulb, Download, Share2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { createBroadcastNotification } from '@/services/notificationService';
 
 interface DailyAdviceOverlayProps {
   title?: string;
@@ -19,38 +18,10 @@ export const DailyAdviceOverlay = ({ title: propTitle, message: propMessage, ski
   const [title, setTitle] = useState(propTitle || '');
   const [message, setMessage] = useState(propMessage || '');
   const [loading, setLoading] = useState(!propTitle);
-  const [notificationSaved, setNotificationSaved] = useState(false);
 
-  // Guardar notificación cuando tenemos los datos del consejo
-  // Solo si no viene del centro de notificaciones (skipSaveNotification = false)
-  useEffect(() => {
-    const saveNotification = async () => {
-      if (title && message && !notificationSaved && !skipSaveNotification) {
-        try {
-          console.log("💡 [DailyAdviceOverlay] Guardando consejo en centro de notificaciones...");
-          
-          await createBroadcastNotification({
-            type: 'daily_advice',
-            title: `Consejo del Día: ${title}`,
-            message: message,
-            metadata: {
-              advice_title: title,
-              advice_message: message,
-              saved_from_overlay: true,
-            },
-            showOverlay: false,
-          });
-          
-          setNotificationSaved(true);
-          console.log("💡 [DailyAdviceOverlay] ✅ Consejo guardado en notificaciones");
-        } catch (error) {
-          console.error("💡 [DailyAdviceOverlay] Error guardando notificación:", error);
-        }
-      }
-    };
-
-    saveNotification();
-  }, [title, message, notificationSaved, skipSaveNotification]);
+  // NOTA: Ya NO se crea notificación desde el overlay.
+  // La notificación ya existe en system_notifications (creada por el sistema programado/edge function).
+  // Crear otra aquí causaba duplicados.
 
   // Auto-cargar consejo si no se proporcionaron props
   useEffect(() => {
