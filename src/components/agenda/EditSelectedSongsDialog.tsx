@@ -14,8 +14,10 @@ interface SelectedSong {
   song_title: string;
   artist?: string;
   key_signature?: string;
+  preferred_key?: string;
   difficulty_level?: number;
   selected_by_name: string;
+  selected_by?: string;
   selection_reason?: string;
   selected_at: string;
   category?: string;
