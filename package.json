@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@11labs/react": "^0.2.0",
+    "@capacitor/browser": "^8.0.1",
     "@capacitor/core": "^8.0.0",
     "@capacitor/local-notifications": "^8.0.0",
     "@capacitor/preferences": "^8.0.0",

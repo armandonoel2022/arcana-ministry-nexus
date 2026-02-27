@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Music, User, Key, Clock, Star, ExternalLink, Play, Youtube } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { openExternalUrl } from "@/utils/openExternal";
 import { toast } from "sonner";
 
 interface Song {
@@ -182,7 +183,7 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
                       <div className="flex flex-wrap gap-3">
                         {song.youtube_link && (
                           <Button
-                            onClick={() => window.open(song.youtube_link, '_blank')}
+                            onClick={() => openExternalUrl(song.youtube_link!)}
                             className="bg-red-600 hover:bg-red-700 text-white rounded-full px-6"
                           >
                             <Youtube className="w-5 h-5 mr-2" />
@@ -191,7 +192,7 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
                         )}
                         {song.spotify_link && (
                           <Button
-                            onClick={() => window.open(song.spotify_link, '_blank')}
+                            onClick={() => openExternalUrl(song.spotify_link!)}
                             className="bg-green-600 hover:bg-green-700 text-white rounded-full px-6"
                           >
                             <Music className="w-5 h-5 mr-2" />
@@ -211,7 +212,7 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
                         {song.sheet_music_url && (
                           <Button
                             variant="outline"
-                            onClick={() => window.open(song.sheet_music_url, '_blank')}
+                            onClick={() => openExternalUrl(song.sheet_music_url!)}
                             className="rounded-full px-6"
                           >
                             <FileText className="w-5 h-5 mr-2" />
