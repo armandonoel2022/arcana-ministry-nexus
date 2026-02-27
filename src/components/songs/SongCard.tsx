@@ -9,6 +9,7 @@ import SongSelectionDialog from './SongSelectionDialog';
 import SongSelectionIndicator from './SongSelectionIndicator';
 import EditSongDialog from './EditSongDialog';
 import { openExternalUrl } from '@/utils/openExternal';
+import YouTubePlayerModal from './YouTubePlayerModal';
 
 interface Song {
   id: string;
@@ -155,14 +156,15 @@ const SongCard: React.FC<SongCardProps> = ({ song }) => {
         <div className="flex items-center justify-between gap-2 pt-2 border-t">
           <div className="flex items-center gap-1">
             {song.youtube_link && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => openExternalUrl(song.youtube_link!)}
-                className="h-8 w-8 p-0 hover:bg-red-50"
-              >
-                <Play className="w-4 h-4 text-red-600" />
-              </Button>
+              <YouTubePlayerModal
+                url={song.youtube_link}
+                songTitle={song.title}
+                trigger={
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-red-50">
+                    <Play className="w-4 h-4 text-red-600" />
+                  </Button>
+                }
+              />
             )}
             {song.spotify_link && (
               <Button

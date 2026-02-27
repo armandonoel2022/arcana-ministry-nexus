@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Music, User, Key, Clock, Star, ExternalLink, Play, Youtube } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { openExternalUrl } from "@/utils/openExternal";
+import YouTubePlayerModal from "./YouTubePlayerModal";
 import { toast } from "sonner";
 
 interface Song {
@@ -182,13 +183,16 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
                       {/* Streaming Links */}
                       <div className="flex flex-wrap gap-3">
                         {song.youtube_link && (
-                          <Button
-                            onClick={() => openExternalUrl(song.youtube_link!)}
-                            className="bg-red-600 hover:bg-red-700 text-white rounded-full px-6"
-                          >
-                            <Youtube className="w-5 h-5 mr-2" />
-                            YouTube
-                          </Button>
+                          <YouTubePlayerModal
+                            url={song.youtube_link}
+                            songTitle={song.title}
+                            trigger={
+                              <Button className="bg-red-600 hover:bg-red-700 text-white rounded-full px-6">
+                                <Youtube className="w-5 h-5 mr-2" />
+                                YouTube
+                              </Button>
+                            }
+                          />
                         )}
                         {song.spotify_link && (
                           <Button
