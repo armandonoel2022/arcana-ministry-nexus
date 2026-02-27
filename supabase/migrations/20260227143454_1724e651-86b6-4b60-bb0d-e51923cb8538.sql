@@ -1,0 +1,1 @@
+UPDATE songs SET category = 'himnario' WHERE category = 'general' AND title ~ '^\d';
