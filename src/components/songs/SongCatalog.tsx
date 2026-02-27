@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Search, Grid, List, Filter, Music, Clock, User, Tag } from 'lucide-react';
+import { Search, Grid, List, Filter, Music, Clock, User, Tag, Hash } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import SongCard from './SongCard';
 import SongListItem from './SongListItem';
+import SongLyrics from './SongLyrics';
 import SongPagination from './SongPagination';
 
 interface Song {
@@ -35,7 +36,11 @@ interface SongCatalogProps {
 }
 
 const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initialSearch = '' }) => {
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const getDefaultViewMode = () => {
+    if (category === 'himnario') return 'numbers' as const;
+    return 'list' as const;
+  };
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'numbers'>(getDefaultViewMode());
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [genreFilter, setGenreFilter] = useState('all');
   const [difficultyFilter, setDifficultyFilter] = useState('all');
@@ -176,6 +181,16 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initial
         </div>
 
         <div className="flex items-center gap-2">
+          {category === 'himnario' && (
+            <Button
+              variant={viewMode === 'numbers' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('numbers')}
+              title="Vista numérica"
+            >
+              <Hash className="w-4 h-4" />
+            </Button>
+          )}
           <Button
             variant={viewMode === 'grid' ? 'default' : 'outline'}
             size="sm"
@@ -286,7 +301,24 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initial
       {/* Songs grid/list */}
       {!isLoading && songs.length > 0 && (
         <>
-          {viewMode === 'grid' ? (
+          {viewMode === 'numbers' ? (
+            <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
+              {songs.map((song) => {
+                const numberMatch = song.title.match(/^(\d+)/);
+                const displayNumber = numberMatch ? numberMatch[1] : song.title.substring(0, 3);
+                return (
+                  <SongLyrics key={song.id} songId={song.id}>
+                    <button
+                      className="aspect-square rounded-lg bg-primary/10 hover:bg-primary/30 border border-primary/20 hover:border-primary/50 flex items-center justify-center font-bold text-sm sm:text-base text-primary transition-all duration-200 hover:scale-105 hover:shadow-md"
+                      title={song.title}
+                    >
+                      {displayNumber}
+                    </button>
+                  </SongLyrics>
+                );
+              })}
+            </div>
+          ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {songs.map((song) => (
                 <SongCard key={song.id} song={song} />
