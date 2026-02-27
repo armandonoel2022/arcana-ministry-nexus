@@ -276,7 +276,6 @@ const MembersList = () => {
                       </Badge>
                     )}
                   </div>
-                </div>
 
                 {/* Botones de acción */}
                 <div className="flex items-center gap-1 ml-2 shrink-0">
