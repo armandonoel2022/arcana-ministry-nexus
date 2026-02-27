@@ -300,7 +300,24 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initial
       {/* Songs grid/list */}
       {!isLoading && songs.length > 0 && (
         <>
-          {viewMode === 'grid' ? (
+          {viewMode === 'numbers' ? (
+            <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
+              {songs.map((song) => {
+                const numberMatch = song.title.match(/^(\d+)/);
+                const displayNumber = numberMatch ? numberMatch[1] : song.title.substring(0, 3);
+                return (
+                  <SongLyrics key={song.id} songId={song.id}>
+                    <button
+                      className="aspect-square rounded-lg bg-primary/10 hover:bg-primary/30 border border-primary/20 hover:border-primary/50 flex items-center justify-center font-bold text-sm sm:text-base text-primary transition-all duration-200 hover:scale-105 hover:shadow-md"
+                      title={song.title}
+                    >
+                      {displayNumber}
+                    </button>
+                  </SongLyrics>
+                );
+              })}
+            </div>
+          ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {songs.map((song) => (
                 <SongCard key={song.id} song={song} />
