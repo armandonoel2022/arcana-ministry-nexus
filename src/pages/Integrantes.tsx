@@ -20,8 +20,8 @@ const Integrantes = () => {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-      style={{ background: "var(--gradient-primary)", width: "100vw", maxWidth: "100vw" }}
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden w-full"
+      style={{ background: "var(--gradient-primary)" }}
     >
       <div className="w-full max-w-7xl">
         {/* Header Section con identidad ARCANA */}
