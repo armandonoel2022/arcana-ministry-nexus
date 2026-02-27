@@ -472,6 +472,42 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
               />
             )}
 
+            {/* Key/Tone Selector */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                🎹 Tono para este servicio
+                {directorDefaultKey && (
+                  <span className="text-xs text-muted-foreground ml-2">
+                    (Tu tono habitual: {directorDefaultKey})
+                  </span>
+                )}
+              </label>
+              <Select value={preferredKey} onValueChange={setPreferredKey}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona el tono" />
+                </SelectTrigger>
+                <SelectContent>
+                  <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">Mayores</div>
+                  {MUSICAL_KEYS.filter(k => !k.includes('m')).map((key) => (
+                    <SelectItem key={key} value={key}>
+                      {key} {key === (song.key_signature || 'G') ? '(original)' : ''}
+                      {key === directorDefaultKey ? ' ★' : ''}
+                    </SelectItem>
+                  ))}
+                  <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">Menores</div>
+                  {MUSICAL_KEYS.filter(k => k.includes('m')).map((key) => (
+                    <SelectItem key={key} value={key}>
+                      {key} {key === (song.key_signature || 'G') ? '(original)' : ''}
+                      {key === directorDefaultKey ? ' ★' : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                El tono original de la canción es: {song.key_signature || 'G'}
+              </p>
+            </div>
+
             <div>
               <label className="text-sm font-medium mb-2 block">
                 Notas adicionales (opcional)
