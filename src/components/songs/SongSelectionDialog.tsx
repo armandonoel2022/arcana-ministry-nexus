@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useSongRepetitionCheck, SongRepetitionResult } from '@/hooks/useSongRepetitionCheck';
 import TrafficLightIndicator from './TrafficLightIndicator';
+import { MUSICAL_KEYS } from '@/utils/musicalKeys';
 
 interface Service {
   id: string;
