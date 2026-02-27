@@ -46,7 +46,7 @@ export const usePushRegistration = () => {
           console.log('🔑 [PushReg] Token received:', normalizedToken?.substring(0, 20) + '...');
           currentTokenRef.current = normalizedToken || null;
           
-          if (!token.value) {
+          if (!normalizedToken) {
             console.error('❌ [PushReg] Empty token received');
             return;
           }
@@ -58,7 +58,7 @@ export const usePushRegistration = () => {
             const { error } = await supabase.from('user_devices').upsert(
               {
                 user_id: user.id,
-                device_token: token.value,
+                device_token: normalizedToken,
                 platform: 'ios',
                 is_active: true,
                 last_active: new Date().toISOString(),
