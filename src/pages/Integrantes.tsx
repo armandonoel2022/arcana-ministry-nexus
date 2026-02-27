@@ -179,37 +179,6 @@ const Integrantes = () => {
         </div>
       </div>
 
-      <style>{`
-        /* Asegurar que no haya desbordamiento horizontal */
-        body, html {
-          overflow-x: hidden;
-          width: 100%;
-          margin: 0;
-          padding: 0;
-        }
-
-        /* Responsive Design */
-        @media screen and (max-width: 768px) {
-          .px-4 {
-            padding-left: 16px;
-            padding-right: 16px;
-          }
-        }
-
-        @media screen and (max-width: 480px) {
-          .px-4 {
-            padding-left: 12px;
-            padding-right: 12px;
-          }
-        }
-
-        @media screen and (max-width: 360px) {
-          .px-4 {
-            padding-left: 8px;
-            padding-right: 8px;
-          }
-        }
-      `}</style>
     </div>
   );
 };
