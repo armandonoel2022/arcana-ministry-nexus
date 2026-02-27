@@ -385,9 +385,6 @@ const BirthdayModule = () => {
       {/* Descargar calendario de cumpleaños */}
       <BirthdayCalendarPDF />
 
-      {/* Panel de pruebas para administradores - siempre visible para debugging */}
-      <BirthdayNotificationTest />
-
       {/* Próximos Cumpleaños */}
       <Card>
         <CardHeader className="p-3 sm:p-6">
