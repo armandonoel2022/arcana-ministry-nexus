@@ -37,7 +37,7 @@ const Integrantes = () => {
         <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 w-full border border-gray-200">
           <Tabs defaultValue="view" className="w-full">
             {/* Tabs Responsivos - mismo estilo que Agenda */}
-            <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-5' : 'grid-cols-4'} bg-gray-100/80 backdrop-blur-md border border-gray-200 rounded-xl p-1 h-auto gap-1 mb-4 sm:mb-6`}>
+            <TabsList className={`flex w-full flex-wrap bg-gray-100/80 backdrop-blur-md border border-gray-200 rounded-xl p-1 h-auto gap-1 mb-4 sm:mb-6`}>
               <TabsTrigger
                 value="view"
                 className="flex items-center justify-center gap-1 sm:gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg text-gray-700 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200 flex-1 min-w-0"
