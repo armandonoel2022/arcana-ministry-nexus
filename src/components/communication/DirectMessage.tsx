@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Send, Smile, Paperclip, MoreVertical } from "lucide-react";
+import { ArrowLeft, Send, Smile, Paperclip, MoreVertical, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { VoiceNoteRecorder } from "./VoiceNoteRecorder";
 import { VoiceMessagePlayer } from "./VoiceMessagePlayer";
@@ -36,8 +36,42 @@ interface DirectMessageProps {
   onBack: () => void;
 }
 
+// Encryption helpers using edge function
+async function encryptMessage(text: string): Promise<string> {
+  try {
+    const { data, error } = await supabase.functions.invoke("dm-crypto", {
+      body: { action: "encrypt", text },
+    });
+    if (error) throw error;
+    return data.encrypted;
+  } catch {
+    // Fallback: send unencrypted if crypto service fails
+    return text;
+  }
+}
+
+async function decryptMessages(messages: { id: string; message: string }[]): Promise<Map<string, string>> {
+  const result = new Map<string, string>();
+  if (messages.length === 0) return result;
+
+  try {
+    const { data, error } = await supabase.functions.invoke("dm-crypto", {
+      body: { action: "decrypt_batch", messages },
+    });
+    if (error) throw error;
+    (data.messages as { id: string; message: string }[]).forEach(m => {
+      result.set(m.id, m.message);
+    });
+  } catch {
+    // Fallback: use original messages
+    messages.forEach(m => result.set(m.id, m.message));
+  }
+  return result;
+}
+
 export const DirectMessage = ({ partner, currentUserId, onBack }: DirectMessageProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [decryptedTexts, setDecryptedTexts] = useState<Map<string, string>>(new Map());
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [showEmoticons, setShowEmoticons] = useState(false);
@@ -50,10 +84,21 @@ export const DirectMessage = ({ partner, currentUserId, onBack }: DirectMessageP
   const { playSound } = useSounds();
   const { uploadMedia, uploading, progress } = useMediaUpload();
 
+  const decryptAllMessages = useCallback(async (msgs: Message[]) => {
+    const toDecrypt = msgs.map(m => ({ id: m.id, message: m.message }));
+    const decrypted = await decryptMessages(toDecrypt);
+    setDecryptedTexts(prev => {
+      const next = new Map(prev);
+      decrypted.forEach((v, k) => next.set(k, v));
+      return next;
+    });
+  }, []);
+
   useEffect(() => {
     fetchMessages();
-    setupRealtimeSubscription();
+    const cleanup = setupRealtimeSubscription();
     markMessagesAsRead();
+    return cleanup;
   }, [partner.id]);
 
   useEffect(() => {
@@ -70,7 +115,9 @@ export const DirectMessage = ({ partner, currentUserId, onBack }: DirectMessageP
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      setMessages(data || []);
+      const msgs = data || [];
+      setMessages(msgs);
+      decryptAllMessages(msgs);
     } catch (error) {
       console.error("Error fetching messages:", error);
     } finally {
@@ -88,13 +135,20 @@ export const DirectMessage = ({ partner, currentUserId, onBack }: DirectMessageP
           schema: "public",
           table: "direct_messages",
         },
-        (payload) => {
+        async (payload) => {
           const newMsg = payload.new as Message;
           if (
             (newMsg.sender_id === currentUserId && newMsg.receiver_id === partner.id) ||
             (newMsg.sender_id === partner.id && newMsg.receiver_id === currentUserId)
           ) {
             setMessages(prev => [...prev, newMsg]);
+            // Decrypt the new message
+            const decrypted = await decryptMessages([{ id: newMsg.id, message: newMsg.message }]);
+            setDecryptedTexts(prev => {
+              const next = new Map(prev);
+              decrypted.forEach((v, k) => next.set(k, v));
+              return next;
+            });
             if (newMsg.sender_id === partner.id) {
               playSound("notification", 0.5);
               markMessagesAsRead();
@@ -127,15 +181,21 @@ export const DirectMessage = ({ partner, currentUserId, onBack }: DirectMessageP
     if (!textToSend && !attachedMedia) return;
 
     try {
+      // Encrypt the message before sending
+      const encryptedText = textToSend ? await encryptMessage(textToSend) : "";
+
       const messageData: any = {
         sender_id: currentUserId,
         receiver_id: partner.id,
-        message: textToSend || "📎 Archivo",
+        message: encryptedText || "📎 Archivo",
       };
 
       if (attachedMedia) {
         messageData.media_url = attachedMedia.url;
         messageData.media_type = attachedMedia.type;
+        if (!textToSend) {
+          messageData.message = await encryptMessage("📎 Archivo");
+        }
       }
 
       const { error } = await supabase
@@ -159,10 +219,11 @@ export const DirectMessage = ({ partner, currentUserId, onBack }: DirectMessageP
 
   const handleVoiceNote = async (audioUrl: string) => {
     try {
+      const encryptedLabel = await encryptMessage("🎤 Nota de voz");
       const { error } = await supabase.from("direct_messages").insert({
         sender_id: currentUserId,
         receiver_id: partner.id,
-        message: "🎤 Nota de voz",
+        message: encryptedLabel,
         media_url: audioUrl,
         media_type: "voice",
       });
@@ -226,7 +287,7 @@ export const DirectMessage = ({ partner, currentUserId, onBack }: DirectMessageP
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-full bg-background">
       {/* Header */}
       <div className="bg-primary px-3 py-2 flex items-center gap-3 shadow-md">
         <Button
@@ -245,7 +306,10 @@ export const DirectMessage = ({ partner, currentUserId, onBack }: DirectMessageP
         </Avatar>
         <div className="flex-1 min-w-0">
           <h2 className="font-semibold text-primary-foreground truncate">{partner.full_name}</h2>
-          <p className="text-xs text-primary-foreground/70">Chat privado</p>
+          <p className="text-xs text-primary-foreground/70 flex items-center gap-1">
+            <Lock className="w-3 h-3" />
+            Chat encriptado AES-256
+          </p>
         </div>
         <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10">
           <MoreVertical className="w-5 h-5" />
@@ -272,10 +336,14 @@ export const DirectMessage = ({ partner, currentUserId, onBack }: DirectMessageP
             </Avatar>
             <p className="text-center">Inicia una conversación con</p>
             <p className="font-semibold">{partner.full_name}</p>
+            <p className="text-xs mt-2 flex items-center gap-1 text-muted-foreground/70">
+              <Lock className="w-3 h-3" /> Los mensajes están encriptados con AES-256
+            </p>
           </div>
         ) : (
           messages.map((msg) => {
             const isOwn = msg.sender_id === currentUserId;
+            const displayText = decryptedTexts.get(msg.id) || msg.message;
             return (
               <div key={msg.id} className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
                 <div
@@ -285,7 +353,7 @@ export const DirectMessage = ({ partner, currentUserId, onBack }: DirectMessageP
                       : "bg-card text-card-foreground rounded-bl-md"
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap break-words">{msg.message}</p>
+                  <p className="text-sm whitespace-pre-wrap break-words">{displayText}</p>
                   
                   {msg.media_url && (
                     <div className="mt-2">

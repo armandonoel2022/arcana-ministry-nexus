@@ -14,3 +14,6 @@ verify_jwt = true
 
 [functions.livekit-token]
 verify_jwt = false
+
+[functions.dm-crypto]
+verify_jwt = true
