@@ -18,141 +18,175 @@ const Integrantes = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400">
-      <div className="w-full px-3 py-3 md:px-4 md:py-6 max-w-7xl mx-auto">
+    <div className="w-full min-h-screen bg-white fixed left-0 right-0 top-0 bottom-0 overflow-y-auto">
+      <div className="w-full px-4 max-w-none sm:max-w-7xl sm:mx-auto sm:px-6 py-4">
         {/* Header Section */}
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-8 h-8 md:w-10 md:h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-            <Users className="w-4 h-4 md:w-5 md:h-5 text-white" />
+        <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-arcana-gradient rounded-full flex items-center justify-center flex-shrink-0">
+            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
           </div>
-          <div>
-            <h1 className="text-lg md:text-2xl font-bold text-white">Integrantes del Ministerio</h1>
-            <p className="text-xs md:text-sm text-white/90">Gestión de miembros y roles del ministerio</p>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">Integrantes del Ministerio</h1>
+            <p className="text-xs sm:text-sm text-gray-600 truncate">
+              Gestión de miembros y roles del ministerio
+            </p>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="bg-white rounded-xl shadow-xl overflow-x-auto">
+        {/* Panel de Contenido Principal */}
+        <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 w-full border border-gray-200">
           <Tabs defaultValue="view" className="w-full">
-            {/* Tabs Navigation - Sin padding adicional */}
-            <div className="border-b border-gray-200">
-              <TabsList className="w-full h-auto p-0 bg-transparent flex overflow-x-auto">
-                <TabsTrigger
-                  value="view"
-                  className="flex-1 min-w-[70px] px-2 py-3 data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent text-gray-600 text-xs md:text-sm"
-                >
-                  <Search className="w-3.5 h-3.5 md:w-4 md:h-4 mx-auto" />
-                  <span className="block mt-0.5">Ver</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="add"
-                  className="flex-1 min-w-[70px] px-2 py-3 data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent text-gray-600 text-xs md:text-sm"
-                >
-                  <Plus className="w-3.5 h-3.5 md:w-4 md:h-4 mx-auto" />
-                  <span className="block mt-0.5">Agregar</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="bulk"
-                  className="flex-1 min-w-[70px] px-2 py-3 data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent text-gray-600 text-xs md:text-sm"
-                >
-                  <Database className="w-3.5 h-3.5 md:w-4 md:h-4 mx-auto" />
-                  <span className="block mt-0.5">Lista</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="upload"
-                  className="flex-1 min-w-[70px] px-2 py-3 data-[state=active]:border-b-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent text-gray-600 text-xs md:text-sm"
-                >
-                  <Upload className="w-3.5 h-3.5 md:w-4 md:h-4 mx-auto" />
-                  <span className="block mt-0.5">CSV</span>
-                </TabsTrigger>
-                {isAdmin && (
-                  <TabsTrigger
-                    value="leaves"
-                    className="flex-1 min-w-[70px] px-2 py-3 data-[state=active]:border-b-2 data-[state=active]:border-amber-600 data-[state=active]:text-amber-600 rounded-none bg-transparent text-gray-600 text-xs md:text-sm"
-                  >
-                    <UserMinus className="w-3.5 h-3.5 md:w-4 md:h-4 mx-auto" />
-                    <span className="block mt-0.5">Licencias</span>
-                  </TabsTrigger>
-                )}
-              </TabsList>
-            </div>
-
-            {/* Tab Content - SIN PADDING EXTRA */}
-            <div className="p-0">
-              <TabsContent value="view" className="mt-0">
-                <div className="p-4 md:p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-6 h-6 md:w-8 md:h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Users className="w-3 h-3 md:w-4 md:h-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <h2 className="text-base md:text-lg font-semibold text-gray-900">Directorio de Integrantes</h2>
-                      <p className="text-xs md:text-sm text-gray-600">
-                        Explora y gestiona la información de todos los miembros
-                      </p>
-                    </div>
-                  </div>
-                  <MembersList key={refreshTrigger} />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="add" className="mt-0">
-                <div className="p-4 md:p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-6 h-6 md:w-8 md:h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <UserPlus className="w-3 h-3 md:w-4 md:h-4 text-green-600" />
-                    </div>
-                    <div>
-                      <h2 className="text-base md:text-lg font-semibold text-gray-900">Agregar Nuevo Integrante</h2>
-                      <p className="text-xs md:text-sm text-gray-600">Completa la información del nuevo miembro</p>
-                    </div>
-                  </div>
-                  <AddMemberForm onSuccess={handleDataUpdate} />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="bulk" className="mt-0">
-                <div className="p-4 md:p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-6 h-6 md:w-8 md:h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                      <Database className="w-3 h-3 md:w-4 md:h-4 text-purple-600" />
-                    </div>
-                    <div>
-                      <h2 className="text-base md:text-lg font-semibold text-gray-900">Inserción Masiva</h2>
-                      <p className="text-xs md:text-sm text-gray-600">Agrega múltiples integrantes</p>
-                    </div>
-                  </div>
-                  <BulkMemberInsert onSuccess={handleDataUpdate} />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="upload" className="mt-0">
-                <div className="p-4 md:p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-6 h-6 md:w-8 md:h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                      <Upload className="w-3 h-3 md:w-4 md:h-4 text-orange-600" />
-                    </div>
-                    <div>
-                      <h2 className="text-base md:text-lg font-semibold text-gray-900">Carga Masiva desde CSV</h2>
-                      <p className="text-xs md:text-sm text-gray-600">Importa integrantes desde un archivo CSV</p>
-                    </div>
-                  </div>
-                  <MembersCSVUpload onSuccess={handleDataUpdate} />
-                </div>
-              </TabsContent>
-
+            {/* Tabs Responsivos - mismo estilo que Agenda */}
+            <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-5' : 'grid-cols-4'} bg-gray-100/80 backdrop-blur-md border border-gray-200 rounded-xl p-1 h-auto gap-1 mb-4 sm:mb-6`}>
+              <TabsTrigger
+                value="view"
+                className="flex items-center justify-center gap-1 sm:gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg text-gray-700 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200 flex-1 min-w-0"
+              >
+                <Search className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="truncate">Ver</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="add"
+                className="flex items-center justify-center gap-1 sm:gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg text-gray-700 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200 flex-1 min-w-0"
+              >
+                <Plus className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="truncate">Agregar</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="bulk"
+                className="flex items-center justify-center gap-1 sm:gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg text-gray-700 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200 flex-1 min-w-0"
+              >
+                <Database className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="truncate">Lista</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="upload"
+                className="flex items-center justify-center gap-1 sm:gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg text-gray-700 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200 flex-1 min-w-0"
+              >
+                <Upload className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="truncate">CSV</span>
+              </TabsTrigger>
               {isAdmin && (
-                <TabsContent value="leaves" className="mt-0">
-                  <div className="p-4 md:p-6">
-                    <MemberLeavesTab />
-                  </div>
-                </TabsContent>
+                <TabsTrigger
+                  value="leaves"
+                  className="flex items-center justify-center gap-1 sm:gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:text-amber-600 data-[state=active]:shadow-lg text-gray-700 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200 flex-1 min-w-0"
+                >
+                  <UserMinus className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                  <span className="truncate">Licencias</span>
+                </TabsTrigger>
               )}
-            </div>
+            </TabsList>
+
+            {/* Contenido de los Tabs */}
+            <TabsContent value="view" className="space-y-4 mt-4 w-full">
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 w-full overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-t-xl p-4 sm:p-6 border-b border-blue-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Users className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-blue-900 text-lg sm:text-xl">Directorio de Integrantes</CardTitle>
+                      <CardDescription className="text-blue-700 text-sm">
+                        Explora y gestiona la información de todos los miembros
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 sm:p-6 w-full">
+                  <MembersList key={refreshTrigger} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="add" className="space-y-4 mt-4 w-full">
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 w-full overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-green-50 to-green-100 rounded-t-xl p-4 sm:p-6 border-b border-green-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <UserPlus className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-green-900 text-lg sm:text-xl">Agregar Nuevo Integrante</CardTitle>
+                      <CardDescription className="text-green-700 text-sm">
+                        Completa la información del nuevo miembro
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 sm:p-6 w-full">
+                  <AddMemberForm onSuccess={handleDataUpdate} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="bulk" className="space-y-4 mt-4 w-full">
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 w-full overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-t-xl p-4 sm:p-6 border-b border-purple-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Database className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-purple-900 text-lg sm:text-xl">Inserción Masiva</CardTitle>
+                      <CardDescription className="text-purple-700 text-sm">
+                        Agrega múltiples integrantes
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 sm:p-6 w-full">
+                  <BulkMemberInsert onSuccess={handleDataUpdate} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="upload" className="space-y-4 mt-4 w-full">
+              <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 w-full overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-t-xl p-4 sm:p-6 border-b border-orange-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Upload className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-orange-900 text-lg sm:text-xl">Carga Masiva desde CSV</CardTitle>
+                      <CardDescription className="text-orange-700 text-sm">
+                        Importa integrantes desde un archivo CSV
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 sm:p-6 w-full">
+                  <MembersCSVUpload onSuccess={handleDataUpdate} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {isAdmin && (
+              <TabsContent value="leaves" className="space-y-4 mt-4 w-full">
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 w-full overflow-hidden">
+                  <CardHeader className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-t-xl p-4 sm:p-6 border-b border-amber-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <UserMinus className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <CardTitle className="text-amber-900 text-lg sm:text-xl">Licencias</CardTitle>
+                        <CardDescription className="text-amber-700 text-sm">
+                          Gestión de permisos y licencias de los miembros
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-4 sm:p-6 w-full">
+                    <MemberLeavesTab />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            )}
           </Tabs>
         </div>
       </div>
-
     </div>
   );
 };
