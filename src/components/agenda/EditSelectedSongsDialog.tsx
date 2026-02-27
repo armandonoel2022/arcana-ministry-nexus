@@ -137,14 +137,43 @@ export const EditSelectedSongsDialog: React.FC<EditSelectedSongsDialogProps> = (
   };
 
   const handleGoToSong = (songTitle: string, category?: string) => {
-    // Cerrar el diálogo
     onOpenChange(false);
-    
-    // Navegar al repertorio con la categoría específica si existe
     if (category) {
       navigate(`/repertorio?category=${category}&search=${encodeURIComponent(songTitle)}`);
     } else {
       navigate(`/repertorio?search=${encodeURIComponent(songTitle)}`);
+    }
+  };
+
+  const handleChangeKey = async (songId: string, songTitle: string, newKey: string) => {
+    try {
+      // Update preferred_key in song_selections
+      const { error } = await supabase
+        .from('song_selections')
+        .update({ preferred_key: newKey })
+        .eq('service_id', serviceId)
+        .eq('song_id', songId);
+
+      if (error) throw error;
+
+      // Also save as director's preferred key
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('director_song_keys')
+          .upsert({
+            director_id: user.id,
+            song_id: songId,
+            preferred_key: newKey
+          }, { onConflict: 'director_id,song_id' });
+      }
+
+      toast.success(`Tono de "${songTitle}" cambiado a ${newKey}`);
+      await fetchSelectedSongs();
+      onSongsUpdated?.();
+    } catch (error) {
+      console.error('Error changing key:', error);
+      toast.error('Error al cambiar el tono');
     }
   };
 
