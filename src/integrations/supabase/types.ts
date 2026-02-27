@@ -541,6 +541,44 @@ export type Database = {
           },
         ]
       }
+      director_song_keys: {
+        Row: {
+          created_at: string
+          director_id: string
+          id: string
+          notes: string | null
+          preferred_key: string
+          song_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          director_id: string
+          id?: string
+          notes?: string | null
+          preferred_key: string
+          song_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          director_id?: string
+          id?: string
+          notes?: string | null
+          preferred_key?: string
+          song_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "director_song_keys_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_program_items: {
         Row: {
           created_at: string | null
@@ -1962,6 +2000,7 @@ export type Database = {
           created_at: string
           id: string
           notification_sent: boolean | null
+          preferred_key: string | null
           selected_by: string
           selection_reason: string | null
           service_id: string
@@ -1972,6 +2011,7 @@ export type Database = {
           created_at?: string
           id?: string
           notification_sent?: boolean | null
+          preferred_key?: string | null
           selected_by: string
           selection_reason?: string | null
           service_id: string
@@ -1982,6 +2022,7 @@ export type Database = {
           created_at?: string
           id?: string
           notification_sent?: boolean | null
+          preferred_key?: string | null
           selected_by?: string
           selection_reason?: string | null
           service_id?: string
@@ -2702,8 +2743,10 @@ export type Database = {
       service_selected_songs: {
         Row: {
           artist: string | null
+          category: string | null
           difficulty_level: number | null
           key_signature: string | null
+          preferred_key: string | null
           selected_at: string | null
           selected_by: string | null
           selected_by_name: string | null
