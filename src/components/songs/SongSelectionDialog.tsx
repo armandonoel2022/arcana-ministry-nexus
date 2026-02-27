@@ -209,15 +209,27 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
         .eq('id', user.id)
         .single();
 
-      // Create song selection
+      // Create song selection with preferred key
       const { error: selectionError } = await supabase
         .from('song_selections')
         .insert({
           service_id: selectedService,
           song_id: song.id,
           selected_by: user.id,
-          selection_reason: reason || 'Seleccionada para el servicio'
+          selection_reason: reason || 'Seleccionada para el servicio',
+          preferred_key: preferredKey || song.key_signature || 'G'
         });
+
+      // Save director's preferred key for this song
+      if (preferredKey && preferredKey !== (song.key_signature || 'G')) {
+        await supabase
+          .from('director_song_keys')
+          .upsert({
+            director_id: user.id,
+            song_id: song.id,
+            preferred_key: preferredKey
+          }, { onConflict: 'director_id,song_id' });
+      }
 
       if (selectionError) throw selectionError;
 
