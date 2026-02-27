@@ -3081,6 +3081,7 @@ export type Database = {
         | "agenda_notification"
         | "pregnancy_reveal"
         | "birth_announcement"
+        | "voice_replacement"
       replacement_category: "voice" | "musician" | "multimedia"
       song_knowledge: "unknown" | "learning" | "known" | "expert"
       user_role:
@@ -3326,6 +3327,7 @@ export const Constants = {
         "agenda_notification",
         "pregnancy_reveal",
         "birth_announcement",
+        "voice_replacement",
       ],
       replacement_category: ["voice", "musician", "multimedia"],
       song_knowledge: ["unknown", "learning", "known", "expert"],
