@@ -152,7 +152,7 @@ const SongListItem: React.FC<SongListItemProps> = ({ song }) => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => window.open(song.youtube_link, '_blank')}
+                onClick={() => openExternalUrl(song.youtube_link!)}
                 className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-red-50"
               >
                 <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600" />
@@ -162,7 +162,7 @@ const SongListItem: React.FC<SongListItemProps> = ({ song }) => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => window.open(song.spotify_link, '_blank')}
+                onClick={() => openExternalUrl(song.spotify_link!)}
                 className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-green-50"
               >
                 <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600" />

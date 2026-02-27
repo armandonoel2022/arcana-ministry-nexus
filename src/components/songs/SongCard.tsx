@@ -157,7 +157,7 @@ const SongCard: React.FC<SongCardProps> = ({ song }) => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => window.open(song.youtube_link, '_blank')}
+                onClick={() => openExternalUrl(song.youtube_link!)}
                 className="h-8 w-8 p-0 hover:bg-red-50"
               >
                 <Play className="w-4 h-4 text-red-600" />
@@ -167,7 +167,7 @@ const SongCard: React.FC<SongCardProps> = ({ song }) => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => window.open(song.spotify_link, '_blank')}
+                onClick={() => openExternalUrl(song.spotify_link!)}
                 className="h-8 w-8 p-0 hover:bg-green-50"
               >
                 <ExternalLink className="w-4 h-4 text-green-600" />
