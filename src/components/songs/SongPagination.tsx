@@ -52,7 +52,7 @@ const SongPagination: React.FC<SongPaginationProps> = ({
   const visiblePages = getVisiblePages();
 
   return (
-    <div className="flex justify-center mt-6 sm:mt-8 px-2 sm:px-0">
+    <div className="sticky bottom-0 z-10 flex justify-center py-3 sm:py-4 px-2 sm:px-0 bg-background/95 backdrop-blur-sm border-t mt-6 sm:mt-8 -mx-4 sm:-mx-6 px-4 sm:px-6">
       <Pagination>
         <PaginationContent className="gap-1 sm:gap-2">
           <PaginationItem>
