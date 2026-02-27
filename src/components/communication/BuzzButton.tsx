@@ -105,6 +105,15 @@ export const BuzzButton = ({ currentUserId }: BuzzButtonProps) => {
   const sendBuzz = async (recipientId: string, recipientName: string) => {
     setSending(true);
     try {
+      // Get sender name
+      const { data: senderProfile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", currentUserId)
+        .maybeSingle();
+
+      const senderName = senderProfile?.full_name || "Alguien";
+
       const { error } = await supabase.from("user_buzzes").insert({
         sender_id: currentUserId,
         recipient_id: recipientId,
@@ -113,6 +122,38 @@ export const BuzzButton = ({ currentUserId }: BuzzButtonProps) => {
       });
 
       if (error) throw error;
+
+      // Send native push notification to all recipient's devices
+      try {
+        const { data: devices } = await supabase
+          .from("user_devices")
+          .select("device_token, platform")
+          .eq("user_id", recipientId)
+          .eq("is_active", true);
+
+        if (devices && devices.length > 0) {
+          await Promise.all(
+            devices.map((device) =>
+              supabase.functions.invoke("send-ios-push", {
+                body: {
+                  deviceToken: device.device_token,
+                  title: "⚡ ¡ZUMBIDO!",
+                  body: `${senderName} te ha enviado un zumbido`,
+                  data: {
+                    type: "buzz",
+                    sender_id: currentUserId,
+                  },
+                  badge: 1,
+                },
+              })
+            )
+          );
+          console.log(`📱 Push enviado a ${devices.length} dispositivo(s) de ${recipientName}`);
+        }
+      } catch (pushError) {
+        console.error("Error enviando push de zumbido:", pushError);
+        // No bloquear el flujo si falla el push
+      }
 
       toast({
         title: "⚡ Zumbido enviado",
