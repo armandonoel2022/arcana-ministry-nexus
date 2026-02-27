@@ -186,13 +186,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 }
 
 // ============================================================
-// EXTENSIÓN: Nombres de notificaciones de Capacitor
+// ⚠️ NO agregar extensión de NSNotification.Name aquí
 // ============================================================
-// Estas extensiones aseguran compatibilidad con Capacitor
-
-extension NSNotification.Name {
-    static let capacitorDidRegisterForRemoteNotifications = 
-        NSNotification.Name("CapacitorDidRegisterForRemoteNotifications")
-    static let capacitorDidFailToRegisterForRemoteNotifications = 
-        NSNotification.Name("CapacitorDidFailToRegisterForRemoteNotifications")
-}
+// Capacitor ya define internamente estos nombres de notificación:
+//   - capacitorDidRegisterForRemoteNotifications (c minúscula)
+//   - capacitorDidFailToRegisterForRemoteNotifications (c minúscula)
+//
+// Si defines una extensión con "C" mayúscula, el token NUNCA
+// llegará al JavaScript porque el plugin escucha con "c" minúscula.
+//
+// El framework Capacitor ya importa estas definiciones automáticamente
+// cuando usas `import Capacitor` arriba.
+// ============================================================
