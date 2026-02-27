@@ -235,11 +235,29 @@ export const EditSelectedSongsDialog: React.FC<EditSelectedSongsDialogProps> = (
                     )}
 
                     <div className="flex flex-wrap items-center gap-2 mb-2">
-                      {song.key_signature && (
-                        <Badge variant="outline" className="text-xs">
-                          🎹 {song.key_signature}
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground">🎹 Tono:</span>
+                        <Select
+                          value={song.preferred_key || song.key_signature || 'G'}
+                          onValueChange={(val) => handleChangeKey(song.song_id, song.song_title, val)}
+                        >
+                          <SelectTrigger className="h-7 w-20 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {MUSICAL_KEYS.map((key) => (
+                              <SelectItem key={key} value={key} className="text-xs">
+                                {key} {key === song.key_signature ? '(orig)' : ''}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {song.preferred_key && song.preferred_key !== song.key_signature && (
+                          <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                            orig: {song.key_signature || 'G'}
+                          </Badge>
+                        )}
+                      </div>
                       {song.difficulty_level && (
                         <Badge className={`text-xs ${getDifficultyColor(song.difficulty_level)}`}>
                           {getDifficultyLabel(song.difficulty_level)}
