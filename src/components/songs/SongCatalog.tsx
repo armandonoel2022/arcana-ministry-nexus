@@ -180,6 +180,16 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initial
         </div>
 
         <div className="flex items-center gap-2">
+          {category === 'himnario' && (
+            <Button
+              variant={viewMode === 'numbers' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('numbers')}
+              title="Vista numérica"
+            >
+              <Hash className="w-4 h-4" />
+            </Button>
+          )}
           <Button
             variant={viewMode === 'grid' ? 'default' : 'outline'}
             size="sm"
