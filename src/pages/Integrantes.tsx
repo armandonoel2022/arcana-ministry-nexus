@@ -20,7 +20,7 @@ const Integrantes = () => {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden w-full"
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-x-hidden w-full max-w-full"
       style={{ background: "var(--gradient-primary)" }}
     >
       <div className="w-full max-w-7xl">
