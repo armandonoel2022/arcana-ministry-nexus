@@ -784,13 +784,14 @@ export const usePushNotifications = () => {
             
             PushNotifications.addListener('registration', async (token: { value: string }) => {
               clearTimeout(timeoutId);
-              console.log('📱 [PushNotifications] Force re-register - Token received:', token.value);
+              const normalizedToken = token.value?.toLowerCase();
+              console.log('📱 [PushNotifications] Force re-register - Token received:', normalizedToken);
               
               // Save immediately
-              await saveDeviceToken(token.value, 'native');
-              localStorage.setItem('pending_device_token', token.value);
+              await saveDeviceToken(normalizedToken, 'native');
+              localStorage.setItem('pending_device_token', normalizedToken);
               
-              resolve(token.value);
+              resolve(normalizedToken);
             });
             
             PushNotifications.addListener('registrationError', (error: any) => {
