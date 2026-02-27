@@ -20,7 +20,7 @@ const Integrantes = () => {
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden" style={{ background: "var(--gradient-primary)" }}>
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-4">
+      <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 py-4">
         {/* Header Section con identidad ARCANA */}
         <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
           <div className="w-8 h-8 sm:w-10 sm:h-10 bg-arcana-gradient rounded-full flex items-center justify-center flex-shrink-0">
@@ -35,7 +35,7 @@ const Integrantes = () => {
         </div>
 
         {/* Panel de Contenido Principal */}
-        <div className="bg-white rounded-2xl shadow-xl w-full">
+        <div className="bg-white rounded-2xl shadow-xl w-full overflow-hidden">
           <Tabs defaultValue="view" className="w-full">
             {/* Tabs Responsivos */}
             <div className="p-4 sm:p-6 pb-0">
@@ -83,9 +83,9 @@ const Integrantes = () => {
             </div>
 
             {/* Contenido de los Tabs */}
-            <div className="p-4 sm:p-6 pt-4">
+            <div className="p-3 sm:p-6 pt-4">
               <TabsContent value="view" className="space-y-4 w-full mt-0">
-                <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 w-full overflow-hidden">
+                <Card className="border-0 shadow-lg transition-shadow duration-300 w-full overflow-x-auto">
                   <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-t-xl p-4 sm:p-6 border-b border-blue-200">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -99,14 +99,14 @@ const Integrantes = () => {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="p-4 sm:p-6 w-full">
+                  <CardContent className="p-2 sm:p-6 w-full overflow-x-auto">
                     <MembersList key={refreshTrigger} />
                   </CardContent>
                 </Card>
               </TabsContent>
 
               <TabsContent value="add" className="space-y-4 w-full mt-0">
-                <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 w-full overflow-hidden">
+                <Card className="border-0 shadow-lg transition-shadow duration-300 w-full">
                   <CardHeader className="bg-gradient-to-r from-green-50 to-green-100 rounded-t-xl p-4 sm:p-6 border-b border-green-200">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -127,7 +127,7 @@ const Integrantes = () => {
               </TabsContent>
 
               <TabsContent value="bulk" className="space-y-4 w-full mt-0">
-                <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 w-full overflow-hidden">
+                <Card className="border-0 shadow-lg transition-shadow duration-300 w-full">
                   <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-t-xl p-4 sm:p-6 border-b border-purple-200">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
@@ -148,7 +148,7 @@ const Integrantes = () => {
               </TabsContent>
 
               <TabsContent value="upload" className="space-y-4 w-full mt-0">
-                <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 w-full overflow-hidden">
+                <Card className="border-0 shadow-lg transition-shadow duration-300 w-full">
                   <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-t-xl p-4 sm:p-6 border-b border-orange-200">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
