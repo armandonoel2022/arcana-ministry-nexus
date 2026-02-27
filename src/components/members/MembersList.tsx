@@ -194,43 +194,41 @@ const MembersList = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-        <div className="relative flex-1">
+    <div className="space-y-4 w-full min-w-0">
+      <div className="space-y-3">
+        <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
             placeholder="Buscar integrantes por nombre, cargo o grupo..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-10 w-full"
           />
         </div>
         
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Ordenar por:</span>
-            <Select value={sortOption} onValueChange={(value: SortOption) => setSortOption(value)}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="creation_date">
-                  <div className="flex items-center gap-2">
-                    <ArrowUp className="w-4 h-4" />
-                    Orden de registro
-                  </div>
-                </SelectItem>
-                <SelectItem value="alphabetical">
-                  <div className="flex items-center gap-2">
-                    <ArrowDown className="w-4 h-4" />
-                    Alfabético (A-Z)
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm text-gray-600 shrink-0">Ordenar por:</span>
+          <Select value={sortOption} onValueChange={(value: SortOption) => setSortOption(value)}>
+            <SelectTrigger className="w-auto min-w-[160px] max-w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="creation_date">
+                <div className="flex items-center gap-2">
+                  <ArrowUp className="w-4 h-4" />
+                  Orden de registro
+                </div>
+              </SelectItem>
+              <SelectItem value="alphabetical">
+                <div className="flex items-center gap-2">
+                  <ArrowDown className="w-4 h-4" />
+                  Alfabético (A-Z)
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
           
-          <Badge variant="secondary" className="bg-modern-blue-50 text-modern-blue-600">
+          <Badge variant="secondary" className="bg-modern-blue-50 text-modern-blue-600 shrink-0">
             {filteredMembers.length} integrantes
           </Badge>
         </div>
@@ -238,10 +236,10 @@ const MembersList = () => {
 
       <div className="space-y-2">
         {filteredMembers.map((member) => (
-          <Card key={member.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 flex-1">
+          <Card key={member.id} className="hover:shadow-md transition-shadow overflow-hidden">
+            <CardContent className="py-4 px-3 sm:px-6">
+              <div className="flex items-center gap-2 sm:gap-4">
+                <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
                   {/* Foto */}
                   <div 
                     className="cursor-pointer transition-transform hover:scale-105"
@@ -268,8 +266,8 @@ const MembersList = () => {
                     </h3>
                   </div>
 
-                  {/* Información alineada con ancho fijo */}
-                  <div className="hidden sm:flex flex-col gap-1 w-48">
+                  {/* Información alineada */}
+                  <div className="hidden sm:flex flex-col gap-1 shrink-0">
                     <Badge variant="secondary" className="text-xs w-fit">
                       {getRoleLabel(member.cargo)}
                     </Badge>
@@ -282,7 +280,7 @@ const MembersList = () => {
                 </div>
 
                 {/* Botones de acción */}
-                <div className="flex items-center gap-1 ml-4">
+                <div className="flex items-center gap-1 ml-2 shrink-0">
                   <Button
                     variant="ghost"
                     size="sm"

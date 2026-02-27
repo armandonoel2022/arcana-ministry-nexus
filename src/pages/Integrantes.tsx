@@ -32,7 +32,7 @@ const Integrantes = () => {
         </div>
 
         {/* Main Content */}
-        <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+        <div className="bg-white rounded-xl shadow-xl overflow-x-auto">
           <Tabs defaultValue="view" className="w-full">
             {/* Tabs Navigation - Sin padding adicional */}
             <div className="border-b border-gray-200">
@@ -92,9 +92,7 @@ const Integrantes = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="-mx-4 md:-mx-6 px-4 md:px-6">
-                    <MembersList key={refreshTrigger} />
-                  </div>
+                  <MembersList key={refreshTrigger} />
                 </div>
               </TabsContent>
 
@@ -155,37 +153,6 @@ const Integrantes = () => {
         </div>
       </div>
 
-      <style>{`
-        /* Reset cualquier padding/margin que pueda estar causando problemas */
-        * {
-          box-sizing: border-box;
-        }
-        
-        body, html {
-          overflow-x: hidden;
-          width: 100%;
-          margin: 0;
-          padding: 0;
-        }
-
-        /* Forzar que todo respete el ancho del contenedor */
-        .overflow-x-auto {
-          overflow-x: auto !important;
-          -webkit-overflow-scrolling: touch;
-          width: 100%;
-        }
-
-        /* Asegurar que las tablas no se desborden */
-        table {
-          width: 100%;
-          table-layout: auto;
-          min-width: 100%;
-        }
-
-        td, th {
-          white-space: nowrap;
-        }
-      `}</style>
     </div>
   );
 };
