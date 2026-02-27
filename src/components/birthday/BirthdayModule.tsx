@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format, isToday, isSameDay, parseISO, isSameMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import BirthdayCard from './BirthdayCard';
-import BirthdayNotificationTest from './BirthdayNotificationTest';
+
 import BirthdayCalendarPDF from './BirthdayCalendarPDF';
 import {
   Dialog,
