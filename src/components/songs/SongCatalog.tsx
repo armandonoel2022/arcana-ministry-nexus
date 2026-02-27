@@ -10,6 +10,7 @@ import { Search, Grid, List, Filter, Music, Clock, User, Tag, Hash } from 'lucid
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import SongCard from './SongCard';
 import SongListItem from './SongListItem';
+import SongLyrics from './SongLyrics';
 import SongPagination from './SongPagination';
 
 interface Song {
