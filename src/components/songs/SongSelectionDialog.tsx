@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useSongRepetitionCheck, SongRepetitionResult } from '@/hooks/useSongRepetitionCheck';
 import TrafficLightIndicator from './TrafficLightIndicator';
+import { MUSICAL_KEYS } from '@/utils/musicalKeys';
 
 interface Service {
   id: string;
@@ -47,6 +48,8 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
   const [services, setServices] = useState<Service[]>([]);
   const [selectedService, setSelectedService] = useState('');
   const [reason, setReason] = useState('');
+  const [preferredKey, setPreferredKey] = useState('');
+  const [directorDefaultKey, setDirectorDefaultKey] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [servicesLoaded, setServicesLoaded] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -55,16 +58,31 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
 
   const { checkSongRepetition, isChecking } = useSongRepetitionCheck();
 
-  // Obtener el usuario actual
+  // Obtener el usuario actual y su tono preferido para esta canción
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setCurrentUserId(user.id);
+        // Cargar tono preferido del director para esta canción
+        const { data: dirKey } = await supabase
+          .from('director_song_keys')
+          .select('preferred_key')
+          .eq('director_id', user.id)
+          .eq('song_id', song.id)
+          .maybeSingle();
+        if (dirKey?.preferred_key) {
+          setPreferredKey(dirKey.preferred_key);
+          setDirectorDefaultKey(dirKey.preferred_key);
+        } else {
+          // Usar el tono por defecto de la canción
+          setPreferredKey(song.key_signature || 'G');
+          setDirectorDefaultKey('');
+        }
       }
     };
     getUser();
-  }, []);
+  }, [song.id]);
 
   // Verificar repetición cuando se selecciona un servicio
   useEffect(() => {
@@ -191,15 +209,27 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
         .eq('id', user.id)
         .single();
 
-      // Create song selection
+      // Create song selection with preferred key
       const { error: selectionError } = await supabase
         .from('song_selections')
         .insert({
           service_id: selectedService,
           song_id: song.id,
           selected_by: user.id,
-          selection_reason: reason || 'Seleccionada para el servicio'
+          selection_reason: reason || 'Seleccionada para el servicio',
+          preferred_key: preferredKey || song.key_signature || 'G'
         });
+
+      // Save director's preferred key for this song
+      if (preferredKey && preferredKey !== (song.key_signature || 'G')) {
+        await supabase
+          .from('director_song_keys')
+          .upsert({
+            director_id: user.id,
+            song_id: song.id,
+            preferred_key: preferredKey
+          }, { onConflict: 'director_id,song_id' });
+      }
 
       if (selectionError) throw selectionError;
 
@@ -441,6 +471,42 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
                 showActions={!forceAllow}
               />
             )}
+
+            {/* Key/Tone Selector */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                🎹 Tono para este servicio
+                {directorDefaultKey && (
+                  <span className="text-xs text-muted-foreground ml-2">
+                    (Tu tono habitual: {directorDefaultKey})
+                  </span>
+                )}
+              </label>
+              <Select value={preferredKey} onValueChange={setPreferredKey}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona el tono" />
+                </SelectTrigger>
+                <SelectContent>
+                  <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">Mayores</div>
+                  {MUSICAL_KEYS.filter(k => !k.includes('m')).map((key) => (
+                    <SelectItem key={key} value={key}>
+                      {key} {key === (song.key_signature || 'G') ? '(original)' : ''}
+                      {key === directorDefaultKey ? ' ★' : ''}
+                    </SelectItem>
+                  ))}
+                  <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">Menores</div>
+                  {MUSICAL_KEYS.filter(k => k.includes('m')).map((key) => (
+                    <SelectItem key={key} value={key}>
+                      {key} {key === (song.key_signature || 'G') ? '(original)' : ''}
+                      {key === directorDefaultKey ? ' ★' : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                El tono original de la canción es: {song.key_signature || 'G'}
+              </p>
+            </div>
 
             <div>
               <label className="text-sm font-medium mb-2 block">

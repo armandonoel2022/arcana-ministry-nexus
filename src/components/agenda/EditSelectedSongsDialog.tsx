@@ -2,18 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Music, X, ExternalLink, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { MUSICAL_KEYS } from '@/utils/musicalKeys';
 
 interface SelectedSong {
   song_id: string;
   song_title: string;
   artist?: string;
   key_signature?: string;
+  preferred_key?: string;
   difficulty_level?: number;
   selected_by_name: string;
+  selected_by?: string;
   selection_reason?: string;
   selected_at: string;
   category?: string;
@@ -133,14 +137,43 @@ export const EditSelectedSongsDialog: React.FC<EditSelectedSongsDialogProps> = (
   };
 
   const handleGoToSong = (songTitle: string, category?: string) => {
-    // Cerrar el diálogo
     onOpenChange(false);
-    
-    // Navegar al repertorio con la categoría específica si existe
     if (category) {
       navigate(`/repertorio?category=${category}&search=${encodeURIComponent(songTitle)}`);
     } else {
       navigate(`/repertorio?search=${encodeURIComponent(songTitle)}`);
+    }
+  };
+
+  const handleChangeKey = async (songId: string, songTitle: string, newKey: string) => {
+    try {
+      // Update preferred_key in song_selections
+      const { error } = await supabase
+        .from('song_selections')
+        .update({ preferred_key: newKey })
+        .eq('service_id', serviceId)
+        .eq('song_id', songId);
+
+      if (error) throw error;
+
+      // Also save as director's preferred key
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('director_song_keys')
+          .upsert({
+            director_id: user.id,
+            song_id: songId,
+            preferred_key: newKey
+          }, { onConflict: 'director_id,song_id' });
+      }
+
+      toast.success(`Tono de "${songTitle}" cambiado a ${newKey}`);
+      await fetchSelectedSongs();
+      onSongsUpdated?.();
+    } catch (error) {
+      console.error('Error changing key:', error);
+      toast.error('Error al cambiar el tono');
     }
   };
 
@@ -202,11 +235,29 @@ export const EditSelectedSongsDialog: React.FC<EditSelectedSongsDialogProps> = (
                     )}
 
                     <div className="flex flex-wrap items-center gap-2 mb-2">
-                      {song.key_signature && (
-                        <Badge variant="outline" className="text-xs">
-                          🎹 {song.key_signature}
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground">🎹 Tono:</span>
+                        <Select
+                          value={song.preferred_key || song.key_signature || 'G'}
+                          onValueChange={(val) => handleChangeKey(song.song_id, song.song_title, val)}
+                        >
+                          <SelectTrigger className="h-7 w-20 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {MUSICAL_KEYS.map((key) => (
+                              <SelectItem key={key} value={key} className="text-xs">
+                                {key} {key === song.key_signature ? '(orig)' : ''}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {song.preferred_key && song.preferred_key !== song.key_signature && (
+                          <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                            orig: {song.key_signature || 'G'}
+                          </Badge>
+                        )}
+                      </div>
                       {song.difficulty_level && (
                         <Badge className={`text-xs ${getDifficultyColor(song.difficulty_level)}`}>
                           {getDifficultyLabel(song.difficulty_level)}
