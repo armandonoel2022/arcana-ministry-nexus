@@ -8,6 +8,7 @@ import SongLyrics from './SongLyrics';
 import SongSelectionDialog from './SongSelectionDialog';
 import SongSelectionIndicator from './SongSelectionIndicator';
 import EditSongDialog from './EditSongDialog';
+import { openExternalUrl } from '@/utils/openExternal';
 
 interface Song {
   id: string;
