@@ -3,13 +3,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Search } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Search, UserX } from "lucide-react";
 
 interface Contact {
   id: string;
   full_name: string;
   photo_url: string | null;
   email?: string | null;
+  is_registered: boolean;
 }
 
 interface ContactSelectorProps {
@@ -29,6 +31,7 @@ export const ContactSelector = ({ currentUserId, onSelectContact, onBack }: Cont
 
   const fetchContacts = async () => {
     try {
+      // Fetch all registered profiles
       const { data: profiles } = await supabase
         .from("profiles")
         .select("id, full_name, photo_url, email")
@@ -36,35 +39,77 @@ export const ContactSelector = ({ currentUserId, onSelectContact, onBack }: Cont
         .neq("id", currentUserId)
         .order("full_name");
 
-      // Obtener fotos de members para los que no tienen foto en profiles
+      // Fetch all active members
       const { data: members } = await supabase
         .from("members")
-        .select("email, photo_url, nombres, apellidos")
+        .select("id, nombres, apellidos, photo_url, email, cargo")
         .eq("is_active", true);
 
-      const contactsWithPhotos = (profiles || []).map(profile => {
+      const profilesMap = new Map<string, typeof profiles extends (infer T)[] | null ? T : never>();
+      const matchedMemberIds = new Set<string>();
+
+      // Index profiles by email (lowercase) for matching
+      const profilesByEmail = new Map<string, (typeof profiles extends (infer T)[] | null ? T : never)>();
+      (profiles || []).forEach(p => {
+        profilesMap.set(p.id, p);
+        if (p.email) profilesByEmail.set(p.email.toLowerCase(), p);
+      });
+
+      const allContacts: Contact[] = [];
+
+      // First, add all registered profiles
+      (profiles || []).forEach(profile => {
         let photoUrl = profile.photo_url;
-        
-        // Si no tiene foto en profiles, buscar en members
+
+        // Try to find matching member for photo
         if (!photoUrl && members) {
-          const member = members.find(m => 
+          const member = members.find(m =>
             (m.email && profile.email && m.email.toLowerCase() === profile.email.toLowerCase()) ||
             (profile.full_name && m.nombres && profile.full_name.toLowerCase().includes(m.nombres.toLowerCase()))
           );
-          if (member?.photo_url) {
-            photoUrl = member.photo_url;
-          }
+          if (member?.photo_url) photoUrl = member.photo_url;
+          if (member) matchedMemberIds.add(member.id);
+        } else if (members) {
+          // Still track matched members even if profile has photo
+          const member = members.find(m =>
+            (m.email && profile.email && m.email.toLowerCase() === profile.email.toLowerCase()) ||
+            (profile.full_name && m.nombres && profile.full_name.toLowerCase().includes(m.nombres.toLowerCase()))
+          );
+          if (member) matchedMemberIds.add(member.id);
         }
 
-        return {
+        allContacts.push({
           id: profile.id,
           full_name: profile.full_name,
           photo_url: photoUrl,
-          email: profile.email
-        };
+          email: profile.email,
+          is_registered: true,
+        });
       });
 
-      setContacts(contactsWithPhotos);
+      // Then, add unmatched members (not registered)
+      (members || []).forEach(member => {
+        if (matchedMemberIds.has(member.id)) return;
+
+        // Check if member has a matching profile by email
+        if (member.email && profilesByEmail.has(member.email.toLowerCase())) return;
+
+        allContacts.push({
+          id: member.id, // member ID, not profile ID
+          full_name: `${member.nombres} ${member.apellidos}`,
+          photo_url: member.photo_url,
+          email: member.email,
+          is_registered: false,
+        });
+      });
+
+      // Sort: registered first, then alphabetically
+      allContacts.sort((a, b) => {
+        if (a.is_registered !== b.is_registered) return a.is_registered ? -1 : 1;
+        return a.full_name.localeCompare(b.full_name);
+      });
+
+      setContacts(allContacts);
     } catch (error) {
       console.error("Error fetching contacts:", error);
     } finally {
@@ -80,7 +125,7 @@ export const ContactSelector = ({ currentUserId, onSelectContact, onBack }: Cont
     return name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
   };
 
-  // Agrupar por letra inicial
+  // Group by letter
   const groupedContacts = filteredContacts.reduce((acc, contact) => {
     const letter = contact.full_name[0].toUpperCase();
     if (!acc[letter]) acc[letter] = [];
@@ -88,8 +133,11 @@ export const ContactSelector = ({ currentUserId, onSelectContact, onBack }: Cont
     return acc;
   }, {} as Record<string, Contact[]>);
 
+  const registeredCount = contacts.filter(c => c.is_registered).length;
+  const totalCount = contacts.length;
+
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-full bg-background">
       {/* Header */}
       <div className="bg-primary px-3 py-2 flex items-center gap-3 shadow-md">
         <Button
@@ -102,7 +150,9 @@ export const ContactSelector = ({ currentUserId, onSelectContact, onBack }: Cont
         </Button>
         <div>
           <h2 className="font-semibold text-primary-foreground">Nuevo mensaje</h2>
-          <p className="text-xs text-primary-foreground/70">{contacts.length} contactos</p>
+          <p className="text-xs text-primary-foreground/70">
+            {registeredCount} registrados · {totalCount} integrantes
+          </p>
         </div>
       </div>
 
@@ -143,16 +193,38 @@ export const ContactSelector = ({ currentUserId, onSelectContact, onBack }: Cont
               {letterContacts.map(contact => (
                 <div
                   key={contact.id}
-                  className="flex items-center gap-3 p-3 hover:bg-muted/50 cursor-pointer transition-colors active:bg-muted"
-                  onClick={() => onSelectContact(contact)}
+                  className={`flex items-center gap-3 p-3 transition-colors ${
+                    contact.is_registered
+                      ? "hover:bg-muted/50 cursor-pointer active:bg-muted"
+                      : "opacity-60 cursor-not-allowed"
+                  }`}
+                  onClick={() => {
+                    if (contact.is_registered) {
+                      onSelectContact(contact);
+                    }
+                  }}
                 >
-                  <Avatar className="w-12 h-12">
-                    <AvatarImage src={contact.photo_url || undefined} className="object-cover" />
-                    <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/40">
-                      {getInitials(contact.full_name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="font-medium text-foreground">{contact.full_name}</span>
+                  <div className="relative">
+                    <Avatar className="w-12 h-12">
+                      <AvatarImage src={contact.photo_url || undefined} className="object-cover" />
+                      <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/40">
+                        {getInitials(contact.full_name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    {!contact.is_registered && (
+                      <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-muted-foreground/60 rounded-full flex items-center justify-center">
+                        <UserX className="w-2.5 h-2.5 text-background" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="font-medium text-foreground break-words">{contact.full_name}</span>
+                    {!contact.is_registered && (
+                      <Badge variant="outline" className="ml-2 text-[10px] text-muted-foreground border-muted-foreground/30">
+                        No registrado
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
