@@ -238,10 +238,10 @@ const MembersList = () => {
         {filteredMembers.map((member) => (
           <Card key={member.id} className="hover:shadow-md transition-shadow">
             <CardContent className="py-3 px-3 sm:px-6">
-              <div className="flex items-center gap-3">
+              <div className="flex items-start gap-3">
                 {/* Foto */}
                 <div 
-                  className="cursor-pointer transition-transform hover:scale-105 shrink-0"
+                  className="cursor-pointer transition-transform hover:scale-105 shrink-0 pt-0.5"
                   onClick={() => handleViewProfile(member.id)}
                 >
                   <Avatar className="w-11 h-11 sm:w-12 sm:h-12 ring-2 ring-transparent hover:ring-modern-blue-300">
@@ -255,35 +255,33 @@ const MembersList = () => {
                   </Avatar>
                 </div>
 
-                {/* Nombre - sin truncate para que se lea completo */}
+                {/* Info del miembro */}
                 <div className="flex-1 min-w-0">
                   <h3 
-                    className="font-semibold text-foreground cursor-pointer hover:text-modern-blue-600 transition-colors text-sm sm:text-base break-words"
+                    className="font-semibold text-foreground cursor-pointer hover:text-modern-blue-600 transition-colors text-sm sm:text-base leading-snug"
                     onClick={() => handleViewProfile(member.id)}
                   >
                     {member.nombres} {member.apellidos}
                   </h3>
-                </div>
-
-                  {/* Información alineada */}
-                  <div className="hidden sm:flex flex-col gap-1 shrink-0">
-                    <Badge variant="secondary" className="text-xs w-fit">
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    <Badge variant="secondary" className="text-xs">
                       {getRoleLabel(member.cargo)}
                     </Badge>
                     {member.grupo && (
-                      <Badge variant="outline" className="text-xs w-fit">
+                      <Badge variant="outline" className="text-xs">
                         {getGroupLabel(member.grupo)}
                       </Badge>
                     )}
                   </div>
+                </div>
 
                 {/* Botones de acción */}
-                <div className="flex items-center gap-1 ml-2 shrink-0">
+                <div className="flex items-center gap-0.5 shrink-0">
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon"
+                    className="h-8 w-8 text-modern-blue-600 hover:text-modern-blue-700 hover:bg-modern-blue-50"
                     onClick={() => handleViewProfile(member.id)}
-                    className="text-modern-blue-600 hover:text-modern-blue-700 hover:bg-modern-blue-50"
                   >
                     <Eye className="w-4 h-4" />
                   </Button>
@@ -291,7 +289,8 @@ const MembersList = () => {
                     <SheetTrigger asChild>
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
+                        className="h-8 w-8"
                         onClick={() => setEditingMember(member)}
                       >
                         <Edit className="w-4 h-4" />
@@ -319,25 +318,13 @@ const MembersList = () => {
                   </Sheet>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon"
+                    className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
                     onClick={() => handleDeleteMember(member.id)}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
-              </div>
-
-              {/* Información adicional en móviles */}
-              <div className="block sm:hidden mt-3 space-y-2">
-                <Badge variant="secondary" className="text-xs mr-2">
-                  {getRoleLabel(member.cargo)}
-                </Badge>
-                {member.grupo && (
-                  <Badge variant="outline" className="text-xs">
-                    {getGroupLabel(member.grupo)}
-                  </Badge>
-                )}
               </div>
             </CardContent>
           </Card>

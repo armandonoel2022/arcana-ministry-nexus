@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Plus, Search, Upload, Database, UserPlus, UserMinus } from "lucide-react";
+import { Users, Plus, Search, UserPlus, UserMinus } from "lucide-react";
 import MembersList from "@/components/members/MembersList";
 import AddMemberForm from "@/components/members/AddMemberForm";
-import MembersCSVUpload from "@/components/members/MembersCSVUpload";
-import BulkMemberInsert from "@/components/members/BulkMemberInsert";
 import MemberLeavesTab from "@/components/members/MemberLeavesTab";
 import { usePermissions } from "@/hooks/usePermissions";
 
@@ -36,8 +34,7 @@ const Integrantes = () => {
         {/* Panel de Contenido Principal */}
         <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 w-full border border-gray-200">
           <Tabs defaultValue="view" className="w-full">
-            {/* Tabs Responsivos - mismo estilo que Agenda */}
-            <TabsList className={`flex w-full flex-wrap bg-gray-100/80 backdrop-blur-md border border-gray-200 rounded-xl p-1 h-auto gap-1 mb-4 sm:mb-6`}>
+            <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-3' : 'grid-cols-2'} bg-gray-100/80 backdrop-blur-md border border-gray-200 rounded-xl p-1 h-auto gap-1 mb-4 sm:mb-6`}>
               <TabsTrigger
                 value="view"
                 className="flex items-center justify-center gap-1 sm:gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg text-gray-700 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200 flex-1 min-w-0"
@@ -52,20 +49,6 @@ const Integrantes = () => {
                 <Plus className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                 <span className="truncate">Agregar</span>
               </TabsTrigger>
-              <TabsTrigger
-                value="bulk"
-                className="flex items-center justify-center gap-1 sm:gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg text-gray-700 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200 flex-1 min-w-0"
-              >
-                <Database className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                <span className="truncate">Lista</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="upload"
-                className="flex items-center justify-center gap-1 sm:gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg text-gray-700 text-xs sm:text-sm py-2 sm:py-2.5 transition-all duration-200 flex-1 min-w-0"
-              >
-                <Upload className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                <span className="truncate">CSV</span>
-              </TabsTrigger>
               {isAdmin && (
                 <TabsTrigger
                   value="leaves"
@@ -77,7 +60,6 @@ const Integrantes = () => {
               )}
             </TabsList>
 
-            {/* Contenido de los Tabs */}
             <TabsContent value="view" className="space-y-4 mt-4 w-full">
               <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 w-full overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-t-xl p-4 sm:p-6 border-b border-blue-200">
@@ -116,48 +98,6 @@ const Integrantes = () => {
                 </CardHeader>
                 <CardContent className="p-4 sm:p-6 w-full">
                   <AddMemberForm onSuccess={handleDataUpdate} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="bulk" className="space-y-4 mt-4 w-full">
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 w-full overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-t-xl p-4 sm:p-6 border-b border-purple-200">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Database className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <CardTitle className="text-purple-900 text-lg sm:text-xl">Inserción Masiva</CardTitle>
-                      <CardDescription className="text-purple-700 text-sm">
-                        Agrega múltiples integrantes
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-4 sm:p-6 w-full">
-                  <BulkMemberInsert onSuccess={handleDataUpdate} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="upload" className="space-y-4 mt-4 w-full">
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300 w-full overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-t-xl p-4 sm:p-6 border-b border-orange-200">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Upload className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <CardTitle className="text-orange-900 text-lg sm:text-xl">Carga Masiva desde CSV</CardTitle>
-                      <CardDescription className="text-orange-700 text-sm">
-                        Importa integrantes desde un archivo CSV
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-4 sm:p-6 w-full">
-                  <MembersCSVUpload onSuccess={handleDataUpdate} />
                 </CardContent>
               </Card>
             </TabsContent>
