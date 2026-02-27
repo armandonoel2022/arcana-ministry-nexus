@@ -173,9 +173,14 @@ const SelectedSongsDisplay: React.FC<SelectedSongsDisplayProps> = ({
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  {song.key_signature && (
+                  {(song.preferred_key || song.key_signature) && (
                     <Badge variant="outline" className="text-xs">
-                      {song.key_signature}
+                      🎹 {song.preferred_key || song.key_signature}
+                    </Badge>
+                  )}
+                  {song.preferred_key && song.preferred_key !== song.key_signature && (
+                    <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                      orig: {song.key_signature || 'G'}
                     </Badge>
                   )}
                   {song.difficulty_level && (
