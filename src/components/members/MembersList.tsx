@@ -236,35 +236,34 @@ const MembersList = () => {
 
       <div className="space-y-2">
         {filteredMembers.map((member) => (
-          <Card key={member.id} className="hover:shadow-md transition-shadow overflow-hidden">
-            <CardContent className="py-4 px-3 sm:px-6">
-              <div className="flex items-center gap-2 sm:gap-4">
-                <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-                  {/* Foto */}
-                  <div 
-                    className="cursor-pointer transition-transform hover:scale-105"
+          <Card key={member.id} className="hover:shadow-md transition-shadow">
+            <CardContent className="py-3 px-3 sm:px-6">
+              <div className="flex items-center gap-3">
+                {/* Foto */}
+                <div 
+                  className="cursor-pointer transition-transform hover:scale-105 shrink-0"
+                  onClick={() => handleViewProfile(member.id)}
+                >
+                  <Avatar className="w-11 h-11 sm:w-12 sm:h-12 ring-2 ring-transparent hover:ring-modern-blue-300">
+                    <AvatarImage
+                      src={member.photo_url || undefined}
+                      alt={`${member.nombres} ${member.apellidos}`}
+                    />
+                    <AvatarFallback className="bg-modern-blue-gradient text-white text-sm">
+                      {member.nombres.charAt(0)}{member.apellidos.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+
+                {/* Nombre - sin truncate para que se lea completo */}
+                <div className="flex-1 min-w-0">
+                  <h3 
+                    className="font-semibold text-foreground cursor-pointer hover:text-modern-blue-600 transition-colors text-sm sm:text-base break-words"
                     onClick={() => handleViewProfile(member.id)}
                   >
-                    <Avatar className="w-12 h-12 ring-2 ring-transparent hover:ring-modern-blue-300">
-                      <AvatarImage
-                        src={member.photo_url || undefined}
-                        alt={`${member.nombres} ${member.apellidos}`}
-                      />
-                      <AvatarFallback className="bg-modern-blue-gradient text-white">
-                        {member.nombres.charAt(0)}{member.apellidos.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-
-                  {/* Nombre */}
-                  <div className="flex-1 min-w-0">
-                    <h3 
-                      className="font-semibold text-foreground cursor-pointer hover:text-modern-blue-600 transition-colors truncate"
-                      onClick={() => handleViewProfile(member.id)}
-                    >
-                      {member.nombres} {member.apellidos}
-                    </h3>
-                  </div>
+                    {member.nombres} {member.apellidos}
+                  </h3>
+                </div>
 
                   {/* Información alineada */}
                   <div className="hidden sm:flex flex-col gap-1 shrink-0">
@@ -277,7 +276,6 @@ const MembersList = () => {
                       </Badge>
                     )}
                   </div>
-                </div>
 
                 {/* Botones de acción */}
                 <div className="flex items-center gap-1 ml-2 shrink-0">
