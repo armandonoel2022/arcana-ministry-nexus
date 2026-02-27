@@ -48,16 +48,14 @@ export const YouTubePlayerModal: React.FC<YouTubePlayerModalProps> = ({ url, son
             <DialogTitle className="flex items-center gap-2 text-sm">
               <Youtube className="w-4 h-4 text-red-600" />
               {songTitle || 'YouTube'}
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ml-auto text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
-                onClick={(e) => e.stopPropagation()}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setOpen(false)}
+                className="ml-auto h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
               >
-                <ExternalLink className="w-3 h-3" />
-                Abrir en YouTube
-              </a>
+                Cerrar
+              </Button>
             </DialogTitle>
           </DialogHeader>
           <div className="aspect-video w-full">
