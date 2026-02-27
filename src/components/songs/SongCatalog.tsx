@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Search, Grid, List, Filter, Music, Clock, User, Tag } from 'lucide-react';
+import { Search, Grid, List, Filter, Music, Clock, User, Tag, Hash } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import SongCard from './SongCard';
 import SongListItem from './SongListItem';
@@ -35,7 +35,11 @@ interface SongCatalogProps {
 }
 
 const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initialSearch = '' }) => {
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const getDefaultViewMode = () => {
+    if (category === 'himnario') return 'numbers' as const;
+    return 'list' as const;
+  };
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'numbers'>(getDefaultViewMode());
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [genreFilter, setGenreFilter] = useState('all');
   const [difficultyFilter, setDifficultyFilter] = useState('all');
