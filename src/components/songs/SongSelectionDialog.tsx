@@ -58,16 +58,31 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
 
   const { checkSongRepetition, isChecking } = useSongRepetitionCheck();
 
-  // Obtener el usuario actual
+  // Obtener el usuario actual y su tono preferido para esta canción
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setCurrentUserId(user.id);
+        // Cargar tono preferido del director para esta canción
+        const { data: dirKey } = await supabase
+          .from('director_song_keys')
+          .select('preferred_key')
+          .eq('director_id', user.id)
+          .eq('song_id', song.id)
+          .maybeSingle();
+        if (dirKey?.preferred_key) {
+          setPreferredKey(dirKey.preferred_key);
+          setDirectorDefaultKey(dirKey.preferred_key);
+        } else {
+          // Usar el tono por defecto de la canción
+          setPreferredKey(song.key_signature || 'G');
+          setDirectorDefaultKey('');
+        }
       }
     };
     getUser();
-  }, []);
+  }, [song.id]);
 
   // Verificar repetición cuando se selecciona un servicio
   useEffect(() => {
