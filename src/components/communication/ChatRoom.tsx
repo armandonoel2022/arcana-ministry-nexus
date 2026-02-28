@@ -602,6 +602,7 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
 
       if (existing) {
         setDuplicateSongName(action.songName);
+        setDuplicateSongCover(action.coverImageUrl || null);
         setShowDuplicateOverlay(true);
         return false;
       }
