@@ -150,13 +150,17 @@ export const AgendaTable: React.FC<AgendaTableProps> = ({ initialFilter }) => {
   const getCurrentWeekend = () => {
     const now = new Date();
     
-    // Durante cuarentena y servicios regulares, mostrar los próximos 7 días de servicios
-    // Esto cubre servicios de miércoles, sábado y domingo
+    // Semana de lunes a domingo
+    const currentDay = now.getDay(); // 0=Dom, 1=Lun, ..., 6=Sáb
+    // Calcular el lunes de esta semana
+    const diffToMonday = currentDay === 0 ? -6 : 1 - currentDay;
     const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() + diffToMonday);
     weekStart.setHours(0, 0, 0, 0);
     
-    const weekEnd = new Date(now);
-    weekEnd.setDate(now.getDate() + 7);
+    // El domingo de esta semana (6 días después del lunes)
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
     weekEnd.setHours(23, 59, 59, 999);
 
     return { start: weekStart, end: weekEnd };
