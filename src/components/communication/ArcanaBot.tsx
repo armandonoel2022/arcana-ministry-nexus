@@ -258,6 +258,8 @@ export class ArcanaBot {
   private static analyzeQueryType(message: string): string {
     // Patrones mejorados para detección de intenciones
     const patterns = {
+      menu: [/^men[uú]$/, /^men[uú]\s/, /\bmen[uú]\b/],
+      resumen_canciones: [/resumen/, /canciones\s+(?:del\s+)?(?:fin\s+de\s+semana|finde|weekend|domingo|servicio)/, /resumen\s+canciones/, /que\s+canciones\s+hay/],
       turnos_propios: [
         /(cu[áa]ndo\s+)?me\s+toca/,
         /mi\s+(pr[oó]ximo\s+)?turno/,
