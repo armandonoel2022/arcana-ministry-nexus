@@ -1007,6 +1007,9 @@ export class ArcanaBot {
     try {
       console.log("ARCANA procesando selección de canción:", query);
 
+      // Detect purpose from the message
+      const songPurpose = this.detectSongPurpose(query);
+
       // Extraer el nombre de la canción del query
       const patterns = [
         /seleccionar\s+([a-záéíóúñ\s]+)\s+para/i,
