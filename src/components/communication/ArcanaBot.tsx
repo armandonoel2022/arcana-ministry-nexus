@@ -818,12 +818,41 @@ export class ArcanaBot {
     return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   }
 
+  // Detect song purpose from message keywords
+  private static detectSongPurpose(message: string): SongPurpose {
+    const normalized = this.normalizeText(message);
+    if (/ofrenda|ofrendas/.test(normalized)) return "offering";
+    if (/santa\s*cena|santa\s*comuni[oó]n|comuni[oó]n|comunion/.test(normalized)) return "communion";
+    return "worship";
+  }
+
+  // Remove purpose keywords from search query
+  private static removePurposeKeywords(query: string): string {
+    return query
+      .replace(/\b(ofrendas?|santa\s*cena|santa\s*comuni[oó]n|comuni[oó]n|comunion)\b/gi, "")
+      .trim();
+  }
+
+  // Get purpose label in Spanish
+  private static getPurposeLabel(purpose: SongPurpose): string {
+    switch (purpose) {
+      case "offering": return "🎵 Ofrendas";
+      case "communion": return "🍷 Santa Comunión";
+      default: return "🎶 Alabanza";
+    }
+  }
+
   private static async handleCancionesBuscar(query: string, userId?: string): Promise<BotResponse> {
     try {
       console.log("ARCANA consultando canciones con query:", query);
 
-      // Extraer términos de búsqueda
-      const searchTerms = query.replace(/canción|cancion|canciones|buscar|repertorio|música|musica|song/gi, "").trim();
+      // Detect purpose from the message
+      const songPurpose = this.detectSongPurpose(query);
+      console.log("ARCANA propósito detectado:", songPurpose);
+
+      // Extraer términos de búsqueda (removing purpose keywords too)
+      let searchTerms = query.replace(/canción|cancion|canciones|buscar|repertorio|música|musica|song/gi, "").trim();
+      searchTerms = this.removePurposeKeywords(searchTerms).trim();
 
       if (!searchTerms) {
         return {
