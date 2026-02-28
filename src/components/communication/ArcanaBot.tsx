@@ -1023,7 +1023,7 @@ export class ArcanaBot {
       for (const pattern of patterns) {
         const match = query.match(pattern);
         if (match && match[1]) {
-          nombreCancion = match[1].trim();
+          nombreCancion = this.removePurposeKeywords(match[1].trim());
           break;
         }
       }
