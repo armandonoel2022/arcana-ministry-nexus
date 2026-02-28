@@ -55,8 +55,10 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initial
   }, [initialSearch]);
 
   // Fetch songs with filters and pagination
+  const showPagination = viewMode !== 'numbers';
+
   const { data: songsData, isLoading, error } = useQuery({
-    queryKey: ['songs', category, searchTerm, genreFilter, difficultyFilter, sortBy, currentPage],
+    queryKey: ['songs', category, searchTerm, genreFilter, difficultyFilter, sortBy, currentPage, viewMode],
     queryFn: async () => {
       let query = supabase
         .from('songs')
@@ -97,10 +99,12 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initial
           query = query.order('title', { ascending: true });
       }
 
-      // Apply pagination
-      const from = (currentPage - 1) * ITEMS_PER_PAGE;
-      const to = from + ITEMS_PER_PAGE - 1;
-      query = query.range(from, to);
+      // Only paginate for grid/list views, not numbers
+      if (viewMode !== 'numbers') {
+        const from = (currentPage - 1) * ITEMS_PER_PAGE;
+        const to = from + ITEMS_PER_PAGE - 1;
+        query = query.range(from, to);
+      }
 
       const { data, error, count } = await query;
       if (error) throw error;
@@ -333,7 +337,7 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initial
           )}
 
           {/* Pagination */}
-          {totalPages > 1 && (
+          {showPagination && totalPages > 1 && (
             <SongPagination
               currentPage={currentPage}
               totalPages={totalPages}
