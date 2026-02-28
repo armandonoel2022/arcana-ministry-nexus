@@ -435,14 +435,37 @@ async function getServiceDetails(supabase: any, serviceId: string) {
 }
 
 async function searchSongs(supabase: any, query: string) {
+  // First try direct ilike search
   const { data, error } = await supabase
     .from('songs')
-    .select('id, title, artist, category')
+    .select('id, title, artist, category, cover_image_url, key_signature')
     .or(`title.ilike.%${query}%,artist.ilike.%${query}%`)
     .eq('is_active', true)
     .limit(10);
 
   if (error) throw error;
+
+  // If no results, try accent-insensitive search
+  if (!data || data.length === 0) {
+    const normalizedQuery = query.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const words = normalizedQuery.split(/\s+/).filter(w => w.length >= 2);
+    
+    const { data: allSongs, error: allError } = await supabase
+      .from('songs')
+      .select('id, title, artist, category, cover_image_url, key_signature')
+      .eq('is_active', true)
+      .limit(500);
+
+    if (allError) throw allError;
+
+    const filtered = (allSongs || []).filter((song: any) => {
+      const normalizedTitle = (song.title || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      const normalizedArtist = (song.artist || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+      return words.every(word => normalizedTitle.includes(word) || normalizedArtist.includes(word));
+    }).slice(0, 10);
+
+    return { songs: filtered };
+  }
 
   return { songs: data };
 }
