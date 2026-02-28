@@ -586,7 +586,7 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
         return false;
       }
 
-      // Verificar si la canción ya existe en el servicio
+      // Verificar si la canción ya existe en el servicio (por song_id)
       const { data: existing, error: checkError } = await supabase
         .from("service_songs")
         .select("id")
@@ -600,10 +600,27 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
       }
 
       if (existing) {
-        // Show duplicate error overlay instead of just a toast
         setDuplicateSongName(action.songName);
         setShowDuplicateOverlay(true);
         return false;
+      }
+
+      // Verificar si ya existe una canción con el mismo propósito especial (solo 1 de ofrendas y 1 de comunión)
+      const purpose = action.songPurpose || 'worship';
+      if (purpose === 'offering' || purpose === 'communion') {
+        const { data: existingPurpose, error: purposeError } = await supabase
+          .from("service_songs")
+          .select("id, songs(title)")
+          .eq("service_id", serviceId)
+          .eq("song_purpose", purpose)
+          .maybeSingle();
+
+        if (!purposeError && existingPurpose) {
+          const purposeLabel = purpose === 'offering' ? 'ofrendas' : 'santa comunión';
+          setDuplicateSongName(`Ya hay una canción de ${purposeLabel} en este servicio. Solo se permite una.`);
+          setShowDuplicateOverlay(true);
+          return false;
+        }
       }
 
       // Obtener datos del usuario actual
@@ -983,7 +1000,10 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-foreground">
-                <strong>"{duplicateSongName}"</strong> ya fue agregada a tu siguiente servicio y no puede ser duplicada.
+                {duplicateSongName.startsWith('Ya hay') 
+                  ? duplicateSongName
+                  : <><strong>"{duplicateSongName}"</strong> ya fue agregada a tu siguiente servicio y no puede ser duplicada.</>
+                }
               </p>
               <Button
                 onClick={() => setShowDuplicateOverlay(false)}
