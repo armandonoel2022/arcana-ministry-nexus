@@ -2,8 +2,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type SongPurpose = "worship" | "offering" | "communion";
 
+export type BotActionType = "select_song" | "menu_option";
+
 export interface BotAction {
-  type: "select_song";
+  type: BotActionType;
   songId: string;
   songName: string;
   serviceDate?: string;
@@ -11,10 +13,14 @@ export interface BotAction {
   coverImageUrl?: string;
   keySignature?: string;
   songPurpose?: SongPurpose;
+  // Menu action fields
+  menuCommand?: string;
+  menuLabel?: string;
+  menuIcon?: string;
 }
 
 interface BotResponse {
-  type: "turnos" | "ensayos" | "canciones" | "general";
+  type: "turnos" | "ensayos" | "canciones" | "general" | "menu";
   message: string;
   expression?: "thinking" | "happy" | "worried";
   actions?: BotAction[];
