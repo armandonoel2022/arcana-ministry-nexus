@@ -1247,6 +1247,7 @@ const ServiceNotificationOverlay = ({
                   title: row.song_title,
                   artist: row.artist,
                   song_order: idx + 1,
+                  song_purpose: 'worship',
                 }));
               }
             }
