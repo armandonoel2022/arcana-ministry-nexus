@@ -1121,6 +1121,7 @@ export class ArcanaBot {
               serviceId: nextService.id,
               coverImageUrl: c.cover_image_url || null,
               keySignature: c.key_signature || null,
+              songPurpose: songPurpose,
             }))
           : [];
 
@@ -1151,6 +1152,7 @@ export class ArcanaBot {
             serviceId: nextService.id,
             coverImageUrl: cancion.cover_image_url || null,
             keySignature: cancion.key_signature || null,
+            songPurpose: songPurpose,
           },
         ];
 
