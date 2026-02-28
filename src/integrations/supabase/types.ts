@@ -2008,6 +2008,7 @@ export type Database = {
           selection_reason: string | null
           service_id: string
           song_id: string
+          song_purpose: string | null
           updated_at: string
         }
         Insert: {
@@ -2019,6 +2020,7 @@ export type Database = {
           selection_reason?: string | null
           service_id: string
           song_id: string
+          song_purpose?: string | null
           updated_at?: string
         }
         Update: {
@@ -2030,6 +2032,7 @@ export type Database = {
           selection_reason?: string | null
           service_id?: string
           song_id?: string
+          song_purpose?: string | null
           updated_at?: string
         }
         Relationships: [
