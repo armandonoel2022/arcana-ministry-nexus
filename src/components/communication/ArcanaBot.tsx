@@ -1076,11 +1076,13 @@ export class ArcanaBot {
 
         const actions: BotAction[] = nextService
           ? canciones.map((c: any) => ({
-              type: "select_song",
+              type: "select_song" as const,
               songId: c.id,
               songName: c.title,
               serviceDate: nextService.service_date,
               serviceId: nextService.id,
+              coverImageUrl: c.cover_image_url || null,
+              keySignature: c.key_signature || null,
             }))
           : [];
 
@@ -1109,6 +1111,8 @@ export class ArcanaBot {
             songName: cancion.title,
             serviceDate: nextService.service_date,
             serviceId: nextService.id,
+            coverImageUrl: cancion.cover_image_url || null,
+            keySignature: cancion.key_signature || null,
           },
         ];
 
