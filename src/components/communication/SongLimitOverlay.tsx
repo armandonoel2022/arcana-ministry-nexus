@@ -35,25 +35,25 @@ export const SongLimitOverlay = ({ songCount, serviceName, onClose }: SongLimitO
           icon: <AlertCircle className="w-8 h-8 text-amber-500" />,
           title: "Tiempo de Adoración Completo",
           description: "Has agregado 4 canciones que completan el tiempo usual de adoración.",
-          nextStep: "La siguiente canción será para el momento de ofrendas.",
+          nextStep: "Para agregar una canción de ofrendas, escribe: ARCANA ofrendas [nombre canción]",
           bgColor: "from-amber-50 to-orange-50",
           borderColor: "border-amber-300"
         };
       case 5:
         return {
           icon: <Music className="w-8 h-8 text-blue-500" />,
-          title: "Canción de Ofrendas Agregada",
-          description: "Esta es la canción designada para el momento de ofrendas.",
-          nextStep: "Si agregas otra canción, será para el momento de Santa Comunión.",
+          title: "5 Canciones Agregadas",
+          description: "Tienes 5 canciones en este servicio.",
+          nextStep: "Para agregar una canción de Santa Comunión, escribe: ARCANA santa cena [nombre canción]",
           bgColor: "from-blue-50 to-indigo-50",
           borderColor: "border-blue-300"
         };
       case 6:
         return {
           icon: <CheckCircle className="w-8 h-8 text-purple-500" />,
-          title: "Canción de Comunión Agregada",
-          description: "Esta es la canción designada para el momento de Santa Comunión.",
-          nextStep: "El repertorio para este servicio está completo.",
+          title: "Repertorio Completo",
+          description: "El repertorio para este servicio está completo.",
+          nextStep: "Puedes seguir agregando canciones si lo necesitas.",
           bgColor: "from-purple-50 to-pink-50",
           borderColor: "border-purple-300"
         };
