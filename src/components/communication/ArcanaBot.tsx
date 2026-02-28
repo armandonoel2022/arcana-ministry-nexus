@@ -214,6 +214,9 @@ export class ArcanaBot {
     console.log("ARCANA tipo de consulta detectada:", queryType);
 
     switch (queryType) {
+      case "menu":
+        return this.getMenuResponse();
+
       case "turnos_propios":
         return await this.handleTurnosQuery(userId);
 
@@ -240,6 +243,9 @@ export class ArcanaBot {
 
       case "cumpleanos":
         return await this.handleBirthdayQuery(cleanMessage);
+
+      case "resumen_canciones":
+        return await this.handleWeekendSongsSummary();
 
       case "ayuda":
         return this.getHelpResponse();
