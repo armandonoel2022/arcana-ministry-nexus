@@ -88,6 +88,7 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
   // Duplicate song overlay state
   const [showDuplicateOverlay, setShowDuplicateOverlay] = useState(false);
   const [duplicateSongName, setDuplicateSongName] = useState("");
+  const [duplicateSongCover, setDuplicateSongCover] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -804,6 +805,7 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
 
       if (existingDup) {
         setDuplicateSongName(action.songName);
+        setDuplicateSongCover(action.coverImageUrl || null);
         setShowDuplicateOverlay(true);
         return;
       }
