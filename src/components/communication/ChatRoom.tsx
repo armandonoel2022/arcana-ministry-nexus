@@ -79,6 +79,11 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
   }>>([]);
   const [isAddingMultipleSongs, setIsAddingMultipleSongs] = useState(false);
   
+  // Key preference dialog state
+  const [showKeyDialog, setShowKeyDialog] = useState(false);
+  const [keyDialogSong, setKeyDialogSong] = useState<{ id: string; name: string } | null>(null);
+  const [selectedKey, setSelectedKey] = useState("");
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
