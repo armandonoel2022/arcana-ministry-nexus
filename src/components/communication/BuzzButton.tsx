@@ -61,11 +61,19 @@ export const BuzzButton = ({ currentUserId }: BuzzButtonProps) => {
               .eq("id", payload.new.sender_id)
               .maybeSingle();
 
-            // Reproducir sonido con volumen alto
-            playSound('alert', 1.0);
+            // Reproducir sonido directamente (no depender del hook)
+            try {
+              const audio = new Audio('/sounds/alert.mp3');
+              audio.volume = 1.0;
+              audio.play().catch(e => console.warn('No se pudo reproducir sonido:', e));
+            } catch (e) {
+              console.warn('Error creando audio:', e);
+            }
             
             // Vibración intensa
-            vibrate([200, 100, 200, 100, 200]);
+            if ('vibrate' in navigator) {
+              navigator.vibrate([200, 100, 200, 100, 200]);
+            }
 
             // Mostrar toast visual
             toast({
@@ -83,7 +91,7 @@ export const BuzzButton = ({ currentUserId }: BuzzButtonProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUserId, playSound, vibrate, toast]);
+  }, [currentUserId, toast]);
 
   const fetchUsers = async () => {
     const { data, error } = await supabase
