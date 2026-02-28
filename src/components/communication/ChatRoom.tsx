@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Users, Bot, Smile, Paperclip, AtSign, ArrowLeft, MoreVertical } from "lucide-react";
+import { Send, Users, Bot, Smile, Paperclip, AtSign, ArrowLeft, MoreVertical, Music, Key } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ArcanaBot, BotAction } from "./ArcanaBot";
 import { ArcanaAvatar } from "./ArcanaAvatar";
