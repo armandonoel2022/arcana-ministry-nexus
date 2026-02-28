@@ -83,6 +83,7 @@ interface WeekendService {
     title: string;
     artist: string;
     song_order: number;
+    song_purpose?: string;
   }[];
 }
 
@@ -1037,6 +1038,7 @@ const ServiceNotificationOverlay = ({
             title: song.title || "Sin título",
             artist: song.artist || "Artista desconocido",
             song_order: song.song_order || 0,
+            song_purpose: song.song_purpose || 'worship',
           })),
         };
       });
@@ -1215,6 +1217,7 @@ const ServiceNotificationOverlay = ({
                 `
                 id,
                 song_order,
+                song_purpose,
                 songs (
                   id,
                   title,
@@ -1231,6 +1234,7 @@ const ServiceNotificationOverlay = ({
                 title: item.songs.title,
                 artist: item.songs.artist,
                 song_order: item.song_order,
+                song_purpose: item.song_purpose || 'worship',
               }));
             } else {
               const { data: selectedView, error: viewError } = await supabase
@@ -1244,6 +1248,7 @@ const ServiceNotificationOverlay = ({
                   title: row.song_title,
                   artist: row.artist,
                   song_order: idx + 1,
+                  song_purpose: 'worship',
                 }));
               }
             }
@@ -1653,9 +1658,9 @@ const ServiceNotificationOverlay = ({
       const songsSection = document.createElement("div");
       songsSection.style.marginBottom = "32px";
 
-      const worshipSongs = service.selected_songs?.filter((s) => s.song_order >= 1 && s.song_order <= 4) || [];
-      const offeringsSongs = service.selected_songs?.filter((s) => s.song_order === 5) || [];
-      const communionSongs = service.selected_songs?.filter((s) => s.song_order === 6) || [];
+      const worshipSongs = service.selected_songs?.filter((s) => (s.song_purpose || 'worship') === 'worship') || [];
+      const offeringsSongs = service.selected_songs?.filter((s) => s.song_purpose === 'offering') || [];
+      const communionSongs = service.selected_songs?.filter((s) => s.song_purpose === 'communion') || [];
       const hasAnySongs = worshipSongs.length > 0 || offeringsSongs.length > 0 || communionSongs.length > 0;
       
       const isDark = isSpecialEvent || isQuarantine;
@@ -2208,9 +2213,9 @@ const ServiceNotificationOverlay = ({
     const isQuarantine = service.service_type === 'cuarentena';
     const isSpecialEvent = service.service_type === 'especial' || service.leader === 'TODOS';
 
-    const worshipSongs = service.selected_songs?.filter((s) => s.song_order >= 1 && s.song_order <= 4) || [];
-    const offeringsSongs = service.selected_songs?.filter((s) => s.song_order === 5) || [];
-    const communionSongs = service.selected_songs?.filter((s) => s.song_order === 6) || [];
+    const worshipSongs = service.selected_songs?.filter((s) => (s.song_purpose || 'worship') === 'worship') || [];
+    const offeringsSongs = service.selected_songs?.filter((s) => s.song_purpose === 'offering') || [];
+    const communionSongs = service.selected_songs?.filter((s) => s.song_purpose === 'communion') || [];
 
     return (
       <div

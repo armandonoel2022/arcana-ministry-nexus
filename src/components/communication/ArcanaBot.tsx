@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export type SongPurpose = "worship" | "offering" | "communion";
+
 export interface BotAction {
   type: "select_song";
   songId: string;
@@ -8,6 +10,7 @@ export interface BotAction {
   serviceId?: string;
   coverImageUrl?: string;
   keySignature?: string;
+  songPurpose?: SongPurpose;
 }
 
 interface BotResponse {
@@ -258,7 +261,7 @@ export class ArcanaBot {
         /cu[áa]ndo\s+canta\s+([a-záéíóúñü\s]{2,})/,
       ],
       ensayos: [/ensayo/, /ensayos/, /pr[áa]ctica/, /practicas/, /rehearsal/],
-      canciones_buscar: [/buscar/, /canci[óo]n/, /canciones/, /repertorio/, /m[úu]sica/, /song/],
+      canciones_buscar: [/buscar/, /canci[óo]n/, /canciones/, /repertorio/, /m[úu]sica/, /song/, /ofrendas?/, /santa\s*(?:cena|comuni[oó]n)/, /comuni[oó]n/],
       canciones_seleccionar: [/seleccionar/, /elegir/, /a[ñn]adir/, /agregar/, /para\s+servicio/],
       cumpleanos: [/cumplea[ñn]os/, /cumple/, /fiesta/, /natalicio/],
       ayuda: [/ayuda/, /help/, /qu[eé]\s+puedes/, /opciones/, /comandos/],
@@ -815,12 +818,41 @@ export class ArcanaBot {
     return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   }
 
+  // Detect song purpose from message keywords
+  private static detectSongPurpose(message: string): SongPurpose {
+    const normalized = this.normalizeText(message);
+    if (/ofrenda|ofrendas/.test(normalized)) return "offering";
+    if (/santa\s*cena|santa\s*comuni[oó]n|comuni[oó]n|comunion/.test(normalized)) return "communion";
+    return "worship";
+  }
+
+  // Remove purpose keywords from search query
+  private static removePurposeKeywords(query: string): string {
+    return query
+      .replace(/\b(ofrendas?|santa\s*cena|santa\s*comuni[oó]n|comuni[oó]n|comunion)\b/gi, "")
+      .trim();
+  }
+
+  // Get purpose label in Spanish
+  private static getPurposeLabel(purpose: SongPurpose): string {
+    switch (purpose) {
+      case "offering": return "🎵 Ofrendas";
+      case "communion": return "🍷 Santa Comunión";
+      default: return "🎶 Alabanza";
+    }
+  }
+
   private static async handleCancionesBuscar(query: string, userId?: string): Promise<BotResponse> {
     try {
       console.log("ARCANA consultando canciones con query:", query);
 
-      // Extraer términos de búsqueda
-      const searchTerms = query.replace(/canción|cancion|canciones|buscar|repertorio|música|musica|song/gi, "").trim();
+      // Detect purpose from the message
+      const songPurpose = this.detectSongPurpose(query);
+      console.log("ARCANA propósito detectado:", songPurpose);
+
+      // Extraer términos de búsqueda (removing purpose keywords too)
+      let searchTerms = query.replace(/canción|cancion|canciones|buscar|repertorio|música|musica|song/gi, "").trim();
+      searchTerms = this.removePurposeKeywords(searchTerms).trim();
 
       if (!searchTerms) {
         return {
@@ -913,7 +945,8 @@ export class ArcanaBot {
 
       const serviceDate = nextService?.service_date;
 
-      let mensaje = `🎵 **Encontré ${canciones.length} canción(es):**\n\n`;
+      const purposeLabel = songPurpose !== "worship" ? ` para ${this.getPurposeLabel(songPurpose)}` : "";
+      let mensaje = `🎵 **Encontré ${canciones.length} canción(es)${purposeLabel}:**\n\n`;
 
       canciones.forEach((cancion, index) => {
         mensaje += `${index + 1}. **${cancion.title}**\n`;
@@ -931,7 +964,8 @@ export class ArcanaBot {
       // Agregar botones si el usuario es director y tiene próximo servicio
       const actions: BotAction[] = [];
       if (nextService) {
-        mensaje += `💡 **Haz clic en los botones para agregar al servicio del ${new Date(serviceDate!).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}**\n\n`;
+        const purposeText = songPurpose !== "worship" ? ` como canción de ${this.getPurposeLabel(songPurpose)}` : "";
+        mensaje += `💡 **Haz clic en los botones para agregar${purposeText} al servicio del ${new Date(serviceDate!).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}**\n\n`;
 
         actions.push(
           ...canciones.map(
@@ -943,6 +977,7 @@ export class ArcanaBot {
               serviceId: nextService.id,
               coverImageUrl: c.cover_image_url || null,
               keySignature: directorKeys[c.id] || c.key_signature || null,
+              songPurpose: songPurpose,
             }),
           ),
         );
@@ -972,6 +1007,9 @@ export class ArcanaBot {
     try {
       console.log("ARCANA procesando selección de canción:", query);
 
+      // Detect purpose from the message
+      const songPurpose = this.detectSongPurpose(query);
+
       // Extraer el nombre de la canción del query
       const patterns = [
         /seleccionar\s+([a-záéíóúñ\s]+)\s+para/i,
@@ -985,7 +1023,7 @@ export class ArcanaBot {
       for (const pattern of patterns) {
         const match = query.match(pattern);
         if (match && match[1]) {
-          nombreCancion = match[1].trim();
+          nombreCancion = this.removePurposeKeywords(match[1].trim());
           break;
         }
       }
@@ -1083,6 +1121,7 @@ export class ArcanaBot {
               serviceId: nextService.id,
               coverImageUrl: c.cover_image_url || null,
               keySignature: c.key_signature || null,
+              songPurpose: songPurpose,
             }))
           : [];
 
@@ -1113,6 +1152,7 @@ export class ArcanaBot {
             serviceId: nextService.id,
             coverImageUrl: cancion.cover_image_url || null,
             keySignature: cancion.key_signature || null,
+            songPurpose: songPurpose,
           },
         ];
 

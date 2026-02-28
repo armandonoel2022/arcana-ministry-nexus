@@ -614,6 +614,7 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
       const { error } = await supabase.from("service_songs").insert({
         service_id: serviceId,
         song_id: action.songId,
+        song_purpose: action.songPurpose || 'worship',
       });
 
       if (error) {
@@ -632,19 +633,21 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
         .maybeSingle();
 
       if (!existingSelection && !selCheckError) {
+        const purposeLabel = action.songPurpose === 'offering' ? 'Ofrendas' : action.songPurpose === 'communion' ? 'Santa Comunión' : 'Alabanza';
         await supabase.from("song_selections").insert({
           service_id: serviceId,
           song_id: action.songId,
           selected_by: user?.id,
-          selection_reason: (action as any).reason || "Seleccionada por ARCANA",
+          selection_reason: (action as any).reason || `Seleccionada por ARCANA (${purposeLabel})`,
         });
       }
 
       // Send confirmation message from bot
+      const purposeMsg = action.songPurpose === 'offering' ? ' (Ofrendas)' : action.songPurpose === 'communion' ? ' (Santa Comunión)' : '';
       await supabase.from("chat_messages").insert({
         room_id: room.id,
         user_id: null,
-        message: `✅ Agregué "${action.songName}" al servicio del ${new Date(serviceDate!).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}`,
+        message: `✅ Agregué "${action.songName}"${purposeMsg} al servicio del ${new Date(serviceDate!).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}`,
         is_bot: true,
       });
 
@@ -1169,9 +1172,20 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
                               )}
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-semibold text-purple-900 truncate">{action.songName}</p>
-                                {action.keySignature && (
-                                  <p className="text-[10px] text-purple-600">🎹 {action.keySignature}</p>
-                                )}
+                                <div className="flex items-center gap-1">
+                                  {action.keySignature && (
+                                    <p className="text-[10px] text-purple-600">🎹 {action.keySignature}</p>
+                                  )}
+                                  {action.songPurpose && action.songPurpose !== 'worship' && (
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                                      action.songPurpose === 'offering' 
+                                        ? 'bg-amber-100 text-amber-700' 
+                                        : 'bg-purple-100 text-purple-700'
+                                    }`}>
+                                      {action.songPurpose === 'offering' ? '🎵 Ofrendas' : '🍷 Comunión'}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                             <div className="flex gap-1">
@@ -1180,7 +1194,7 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
                                 size="sm"
                                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-md text-xs h-7"
                               >
-                                ➕ Agregar
+                                ➕ {action.songPurpose === 'offering' ? 'Agregar (Ofrendas)' : action.songPurpose === 'communion' ? 'Agregar (Comunión)' : 'Agregar'}
                               </Button>
                               {currentUser?.profile?.role === 'leader' || currentUser?.profile?.role === 'administrator' ? (
                                 <Button

@@ -1883,6 +1883,7 @@ export type Database = {
           service_id: string
           song_id: string
           song_order: number | null
+          song_purpose: string
           updated_at: string
         }
         Insert: {
@@ -1892,6 +1893,7 @@ export type Database = {
           service_id: string
           song_id: string
           song_order?: number | null
+          song_purpose?: string
           updated_at?: string
         }
         Update: {
@@ -1901,6 +1903,7 @@ export type Database = {
           service_id?: string
           song_id?: string
           song_order?: number | null
+          song_purpose?: string
           updated_at?: string
         }
         Relationships: [
