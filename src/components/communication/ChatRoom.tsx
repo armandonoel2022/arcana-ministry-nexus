@@ -972,6 +972,53 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
         pendingSongsCount={pendingSongs.length}
       />
 
+      {/* Key Preference Dialog */}
+      <Dialog open={showKeyDialog} onOpenChange={(open) => !open && setShowKeyDialog(false)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center text-sm">
+              🎹 Tono preferido para "{keyDialogSong?.name}"
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-3">
+            <p className="text-xs text-muted-foreground mb-3 text-center">
+              Selecciona tu tono preferido como director de alabanza
+            </p>
+            <div className="grid grid-cols-6 gap-1.5 max-h-48 overflow-y-auto">
+              {musicalKeys.map((key) => (
+                <Button
+                  key={key}
+                  size="sm"
+                  variant={selectedKey === key ? "default" : "outline"}
+                  className={`text-xs h-8 ${selectedKey === key ? "bg-primary text-primary-foreground" : ""}`}
+                  onClick={() => setSelectedKey(key)}
+                >
+                  {key}
+                </Button>
+              ))}
+            </div>
+            {selectedKey && (
+              <div className="mt-3 flex gap-2">
+                <Button
+                  onClick={handleSaveKeyPreference}
+                  className="flex-1 bg-primary hover:bg-primary/90"
+                  size="sm"
+                >
+                  ✓ Guardar {selectedKey}
+                </Button>
+                <Button
+                  onClick={() => setShowKeyDialog(false)}
+                  variant="outline"
+                  size="sm"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Avatar animado de ARCANA */}
       <ArcanaAvatar isActive={arcanaActive} expression={arcanaExpression} position="bottom-right" />
 
