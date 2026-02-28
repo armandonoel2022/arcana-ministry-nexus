@@ -596,11 +596,9 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
       }
 
       if (existing) {
-        toast({
-          title: "⚠️ Canción ya agregada",
-          description: `"${action.songName}" ya está en este servicio`,
-          variant: "default",
-        });
+        // Show duplicate error overlay instead of just a toast
+        setDuplicateSongName(action.songName);
+        setShowDuplicateOverlay(true);
         return false;
       }
 
