@@ -1000,7 +1000,10 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-foreground">
-                <strong>"{duplicateSongName}"</strong> ya fue agregada a tu siguiente servicio y no puede ser duplicada.
+                {duplicateSongName.startsWith('Ya hay') 
+                  ? duplicateSongName
+                  : <><strong>"{duplicateSongName}"</strong> ya fue agregada a tu siguiente servicio y no puede ser duplicada.</>
+                }
               </p>
               <Button
                 onClick={() => setShowDuplicateOverlay(false)}
