@@ -1034,12 +1034,23 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-foreground">
-                {duplicateSongName.startsWith('Ya hay') 
-                  ? duplicateSongName
-                  : <><strong>"{duplicateSongName}"</strong> ya fue agregada a tu siguiente servicio y no puede ser duplicada.</>
-                }
-              </p>
+              {duplicateSongName.startsWith('Ya hay') 
+                ? <p className="text-sm text-foreground">{duplicateSongName}</p>
+                : (
+                  <div className="flex items-center gap-3">
+                    {duplicateSongCover && (
+                      <img 
+                        src={duplicateSongCover} 
+                        alt={duplicateSongName}
+                        className="w-16 h-16 rounded-lg object-cover shadow-md flex-shrink-0"
+                      />
+                    )}
+                    <p className="text-sm text-foreground">
+                      <strong>"{duplicateSongName}"</strong> ya fue agregada a tu siguiente servicio y no puede ser duplicada.
+                    </p>
+                  </div>
+                )
+              }
               <Button
                 onClick={() => setShowDuplicateOverlay(false)}
                 className="w-full"
