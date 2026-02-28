@@ -2,11 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Music, User, Key, Clock, Star, ExternalLink, Play, Youtube } from "lucide-react";
+import { FileText, Music, User, Key, Clock, Star, Youtube } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { openExternalUrl } from "@/utils/openExternal";
 import YouTubePlayerModal from "./YouTubePlayerModal";
@@ -41,7 +40,7 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
   const [open, setOpen] = useState(false);
   const [song, setSong] = useState<Song | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [showLyrics, setShowLyrics] = useState(false);
+  
 
   const loadSongDetails = async () => {
     if (!open) return;
@@ -99,14 +98,6 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
     ));
   };
 
-  const formatChords = (chords?: string) => {
-    if (!chords) return null;
-    return chords.split('\n').map((line, index) => (
-      <div key={index} className={`font-mono text-sm ${line.trim() === '' ? 'h-4' : 'leading-relaxed'}`}>
-        {line.trim() === '' ? '\u00A0' : line}
-      </div>
-    ));
-  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -126,31 +117,7 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
         ) : song ? (
-          showLyrics && song.lyrics ? (
-            // Lyrics View - Full Screen
-            <div className="h-[calc(85vh-100px)] flex flex-col">
-              <div className="flex items-center justify-between mb-4 pb-4 border-b">
-                <div>
-                  <h3 className="text-2xl font-bold">{song.title}</h3>
-                  {song.artist && (
-                    <p className="text-muted-foreground">{song.artist}</p>
-                  )}
-                </div>
-                <Button
-                  onClick={() => setShowLyrics(false)}
-                  variant="outline"
-                  className="rounded-full"
-                >
-                  Volver
-                </Button>
-              </div>
-              <ScrollArea className="flex-1">
-                <div className="whitespace-pre-line text-base leading-relaxed pr-4">
-                  {formatLyrics(song.lyrics)}
-                </div>
-              </ScrollArea>
-            </div>
-          ) : (
+          (
             // Main View with Song Details
             <ScrollArea className="max-h-[calc(85vh-100px)]">
               <div className="space-y-6 pr-4">
@@ -201,16 +168,6 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
                           >
                             <Music className="w-5 h-5 mr-2" />
                             Spotify
-                          </Button>
-                        )}
-                        {song.lyrics && (
-                          <Button
-                            onClick={() => setShowLyrics(true)}
-                            variant="outline"
-                            className="rounded-full px-6"
-                          >
-                            <FileText className="w-5 h-5 mr-2" />
-                            Ver Letra
                           </Button>
                         )}
                         {song.sheet_music_url && (
