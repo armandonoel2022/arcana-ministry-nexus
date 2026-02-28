@@ -57,6 +57,7 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
   const [repetitionResult, setRepetitionResult] = useState<SongRepetitionResult | null>(null);
   const [forceAllow, setForceAllow] = useState(false);
   const [showDuplicateError, setShowDuplicateError] = useState(false);
+  const [songPurpose, setSongPurpose] = useState('worship');
 
   const { checkSongRepetition, isChecking } = useSongRepetitionCheck();
 
@@ -225,7 +226,7 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
         .eq('id', user.id)
         .single();
 
-      // Create song selection with preferred key
+      // Create song selection with preferred key and purpose
       const { error: selectionError } = await supabase
         .from('song_selections')
         .insert({
@@ -233,7 +234,8 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
           song_id: song.id,
           selected_by: user.id,
           selection_reason: reason || 'Seleccionada para el servicio',
-          preferred_key: preferredKey || song.key_signature || 'G'
+          preferred_key: preferredKey || song.key_signature || 'G',
+          song_purpose: songPurpose
         });
 
       // Save director's preferred key for this song
@@ -305,6 +307,7 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
       setOpen(false);
       setSelectedService('');
       setReason('');
+      setSongPurpose('worship');
       setRepetitionResult(null);
       setForceAllow(false);
     } catch (error) {
@@ -523,6 +526,23 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
               <p className="text-xs text-muted-foreground mt-1">
                 El tono original de la canción es: {song.key_signature || 'G'}
               </p>
+            </div>
+
+            {/* Song Purpose Selector */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                🎵 Propósito de la canción
+              </label>
+              <Select value={songPurpose} onValueChange={setSongPurpose}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="worship">🎵 Adoración</SelectItem>
+                  <SelectItem value="offering">🎶 Ofrendas</SelectItem>
+                  <SelectItem value="communion">🍷 Santa Comunión</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
