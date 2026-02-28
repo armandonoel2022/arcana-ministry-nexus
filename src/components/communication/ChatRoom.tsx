@@ -881,6 +881,61 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
     });
   }, [toast, pendingSongs, sendSongsNotification]);
 
+  // Handle key preference dialog
+  const handleSetKeyPreference = useCallback((songId: string, songName: string) => {
+    setKeyDialogSong({ id: songId, name: songName });
+    setSelectedKey("");
+    setShowKeyDialog(true);
+  }, []);
+
+  const handleSaveKeyPreference = useCallback(async () => {
+    if (!keyDialogSong || !selectedKey || !currentUser?.id) return;
+    
+    try {
+      // Upsert the director's key preference
+      const { data: existing } = await supabase
+        .from("director_song_keys")
+        .select("id")
+        .eq("director_id", currentUser.id)
+        .eq("song_id", keyDialogSong.id)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("director_song_keys")
+          .update({ preferred_key: selectedKey, updated_at: new Date().toISOString() })
+          .eq("id", existing.id);
+      } else {
+        await supabase
+          .from("director_song_keys")
+          .insert({
+            director_id: currentUser.id,
+            song_id: keyDialogSong.id,
+            preferred_key: selectedKey,
+          });
+      }
+
+      toast({
+        title: "✅ Tono guardado",
+        description: `Tu tono preferido para "${keyDialogSong.name}" es ahora ${selectedKey}`,
+      });
+      setShowKeyDialog(false);
+      setKeyDialogSong(null);
+    } catch (error) {
+      console.error("Error guardando tono:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo guardar el tono preferido",
+        variant: "destructive",
+      });
+    }
+  }, [keyDialogSong, selectedKey, currentUser, toast]);
+
+  const musicalKeys = [
+    "C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B",
+    "Cm", "C#m", "Dm", "D#m", "Ebm", "Em", "Fm", "F#m", "Gm", "G#m", "Am", "A#m", "Bbm", "Bm"
+  ];
+
   if (loading) {
     return <div className="text-center py-8">Cargando mensajes...</div>;
   }
