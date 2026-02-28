@@ -261,7 +261,7 @@ export class ArcanaBot {
         /cu[áa]ndo\s+canta\s+([a-záéíóúñü\s]{2,})/,
       ],
       ensayos: [/ensayo/, /ensayos/, /pr[áa]ctica/, /practicas/, /rehearsal/],
-      canciones_buscar: [/buscar/, /canci[óo]n/, /canciones/, /repertorio/, /m[úu]sica/, /song/],
+      canciones_buscar: [/buscar/, /canci[óo]n/, /canciones/, /repertorio/, /m[úu]sica/, /song/, /ofrendas?/, /santa\s*(?:cena|comuni[oó]n)/, /comuni[oó]n/],
       canciones_seleccionar: [/seleccionar/, /elegir/, /a[ñn]adir/, /agregar/, /para\s+servicio/],
       cumpleanos: [/cumplea[ñn]os/, /cumple/, /fiesta/, /natalicio/],
       ayuda: [/ayuda/, /help/, /qu[eé]\s+puedes/, /opciones/, /comandos/],
