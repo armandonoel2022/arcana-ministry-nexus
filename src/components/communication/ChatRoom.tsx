@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Users, Bot, Smile, Paperclip, AtSign, ArrowLeft, MoreVertical } from "lucide-react";
+import { Send, Users, Bot, Smile, Paperclip, AtSign, ArrowLeft, MoreVertical, Music, Key } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ArcanaBot, BotAction } from "./ArcanaBot";
 import { ArcanaAvatar } from "./ArcanaAvatar";
@@ -78,6 +79,11 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
     serviceDate: string;
   }>>([]);
   const [isAddingMultipleSongs, setIsAddingMultipleSongs] = useState(false);
+  
+  // Key preference dialog state
+  const [showKeyDialog, setShowKeyDialog] = useState(false);
+  const [keyDialogSong, setKeyDialogSong] = useState<{ id: string; name: string } | null>(null);
+  const [selectedKey, setSelectedKey] = useState("");
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -876,6 +882,61 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
     });
   }, [toast, pendingSongs, sendSongsNotification]);
 
+  // Handle key preference dialog
+  const handleSetKeyPreference = useCallback((songId: string, songName: string) => {
+    setKeyDialogSong({ id: songId, name: songName });
+    setSelectedKey("");
+    setShowKeyDialog(true);
+  }, []);
+
+  const handleSaveKeyPreference = useCallback(async () => {
+    if (!keyDialogSong || !selectedKey || !currentUser?.id) return;
+    
+    try {
+      // Upsert the director's key preference
+      const { data: existing } = await supabase
+        .from("director_song_keys")
+        .select("id")
+        .eq("director_id", currentUser.id)
+        .eq("song_id", keyDialogSong.id)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("director_song_keys")
+          .update({ preferred_key: selectedKey, updated_at: new Date().toISOString() })
+          .eq("id", existing.id);
+      } else {
+        await supabase
+          .from("director_song_keys")
+          .insert({
+            director_id: currentUser.id,
+            song_id: keyDialogSong.id,
+            preferred_key: selectedKey,
+          });
+      }
+
+      toast({
+        title: "✅ Tono guardado",
+        description: `Tu tono preferido para "${keyDialogSong.name}" es ahora ${selectedKey}`,
+      });
+      setShowKeyDialog(false);
+      setKeyDialogSong(null);
+    } catch (error) {
+      console.error("Error guardando tono:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo guardar el tono preferido",
+        variant: "destructive",
+      });
+    }
+  }, [keyDialogSong, selectedKey, currentUser, toast]);
+
+  const musicalKeys = [
+    "C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B",
+    "Cm", "C#m", "Dm", "D#m", "Ebm", "Em", "Fm", "F#m", "Gm", "G#m", "Am", "A#m", "Bbm", "Bm"
+  ];
+
   if (loading) {
     return <div className="text-center py-8">Cargando mensajes...</div>;
   }
@@ -910,6 +971,53 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
         onSearchAnother={handleSearchAnother}
         pendingSongsCount={pendingSongs.length}
       />
+
+      {/* Key Preference Dialog */}
+      <Dialog open={showKeyDialog} onOpenChange={(open) => !open && setShowKeyDialog(false)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center text-sm">
+              🎹 Tono preferido para "{keyDialogSong?.name}"
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-3">
+            <p className="text-xs text-muted-foreground mb-3 text-center">
+              Selecciona tu tono preferido como director de alabanza
+            </p>
+            <div className="grid grid-cols-6 gap-1.5 max-h-48 overflow-y-auto">
+              {musicalKeys.map((key) => (
+                <Button
+                  key={key}
+                  size="sm"
+                  variant={selectedKey === key ? "default" : "outline"}
+                  className={`text-xs h-8 ${selectedKey === key ? "bg-primary text-primary-foreground" : ""}`}
+                  onClick={() => setSelectedKey(key)}
+                >
+                  {key}
+                </Button>
+              ))}
+            </div>
+            {selectedKey && (
+              <div className="mt-3 flex gap-2">
+                <Button
+                  onClick={handleSaveKeyPreference}
+                  className="flex-1 bg-primary hover:bg-primary/90"
+                  size="sm"
+                >
+                  ✓ Guardar {selectedKey}
+                </Button>
+                <Button
+                  onClick={() => setShowKeyDialog(false)}
+                  variant="outline"
+                  size="sm"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Avatar animado de ARCANA */}
       <ArcanaAvatar isActive={arcanaActive} expression={arcanaExpression} position="bottom-right" />
@@ -1044,16 +1152,50 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
 
                     {/* Render action buttons if available */}
                     {message.actions && message.actions.length > 0 && (
-                      <div className="mt-3 flex flex-col gap-2">
+                      <div className="mt-3 flex flex-col gap-3">
                         {message.actions.map((action, idx) => (
-                          <Button
-                            key={idx}
-                            onClick={() => handleActionClick(action)}
-                            size="sm"
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-md"
-                          >
-                            ➕ Agregar "{action.songName}"
-                          </Button>
+                          <div key={idx} className="bg-white/60 rounded-lg p-2 border border-purple-200">
+                            <div className="flex items-center gap-2 mb-2">
+                              {action.coverImageUrl ? (
+                                <img
+                                  src={action.coverImageUrl}
+                                  alt={action.songName}
+                                  className="w-10 h-10 rounded object-cover flex-shrink-0"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 rounded bg-purple-200 flex items-center justify-center flex-shrink-0">
+                                  <Music className="w-5 h-5 text-purple-600" />
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-semibold text-purple-900 truncate">{action.songName}</p>
+                                {action.keySignature && (
+                                  <p className="text-[10px] text-purple-600">🎹 {action.keySignature}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button
+                                onClick={() => handleActionClick(action)}
+                                size="sm"
+                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-md text-xs h-7"
+                              >
+                                ➕ Agregar
+                              </Button>
+                              {currentUser?.profile?.role === 'leader' || currentUser?.profile?.role === 'administrator' ? (
+                                <Button
+                                  onClick={() => handleSetKeyPreference(action.songId, action.songName)}
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-xs h-7 border-purple-300 text-purple-700 hover:bg-purple-50"
+                                  title="Configurar tono preferido"
+                                >
+                                  <Key className="w-3 h-3 mr-1" />
+                                  Tono
+                                </Button>
+                              ) : null}
+                            </div>
+                          </div>
                         ))}
                       </div>
                     )}

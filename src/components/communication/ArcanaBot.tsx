@@ -6,6 +6,8 @@ export interface BotAction {
   songName: string;
   serviceDate?: string;
   serviceId?: string;
+  coverImageUrl?: string;
+  keySignature?: string;
 }
 
 interface BotResponse {
@@ -808,12 +810,17 @@ export class ArcanaBot {
     }
   }
 
+  // Normalize text removing accents for comparison
+  private static normalizeText(text: string): string {
+    return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  }
+
   private static async handleCancionesBuscar(query: string, userId?: string): Promise<BotResponse> {
     try {
       console.log("ARCANA consultando canciones con query:", query);
 
       // Extraer términos de búsqueda
-      const searchTerms = query.replace(/canción|cancion|canciones|buscar|repertorio|música|song/gi, "").trim();
+      const searchTerms = query.replace(/canción|cancion|canciones|buscar|repertorio|música|musica|song/gi, "").trim();
 
       if (!searchTerms) {
         return {
@@ -823,7 +830,8 @@ export class ArcanaBot {
         };
       }
 
-      const { data: canciones, error } = await supabase
+      // First try exact ilike search
+      let { data: canciones, error } = await supabase
         .from("songs")
         .select("*")
         .or(`title.ilike.%${searchTerms}%,artist.ilike.%${searchTerms}%`)
@@ -837,6 +845,30 @@ export class ArcanaBot {
           message: "🤖 Error buscando canciones.",
           expression: "worried",
         };
+      }
+
+      // If no results, try accent-insensitive search by fetching more songs and filtering locally
+      if (!canciones || canciones.length === 0) {
+        const normalizedSearch = this.normalizeText(searchTerms);
+        const searchWords = normalizedSearch.split(/\s+/).filter(w => w.length >= 2);
+        
+        // Fetch a broader set and filter client-side for accent-insensitive matching
+        const { data: allSongs } = await supabase
+          .from("songs")
+          .select("*")
+          .eq("is_active", true)
+          .limit(500);
+
+        if (allSongs) {
+          canciones = allSongs.filter(song => {
+            const normalizedTitle = this.normalizeText(song.title || "");
+            const normalizedArtist = this.normalizeText(song.artist || "");
+            // All search words must appear in title or artist
+            return searchWords.every(word => 
+              normalizedTitle.includes(word) || normalizedArtist.includes(word)
+            );
+          }).slice(0, 5);
+        }
       }
 
       if (!canciones || canciones.length === 0) {
@@ -865,6 +897,20 @@ export class ArcanaBot {
         }
       }
 
+      // Get director's preferred keys if userId available
+      let directorKeys: Record<string, string> = {};
+      if (userId) {
+        const songIds = canciones.map(c => c.id);
+        const { data: keys } = await supabase
+          .from("director_song_keys")
+          .select("song_id, preferred_key")
+          .eq("director_id", userId)
+          .in("song_id", songIds);
+        if (keys) {
+          keys.forEach(k => { directorKeys[k.song_id] = k.preferred_key; });
+        }
+      }
+
       const serviceDate = nextService?.service_date;
 
       let mensaje = `🎵 **Encontré ${canciones.length} canción(es):**\n\n`;
@@ -873,7 +919,12 @@ export class ArcanaBot {
         mensaje += `${index + 1}. **${cancion.title}**\n`;
         if (cancion.artist) mensaje += `🎤 ${cancion.artist}\n`;
         if (cancion.genre) mensaje += `🎼 ${cancion.genre}\n`;
-        if (cancion.key_signature) mensaje += `🎹 Tono: ${cancion.key_signature}\n`;
+        const dirKey = directorKeys[cancion.id];
+        if (dirKey) {
+          mensaje += `🎹 Tono: ${cancion.key_signature || 'N/A'} (★ Tu preferido: ${dirKey})\n`;
+        } else if (cancion.key_signature) {
+          mensaje += `🎹 Tono: ${cancion.key_signature}\n`;
+        }
         mensaje += "\n";
       });
 
@@ -890,6 +941,8 @@ export class ArcanaBot {
               songName: c.title,
               serviceDate: nextService.service_date,
               serviceId: nextService.id,
+              coverImageUrl: c.cover_image_url || null,
+              keySignature: directorKeys[c.id] || c.key_signature || null,
             }),
           ),
         );
@@ -946,13 +999,32 @@ export class ArcanaBot {
         };
       }
 
-      // Buscar la canción en el repertorio
-      const { data: canciones, error } = await supabase
+      // Buscar la canción en el repertorio - first try ilike, then accent-insensitive
+      let { data: canciones, error } = await supabase
         .from("songs")
         .select("*")
         .or(`title.ilike.%${nombreCancion}%,artist.ilike.%${nombreCancion}%`)
         .eq("is_active", true)
         .limit(3);
+
+      // If no results, try accent-insensitive search
+      if ((!canciones || canciones.length === 0) && !error) {
+        const normalizedSearch = this.normalizeText(nombreCancion);
+        const searchWords = normalizedSearch.split(/\s+/).filter(w => w.length >= 2);
+        
+        const { data: allSongs } = await supabase
+          .from("songs")
+          .select("*")
+          .eq("is_active", true)
+          .limit(500);
+
+        if (allSongs) {
+          canciones = allSongs.filter(song => {
+            const normalizedTitle = this.normalizeText(song.title || "");
+            return searchWords.every(word => normalizedTitle.includes(word));
+          }).slice(0, 3);
+        }
+      }
 
       if (error) {
         console.error("Error buscando canción:", error);
@@ -1004,11 +1076,13 @@ export class ArcanaBot {
 
         const actions: BotAction[] = nextService
           ? canciones.map((c: any) => ({
-              type: "select_song",
+              type: "select_song" as const,
               songId: c.id,
               songName: c.title,
               serviceDate: nextService.service_date,
               serviceId: nextService.id,
+              coverImageUrl: c.cover_image_url || null,
+              keySignature: c.key_signature || null,
             }))
           : [];
 
@@ -1037,6 +1111,8 @@ export class ArcanaBot {
             songName: cancion.title,
             serviceDate: nextService.service_date,
             serviceId: nextService.id,
+            coverImageUrl: cancion.cover_image_url || null,
+            keySignature: cancion.key_signature || null,
           },
         ];
 
