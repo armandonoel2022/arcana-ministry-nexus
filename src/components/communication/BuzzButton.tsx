@@ -91,7 +91,7 @@ export const BuzzButton = ({ currentUserId }: BuzzButtonProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUserId, playSound, vibrate, toast]);
+  }, [currentUserId, toast]);
 
   const fetchUsers = async () => {
     const { data, error } = await supabase
