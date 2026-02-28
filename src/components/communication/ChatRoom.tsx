@@ -794,6 +794,38 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
         return;
       }
 
+      // Check for duplicates BEFORE showing the semaphore dialog
+      const { data: existingDup } = await supabase
+        .from("service_songs")
+        .select("id")
+        .eq("service_id", serviceId)
+        .eq("song_id", action.songId)
+        .maybeSingle();
+
+      if (existingDup) {
+        setDuplicateSongName(action.songName);
+        setShowDuplicateOverlay(true);
+        return;
+      }
+
+      // Check if there's already an offering/communion song for this service
+      const purpose = action.songPurpose || 'worship';
+      if (purpose === 'offering' || purpose === 'communion') {
+        const { data: existingPurpose } = await supabase
+          .from("service_songs")
+          .select("id")
+          .eq("service_id", serviceId)
+          .eq("song_purpose", purpose)
+          .maybeSingle();
+
+        if (existingPurpose) {
+          const purposeLabel = purpose === 'offering' ? 'ofrendas' : 'santa comunión';
+          setDuplicateSongName(`Ya hay una canción de ${purposeLabel} en este servicio. Solo se permite una.`);
+          setShowDuplicateOverlay(true);
+          return;
+        }
+      }
+
       // Store the pending action and show the dialog
       setPendingAction(action);
       setShowRepetitionDialog(true);
