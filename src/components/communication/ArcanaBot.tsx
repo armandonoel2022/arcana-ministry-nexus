@@ -6,6 +6,8 @@ export interface BotAction {
   songName: string;
   serviceDate?: string;
   serviceId?: string;
+  coverImageUrl?: string;
+  keySignature?: string;
 }
 
 interface BotResponse {
