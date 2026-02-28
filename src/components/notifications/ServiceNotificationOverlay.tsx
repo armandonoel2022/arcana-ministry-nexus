@@ -1038,6 +1038,7 @@ const ServiceNotificationOverlay = ({
             title: song.title || "Sin título",
             artist: song.artist || "Artista desconocido",
             song_order: song.song_order || 0,
+            song_purpose: song.song_purpose || 'worship',
           })),
         };
       });
