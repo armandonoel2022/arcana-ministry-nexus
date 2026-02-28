@@ -945,7 +945,8 @@ export class ArcanaBot {
 
       const serviceDate = nextService?.service_date;
 
-      let mensaje = `🎵 **Encontré ${canciones.length} canción(es):**\n\n`;
+      const purposeLabel = songPurpose !== "worship" ? ` para ${this.getPurposeLabel(songPurpose)}` : "";
+      let mensaje = `🎵 **Encontré ${canciones.length} canción(es)${purposeLabel}:**\n\n`;
 
       canciones.forEach((cancion, index) => {
         mensaje += `${index + 1}. **${cancion.title}**\n`;
@@ -963,7 +964,8 @@ export class ArcanaBot {
       // Agregar botones si el usuario es director y tiene próximo servicio
       const actions: BotAction[] = [];
       if (nextService) {
-        mensaje += `💡 **Haz clic en los botones para agregar al servicio del ${new Date(serviceDate!).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}**\n\n`;
+        const purposeText = songPurpose !== "worship" ? ` como canción de ${this.getPurposeLabel(songPurpose)}` : "";
+        mensaje += `💡 **Haz clic en los botones para agregar${purposeText} al servicio del ${new Date(serviceDate!).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}**\n\n`;
 
         actions.push(
           ...canciones.map(
@@ -975,6 +977,7 @@ export class ArcanaBot {
               serviceId: nextService.id,
               coverImageUrl: c.cover_image_url || null,
               keySignature: directorKeys[c.id] || c.key_signature || null,
+              songPurpose: songPurpose,
             }),
           ),
         );
