@@ -260,11 +260,9 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
                       <span className="font-semibold">Letra</span>
                     </div>
                     {song.lyrics && song.lyrics.trim() !== '' && song.lyrics.trim().toLowerCase() !== 'pendiente' ? (
-                      <ScrollArea className="max-h-96 rounded-lg border p-4">
-                        <div className="whitespace-pre-line text-sm leading-relaxed">
-                          {formatLyrics(song.lyrics)}
-                        </div>
-                      </ScrollArea>
+                      <div className="rounded-lg border p-4 whitespace-pre-line text-sm leading-relaxed">
+                        {formatLyrics(song.lyrics)}
+                      </div>
                     ) : (
                       <div className="text-center text-muted-foreground py-8 border rounded-lg">
                         Pendiente
