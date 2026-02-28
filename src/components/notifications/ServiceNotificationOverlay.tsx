@@ -757,7 +757,22 @@ const getAllGroupMembersRaw = (
   return allMembers;
 };
 
-// Función wrapper que filtra miembros inactivos
+// Parejas de intercambio: si uno está en licencia, el otro asume
+const INTERCHANGE_PAIRS: [string, string][] = [
+  [MEMBER_IDS.FELIX_NICOLAS, MEMBER_IDS.ARMANDO_NOEL],
+  [MEMBER_IDS.GUARIONEX_GARCIA, MEMBER_IDS.FREDDERID_ABRAHAN],
+  [MEMBER_IDS.ARIZONI_LIRIANO, MEMBER_IDS.DENNY_ALBERTO],
+];
+
+const getInterchangePartner = (memberId: string): string | null => {
+  for (const [a, b] of INTERCHANGE_PAIRS) {
+    if (memberId === a) return b;
+    if (memberId === b) return a;
+  }
+  return null;
+};
+
+// Función wrapper que filtra miembros inactivos y reemplaza con su par de intercambio
 const getGroupMembers = (
   groupName: string,
   serviceTime: string,
@@ -773,14 +788,39 @@ const getGroupMembers = (
     return members;
   }
   
-  // Filtrar miembros que están en licencia
-  const activeMembers = members.filter(member => {
+  // Filtrar miembros en licencia y reemplazar con su par de intercambio
+  const activeMembers: typeof members = [];
+  
+  for (const member of members) {
     const isInactive = inactiveMemberIds.has(member.id);
+    
     if (isInactive) {
       console.log(`🚫 Miembro en licencia excluido del overlay: ${member.name}`);
+      
+      // Buscar su par de intercambio
+      const partnerId = getInterchangePartner(member.id);
+      if (partnerId && !inactiveMemberIds.has(partnerId)) {
+        // Verificar que el par no esté ya en la lista
+        const partnerAlreadyInList = members.some(m => m.id === partnerId);
+        if (!partnerAlreadyInList) {
+          const partnerInfo = ALL_MEMBERS[partnerId];
+          if (partnerInfo) {
+            console.log(`✅ Reemplazando con par de intercambio: ${partnerInfo.name}`);
+            activeMembers.push({
+              id: partnerId,
+              name: partnerInfo.name,
+              voice: partnerInfo.voice,
+              role: member.role,
+              mic: member.mic,
+              photo_url: partnerInfo.photo_url,
+            });
+          }
+        }
+      }
+    } else {
+      activeMembers.push(member);
     }
-    return !isInactive;
-  });
+  }
   
   return activeMembers;
 };
