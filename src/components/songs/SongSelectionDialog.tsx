@@ -36,6 +36,7 @@ interface Song {
   difficulty_level?: number;
   key_signature?: string;
   tags?: string[];
+  cover_image_url?: string;
 }
 
 interface SongSelectionDialogProps {
@@ -55,6 +56,7 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [repetitionResult, setRepetitionResult] = useState<SongRepetitionResult | null>(null);
   const [forceAllow, setForceAllow] = useState(false);
+  const [showDuplicateError, setShowDuplicateError] = useState(false);
 
   const { checkSongRepetition, isChecking } = useSongRepetitionCheck();
 
@@ -201,6 +203,20 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
+
+      // Check for duplicate before inserting
+      const { data: existingDup } = await supabase
+        .from('song_selections')
+        .select('id')
+        .eq('service_id', selectedService)
+        .eq('song_id', song.id)
+        .maybeSingle();
+
+      if (existingDup) {
+        setShowDuplicateError(true);
+        setIsLoading(false);
+        return;
+      }
 
       // Get user profile
       const { data: profile } = await supabase
@@ -349,6 +365,7 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
         setSelectedService('');
         setRepetitionResult(null);
         setForceAllow(false);
+        setShowDuplicateError(false);
       }
     }}>
       <DialogTrigger asChild onClick={loadUpcomingServices}>
@@ -520,6 +537,28 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
               />
             </div>
           </div>
+
+          {/* Duplicate Error */}
+          {showDuplicateError && (
+            <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 flex items-center gap-4">
+              {song.cover_image_url && (
+                <img 
+                  src={song.cover_image_url} 
+                  alt={song.title}
+                  className="w-16 h-16 rounded-lg object-cover shadow-md flex-shrink-0"
+                />
+              )}
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-destructive">⚠️ Canción duplicada</p>
+                <p className="text-sm text-foreground">
+                  <strong>"{song.title}"</strong> ya fue agregada a este servicio.
+                </p>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => setShowDuplicateError(false)}>
+                OK
+              </Button>
+            </div>
+          )}
 
           <div className="flex gap-2 pt-4">
             <Button 
