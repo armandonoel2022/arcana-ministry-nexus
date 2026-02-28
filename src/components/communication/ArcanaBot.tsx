@@ -1332,6 +1332,138 @@ export class ArcanaBot {
     }
   }
 
+  private static getMenuResponse(): BotResponse {
+    const menuActions: BotAction[] = [
+      {
+        type: "menu_option",
+        songId: "",
+        songName: "",
+        menuCommand: "cumpleaños del mes",
+        menuLabel: "🎂 Cumpleaños del mes",
+        menuIcon: "🎂",
+      },
+      {
+        type: "menu_option",
+        songId: "",
+        songName: "",
+        menuCommand: "buscar canción",
+        menuLabel: "🎵 Buscar canciones",
+        menuIcon: "🎵",
+      },
+      {
+        type: "menu_option",
+        songId: "",
+        songName: "",
+        menuCommand: "cuando me toca",
+        menuLabel: "📅 ¿Cuándo me toca?",
+        menuIcon: "📅",
+      },
+      {
+        type: "menu_option",
+        songId: "",
+        songName: "",
+        menuCommand: "resumen canciones",
+        menuLabel: "📋 Resumen del fin de semana",
+        menuIcon: "📋",
+      },
+      {
+        type: "menu_option",
+        songId: "",
+        songName: "",
+        menuCommand: "próximo ensayo",
+        menuLabel: "🎹 Próximo ensayo",
+        menuIcon: "🎹",
+      },
+    ];
+
+    return {
+      type: "menu",
+      message: "🤖 **Menú de ARCANA** ✨\n\n¿Qué deseas consultar? Selecciona una opción:",
+      expression: "happy",
+      actions: menuActions,
+    };
+  }
+
+  private static async handleWeekendSongsSummary(): Promise<BotResponse> {
+    try {
+      // Obtener el próximo fin de semana (domingo)
+      const today = new Date();
+      const dayOfWeek = today.getDay(); // 0=Sun
+      const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+      const nextSunday = new Date(today);
+      nextSunday.setDate(today.getDate() + daysUntilSunday);
+      const sundayStr = nextSunday.toISOString().split('T')[0];
+
+      // Buscar servicios de ese día
+      const { data: services, error: srvError } = await supabase
+        .from("services")
+        .select("id, title, service_date, leader")
+        .gte("service_date", sundayStr + "T00:00:00")
+        .lte("service_date", sundayStr + "T23:59:59")
+        .order("service_date", { ascending: true });
+
+      if (srvError || !services || services.length === 0) {
+        return {
+          type: "general",
+          message: `📋 No encontré servicios programados para el ${nextSunday.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })}.`,
+          expression: "worried",
+        };
+      }
+
+      let mensaje = `📋 **Resumen de canciones para el ${nextSunday.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })}:**\n\n`;
+
+      for (const service of services) {
+        // Get songs for this service
+        const { data: songs } = await supabase
+          .from("service_songs")
+          .select("song_purpose, songs(title)")
+          .eq("service_id", service.id)
+          .order("created_at", { ascending: true });
+
+        mensaje += `🕐 **${service.title}** (Dir: ${service.leader || 'Sin asignar'})\n`;
+
+        if (!songs || songs.length === 0) {
+          mensaje += `   _Sin canciones seleccionadas aún_\n\n`;
+          continue;
+        }
+
+        const worshipSongs = songs.filter((s: any) => !s.song_purpose || s.song_purpose === 'worship');
+        const offeringSongs = songs.filter((s: any) => s.song_purpose === 'offering');
+        const communionSongs = songs.filter((s: any) => s.song_purpose === 'communion');
+
+        if (worshipSongs.length > 0) {
+          mensaje += `   🎵 **Adoración:**\n`;
+          worshipSongs.forEach((s: any, i: number) => {
+            mensaje += `   ${i + 1}. ${(s as any).songs?.title || 'Sin título'}\n`;
+          });
+        }
+        if (offeringSongs.length > 0) {
+          mensaje += `   🎶 **Ofrendas:**\n`;
+          offeringSongs.forEach((s: any) => {
+            mensaje += `   • ${(s as any).songs?.title || 'Sin título'}\n`;
+          });
+        }
+        if (communionSongs.length > 0) {
+          mensaje += `   🍷 **Santa Comunión:**\n`;
+          communionSongs.forEach((s: any) => {
+            mensaje += `   • ${(s as any).songs?.title || 'Sin título'}\n`;
+          });
+        }
+
+        mensaje += `   📊 Total: ${songs.length} canción${songs.length > 1 ? 'es' : ''}\n\n`;
+      }
+
+      return { type: "general", message: mensaje, expression: "happy" };
+    } catch (error) {
+      console.error("Error obteniendo resumen de canciones:", error);
+      return {
+        type: "general",
+        message: "📋 Error obteniendo el resumen de canciones del fin de semana.",
+        expression: "worried",
+      };
+    }
+  }
+
   private static getHelpResponse(): BotResponse {
     const ayuda = `🤖 **¡Hola! Soy ARCANA, tu asistente del ministerio ADN Arca de Noé.** ✨
 
