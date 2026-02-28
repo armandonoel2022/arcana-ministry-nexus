@@ -295,49 +295,26 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
                   </div>
                 </Card>
 
-                {/* Content Tabs - Only Chords and Notes */}
-                {(song.chords || song.director_notes) && (
-                  <Card className="rounded-xl">
-                    <CardContent className="p-6">
-                      <Tabs defaultValue={song.chords ? "chords" : "notes"} className="w-full">
-                        <TabsList className={`grid w-full ${song.chords && song.director_notes ? 'grid-cols-2' : 'grid-cols-1'} rounded-lg`}>
-                          {song.chords && (
-                            <TabsTrigger value="chords" className="rounded-md">
-                              <Key className="w-4 h-4 mr-2" />
-                              Acordes
-                            </TabsTrigger>
-                          )}
-                          {song.director_notes && (
-                            <TabsTrigger value="notes" className="rounded-md">
-                              <FileText className="w-4 h-4 mr-2" />
-                              Notas
-                            </TabsTrigger>
-                          )}
-                        </TabsList>
-
-                        {song.chords && (
-                          <TabsContent value="chords" className="mt-6">
-                            <ScrollArea className="h-96 rounded-lg border p-4">
-                              <div className="font-mono text-sm">
-                                {formatChords(song.chords)}
-                              </div>
-                            </ScrollArea>
-                          </TabsContent>
-                        )}
-
-                        {song.director_notes && (
-                          <TabsContent value="notes" className="mt-6">
-                            <ScrollArea className="h-96 rounded-lg border p-4">
-                              <div className="text-sm leading-relaxed whitespace-pre-line">
-                                {song.director_notes}
-                              </div>
-                            </ScrollArea>
-                          </TabsContent>
-                        )}
-                      </Tabs>
-                    </CardContent>
-                  </Card>
-                )}
+                {/* Letra */}
+                <Card className="rounded-xl">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <FileText className="w-4 h-4 text-muted-foreground" />
+                      <span className="font-semibold">Letra</span>
+                    </div>
+                    {song.lyrics && song.lyrics.trim() !== '' && song.lyrics.trim().toLowerCase() !== 'pendiente' ? (
+                      <ScrollArea className="max-h-96 rounded-lg border p-4">
+                        <div className="whitespace-pre-line text-sm leading-relaxed">
+                          {formatLyrics(song.lyrics)}
+                        </div>
+                      </ScrollArea>
+                    ) : (
+                      <div className="text-center text-muted-foreground py-8 border rounded-lg">
+                        Pendiente
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
             </ScrollArea>
           )
