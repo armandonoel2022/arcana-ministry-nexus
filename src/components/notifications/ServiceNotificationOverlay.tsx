@@ -83,6 +83,7 @@ interface WeekendService {
     title: string;
     artist: string;
     song_order: number;
+    song_purpose?: string;
   }[];
 }
 

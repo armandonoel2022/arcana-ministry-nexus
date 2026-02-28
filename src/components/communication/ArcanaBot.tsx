@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export type SongPurpose = "worship" | "offering" | "communion";
+
 export interface BotAction {
   type: "select_song";
   songId: string;
@@ -8,6 +10,7 @@ export interface BotAction {
   serviceId?: string;
   coverImageUrl?: string;
   keySignature?: string;
+  songPurpose?: SongPurpose;
 }
 
 interface BotResponse {
