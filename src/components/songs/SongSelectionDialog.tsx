@@ -365,6 +365,7 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
         setSelectedService('');
         setRepetitionResult(null);
         setForceAllow(false);
+        setShowDuplicateError(false);
       }
     }}>
       <DialogTrigger asChild onClick={loadUpcomingServices}>
