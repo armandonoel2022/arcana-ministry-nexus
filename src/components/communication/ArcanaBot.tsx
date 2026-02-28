@@ -1413,16 +1413,29 @@ export class ArcanaBot {
       let mensaje = `📋 **Resumen de canciones para el ${nextSunday.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })}:**\n\n`;
 
       for (const service of services) {
-        // Get songs for this service
-        const { data: songs } = await supabase
+        // Get songs for this service - try service_songs first, fallback to song_selections
+        let songs: any[] = [];
+        const { data: svcSongs } = await supabase
           .from("service_songs")
           .select("song_purpose, songs(title)")
           .eq("service_id", service.id)
           .order("created_at", { ascending: true });
 
+        if (svcSongs && svcSongs.length > 0) {
+          songs = svcSongs;
+        } else {
+          // Fallback: check song_selections table
+          const { data: selSongs } = await supabase
+            .from("song_selections")
+            .select("song_purpose, songs(title)")
+            .eq("service_id", service.id)
+            .order("created_at", { ascending: true });
+          songs = selSongs || [];
+        }
+
         mensaje += `🕐 **${service.title}** (Dir: ${service.leader || 'Sin asignar'})\n`;
 
-        if (!songs || songs.length === 0) {
+        if (songs.length === 0) {
           mensaje += `   _Sin canciones seleccionadas aún_\n\n`;
           continue;
         }
