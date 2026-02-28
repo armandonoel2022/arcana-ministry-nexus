@@ -1424,14 +1424,13 @@ export class ArcanaBot {
         if (svcSongs && svcSongs.length > 0) {
           songs = svcSongs;
         } else {
-          // Fallback: check song_selections table (no song_purpose column)
+          // Fallback: check song_selections table
           const { data: selSongs } = await supabase
             .from("song_selections")
-            .select("songs(title)")
+            .select("song_purpose, songs(title)")
             .eq("service_id", service.id)
             .order("created_at", { ascending: true });
-          // Map to same shape, all as worship by default
-          songs = (selSongs || []).map((s: any) => ({ ...s, song_purpose: null }));
+          songs = selSongs || [];
         }
 
         mensaje += `🕐 **${service.title}** (Dir: ${service.leader || 'Sin asignar'})\n`;
