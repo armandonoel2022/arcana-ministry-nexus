@@ -1258,61 +1258,79 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
 
                     {/* Render action buttons if available */}
                     {message.actions && message.actions.length > 0 && (
-                      <div className="mt-3 flex flex-col gap-3">
+                      <div className="mt-3 flex flex-col gap-2">
                         {message.actions.map((action, idx) => (
-                          <div key={idx} className="bg-white/60 rounded-lg p-2 border border-purple-200">
-                            <div className="flex items-center gap-2 mb-2">
-                              {action.coverImageUrl ? (
-                                <img
-                                  src={action.coverImageUrl}
-                                  alt={action.songName}
-                                  className="w-10 h-10 rounded object-cover flex-shrink-0"
-                                />
-                              ) : (
-                                <div className="w-10 h-10 rounded bg-purple-200 flex items-center justify-center flex-shrink-0">
-                                  <Music className="w-5 h-5 text-purple-600" />
-                                </div>
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold text-purple-900 truncate">{action.songName}</p>
-                                <div className="flex items-center gap-1">
-                                  {action.keySignature && (
-                                    <p className="text-[10px] text-purple-600">🎹 {action.keySignature}</p>
-                                  )}
-                                  {action.songPurpose && action.songPurpose !== 'worship' && (
-                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                                      action.songPurpose === 'offering' 
-                                        ? 'bg-amber-100 text-amber-700' 
-                                        : 'bg-purple-100 text-purple-700'
-                                    }`}>
-                                      {action.songPurpose === 'offering' ? '🎵 Ofrendas' : '🍷 Comunión'}
-                                    </span>
-                                  )}
+                          action.type === "menu_option" ? (
+                            /* Menu option button */
+                            <Button
+                              key={idx}
+                              onClick={() => {
+                                if (action.menuCommand) {
+                                  sendMessage(`ARCANA ${action.menuCommand}`);
+                                }
+                              }}
+                              variant="outline"
+                              size="sm"
+                              className="w-full justify-start text-left text-xs h-9 border-purple-200 hover:bg-purple-50 hover:border-purple-400 text-purple-800 font-medium"
+                            >
+                              {action.menuLabel}
+                            </Button>
+                          ) : (
+                            /* Song action card */
+                            <div key={idx} className="bg-white/60 rounded-lg p-2 border border-purple-200">
+                              <div className="flex items-center gap-2 mb-2">
+                                {action.coverImageUrl ? (
+                                  <img
+                                    src={action.coverImageUrl}
+                                    alt={action.songName}
+                                    className="w-10 h-10 rounded object-cover flex-shrink-0"
+                                  />
+                                ) : (
+                                  <div className="w-10 h-10 rounded bg-purple-200 flex items-center justify-center flex-shrink-0">
+                                    <Music className="w-5 h-5 text-purple-600" />
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold text-purple-900 truncate">{action.songName}</p>
+                                  <div className="flex items-center gap-1">
+                                    {action.keySignature && (
+                                      <p className="text-[10px] text-purple-600">🎹 {action.keySignature}</p>
+                                    )}
+                                    {action.songPurpose && action.songPurpose !== 'worship' && (
+                                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                                        action.songPurpose === 'offering' 
+                                          ? 'bg-amber-100 text-amber-700' 
+                                          : 'bg-purple-100 text-purple-700'
+                                      }`}>
+                                        {action.songPurpose === 'offering' ? '🎵 Ofrendas' : '🍷 Comunión'}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                            <div className="flex gap-1">
-                              <Button
-                                onClick={() => handleActionClick(action)}
-                                size="sm"
-                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-md text-xs h-7"
-                              >
-                                ➕ {action.songPurpose === 'offering' ? 'Agregar (Ofrendas)' : action.songPurpose === 'communion' ? 'Agregar (Comunión)' : 'Agregar'}
-                              </Button>
-                              {currentUser?.profile?.role === 'leader' || currentUser?.profile?.role === 'administrator' ? (
+                              <div className="flex gap-1">
                                 <Button
-                                  onClick={() => handleSetKeyPreference(action.songId, action.songName)}
+                                  onClick={() => handleActionClick(action)}
                                   size="sm"
-                                  variant="outline"
-                                  className="text-xs h-7 border-purple-300 text-purple-700 hover:bg-purple-50"
-                                  title="Configurar tono preferido"
+                                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-md text-xs h-7"
                                 >
-                                  <Key className="w-3 h-3 mr-1" />
-                                  Tono
+                                  ➕ {action.songPurpose === 'offering' ? 'Agregar (Ofrendas)' : action.songPurpose === 'communion' ? 'Agregar (Comunión)' : 'Agregar'}
                                 </Button>
-                              ) : null}
+                                {currentUser?.profile?.role === 'leader' || currentUser?.profile?.role === 'administrator' ? (
+                                  <Button
+                                    onClick={() => handleSetKeyPreference(action.songId, action.songName)}
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-xs h-7 border-purple-300 text-purple-700 hover:bg-purple-50"
+                                    title="Configurar tono preferido"
+                                  >
+                                    <Key className="w-3 h-3 mr-1" />
+                                    Tono
+                                  </Button>
+                                ) : null}
+                              </div>
                             </div>
-                          </div>
+                          )
                         ))}
                       </div>
                     )}
