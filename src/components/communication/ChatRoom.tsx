@@ -614,6 +614,7 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
       const { error } = await supabase.from("service_songs").insert({
         service_id: serviceId,
         song_id: action.songId,
+        song_purpose: action.songPurpose || 'worship',
       });
 
       if (error) {
@@ -632,19 +633,21 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
         .maybeSingle();
 
       if (!existingSelection && !selCheckError) {
+        const purposeLabel = action.songPurpose === 'offering' ? 'Ofrendas' : action.songPurpose === 'communion' ? 'Santa Comunión' : 'Alabanza';
         await supabase.from("song_selections").insert({
           service_id: serviceId,
           song_id: action.songId,
           selected_by: user?.id,
-          selection_reason: (action as any).reason || "Seleccionada por ARCANA",
+          selection_reason: (action as any).reason || `Seleccionada por ARCANA (${purposeLabel})`,
         });
       }
 
       // Send confirmation message from bot
+      const purposeMsg = action.songPurpose === 'offering' ? ' (Ofrendas)' : action.songPurpose === 'communion' ? ' (Santa Comunión)' : '';
       await supabase.from("chat_messages").insert({
         room_id: room.id,
         user_id: null,
-        message: `✅ Agregué "${action.songName}" al servicio del ${new Date(serviceDate!).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}`,
+        message: `✅ Agregué "${action.songName}"${purposeMsg} al servicio del ${new Date(serviceDate!).toLocaleDateString("es-ES", { day: "numeric", month: "long" })}`,
         is_bot: true,
       });
 
