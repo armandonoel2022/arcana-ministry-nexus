@@ -1237,19 +1237,36 @@ const ServiceNotificationOverlay = ({
                 song_purpose: item.song_purpose || 'worship',
               }));
             } else {
-              const { data: selectedView, error: viewError } = await supabase
-                .from("service_selected_songs")
-                .select("song_id, song_title, artist, selected_at")
+              // Fallback: read from song_selections which has song_purpose
+              const { data: selData, error: selError } = await supabase
+                .from("song_selections")
+                .select("song_id, song_purpose, songs(id, title, artist)")
                 .eq("service_id", service.id)
-                .order("selected_at", { ascending: true });
-              if (!viewError && selectedView && selectedView.length > 0) {
-                selectedSongs = selectedView.map((row: any, idx: number) => ({
-                  id: row.song_id,
-                  title: row.song_title,
-                  artist: row.artist,
+                .order("created_at", { ascending: true });
+              if (!selError && selData && selData.length > 0) {
+                selectedSongs = selData.map((row: any, idx: number) => ({
+                  id: row.songs?.id || row.song_id,
+                  title: row.songs?.title || 'Canción',
+                  artist: row.songs?.artist || null,
                   song_order: idx + 1,
-                  song_purpose: 'worship',
+                  song_purpose: row.song_purpose || 'worship',
                 }));
+              } else {
+                // Last fallback: service_selected_songs view
+                const { data: selectedView, error: viewError } = await supabase
+                  .from("service_selected_songs")
+                  .select("song_id, song_title, artist, selected_at")
+                  .eq("service_id", service.id)
+                  .order("selected_at", { ascending: true });
+                if (!viewError && selectedView && selectedView.length > 0) {
+                  selectedSongs = selectedView.map((row: any, idx: number) => ({
+                    id: row.song_id,
+                    title: row.song_title,
+                    artist: row.artist,
+                    song_order: idx + 1,
+                    song_purpose: 'worship',
+                  }));
+                }
               }
             }
 
