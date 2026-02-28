@@ -85,6 +85,10 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
   const [keyDialogSong, setKeyDialogSong] = useState<{ id: string; name: string } | null>(null);
   const [selectedKey, setSelectedKey] = useState("");
   
+  // Duplicate song overlay state
+  const [showDuplicateOverlay, setShowDuplicateOverlay] = useState(false);
+  const [duplicateSongName, setDuplicateSongName] = useState("");
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
@@ -596,11 +600,9 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
       }
 
       if (existing) {
-        toast({
-          title: "⚠️ Canción ya agregada",
-          description: `"${action.songName}" ya está en este servicio`,
-          variant: "default",
-        });
+        // Show duplicate error overlay instead of just a toast
+        setDuplicateSongName(action.songName);
+        setShowDuplicateOverlay(true);
         return false;
       }
 
@@ -958,7 +960,42 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
         />
       )}
 
-      {/* Song Repetition Semaphore Dialog */}
+      {/* Duplicate Song Error Overlay */}
+      {showDuplicateOverlay && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={() => setShowDuplicateOverlay(false)}
+        >
+          <Card 
+            className="w-[90%] max-w-md border-2 border-destructive/50 shadow-2xl bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/40 dark:to-orange-950/40"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <Music className="w-6 h-6 text-destructive" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg text-destructive">Canción Duplicada</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">No se puede agregar</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-foreground">
+                <strong>"{duplicateSongName}"</strong> ya fue agregada a tu siguiente servicio y no puede ser duplicada.
+              </p>
+              <Button
+                onClick={() => setShowDuplicateOverlay(false)}
+                className="w-full"
+              >
+                Entendido
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <SongRepetitionDialog
         isOpen={showRepetitionDialog}
         onClose={() => {
