@@ -1646,7 +1646,7 @@ const ServiceNotificationOverlay = ({
       dateTime.style.fontSize = "18px";
       dateTime.style.textTransform = "capitalize";
       dateTime.style.fontWeight = "500";
-      dateTime.style.color = isSpecialEvent ? "#fda4af" : isQuarantine ? "#fbbf24" : "#6b7280";
+      dateTime.style.color = isWomensDay_ ? "#fce7f3" : isSpecialEvent ? "#fda4af" : isQuarantine ? "#fbbf24" : "#6b7280";
 
       header.appendChild(title);
       header.appendChild(dateTime);
