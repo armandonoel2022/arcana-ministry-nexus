@@ -1533,7 +1533,8 @@ const ServiceNotificationOverlay = ({
       }
 
       const isQuarantine = service.service_type === 'cuarentena';
-      const isSpecialEvent = service.service_type === 'especial' || service.leader === 'TODOS';
+      const isWomensDay_ = isWomensDayService(service);
+      const isSpecialEvent = !isWomensDay_ && (service.service_type === 'especial' || service.leader === 'TODOS');
 
       // Crear un contenedor específico para la descarga
       const container = document.createElement("div");
@@ -1543,7 +1544,10 @@ const ServiceNotificationOverlay = ({
       container.style.lineHeight = "1.5";
 
       // Estilos según tipo de servicio
-      if (isSpecialEvent) {
+      if (isWomensDay_) {
+        container.style.background = "linear-gradient(135deg, #be185d 0%, #db2777 50%, #ec4899 100%)";
+        container.style.color = "#f5f5f5";
+      } else if (isSpecialEvent) {
         container.style.background = "linear-gradient(135deg, #881337 0%, #9f1239 50%, #be123c 100%)";
         container.style.color = "#f5f5f5";
       } else if (isQuarantine) {
@@ -1560,7 +1564,29 @@ const ServiceNotificationOverlay = ({
       header.style.textAlign = "center";
 
       // Banner especial
-      if (isSpecialEvent) {
+      if (isWomensDay_) {
+        const womensBanner = document.createElement("div");
+        womensBanner.style.background = "linear-gradient(135deg, #EC4899 0%, #DB2777 100%)";
+        womensBanner.style.color = "white";
+        womensBanner.style.padding = "12px 24px";
+        womensBanner.style.borderRadius = "12px";
+        womensBanner.style.marginBottom = "24px";
+        womensBanner.style.fontWeight = "bold";
+        womensBanner.style.fontSize = "18px";
+        womensBanner.style.textAlign = "center";
+        womensBanner.style.boxShadow = "0 4px 15px rgba(236, 72, 153, 0.3)";
+        womensBanner.textContent = "👑 HIJA DEL REY • Día Internacional de la Mujer";
+        header.appendChild(womensBanner);
+        
+        const dedicationText = document.createElement("p");
+        dedicationText.style.fontSize = "14px";
+        dedicationText.style.color = "#fce7f3";
+        dedicationText.style.textAlign = "center";
+        dedicationText.style.marginBottom = "16px";
+        dedicationText.style.fontStyle = "italic";
+        dedicationText.textContent = "Los varones dirigen y hacen coros en honor a las mujeres del ministerio";
+        header.appendChild(dedicationText);
+      } else if (isSpecialEvent) {
         const specialBanner = document.createElement("div");
         specialBanner.style.background = "linear-gradient(135deg, #E11D48 0%, #BE123C 100%)";
         specialBanner.style.color = "white";
