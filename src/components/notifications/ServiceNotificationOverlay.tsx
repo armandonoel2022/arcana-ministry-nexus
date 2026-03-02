@@ -2944,14 +2944,16 @@ const ServiceNotificationOverlay = ({
           {/* Fixed Header */}
           <div 
             className={`p-4 border-b border-border sticky top-4 z-10 shadow-md ${
-              (hasQuarantineService || hasSpecialEvent) ? 'rounded-none' : 'rounded-t-xl'
+              (hasQuarantineService || hasSpecialEvent || hasWomensDayService) ? 'rounded-none' : 'rounded-t-xl'
             }`}
             style={{
-              background: hasSpecialEvent
-                ? "linear-gradient(135deg, #881337 0%, #9f1239 100%)"
-                : hasQuarantineService 
-                  ? "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" 
-                  : "white"
+              background: hasWomensDayService
+                ? "linear-gradient(135deg, #be185d 0%, #db2777 100%)"
+                : hasSpecialEvent
+                  ? "linear-gradient(135deg, #881337 0%, #9f1239 100%)"
+                  : hasQuarantineService 
+                    ? "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" 
+                    : "white"
             }}
           >
             <div className="flex items-center justify-between">
@@ -2959,20 +2961,22 @@ const ServiceNotificationOverlay = ({
                 <div 
                   className="w-10 h-10 rounded-full flex items-center justify-center"
                   style={{
-                    background: hasSpecialEvent
-                      ? "linear-gradient(135deg, #E11D48 0%, #BE123C 100%)"
-                      : hasQuarantineService 
-                        ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
-                        : "linear-gradient(to right, #a855f7, #ec4899)"
+                    background: hasWomensDayService
+                      ? "linear-gradient(135deg, #EC4899 0%, #DB2777 100%)"
+                      : hasSpecialEvent
+                        ? "linear-gradient(135deg, #E11D48 0%, #BE123C 100%)"
+                        : hasQuarantineService 
+                          ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
+                          : "linear-gradient(to right, #a855f7, #ec4899)"
                   }}
                 >
                   <Bell className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className={`text-xl font-bold ${(hasQuarantineService || hasSpecialEvent) ? 'text-white' : 'text-foreground'}`}>
-                    {hasSpecialEvent ? 'Servicio Especial' : hasQuarantineService ? 'Servicio de Cuarentena' : 'Programa de Servicios'}
+                  <h2 className={`text-xl font-bold ${(hasQuarantineService || hasSpecialEvent || hasWomensDayService) ? 'text-white' : 'text-foreground'}`}>
+                    {hasWomensDayService ? 'Hija del Rey' : hasSpecialEvent ? 'Servicio Especial' : hasQuarantineService ? 'Servicio de Cuarentena' : 'Programa de Servicios'}
                   </h2>
-                  <p className={`text-sm ${hasSpecialEvent ? 'text-rose-200' : hasQuarantineService ? 'text-amber-200' : 'text-muted-foreground'}`}>
+                  <p className={`text-sm ${hasWomensDayService ? 'text-pink-200' : hasSpecialEvent ? 'text-rose-200' : hasQuarantineService ? 'text-amber-200' : 'text-muted-foreground'}`}>
                     {format(parseServiceDate(services[0].service_date), "EEEE, dd 'de' MMMM", { locale: es })}
                   </p>
                 </div>
