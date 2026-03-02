@@ -2024,16 +2024,16 @@ const ServiceNotificationOverlay = ({
       // Voices Section
       const voicesSection = document.createElement("div");
 
-      if (isSpecialEvent) {
+      if (isWomensDay_ || isSpecialEvent) {
         // SPECIAL EVENT: Show all members grouped by group
         const voicesTitle = document.createElement("h3");
-        voicesTitle.textContent = "Integrantes del Ministerio";
+        voicesTitle.textContent = isWomensDay_ ? "Los Varones • Coros y Dirección" : "Integrantes del Ministerio";
         voicesTitle.style.fontSize = "20px";
         voicesTitle.style.fontWeight = "bold";
         voicesTitle.style.marginBottom = "20px";
         voicesTitle.style.textAlign = "center";
         voicesTitle.style.textDecoration = "underline";
-        voicesTitle.style.color = "#fecdd3";
+        voicesTitle.style.color = isWomensDay_ ? "#fce7f3" : "#fecdd3";
         voicesSection.appendChild(voicesTitle);
 
         const groupColorMap: Record<string, string> = {
@@ -2317,7 +2317,7 @@ const ServiceNotificationOverlay = ({
 
       // Capture as image
       const canvas = await html2canvas(container, {
-        backgroundColor: isQuarantine ? "#1a1a2e" : "#ffffff",
+        backgroundColor: isWomensDay_ ? "#be185d" : isQuarantine ? "#1a1a2e" : isSpecialEvent ? "#881337" : "#ffffff",
         scale: 2,
         useCORS: true,
         allowTaint: true,
@@ -3202,24 +3202,26 @@ const ServiceNotificationOverlay = ({
 
             {/* Action Buttons */}
             <div className="px-6 pb-6 flex items-center gap-3 justify-center flex-wrap">
-              <Button
-                variant="default"
-                onClick={() => downloadServiceImage(services[0].id, "Primer Servicio")}
-                className="flex items-center gap-2"
-              >
-                <Download className="w-4 h-4" />
-                Descargar 1er Servicio
-              </Button>
-              {services[1] && (
-                <Button
-                  variant="default"
-                  onClick={() => downloadServiceImage(services[1].id, "Segundo Servicio")}
-                  className="flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Descargar 2do Servicio
-                </Button>
-              )}
+              {services.map((service, idx) => {
+                const serviceDate = parseServiceDate(service.service_date);
+                const dayName = format(serviceDate, "EEEE", { locale: es });
+                const serviceTime = getServiceTime(service.title, service.service_type);
+                const isWD = isWomensDayService(service);
+                const label = isWD 
+                  ? "Descargar Hija del Rey" 
+                  : `Descargar ${dayName.charAt(0).toUpperCase() + dayName.slice(1)} ${serviceTime}`;
+                return (
+                  <Button
+                    key={service.id}
+                    variant="default"
+                    onClick={() => downloadServiceImage(service.id, service.title)}
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    {label}
+                  </Button>
+                );
+              })}
               <Button variant="outline" onClick={closeOverlay} className="flex items-center gap-2">
                 <X className="w-4 h-4" />
                 Cerrar
