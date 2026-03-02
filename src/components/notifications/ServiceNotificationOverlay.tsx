@@ -2453,9 +2453,85 @@ const ServiceNotificationOverlay = ({
             </div>
           </div>
         </div>
+        )}
 
-        {/* SPECIAL EVENT: Show all members grouped by their group */}
-        {isSpecialEvent ? (
+        {/* WOMEN'S DAY: Show male members in special pink layout */}
+        {isWomensDay_ ? (
+          <div className="space-y-4">
+            {/* Bible verse */}
+            <div 
+              className="rounded-lg p-4 text-center"
+              style={{
+                background: "rgba(255,255,255,0.15)",
+                border: "1px solid rgba(255,255,255,0.2)",
+              }}
+            >
+              <p className="text-white italic text-sm">
+                "Encomienda a Jehová tu camino, y confía en él; y él hará."
+              </p>
+              <p className="text-pink-200 text-xs mt-1">- Salmos 37:5</p>
+            </div>
+
+            {/* Male members */}
+            <div className="rounded-lg p-4" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="px-3 py-1 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: "#DB2777" }}>
+                  🎤 Voces Masculinas
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {responsibleVoices.map((member) => {
+                  const { firstName, lastName } = splitName(member.profiles?.full_name || "");
+                  return (
+                    <div key={member.id} className="flex items-center gap-2">
+                      <div className="w-12 h-12 rounded-full border-2 border-pink-300/60 overflow-hidden bg-gradient-to-r from-pink-400 to-pink-500 flex-shrink-0">
+                        <img
+                          src={member.profiles?.photo_url}
+                          alt={member.profiles?.full_name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = "none";
+                            const fallback = target.nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = "flex";
+                          }}
+                        />
+                        <div className="w-full h-full hidden items-center justify-center text-white text-xs font-bold">
+                          {getInitials(member.profiles?.full_name || "NN")}
+                        </div>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-white truncate">{firstName}</div>
+                        {lastName && <div className="text-xs text-pink-100/70 truncate">{lastName}</div>}
+                        <div className="text-xs text-pink-200">{member.instrument?.split(' • ')[0]}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Dedication message */}
+            <div className="rounded-lg p-4 text-center" style={{ background: "rgba(255,255,255,0.2)" }}>
+              <p className="text-white text-sm font-medium">
+                💐 Con amor y admiración para todas las mujeres de nuestro ministerio
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="service-action-buttons flex flex-wrap gap-2 mt-6 pt-4 border-t border-pink-300/30">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => downloadServiceImage(service.id, service.title)}
+                className="flex items-center gap-2 border-pink-300 text-white hover:bg-pink-400/20"
+              >
+                <Download className="w-4 h-4" />
+                Descargar
+              </Button>
+            </div>
+          </div>
+        ) : isSpecialEvent ? (
           <div className="space-y-4">
             {/* Special event info banner */}
             <div 
