@@ -1191,8 +1191,21 @@ const ServiceNotificationOverlay = ({
       if (error) throw error;
 
       if (data && data.length > 0) {
+        // Deduplicate services on the same day with the same leader and title
+        const deduped = data.filter((service, index, arr) => {
+          const datePart = service.service_date.split('T')[0].split(' ')[0];
+          const isDuplicate = arr.findIndex(s => {
+            const sPart = s.service_date.split('T')[0].split(' ')[0];
+            return sPart === datePart && s.leader === service.leader && s.title === service.title;
+          }) !== index;
+          if (isDuplicate) {
+            console.log(`🔄 Servicio duplicado filtrado: ${service.title} - ${service.service_date}`);
+          }
+          return !isDuplicate;
+        });
+
         // Primero extraer info de directores para context de previous/next
-        const servicesDirectorInfo = data.map((service) => ({
+        const servicesDirectorInfo = deduped.map((service) => ({
           director: service.leader || "Por asignar",
           time: getServiceTime(service.title),
         }));
@@ -1615,14 +1628,16 @@ const ServiceNotificationOverlay = ({
       }
 
       const title = document.createElement("h1");
-      title.textContent = isSpecialEvent 
-        ? (service.special_activity || "Servicio Especial")
-        : isQuarantine ? "Culto de Oración" : "Programa de Servicios";
+      title.textContent = isWomensDay_
+        ? "Hija del Rey"
+        : isSpecialEvent 
+          ? (service.special_activity || "Servicio Especial")
+          : isQuarantine ? "Culto de Oración" : "Programa de Servicios";
       title.style.fontSize = "28px";
       title.style.fontWeight = "bold";
       title.style.marginBottom = "8px";
       title.style.letterSpacing = "-0.025em";
-      title.style.color = (isSpecialEvent || isQuarantine) ? "#fcd34d" : "#111827";
+      title.style.color = isWomensDay_ ? "#fce7f3" : (isSpecialEvent || isQuarantine) ? "#fcd34d" : "#111827";
       if (isSpecialEvent) title.style.color = "#fecdd3";
 
       const dateTime = document.createElement("p");
@@ -1804,7 +1819,7 @@ const ServiceNotificationOverlay = ({
       const communionSongs = service.selected_songs?.filter((s) => s.song_purpose === 'communion') || [];
       const hasAnySongs = worshipSongs.length > 0 || offeringsSongs.length > 0 || communionSongs.length > 0;
       
-      const isDark = isSpecialEvent || isQuarantine;
+      const isDark = isWomensDay_ || isSpecialEvent || isQuarantine;
       
       if (hasAnySongs) {
         const songsTitle = document.createElement("h3");
