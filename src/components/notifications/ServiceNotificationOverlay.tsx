@@ -114,6 +114,9 @@ const MEMBER_IDS = {
   // Solo disponibles a las 8:00 AM
   MARIA_SANTANA: "1d5866c9-cdc1-439e-976a-2d2e6a5aef80",
 
+  // Músicos/directores adicionales
+  ROOSEVELT_MARTINEZ: "60b1f3d9-9826-4e5c-a348-cebbdbd2a7c9",
+
   // Miembros fijos
   ROSELY_MONTERO: "2a2fa0cd-d301-46ec-9965-2e4ea3692181",
   ALEIDA_BATISTA: "00a916a8-ab94-4cc0-81ae-668dd6071416",
@@ -245,6 +248,43 @@ const ALL_MEMBERS = {
     photo_url:
       "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/bdcc27cd-40ae-456e-a340-633ce7da08c0.JPG",
   },
+  [MEMBER_IDS.ROOSEVELT_MARTINEZ]: {
+    name: "Roosevelt Martinez",
+    voice: "Piano/Bajo",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/60b1f3d9-9826-4e5c-a348-cebbdbd2a7c9.JPG",
+  },
+};
+
+// Helper para detectar servicio del Día de la Mujer
+const isWomensDayService = (service: any): boolean => {
+  const activity = (service.special_activity || '').toLowerCase();
+  const leader = (service.leader || '').toLowerCase();
+  return (
+    activity.includes('día internacional de la mujer') ||
+    activity.includes('hija del rey') ||
+    (leader.includes('varones') && activity.includes('mujer'))
+  );
+};
+
+// Miembros específicos para el servicio del Día de la Mujer (solo varones)
+const getWomensDayMembers = (): { id: string; name: string; voice: string; role: string; mic: string; photo_url: string; group: string }[] => {
+  const menIds = [
+    MEMBER_IDS.ROOSEVELT_MARTINEZ,
+    MEMBER_IDS.ARMANDO_NOEL,
+    MEMBER_IDS.FELIX_NICOLAS,
+    MEMBER_IDS.FREDDERID_ABRAHAN,
+    MEMBER_IDS.ARIZONI_LIRIANO,
+  ];
+  return menIds.map((id, idx) => ({
+    id,
+    name: ALL_MEMBERS[id]?.name || "",
+    voice: ALL_MEMBERS[id]?.voice || "",
+    role: idx === 0 ? "Director Musical" : "Corista",
+    mic: `Micrófono #${idx + 1}`,
+    photo_url: ALL_MEMBERS[id]?.photo_url || "",
+    group: "Los Varones",
+  }));
 };
 
 // Configuración de grupos con lógica dinámica
