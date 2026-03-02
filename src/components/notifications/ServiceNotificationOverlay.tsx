@@ -1247,10 +1247,14 @@ const ServiceNotificationOverlay = ({
               }
             }
 
+            // Detectar si es el servicio del Día de la Mujer
+            const isWomensDay = isWomensDayService(service);
+
             // Detectar si es un servicio especial donde participan TODOS los grupos
-            const isSpecialAllGroups = 
+            const isSpecialAllGroups = !isWomensDay && (
               service.service_type === 'especial' || 
-              (service.leader && service.leader.toUpperCase() === 'TODOS');
+              (service.leader && service.leader.toUpperCase() === 'TODOS')
+            );
 
             // Obtener miembros del grupo usando la nueva función
             let groupName = "Grupo de Aleida";
@@ -1269,7 +1273,12 @@ const ServiceNotificationOverlay = ({
             const previousService = serviceIndex > 0 ? servicesDirectorInfo[serviceIndex - 1] : undefined;
             const nextService = serviceIndex < servicesDirectorInfo.length - 1 ? servicesDirectorInfo[serviceIndex + 1] : undefined;
 
-            if (isSpecialAllGroups) {
+            if (isWomensDay) {
+              // Servicio Día de la Mujer: solo los varones específicos
+              const womensDayMembers = getWomensDayMembers();
+              members = womensDayMembers;
+              console.log(`👑 Servicio Día de la Mujer detectado: ${service.special_activity} - ${womensDayMembers.length} varones`);
+            } else if (isSpecialAllGroups) {
               // Para servicios especiales: obtener TODOS los miembros de todos los grupos
               const allMembers = getAllGroupMembersRaw(inactiveMemberIds);
               members = allMembers;
