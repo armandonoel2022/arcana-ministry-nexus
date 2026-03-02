@@ -2337,16 +2337,40 @@ const ServiceNotificationOverlay = ({
       <div
         ref={(el) => (serviceCardRefs.current[service.id] = el)}
         className={`rounded-xl p-6 shadow-lg mx-auto ${
-          isSpecialEvent
-            ? 'bg-gradient-to-br from-rose-900 to-rose-800 border-2 border-rose-400/40'
-            : isQuarantine 
-              ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-amber-500/30' 
-              : 'bg-white/90 border border-blue-200'
+          isWomensDay_
+            ? 'bg-gradient-to-br from-pink-600 via-pink-500 to-rose-500 border-2 border-pink-300/40'
+            : isSpecialEvent
+              ? 'bg-gradient-to-br from-rose-900 to-rose-800 border-2 border-rose-400/40'
+              : isQuarantine 
+                ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-amber-500/30' 
+                : 'bg-white/90 border border-blue-200'
         }`}
         style={{ maxWidth: "600px" }}
       >
+        {/* Women's Day Badge */}
+        {isWomensDay_ && (
+          <div className="flex flex-col items-center justify-center gap-2 mb-4 -mt-2">
+            <span 
+              className="px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5"
+              style={{
+                background: "linear-gradient(135deg, #EC4899 0%, #DB2777 100%)",
+                color: "white",
+              }}
+            >
+              👑 HIJA DEL REY
+            </span>
+            <span className="text-white text-lg font-bold text-center">
+              Día Internacional de la Mujer
+            </span>
+            <span className="text-pink-100 text-sm font-medium">8 de Marzo • {serviceTime}</span>
+            <p className="text-white/80 text-xs text-center max-w-sm mt-1">
+              En honor a todas las mujeres valientes y llenas de fe de nuestro ministerio, los varones dirigen y hacen coros este domingo
+            </p>
+          </div>
+        )}
+
         {/* Special Event Badge */}
-        {isSpecialEvent && (
+        {isSpecialEvent && !isWomensDay_ && (
           <div className="flex flex-col items-center justify-center gap-2 mb-4 -mt-2">
             <span 
               className="px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5"
