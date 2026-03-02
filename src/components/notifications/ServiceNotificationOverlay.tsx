@@ -1364,12 +1364,12 @@ const ServiceNotificationOverlay = ({
 
             const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG] || GROUP_CONFIG["Grupo de Aleida"];
 
-            // Para servicios especiales, incluir info del grupo en el instrument
-            const membersList = isSpecialAllGroups
+            // Para servicios especiales o Día de la Mujer, incluir info del grupo en el instrument
+            const membersList = (isSpecialAllGroups || isWomensDay)
               ? members.map((member: any, index: number) => ({
                   id: `member-${service.id}-${index}`,
                   user_id: member.id,
-                  instrument: `${member.voice} • ${member.group}`,
+                  instrument: `${member.voice} • ${member.role || member.group}`,
                   is_leader: false,
                   profiles: {
                     id: member.id,
@@ -1391,26 +1391,32 @@ const ServiceNotificationOverlay = ({
 
             return {
               ...service,
-              leader: isSpecialAllGroups ? "TODOS" : (directorProfile?.full_name || service.leader),
+              leader: isWomensDay ? "Los Varones" : isSpecialAllGroups ? "TODOS" : (directorProfile?.full_name || service.leader),
               group_members: membersList,
               selected_songs: selectedSongs,
-              director_profile: isSpecialAllGroups ? null : directorProfile,
-              worship_groups: isSpecialAllGroups
+              director_profile: (isSpecialAllGroups || isWomensDay) ? null : directorProfile,
+              worship_groups: isWomensDay
                 ? {
-                    id: "all",
-                    name: "Todos los Grupos",
-                    color_theme: "#E11D48", // Rose/red for special events
+                    id: "womens-day",
+                    name: "Los Varones",
+                    color_theme: "#EC4899", // Pink for Women's Day
                   }
-                : Array.isArray(service.worship_groups) && service.worship_groups.length > 0
+                : isSpecialAllGroups
                   ? {
-                      ...service.worship_groups[0],
-                      color_theme: groupConfig.color_theme,
+                      id: "all",
+                      name: "Todos los Grupos",
+                      color_theme: "#E11D48",
                     }
-                  : {
-                      id: "1",
-                      name: groupName,
-                      color_theme: groupConfig.color_theme,
-                    },
+                  : Array.isArray(service.worship_groups) && service.worship_groups.length > 0
+                    ? {
+                        ...service.worship_groups[0],
+                        color_theme: groupConfig.color_theme,
+                      }
+                    : {
+                        id: "1",
+                        name: groupName,
+                        color_theme: groupConfig.color_theme,
+                      },
             };
           }),
         );
