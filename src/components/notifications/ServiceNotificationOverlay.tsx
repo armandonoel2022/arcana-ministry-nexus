@@ -1211,7 +1211,7 @@ const ServiceNotificationOverlay = ({
         }));
 
         const servicesWithMembers = await Promise.all(
-          data.map(async (service, serviceIndex) => {
+          deduped.map(async (service, serviceIndex) => {
             let members: any[] = [];
             let directorProfile: any = null;
 
