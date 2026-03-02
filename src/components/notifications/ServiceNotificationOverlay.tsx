@@ -273,6 +273,7 @@ const getWomensDayMembers = (): { id: string; name: string; voice: string; role:
     MEMBER_IDS.ROOSEVELT_MARTINEZ,
     MEMBER_IDS.ARMANDO_NOEL,
     MEMBER_IDS.FELIX_NICOLAS,
+    MEMBER_IDS.GUARIONEX_GARCIA,
     MEMBER_IDS.FREDDERID_ABRAHAN,
     MEMBER_IDS.ARIZONI_LIRIANO,
   ];
@@ -2144,6 +2145,32 @@ const ServiceNotificationOverlay = ({
           dedText.style.fontWeight = "600";
           dedText.style.color = "white";
           dedication.appendChild(dedText);
+
+          // Ministry logo in Women's Day
+          const wdLogoRow = document.createElement("div");
+          wdLogoRow.style.display = "flex";
+          wdLogoRow.style.alignItems = "center";
+          wdLogoRow.style.justifyContent = "center";
+          wdLogoRow.style.gap = "8px";
+          wdLogoRow.style.marginTop = "12px";
+
+          const wdLogoImg = document.createElement("img");
+          wdLogoImg.src = window.location.origin + "/lovable-uploads/43125001-4383-4612-84dd-b01a2ee6a562.png";
+          wdLogoImg.style.width = "28px";
+          wdLogoImg.style.height = "28px";
+          wdLogoImg.style.borderRadius = "50%";
+          wdLogoImg.style.objectFit = "cover";
+          wdLogoImg.style.border = "2px solid rgba(255,255,255,0.3)";
+          wdLogoRow.appendChild(wdLogoImg);
+
+          const wdLogoText = document.createElement("span");
+          wdLogoText.textContent = "Ministerio de Alabanza Arca de Noé";
+          wdLogoText.style.fontSize = "12px";
+          wdLogoText.style.fontWeight = "500";
+          wdLogoText.style.color = "rgba(255,255,255,0.7)";
+          wdLogoRow.appendChild(wdLogoText);
+
+          dedication.appendChild(wdLogoRow);
           voicesSection.appendChild(dedication);
         } else {
         ["Grupo de Aleida", "Grupo de Keyla", "Grupo de Massy"].forEach(groupKey => {
@@ -2375,11 +2402,37 @@ const ServiceNotificationOverlay = ({
         footer.style.padding = "12px";
         footer.style.borderTop = "1px solid rgba(253,164,175,0.2)";
         
-        const footerText = document.createElement("p");
-        footerText.textContent = "Ministerio de Alabanza Arca de Noé • " + format(new Date(), 'yyyy');
-        footerText.style.fontSize = "12px";
-        footerText.style.color = "rgba(255,255,255,0.4)";
-        footer.appendChild(footerText);
+      // Ministry logo
+        const logoContainer = document.createElement("div");
+        logoContainer.style.display = "flex";
+        logoContainer.style.alignItems = "center";
+        logoContainer.style.justifyContent = "center";
+        logoContainer.style.gap = "10px";
+        logoContainer.style.marginBottom = "8px";
+
+        const logoImg = document.createElement("img");
+        logoImg.src = window.location.origin + "/lovable-uploads/43125001-4383-4612-84dd-b01a2ee6a562.png";
+        logoImg.style.width = "36px";
+        logoImg.style.height = "36px";
+        logoImg.style.borderRadius = "50%";
+        logoImg.style.objectFit = "cover";
+        logoImg.style.border = "2px solid rgba(255,255,255,0.3)";
+        logoContainer.appendChild(logoImg);
+
+        const logoText = document.createElement("span");
+        logoText.textContent = "Ministerio de Alabanza Arca de Noé";
+        logoText.style.fontSize = "13px";
+        logoText.style.fontWeight = "600";
+        logoText.style.color = "rgba(255,255,255,0.6)";
+        logoContainer.appendChild(logoText);
+
+        footer.appendChild(logoContainer);
+
+        const yearText = document.createElement("p");
+        yearText.textContent = format(new Date(), 'yyyy');
+        yearText.style.fontSize = "11px";
+        yearText.style.color = "rgba(255,255,255,0.3)";
+        footer.appendChild(yearText);
         
         voicesSection.appendChild(footer);
       }
