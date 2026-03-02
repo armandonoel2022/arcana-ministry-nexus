@@ -2326,7 +2326,8 @@ const ServiceNotificationOverlay = ({
     const directorMember = service.group_members.find((m) => m.is_leader);
     const responsibleVoices = getResponsibleVoices(service.group_members);
     const isQuarantine = service.service_type === 'cuarentena';
-    const isSpecialEvent = service.service_type === 'especial' || service.leader === 'TODOS';
+    const isWomensDay_ = isWomensDayService(service);
+    const isSpecialEvent = !isWomensDay_ && (service.service_type === 'especial' || service.leader === 'TODOS');
 
     const worshipSongs = service.selected_songs?.filter((s) => (s.song_purpose || 'worship') === 'worship') || [];
     const offeringsSongs = service.selected_songs?.filter((s) => s.song_purpose === 'offering') || [];
