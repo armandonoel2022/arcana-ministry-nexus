@@ -2885,9 +2885,10 @@ const ServiceNotificationOverlay = ({
     return null;
   }
 
-  // Detectar si algún servicio es de cuarentena o especial
+  // Detectar si algún servicio es de cuarentena, especial o Día de la Mujer
   const hasQuarantineService = services.some(s => s.service_type === 'cuarentena');
-  const hasSpecialEvent = services.some(s => s.service_type === 'especial' || s.leader === 'TODOS');
+  const hasWomensDayService = services.some(s => isWomensDayService(s));
+  const hasSpecialEvent = !hasWomensDayService && services.some(s => s.service_type === 'especial' || s.leader === 'TODOS');
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto">
@@ -2899,8 +2900,22 @@ const ServiceNotificationOverlay = ({
               : "animate-out slide-out-to-top-4 fade-out duration-300"
           }`}
         >
+          {/* Women's Day Banner */}
+          {hasWomensDayService && (
+            <div 
+              className="mb-2 rounded-t-xl p-3 flex items-center justify-center gap-2 text-white"
+              style={{
+                background: "linear-gradient(135deg, #EC4899 0%, #DB2777 100%)",
+              }}
+            >
+              <span className="text-lg">👑</span>
+              <span className="font-semibold text-sm">DÍA INTERNACIONAL DE LA MUJER</span>
+              <span className="text-lg">💐</span>
+            </div>
+          )}
+
           {/* Special Event Banner */}
-          {hasSpecialEvent && !hasQuarantineService && (
+          {hasSpecialEvent && !hasQuarantineService && !hasWomensDayService && (
             <div 
               className="mb-2 rounded-t-xl p-3 flex items-center justify-center gap-2 text-white"
               style={{
