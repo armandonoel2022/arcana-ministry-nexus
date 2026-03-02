@@ -935,6 +935,9 @@ const splitName = (fullName: string) => {
     if (fullName.includes("Ruth")) {
       return { firstName: "Ruth Esmailin", lastName: "Ramirez" };
     }
+    if (fullName.includes("Roosevelt")) {
+      return { firstName: "Roosevelt", lastName: "Martinez" };
+    }
 
     // Lógica general para otros nombres
     if (parts.length === 2) {
