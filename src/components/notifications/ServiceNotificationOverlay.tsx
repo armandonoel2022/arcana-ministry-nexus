@@ -2256,6 +2256,7 @@ const ServiceNotificationOverlay = ({
           groupContainer.appendChild(membersGrid);
           voicesSection.appendChild(groupContainer);
         });
+        } // close else (non-Women's Day special events)
       } else {
         // Regular service: show responsible voices
         const voicesTitle = document.createElement("h3");
