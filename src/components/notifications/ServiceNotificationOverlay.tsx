@@ -2404,7 +2404,8 @@ const ServiceNotificationOverlay = ({
           </div>
         )}
 
-        {/* Service Header */}
+        {/* Service Header - skip for Women's Day since badge already has all info */}
+        {!isWomensDay_ && (
         <div className="flex items-center gap-3 mb-6">
           <div
             className="w-3 h-8 rounded-full"
