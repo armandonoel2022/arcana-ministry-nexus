@@ -1191,14 +1191,27 @@ const ServiceNotificationOverlay = ({
       if (error) throw error;
 
       if (data && data.length > 0) {
+        // Deduplicate services on the same day with the same leader and title
+        const deduped = data.filter((service, index, arr) => {
+          const datePart = service.service_date.split('T')[0].split(' ')[0];
+          const isDuplicate = arr.findIndex(s => {
+            const sPart = s.service_date.split('T')[0].split(' ')[0];
+            return sPart === datePart && s.leader === service.leader && s.title === service.title;
+          }) !== index;
+          if (isDuplicate) {
+            console.log(`🔄 Servicio duplicado filtrado: ${service.title} - ${service.service_date}`);
+          }
+          return !isDuplicate;
+        });
+
         // Primero extraer info de directores para context de previous/next
-        const servicesDirectorInfo = data.map((service) => ({
+        const servicesDirectorInfo = deduped.map((service) => ({
           director: service.leader || "Por asignar",
           time: getServiceTime(service.title),
         }));
 
         const servicesWithMembers = await Promise.all(
-          data.map(async (service, serviceIndex) => {
+          deduped.map(async (service, serviceIndex) => {
             let members: any[] = [];
             let directorProfile: any = null;
 
@@ -1533,7 +1546,8 @@ const ServiceNotificationOverlay = ({
       }
 
       const isQuarantine = service.service_type === 'cuarentena';
-      const isSpecialEvent = service.service_type === 'especial' || service.leader === 'TODOS';
+      const isWomensDay_ = isWomensDayService(service);
+      const isSpecialEvent = !isWomensDay_ && (service.service_type === 'especial' || service.leader === 'TODOS');
 
       // Crear un contenedor específico para la descarga
       const container = document.createElement("div");
@@ -1543,7 +1557,10 @@ const ServiceNotificationOverlay = ({
       container.style.lineHeight = "1.5";
 
       // Estilos según tipo de servicio
-      if (isSpecialEvent) {
+      if (isWomensDay_) {
+        container.style.background = "linear-gradient(135deg, #be185d 0%, #db2777 50%, #ec4899 100%)";
+        container.style.color = "#f5f5f5";
+      } else if (isSpecialEvent) {
         container.style.background = "linear-gradient(135deg, #881337 0%, #9f1239 50%, #be123c 100%)";
         container.style.color = "#f5f5f5";
       } else if (isQuarantine) {
@@ -1560,7 +1577,29 @@ const ServiceNotificationOverlay = ({
       header.style.textAlign = "center";
 
       // Banner especial
-      if (isSpecialEvent) {
+      if (isWomensDay_) {
+        const womensBanner = document.createElement("div");
+        womensBanner.style.background = "linear-gradient(135deg, #EC4899 0%, #DB2777 100%)";
+        womensBanner.style.color = "white";
+        womensBanner.style.padding = "12px 24px";
+        womensBanner.style.borderRadius = "12px";
+        womensBanner.style.marginBottom = "24px";
+        womensBanner.style.fontWeight = "bold";
+        womensBanner.style.fontSize = "18px";
+        womensBanner.style.textAlign = "center";
+        womensBanner.style.boxShadow = "0 4px 15px rgba(236, 72, 153, 0.3)";
+        womensBanner.textContent = "👑 HIJA DEL REY • Día Internacional de la Mujer";
+        header.appendChild(womensBanner);
+        
+        const dedicationText = document.createElement("p");
+        dedicationText.style.fontSize = "14px";
+        dedicationText.style.color = "#fce7f3";
+        dedicationText.style.textAlign = "center";
+        dedicationText.style.marginBottom = "16px";
+        dedicationText.style.fontStyle = "italic";
+        dedicationText.textContent = "Los varones dirigen y hacen coros en honor a las mujeres del ministerio";
+        header.appendChild(dedicationText);
+      } else if (isSpecialEvent) {
         const specialBanner = document.createElement("div");
         specialBanner.style.background = "linear-gradient(135deg, #E11D48 0%, #BE123C 100%)";
         specialBanner.style.color = "white";
@@ -1589,14 +1628,16 @@ const ServiceNotificationOverlay = ({
       }
 
       const title = document.createElement("h1");
-      title.textContent = isSpecialEvent 
-        ? (service.special_activity || "Servicio Especial")
-        : isQuarantine ? "Culto de Oración" : "Programa de Servicios";
+      title.textContent = isWomensDay_
+        ? "Hija del Rey"
+        : isSpecialEvent 
+          ? (service.special_activity || "Servicio Especial")
+          : isQuarantine ? "Culto de Oración" : "Programa de Servicios";
       title.style.fontSize = "28px";
       title.style.fontWeight = "bold";
       title.style.marginBottom = "8px";
       title.style.letterSpacing = "-0.025em";
-      title.style.color = (isSpecialEvent || isQuarantine) ? "#fcd34d" : "#111827";
+      title.style.color = isWomensDay_ ? "#fce7f3" : (isSpecialEvent || isQuarantine) ? "#fcd34d" : "#111827";
       if (isSpecialEvent) title.style.color = "#fecdd3";
 
       const dateTime = document.createElement("p");
@@ -1605,7 +1646,7 @@ const ServiceNotificationOverlay = ({
       dateTime.style.fontSize = "18px";
       dateTime.style.textTransform = "capitalize";
       dateTime.style.fontWeight = "500";
-      dateTime.style.color = isSpecialEvent ? "#fda4af" : isQuarantine ? "#fbbf24" : "#6b7280";
+      dateTime.style.color = isWomensDay_ ? "#fce7f3" : isSpecialEvent ? "#fda4af" : isQuarantine ? "#fbbf24" : "#6b7280";
 
       header.appendChild(title);
       header.appendChild(dateTime);
@@ -1642,9 +1683,9 @@ const ServiceNotificationOverlay = ({
       groupInfo.style.flexWrap = "wrap";
 
       const groupNameEl = document.createElement("span");
-      groupNameEl.textContent = isSpecialEvent ? "Todos los Grupos" : (service.worship_groups?.name || "Grupo de Alabanza");
-      groupNameEl.style.backgroundColor = isSpecialEvent ? "#E11D48" : isQuarantine ? "#f59e0b" : (service.worship_groups?.color_theme || "#3B82F6");
-      groupNameEl.style.color = isSpecialEvent ? "white" : isQuarantine ? "#1a1a2e" : "white";
+      groupNameEl.textContent = isWomensDay_ ? "Los Varones" : isSpecialEvent ? "Todos los Grupos" : (service.worship_groups?.name || "Grupo de Alabanza");
+      groupNameEl.style.backgroundColor = isWomensDay_ ? "#EC4899" : isSpecialEvent ? "#E11D48" : isQuarantine ? "#f59e0b" : (service.worship_groups?.color_theme || "#3B82F6");
+      groupNameEl.style.color = isWomensDay_ ? "white" : isSpecialEvent ? "white" : isQuarantine ? "#1a1a2e" : "white";
       groupNameEl.style.padding = "6px 16px";
       groupNameEl.style.borderRadius = "9999px";
       groupNameEl.style.fontSize = "16px";
@@ -1652,12 +1693,14 @@ const ServiceNotificationOverlay = ({
       groupNameEl.style.letterSpacing = "-0.025em";
 
       const activity = document.createElement("span");
-      activity.textContent = service.special_activity
-        ? (isSpecialEvent ? service.special_activity : `Sección especial: ${service.special_activity}`)
-        : isQuarantine ? "Culto de Oración" : "Sección especial: Ninguna";
+      activity.textContent = isWomensDay_
+        ? "Día Internacional de la Mujer"
+        : service.special_activity
+          ? ((isSpecialEvent) ? service.special_activity : `Sección especial: ${service.special_activity}`)
+          : isQuarantine ? "Culto de Oración" : "Sección especial: Ninguna";
       activity.style.fontSize = "16px";
       activity.style.fontWeight = "500";
-      activity.style.color = isSpecialEvent ? "#fda4af" : isQuarantine ? "#fbbf24" : "#6b7280";
+      activity.style.color = isWomensDay_ ? "#fce7f3" : isSpecialEvent ? "#fda4af" : isQuarantine ? "#fbbf24" : "#6b7280";
 
       groupInfo.appendChild(groupNameEl);
       groupInfo.appendChild(activity);
@@ -1778,7 +1821,7 @@ const ServiceNotificationOverlay = ({
       const communionSongs = service.selected_songs?.filter((s) => s.song_purpose === 'communion') || [];
       const hasAnySongs = worshipSongs.length > 0 || offeringsSongs.length > 0 || communionSongs.length > 0;
       
-      const isDark = isSpecialEvent || isQuarantine;
+      const isDark = isWomensDay_ || isSpecialEvent || isQuarantine;
       
       if (hasAnySongs) {
         const songsTitle = document.createElement("h3");
@@ -1983,16 +2026,16 @@ const ServiceNotificationOverlay = ({
       // Voices Section
       const voicesSection = document.createElement("div");
 
-      if (isSpecialEvent) {
+      if (isWomensDay_ || isSpecialEvent) {
         // SPECIAL EVENT: Show all members grouped by group
         const voicesTitle = document.createElement("h3");
-        voicesTitle.textContent = "Integrantes del Ministerio";
+        voicesTitle.textContent = isWomensDay_ ? "Los Varones • Coros y Dirección" : "Integrantes del Ministerio";
         voicesTitle.style.fontSize = "20px";
         voicesTitle.style.fontWeight = "bold";
         voicesTitle.style.marginBottom = "20px";
         voicesTitle.style.textAlign = "center";
         voicesTitle.style.textDecoration = "underline";
-        voicesTitle.style.color = "#fecdd3";
+        voicesTitle.style.color = isWomensDay_ ? "#fce7f3" : "#fecdd3";
         voicesSection.appendChild(voicesTitle);
 
         const groupColorMap: Record<string, string> = {
@@ -2003,6 +2046,106 @@ const ServiceNotificationOverlay = ({
 
         const allVoices = getResponsibleVoices(service.group_members);
 
+        if (isWomensDay_) {
+          // Women's Day: show all male members in a single list (no sub-groups)
+          const membersGrid = document.createElement("div");
+          membersGrid.style.display = "flex";
+          membersGrid.style.flexDirection = "column";
+          membersGrid.style.gap = "16px";
+
+          allVoices.forEach(member => {
+            const { firstName, lastName } = splitName(member.profiles?.full_name || "");
+
+            const memberItem = document.createElement("div");
+            memberItem.style.display = "flex";
+            memberItem.style.alignItems = "center";
+            memberItem.style.gap = "16px";
+            memberItem.style.padding = "12px";
+            memberItem.style.borderRadius = "12px";
+            memberItem.style.backgroundColor = "rgba(255,255,255,0.15)";
+            memberItem.style.border = "1px solid rgba(255,255,255,0.2)";
+
+            const avatar = document.createElement("div");
+            avatar.style.width = "60px";
+            avatar.style.height = "60px";
+            avatar.style.borderRadius = "50%";
+            avatar.style.border = "3px solid #f9a8d4";
+            avatar.style.overflow = "hidden";
+            avatar.style.background = "linear-gradient(to right, #EC4899, #DB2777)";
+            avatar.style.display = "flex";
+            avatar.style.alignItems = "center";
+            avatar.style.justifyContent = "center";
+            avatar.style.color = "white";
+            avatar.style.fontWeight = "bold";
+            avatar.style.fontSize = "18px";
+            avatar.style.flexShrink = "0";
+
+            const img = document.createElement("img");
+            img.src = member.profiles?.photo_url || "";
+            img.style.width = "100%";
+            img.style.height = "100%";
+            img.style.objectFit = "cover";
+            img.onerror = () => {
+              img.style.display = "none";
+              const init = document.createElement("div");
+              init.textContent = getInitials(member.profiles?.full_name || "NN");
+              init.style.display = "flex";
+              init.style.alignItems = "center";
+              init.style.justifyContent = "center";
+              init.style.width = "100%";
+              init.style.height = "100%";
+              avatar.appendChild(init);
+            };
+            avatar.appendChild(img);
+
+            const info = document.createElement("div");
+            info.style.flex = "1";
+
+            const nameEl = document.createElement("div");
+            nameEl.textContent = firstName;
+            nameEl.style.fontWeight = "bold";
+            nameEl.style.fontSize = "18px";
+            nameEl.style.color = "white";
+            info.appendChild(nameEl);
+
+            if (lastName) {
+              const lastNameEl = document.createElement("div");
+              lastNameEl.textContent = lastName;
+              lastNameEl.style.fontSize = "16px";
+              lastNameEl.style.color = "rgba(255,255,255,0.7)";
+              info.appendChild(lastNameEl);
+            }
+
+            const voiceType = document.createElement("div");
+            voiceType.textContent = member.instrument?.split(' • ')[0] || "";
+            voiceType.style.fontSize = "14px";
+            voiceType.style.fontWeight = "600";
+            voiceType.style.color = "#f9a8d4";
+            info.appendChild(voiceType);
+
+            memberItem.appendChild(avatar);
+            memberItem.appendChild(info);
+            membersGrid.appendChild(memberItem);
+          });
+
+          voicesSection.appendChild(membersGrid);
+
+          // Dedication footer
+          const dedication = document.createElement("div");
+          dedication.style.marginTop = "24px";
+          dedication.style.textAlign = "center";
+          dedication.style.padding = "16px";
+          dedication.style.borderRadius = "12px";
+          dedication.style.background = "rgba(255,255,255,0.2)";
+
+          const dedText = document.createElement("p");
+          dedText.textContent = "💐 Con amor y admiración para todas las mujeres de nuestro ministerio";
+          dedText.style.fontSize = "14px";
+          dedText.style.fontWeight = "600";
+          dedText.style.color = "white";
+          dedication.appendChild(dedText);
+          voicesSection.appendChild(dedication);
+        } else {
         ["Grupo de Aleida", "Grupo de Keyla", "Grupo de Massy"].forEach(groupKey => {
           const groupMembers = allVoices.filter(m => m.instrument?.includes(groupKey));
           if (groupMembers.length === 0) return;
@@ -2115,6 +2258,7 @@ const ServiceNotificationOverlay = ({
           groupContainer.appendChild(membersGrid);
           voicesSection.appendChild(groupContainer);
         });
+        } // close else (non-Women's Day special events)
       } else {
         // Regular service: show responsible voices
         const voicesTitle = document.createElement("h3");
@@ -2276,7 +2420,7 @@ const ServiceNotificationOverlay = ({
 
       // Capture as image
       const canvas = await html2canvas(container, {
-        backgroundColor: isQuarantine ? "#1a1a2e" : "#ffffff",
+        backgroundColor: isWomensDay_ ? "#be185d" : isQuarantine ? "#1a1a2e" : isSpecialEvent ? "#881337" : "#ffffff",
         scale: 2,
         useCORS: true,
         allowTaint: true,
@@ -3161,24 +3305,26 @@ const ServiceNotificationOverlay = ({
 
             {/* Action Buttons */}
             <div className="px-6 pb-6 flex items-center gap-3 justify-center flex-wrap">
-              <Button
-                variant="default"
-                onClick={() => downloadServiceImage(services[0].id, "Primer Servicio")}
-                className="flex items-center gap-2"
-              >
-                <Download className="w-4 h-4" />
-                Descargar 1er Servicio
-              </Button>
-              {services[1] && (
-                <Button
-                  variant="default"
-                  onClick={() => downloadServiceImage(services[1].id, "Segundo Servicio")}
-                  className="flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Descargar 2do Servicio
-                </Button>
-              )}
+              {services.map((service, idx) => {
+                const serviceDate = parseServiceDate(service.service_date);
+                const dayName = format(serviceDate, "EEEE", { locale: es });
+                const serviceTime = getServiceTime(service.title, service.service_type);
+                const isWD = isWomensDayService(service);
+                const label = isWD 
+                  ? "Descargar Hija del Rey" 
+                  : `Descargar ${dayName.charAt(0).toUpperCase() + dayName.slice(1)} ${serviceTime}`;
+                return (
+                  <Button
+                    key={service.id}
+                    variant="default"
+                    onClick={() => downloadServiceImage(service.id, service.title)}
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    {label}
+                  </Button>
+                );
+              })}
               <Button variant="outline" onClick={closeOverlay} className="flex items-center gap-2">
                 <X className="w-4 h-4" />
                 Cerrar
