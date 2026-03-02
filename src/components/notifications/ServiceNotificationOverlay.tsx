@@ -114,6 +114,9 @@ const MEMBER_IDS = {
   // Solo disponibles a las 8:00 AM
   MARIA_SANTANA: "1d5866c9-cdc1-439e-976a-2d2e6a5aef80",
 
+  // Músicos/directores adicionales
+  ROOSEVELT_MARTINEZ: "60b1f3d9-9826-4e5c-a348-cebbdbd2a7c9",
+
   // Miembros fijos
   ROSELY_MONTERO: "2a2fa0cd-d301-46ec-9965-2e4ea3692181",
   ALEIDA_BATISTA: "00a916a8-ab94-4cc0-81ae-668dd6071416",
@@ -245,6 +248,43 @@ const ALL_MEMBERS = {
     photo_url:
       "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/bdcc27cd-40ae-456e-a340-633ce7da08c0.JPG",
   },
+  [MEMBER_IDS.ROOSEVELT_MARTINEZ]: {
+    name: "Roosevelt Martinez",
+    voice: "Piano/Bajo",
+    photo_url:
+      "https://hfjtzmnphyizntcjzgar.supabase.co/storage/v1/object/public/member-photos/60b1f3d9-9826-4e5c-a348-cebbdbd2a7c9.JPG",
+  },
+};
+
+// Helper para detectar servicio del Día de la Mujer
+const isWomensDayService = (service: any): boolean => {
+  const activity = (service.special_activity || '').toLowerCase();
+  const leader = (service.leader || '').toLowerCase();
+  return (
+    activity.includes('día internacional de la mujer') ||
+    activity.includes('hija del rey') ||
+    (leader.includes('varones') && activity.includes('mujer'))
+  );
+};
+
+// Miembros específicos para el servicio del Día de la Mujer (solo varones)
+const getWomensDayMembers = (): { id: string; name: string; voice: string; role: string; mic: string; photo_url: string; group: string }[] => {
+  const menIds = [
+    MEMBER_IDS.ROOSEVELT_MARTINEZ,
+    MEMBER_IDS.ARMANDO_NOEL,
+    MEMBER_IDS.FELIX_NICOLAS,
+    MEMBER_IDS.FREDDERID_ABRAHAN,
+    MEMBER_IDS.ARIZONI_LIRIANO,
+  ];
+  return menIds.map((id, idx) => ({
+    id,
+    name: ALL_MEMBERS[id]?.name || "",
+    voice: ALL_MEMBERS[id]?.voice || "",
+    role: idx === 0 ? "Director Musical" : "Corista",
+    mic: `Micrófono #${idx + 1}`,
+    photo_url: ALL_MEMBERS[id]?.photo_url || "",
+    group: "Los Varones",
+  }));
 };
 
 // Configuración de grupos con lógica dinámica
@@ -895,6 +935,9 @@ const splitName = (fullName: string) => {
     if (fullName.includes("Ruth")) {
       return { firstName: "Ruth Esmailin", lastName: "Ramirez" };
     }
+    if (fullName.includes("Roosevelt")) {
+      return { firstName: "Roosevelt", lastName: "Martinez" };
+    }
 
     // Lógica general para otros nombres
     if (parts.length === 2) {
@@ -1204,10 +1247,14 @@ const ServiceNotificationOverlay = ({
               }
             }
 
+            // Detectar si es el servicio del Día de la Mujer
+            const isWomensDay = isWomensDayService(service);
+
             // Detectar si es un servicio especial donde participan TODOS los grupos
-            const isSpecialAllGroups = 
+            const isSpecialAllGroups = !isWomensDay && (
               service.service_type === 'especial' || 
-              (service.leader && service.leader.toUpperCase() === 'TODOS');
+              (service.leader && service.leader.toUpperCase() === 'TODOS')
+            );
 
             // Obtener miembros del grupo usando la nueva función
             let groupName = "Grupo de Aleida";
@@ -1226,7 +1273,12 @@ const ServiceNotificationOverlay = ({
             const previousService = serviceIndex > 0 ? servicesDirectorInfo[serviceIndex - 1] : undefined;
             const nextService = serviceIndex < servicesDirectorInfo.length - 1 ? servicesDirectorInfo[serviceIndex + 1] : undefined;
 
-            if (isSpecialAllGroups) {
+            if (isWomensDay) {
+              // Servicio Día de la Mujer: solo los varones específicos
+              const womensDayMembers = getWomensDayMembers();
+              members = womensDayMembers;
+              console.log(`👑 Servicio Día de la Mujer detectado: ${service.special_activity} - ${womensDayMembers.length} varones`);
+            } else if (isSpecialAllGroups) {
               // Para servicios especiales: obtener TODOS los miembros de todos los grupos
               const allMembers = getAllGroupMembersRaw(inactiveMemberIds);
               members = allMembers;
@@ -1312,12 +1364,12 @@ const ServiceNotificationOverlay = ({
 
             const groupConfig = GROUP_CONFIG[groupName as keyof typeof GROUP_CONFIG] || GROUP_CONFIG["Grupo de Aleida"];
 
-            // Para servicios especiales, incluir info del grupo en el instrument
-            const membersList = isSpecialAllGroups
+            // Para servicios especiales o Día de la Mujer, incluir info del grupo en el instrument
+            const membersList = (isSpecialAllGroups || isWomensDay)
               ? members.map((member: any, index: number) => ({
                   id: `member-${service.id}-${index}`,
                   user_id: member.id,
-                  instrument: `${member.voice} • ${member.group}`,
+                  instrument: `${member.voice} • ${member.role || member.group}`,
                   is_leader: false,
                   profiles: {
                     id: member.id,
@@ -1339,26 +1391,32 @@ const ServiceNotificationOverlay = ({
 
             return {
               ...service,
-              leader: isSpecialAllGroups ? "TODOS" : (directorProfile?.full_name || service.leader),
+              leader: isWomensDay ? "Los Varones" : isSpecialAllGroups ? "TODOS" : (directorProfile?.full_name || service.leader),
               group_members: membersList,
               selected_songs: selectedSongs,
-              director_profile: isSpecialAllGroups ? null : directorProfile,
-              worship_groups: isSpecialAllGroups
+              director_profile: (isSpecialAllGroups || isWomensDay) ? null : directorProfile,
+              worship_groups: isWomensDay
                 ? {
-                    id: "all",
-                    name: "Todos los Grupos",
-                    color_theme: "#E11D48", // Rose/red for special events
+                    id: "womens-day",
+                    name: "Los Varones",
+                    color_theme: "#EC4899", // Pink for Women's Day
                   }
-                : Array.isArray(service.worship_groups) && service.worship_groups.length > 0
+                : isSpecialAllGroups
                   ? {
-                      ...service.worship_groups[0],
-                      color_theme: groupConfig.color_theme,
+                      id: "all",
+                      name: "Todos los Grupos",
+                      color_theme: "#E11D48",
                     }
-                  : {
-                      id: "1",
-                      name: groupName,
-                      color_theme: groupConfig.color_theme,
-                    },
+                  : Array.isArray(service.worship_groups) && service.worship_groups.length > 0
+                    ? {
+                        ...service.worship_groups[0],
+                        color_theme: groupConfig.color_theme,
+                      }
+                    : {
+                        id: "1",
+                        name: groupName,
+                        color_theme: groupConfig.color_theme,
+                      },
             };
           }),
         );
@@ -2268,7 +2326,8 @@ const ServiceNotificationOverlay = ({
     const directorMember = service.group_members.find((m) => m.is_leader);
     const responsibleVoices = getResponsibleVoices(service.group_members);
     const isQuarantine = service.service_type === 'cuarentena';
-    const isSpecialEvent = service.service_type === 'especial' || service.leader === 'TODOS';
+    const isWomensDay_ = isWomensDayService(service);
+    const isSpecialEvent = !isWomensDay_ && (service.service_type === 'especial' || service.leader === 'TODOS');
 
     const worshipSongs = service.selected_songs?.filter((s) => (s.song_purpose || 'worship') === 'worship') || [];
     const offeringsSongs = service.selected_songs?.filter((s) => s.song_purpose === 'offering') || [];
@@ -2278,16 +2337,40 @@ const ServiceNotificationOverlay = ({
       <div
         ref={(el) => (serviceCardRefs.current[service.id] = el)}
         className={`rounded-xl p-6 shadow-lg mx-auto ${
-          isSpecialEvent
-            ? 'bg-gradient-to-br from-rose-900 to-rose-800 border-2 border-rose-400/40'
-            : isQuarantine 
-              ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-amber-500/30' 
-              : 'bg-white/90 border border-blue-200'
+          isWomensDay_
+            ? 'bg-gradient-to-br from-pink-600 via-pink-500 to-rose-500 border-2 border-pink-300/40'
+            : isSpecialEvent
+              ? 'bg-gradient-to-br from-rose-900 to-rose-800 border-2 border-rose-400/40'
+              : isQuarantine 
+                ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-amber-500/30' 
+                : 'bg-white/90 border border-blue-200'
         }`}
         style={{ maxWidth: "600px" }}
       >
+        {/* Women's Day Badge */}
+        {isWomensDay_ && (
+          <div className="flex flex-col items-center justify-center gap-2 mb-4 -mt-2">
+            <span 
+              className="px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5"
+              style={{
+                background: "linear-gradient(135deg, #EC4899 0%, #DB2777 100%)",
+                color: "white",
+              }}
+            >
+              👑 HIJA DEL REY
+            </span>
+            <span className="text-white text-lg font-bold text-center">
+              Día Internacional de la Mujer
+            </span>
+            <span className="text-pink-100 text-sm font-medium">8 de Marzo • {serviceTime}</span>
+            <p className="text-white/80 text-xs text-center max-w-sm mt-1">
+              En honor a todas las mujeres valientes y llenas de fe de nuestro ministerio, los varones dirigen y hacen coros este domingo
+            </p>
+          </div>
+        )}
+
         {/* Special Event Badge */}
-        {isSpecialEvent && (
+        {isSpecialEvent && !isWomensDay_ && (
           <div className="flex flex-col items-center justify-center gap-2 mb-4 -mt-2">
             <span 
               className="px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5"
@@ -2321,7 +2404,8 @@ const ServiceNotificationOverlay = ({
           </div>
         )}
 
-        {/* Service Header */}
+        {/* Service Header - skip for Women's Day since badge already has all info */}
+        {!isWomensDay_ && (
         <div className="flex items-center gap-3 mb-6">
           <div
             className="w-3 h-8 rounded-full"
@@ -2369,9 +2453,85 @@ const ServiceNotificationOverlay = ({
             </div>
           </div>
         </div>
+        )}
 
-        {/* SPECIAL EVENT: Show all members grouped by their group */}
-        {isSpecialEvent ? (
+        {/* WOMEN'S DAY: Show male members in special pink layout */}
+        {isWomensDay_ ? (
+          <div className="space-y-4">
+            {/* Bible verse */}
+            <div 
+              className="rounded-lg p-4 text-center"
+              style={{
+                background: "rgba(255,255,255,0.15)",
+                border: "1px solid rgba(255,255,255,0.2)",
+              }}
+            >
+              <p className="text-white italic text-sm">
+                "Encomienda a Jehová tu camino, y confía en él; y él hará."
+              </p>
+              <p className="text-pink-200 text-xs mt-1">- Salmos 37:5</p>
+            </div>
+
+            {/* Male members */}
+            <div className="rounded-lg p-4" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="px-3 py-1 rounded-full text-xs font-semibold text-white" style={{ backgroundColor: "#DB2777" }}>
+                  🎤 Voces Masculinas
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {responsibleVoices.map((member) => {
+                  const { firstName, lastName } = splitName(member.profiles?.full_name || "");
+                  return (
+                    <div key={member.id} className="flex items-center gap-2">
+                      <div className="w-12 h-12 rounded-full border-2 border-pink-300/60 overflow-hidden bg-gradient-to-r from-pink-400 to-pink-500 flex-shrink-0">
+                        <img
+                          src={member.profiles?.photo_url}
+                          alt={member.profiles?.full_name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = "none";
+                            const fallback = target.nextElementSibling as HTMLElement;
+                            if (fallback) fallback.style.display = "flex";
+                          }}
+                        />
+                        <div className="w-full h-full hidden items-center justify-center text-white text-xs font-bold">
+                          {getInitials(member.profiles?.full_name || "NN")}
+                        </div>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-white truncate">{firstName}</div>
+                        {lastName && <div className="text-xs text-pink-100/70 truncate">{lastName}</div>}
+                        <div className="text-xs text-pink-200">{member.instrument?.split(' • ')[0]}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Dedication message */}
+            <div className="rounded-lg p-4 text-center" style={{ background: "rgba(255,255,255,0.2)" }}>
+              <p className="text-white text-sm font-medium">
+                💐 Con amor y admiración para todas las mujeres de nuestro ministerio
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="service-action-buttons flex flex-wrap gap-2 mt-6 pt-4 border-t border-pink-300/30">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => downloadServiceImage(service.id, service.title)}
+                className="flex items-center gap-2 border-pink-300 text-white hover:bg-pink-400/20"
+              >
+                <Download className="w-4 h-4" />
+                Descargar
+              </Button>
+            </div>
+          </div>
+        ) : isSpecialEvent ? (
           <div className="space-y-4">
             {/* Special event info banner */}
             <div 
@@ -2725,9 +2885,10 @@ const ServiceNotificationOverlay = ({
     return null;
   }
 
-  // Detectar si algún servicio es de cuarentena o especial
+  // Detectar si algún servicio es de cuarentena, especial o Día de la Mujer
   const hasQuarantineService = services.some(s => s.service_type === 'cuarentena');
-  const hasSpecialEvent = services.some(s => s.service_type === 'especial' || s.leader === 'TODOS');
+  const hasWomensDayService = services.some(s => isWomensDayService(s));
+  const hasSpecialEvent = !hasWomensDayService && services.some(s => s.service_type === 'especial' || s.leader === 'TODOS');
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 p-4 overflow-y-auto">
@@ -2739,8 +2900,22 @@ const ServiceNotificationOverlay = ({
               : "animate-out slide-out-to-top-4 fade-out duration-300"
           }`}
         >
+          {/* Women's Day Banner */}
+          {hasWomensDayService && (
+            <div 
+              className="mb-2 rounded-t-xl p-3 flex items-center justify-center gap-2 text-white"
+              style={{
+                background: "linear-gradient(135deg, #EC4899 0%, #DB2777 100%)",
+              }}
+            >
+              <span className="text-lg">👑</span>
+              <span className="font-semibold text-sm">DÍA INTERNACIONAL DE LA MUJER</span>
+              <span className="text-lg">💐</span>
+            </div>
+          )}
+
           {/* Special Event Banner */}
-          {hasSpecialEvent && !hasQuarantineService && (
+          {hasSpecialEvent && !hasQuarantineService && !hasWomensDayService && (
             <div 
               className="mb-2 rounded-t-xl p-3 flex items-center justify-center gap-2 text-white"
               style={{
@@ -2769,14 +2944,16 @@ const ServiceNotificationOverlay = ({
           {/* Fixed Header */}
           <div 
             className={`p-4 border-b border-border sticky top-4 z-10 shadow-md ${
-              (hasQuarantineService || hasSpecialEvent) ? 'rounded-none' : 'rounded-t-xl'
+              (hasQuarantineService || hasSpecialEvent || hasWomensDayService) ? 'rounded-none' : 'rounded-t-xl'
             }`}
             style={{
-              background: hasSpecialEvent
-                ? "linear-gradient(135deg, #881337 0%, #9f1239 100%)"
-                : hasQuarantineService 
-                  ? "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" 
-                  : "white"
+              background: hasWomensDayService
+                ? "linear-gradient(135deg, #be185d 0%, #db2777 100%)"
+                : hasSpecialEvent
+                  ? "linear-gradient(135deg, #881337 0%, #9f1239 100%)"
+                  : hasQuarantineService 
+                    ? "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" 
+                    : "white"
             }}
           >
             <div className="flex items-center justify-between">
@@ -2784,20 +2961,22 @@ const ServiceNotificationOverlay = ({
                 <div 
                   className="w-10 h-10 rounded-full flex items-center justify-center"
                   style={{
-                    background: hasSpecialEvent
-                      ? "linear-gradient(135deg, #E11D48 0%, #BE123C 100%)"
-                      : hasQuarantineService 
-                        ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
-                        : "linear-gradient(to right, #a855f7, #ec4899)"
+                    background: hasWomensDayService
+                      ? "linear-gradient(135deg, #EC4899 0%, #DB2777 100%)"
+                      : hasSpecialEvent
+                        ? "linear-gradient(135deg, #E11D48 0%, #BE123C 100%)"
+                        : hasQuarantineService 
+                          ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
+                          : "linear-gradient(to right, #a855f7, #ec4899)"
                   }}
                 >
                   <Bell className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className={`text-xl font-bold ${(hasQuarantineService || hasSpecialEvent) ? 'text-white' : 'text-foreground'}`}>
-                    {hasSpecialEvent ? 'Servicio Especial' : hasQuarantineService ? 'Servicio de Cuarentena' : 'Programa de Servicios'}
+                  <h2 className={`text-xl font-bold ${(hasQuarantineService || hasSpecialEvent || hasWomensDayService) ? 'text-white' : 'text-foreground'}`}>
+                    {hasWomensDayService ? 'Hija del Rey' : hasSpecialEvent ? 'Servicio Especial' : hasQuarantineService ? 'Servicio de Cuarentena' : 'Programa de Servicios'}
                   </h2>
-                  <p className={`text-sm ${hasSpecialEvent ? 'text-rose-200' : hasQuarantineService ? 'text-amber-200' : 'text-muted-foreground'}`}>
+                  <p className={`text-sm ${hasWomensDayService ? 'text-pink-200' : hasSpecialEvent ? 'text-rose-200' : hasQuarantineService ? 'text-amber-200' : 'text-muted-foreground'}`}>
                     {format(parseServiceDate(services[0].service_date), "EEEE, dd 'de' MMMM", { locale: es })}
                   </p>
                 </div>
