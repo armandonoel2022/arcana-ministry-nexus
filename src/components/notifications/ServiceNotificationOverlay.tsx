@@ -2145,6 +2145,32 @@ const ServiceNotificationOverlay = ({
           dedText.style.fontWeight = "600";
           dedText.style.color = "white";
           dedication.appendChild(dedText);
+
+          // Ministry logo in Women's Day
+          const wdLogoRow = document.createElement("div");
+          wdLogoRow.style.display = "flex";
+          wdLogoRow.style.alignItems = "center";
+          wdLogoRow.style.justifyContent = "center";
+          wdLogoRow.style.gap = "8px";
+          wdLogoRow.style.marginTop = "12px";
+
+          const wdLogoImg = document.createElement("img");
+          wdLogoImg.src = window.location.origin + "/lovable-uploads/43125001-4383-4612-84dd-b01a2ee6a562.png";
+          wdLogoImg.style.width = "28px";
+          wdLogoImg.style.height = "28px";
+          wdLogoImg.style.borderRadius = "50%";
+          wdLogoImg.style.objectFit = "cover";
+          wdLogoImg.style.border = "2px solid rgba(255,255,255,0.3)";
+          wdLogoRow.appendChild(wdLogoImg);
+
+          const wdLogoText = document.createElement("span");
+          wdLogoText.textContent = "Ministerio de Alabanza Arca de Noé";
+          wdLogoText.style.fontSize = "12px";
+          wdLogoText.style.fontWeight = "500";
+          wdLogoText.style.color = "rgba(255,255,255,0.7)";
+          wdLogoRow.appendChild(wdLogoText);
+
+          dedication.appendChild(wdLogoRow);
           voicesSection.appendChild(dedication);
         } else {
         ["Grupo de Aleida", "Grupo de Keyla", "Grupo de Massy"].forEach(groupKey => {
