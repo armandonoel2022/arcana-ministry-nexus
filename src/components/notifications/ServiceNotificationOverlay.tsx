@@ -1683,9 +1683,9 @@ const ServiceNotificationOverlay = ({
       groupInfo.style.flexWrap = "wrap";
 
       const groupNameEl = document.createElement("span");
-      groupNameEl.textContent = isSpecialEvent ? "Todos los Grupos" : (service.worship_groups?.name || "Grupo de Alabanza");
-      groupNameEl.style.backgroundColor = isSpecialEvent ? "#E11D48" : isQuarantine ? "#f59e0b" : (service.worship_groups?.color_theme || "#3B82F6");
-      groupNameEl.style.color = isSpecialEvent ? "white" : isQuarantine ? "#1a1a2e" : "white";
+      groupNameEl.textContent = isWomensDay_ ? "Los Varones" : isSpecialEvent ? "Todos los Grupos" : (service.worship_groups?.name || "Grupo de Alabanza");
+      groupNameEl.style.backgroundColor = isWomensDay_ ? "#EC4899" : isSpecialEvent ? "#E11D48" : isQuarantine ? "#f59e0b" : (service.worship_groups?.color_theme || "#3B82F6");
+      groupNameEl.style.color = isWomensDay_ ? "white" : isSpecialEvent ? "white" : isQuarantine ? "#1a1a2e" : "white";
       groupNameEl.style.padding = "6px 16px";
       groupNameEl.style.borderRadius = "9999px";
       groupNameEl.style.fontSize = "16px";
@@ -1693,12 +1693,14 @@ const ServiceNotificationOverlay = ({
       groupNameEl.style.letterSpacing = "-0.025em";
 
       const activity = document.createElement("span");
-      activity.textContent = service.special_activity
-        ? (isSpecialEvent ? service.special_activity : `Sección especial: ${service.special_activity}`)
-        : isQuarantine ? "Culto de Oración" : "Sección especial: Ninguna";
+      activity.textContent = isWomensDay_
+        ? "Día Internacional de la Mujer"
+        : service.special_activity
+          ? ((isSpecialEvent) ? service.special_activity : `Sección especial: ${service.special_activity}`)
+          : isQuarantine ? "Culto de Oración" : "Sección especial: Ninguna";
       activity.style.fontSize = "16px";
       activity.style.fontWeight = "500";
-      activity.style.color = isSpecialEvent ? "#fda4af" : isQuarantine ? "#fbbf24" : "#6b7280";
+      activity.style.color = isWomensDay_ ? "#fce7f3" : isSpecialEvent ? "#fda4af" : isQuarantine ? "#fbbf24" : "#6b7280";
 
       groupInfo.appendChild(groupNameEl);
       groupInfo.appendChild(activity);
