@@ -159,7 +159,7 @@ const WomensDayOverlay: React.FC<WomensDayOverlayProps> = ({ onClose }) => {
       trimCtx.drawImage(canvas, 0, 0);
 
       // Download
-      canvas.toBlob((blob) => {
+      trimmedCanvas.toBlob((blob) => {
         if (!blob) return;
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
