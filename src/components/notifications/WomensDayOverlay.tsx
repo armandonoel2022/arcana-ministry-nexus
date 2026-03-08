@@ -137,8 +137,8 @@ const WomensDayOverlay: React.FC<WomensDayOverlayProps> = ({ onClose }) => {
       ctx.fillStyle = 'rgba(255,255,255,0.85)';
       ctx.fillText('Que Dios bendiga a cada una de ustedes', W / 2, bannerY + 105);
 
-      // Ministry footer
-      const footerY = H - 160;
+      // Ministry footer (right after banner)
+      const footerY = bannerY + 140 + 40;
       ctx.fillStyle = 'rgba(255,255,255,0.15)';
       ctx.beginPath();
       ctx.roundRect(60, footerY, W - 120, 120, 20);
@@ -149,6 +149,14 @@ const WomensDayOverlay: React.FC<WomensDayOverlayProps> = ({ onClose }) => {
       ctx.fillText('Ministerio de Alabanza', W / 2, footerY + 50);
       ctx.font = '22px system-ui, sans-serif';
       ctx.fillText('Arca de Noé', W / 2, footerY + 85);
+
+      // Trim canvas to actual content height
+      const finalH = footerY + 120 + 60;
+      const trimmedCanvas = document.createElement('canvas');
+      trimmedCanvas.width = W;
+      trimmedCanvas.height = finalH;
+      const trimCtx = trimmedCanvas.getContext('2d')!;
+      trimCtx.drawImage(canvas, 0, 0);
 
       // Download
       canvas.toBlob((blob) => {
