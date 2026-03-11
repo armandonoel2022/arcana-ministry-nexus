@@ -55,8 +55,9 @@ const MinisterialAgenda = () => {
         </div>
 
         {/* Componente de descarga de PDF mensual */}
-        <div className="mb-4">
+        <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <MonthlyAgendaPDF availableYears={availableYears} />
+          <AgendaCalendarPDF />
         </div>
 
         {/* Panel de Contenido Principal */}
