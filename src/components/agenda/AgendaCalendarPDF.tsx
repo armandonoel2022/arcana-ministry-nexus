@@ -12,17 +12,19 @@ const MONTHS = [
   "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"
 ];
 
-const GROUP_SHORT: Record<string, string> = {
-  'Grupo de Aleida': 'Aleida',
-  'Grupo de Keyla': 'Keyla',
-  'Grupo de Massy': 'Massy',
+const DAY_NAMES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+
+const GROUP_COLORS: Record<string, [number, number, number]> = {
+  'Grupo de Aleida': [220, 38, 38],   // Red
+  'Grupo de Keyla': [139, 92, 246],    // Purple
+  'Grupo de Massy': [34, 197, 94],     // Green
 };
 
-const DIRECTOR_SHORT = (name: string) => {
-  const parts = name.split(' ');
-  if (parts.length >= 2) return `${parts[0]} ${parts[1].substring(0, 1)}.`;
-  return name;
-};
+const MONTH_COLORS: [number, number, number][] = [
+  [59, 130, 246], [236, 72, 153], [34, 197, 94], [168, 85, 247],
+  [234, 179, 8], [249, 115, 22], [14, 165, 233], [239, 68, 68],
+  [139, 92, 246], [245, 158, 11], [6, 182, 212], [220, 38, 38],
+];
 
 interface ServiceRow {
   service_date: string;
@@ -33,45 +35,184 @@ interface ServiceRow {
   worship_groups?: { name: string } | null;
 }
 
+const loadImageAsBase64 = async (url: string): Promise<string | null> => {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+};
+
+const drawHeader = (doc: jsPDF, pageWidth: number, margin: number, logoBase64: string | null, year: number) => {
+  const headerHeight = 16;
+  doc.setFillColor(37, 99, 235);
+  doc.roundedRect(margin, margin, pageWidth - margin * 2, headerHeight, 3, 3, "F");
+
+  if (logoBase64) {
+    try { doc.addImage(logoBase64, "PNG", margin + 3, margin + 1.5, 13, 13); } catch {}
+  }
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(13);
+  doc.setFont("helvetica", "bold");
+  doc.text("AGENDA DE SERVICIOS", pageWidth / 2, margin + 7, { align: "center" });
+  doc.setFontSize(7.5);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Ministerio ADN Arca de Noé • ${year}`, pageWidth / 2, margin + 13, { align: "center" });
+
+  return margin + headerHeight + 4;
+};
+
+const drawFooter = (doc: jsPDF, pageWidth: number, pageHeight: number) => {
+  doc.setTextColor(148, 163, 184);
+  doc.setFontSize(6);
+  doc.setFont("helvetica", "italic");
+  doc.text(`Generado por ARCANA • ${new Date().toLocaleDateString('es-DO')}`, pageWidth / 2, pageHeight - 5, { align: "center" });
+};
+
+const renderMonthBlock = (
+  doc: jsPDF,
+  monthServices: ServiceRow[],
+  month: number,
+  x: number,
+  y: number,
+  width: number,
+  maxHeight: number
+): number => {
+  const color = MONTH_COLORS[month];
+  const padding = 3;
+  const rowHeight = 5.5;
+
+  // Month title bar
+  doc.setFillColor(...color);
+  doc.roundedRect(x, y, width, 8, 2, 2, "F");
+  doc.rect(x, y + 5, width, 3, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "bold");
+  doc.text(MONTHS[month], x + width / 2, y + 5.8, { align: "center" });
+
+  let curY = y + 11;
+
+  if (monthServices.length === 0) {
+    doc.setTextColor(148, 163, 184);
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "italic");
+    doc.text("Sin servicios programados", x + width / 2, curY + 6, { align: "center" });
+    return curY + 12;
+  }
+
+  // Sort services by date
+  const sorted = [...monthServices].sort((a, b) => a.service_date.localeCompare(b.service_date));
+
+  // Column headers
+  doc.setFillColor(241, 245, 249);
+  doc.rect(x, curY, width, rowHeight, "F");
+  doc.setTextColor(100, 116, 139);
+  doc.setFontSize(5.5);
+  doc.setFont("helvetica", "bold");
+  const col1 = x + 2;
+  const col2 = x + 28;
+  const col3 = x + 48;
+  const col4 = x + width * 0.58;
+  doc.text("DÍA", col1, curY + 3.8);
+  doc.text("HORA", col2, curY + 3.8);
+  doc.text("GRUPO", col3, curY + 3.8);
+  doc.text("DIRIGE", col4, curY + 3.8);
+  curY += rowHeight;
+
+  // Separator
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.3);
+  doc.line(x + 1, curY, x + width - 1, curY);
+
+  for (const service of sorted) {
+    if (curY + rowHeight > y + maxHeight) break;
+
+    const d = new Date(service.service_date);
+    const dayName = DAY_NAMES[d.getDay()];
+    const dayNum = d.getDate();
+    const groupName = service.worship_groups?.name || '—';
+    const groupColor = GROUP_COLORS[groupName] || [100, 100, 100];
+
+    // Determine hour display
+    let hora = '';
+    if (service.service_type === 'Servicio de Miércoles') {
+      hora = '7:00 PM';
+    } else if (service.title === '08:00 a.m.') {
+      hora = '8:00 AM';
+    } else if (service.title === '10:45 a.m.') {
+      hora = '10:45 AM';
+    } else {
+      hora = service.title;
+    }
+
+    // Alternating row background
+    const rowIdx = sorted.indexOf(service);
+    if (rowIdx % 2 === 0) {
+      doc.setFillColor(250, 251, 252);
+      doc.rect(x, curY, width, rowHeight, "F");
+    }
+
+    // Day column - bold with color
+    const isWednesday = service.service_type === 'Servicio de Miércoles';
+    doc.setTextColor(isWednesday ? 217 : 51, isWednesday ? 119 : 65, isWednesday ? 6 : 85);
+    doc.setFontSize(6);
+    doc.setFont("helvetica", "bold");
+    doc.text(`${dayName} ${dayNum}`, col1, curY + 3.8);
+
+    // Hour column
+    doc.setTextColor(71, 85, 105);
+    doc.setFontSize(6);
+    doc.setFont("helvetica", "normal");
+    doc.text(hora, col2, curY + 3.8);
+
+    // Group column - colored
+    doc.setTextColor(...groupColor);
+    doc.setFontSize(6);
+    doc.setFont("helvetica", "bold");
+    doc.text(groupName, col3, curY + 3.8);
+
+    // Director column
+    doc.setTextColor(30, 41, 59);
+    doc.setFontSize(6);
+    doc.setFont("helvetica", "normal");
+    doc.text(service.leader, col4, curY + 3.8);
+
+    curY += rowHeight;
+
+    // Light separator
+    doc.setDrawColor(241, 245, 249);
+    doc.setLineWidth(0.15);
+    doc.line(x + 1, curY, x + width - 1, curY);
+  }
+
+  return curY + 2;
+};
+
 export const AgendaCalendarPDF: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
-
-  const loadImageAsBase64 = async (url: string): Promise<string | null> => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = () => resolve(null);
-        reader.readAsDataURL(blob);
-      });
-    } catch {
-      return null;
-    }
-  };
 
   const generatePDF = async () => {
     setIsGenerating(true);
 
     try {
-      const currentMonth = new Date().getMonth(); // 0-indexed (March = 2)
+      const currentMonth = new Date().getMonth();
       const currentYear = 2026;
 
-      // Fetch all services from current month to December
       const startDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-01`;
       const endDate = `${currentYear}-12-31`;
 
       const { data: services, error } = await supabase
         .from("services")
-        .select(`
-          service_date,
-          title,
-          leader,
-          service_type,
-          assigned_group_id,
-          worship_groups (name)
-        `)
+        .select(`service_date, title, leader, service_type, assigned_group_id, worship_groups (name)`)
         .gte("service_date", startDate)
         .lte("service_date", endDate)
         .in("service_type", ["Servicio Dominical", "Servicio de Miércoles"])
@@ -84,228 +225,53 @@ export const AgendaCalendarPDF: React.FC = () => {
         return;
       }
 
-      // Group services by month
       const servicesByMonth: Record<number, ServiceRow[]> = {};
-      for (let m = currentMonth; m < 12; m++) {
-        servicesByMonth[m] = [];
-      }
-
+      for (let m = currentMonth; m < 12; m++) servicesByMonth[m] = [];
       services.forEach((s: any) => {
         const month = new Date(s.service_date).getMonth();
-        if (servicesByMonth[month]) {
-          servicesByMonth[month].push(s);
-        }
+        if (servicesByMonth[month]) servicesByMonth[month].push(s);
       });
 
-      // Load logo
       const logoBase64 = await loadImageAsBase64(arcanaLogo);
 
-      // Create PDF - landscape for more width
-      const doc = new jsPDF({
-        orientation: "landscape",
-        unit: "mm",
-        format: "letter",
-      });
-
+      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "letter" });
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 8;
 
-      // Colors
-      const primaryBlue: [number, number, number] = [59, 130, 246];
-      const darkBlue: [number, number, number] = [30, 64, 175];
+      // Layout: 2 months side-by-side per page
+      const monthsList = [];
+      for (let m = currentMonth; m < 12; m++) monthsList.push(m);
 
-      // Background
-      doc.setFillColor(248, 250, 252);
-      doc.rect(0, 0, pageWidth, pageHeight, "F");
+      const colWidth = (pageWidth - margin * 2 - 6) / 2;
 
-      // Header
-      const headerHeight = 18;
-      doc.setFillColor(37, 99, 235);
-      doc.roundedRect(margin, margin, pageWidth - margin * 2, headerHeight, 3, 3, "F");
+      for (let i = 0; i < monthsList.length; i += 2) {
+        if (i > 0) doc.addPage();
 
-      if (logoBase64) {
-        try {
-          doc.addImage(logoBase64, "PNG", margin + 4, margin + 2, 14, 14);
-        } catch {}
-      }
+        const contentStartY = drawHeader(doc, pageWidth, margin, logoBase64, currentYear);
 
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text("AGENDA DE SERVICIOS", pageWidth / 2, margin + 8, { align: "center" });
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "normal");
-      doc.text(`Ministerio ADN Arca de Noé • ${currentYear}`, pageWidth / 2, margin + 14, { align: "center" });
+        // Left month
+        const leftMonth = monthsList[i];
+        const leftServices = servicesByMonth[leftMonth] || [];
+        renderMonthBlock(doc, leftServices, leftMonth, margin, contentStartY, colWidth, pageHeight - contentStartY - 12);
 
-      // Calculate months to show
-      const monthsToShow = 12 - currentMonth; // e.g., March(2) to Dec(11) = 10 months
-      
-      // Grid layout: determine cols/rows based on month count
-      let cols: number, rows: number;
-      if (monthsToShow <= 4) { cols = 2; rows = 2; }
-      else if (monthsToShow <= 6) { cols = 3; rows = 2; }
-      else if (monthsToShow <= 9) { cols = 3; rows = 3; }
-      else { cols = 5; rows = 2; }
-
-      const gridStartY = margin + headerHeight + 4;
-      const gapX = 3;
-      const gapY = 3;
-      const cellWidth = (pageWidth - margin * 2 - gapX * (cols - 1)) / cols;
-      const cellHeight = (pageHeight - gridStartY - margin - 6) / rows;
-
-      const monthColors: [number, number, number][] = [
-        [59, 130, 246], [236, 72, 153], [34, 197, 94], [168, 85, 247],
-        [234, 179, 8], [249, 115, 22], [14, 165, 233], [239, 68, 68],
-        [139, 92, 246], [245, 158, 11], [6, 182, 212], [220, 38, 38],
-      ];
-
-      let monthIdx = 0;
-      for (let month = currentMonth; month < 12; month++) {
-        const col = monthIdx % cols;
-        const row = Math.floor(monthIdx / cols);
-        
-        const cellX = margin + col * (cellWidth + gapX);
-        const cellY = gridStartY + row * (cellHeight + gapY);
-
-        // Cell background
-        doc.setFillColor(255, 255, 255);
-        doc.roundedRect(cellX, cellY, cellWidth, cellHeight, 3, 3, "F");
-
-        // Border
-        doc.setDrawColor(226, 232, 240);
-        doc.setLineWidth(0.3);
-        doc.roundedRect(cellX, cellY, cellWidth, cellHeight, 3, 3, "S");
-
-        // Month header bar
-        doc.setFillColor(...monthColors[month]);
-        doc.roundedRect(cellX, cellY, cellWidth, 6, 3, 3, "F");
-        doc.rect(cellX, cellY + 3, cellWidth, 3, "F");
-
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(6.5);
-        doc.setFont("helvetica", "bold");
-        doc.text(MONTHS[month], cellX + cellWidth / 2, cellY + 4.5, { align: "center" });
-
-        // Services list
-        const monthServices = servicesByMonth[month] || [];
-        const contentY = cellY + 8;
-        const lineHeight = 3.2;
-        const maxLines = Math.floor((cellHeight - 10) / lineHeight);
-
-        if (monthServices.length === 0) {
-          doc.setTextColor(148, 163, 184);
-          doc.setFontSize(5);
-          doc.setFont("helvetica", "italic");
-          doc.text("Sin servicios", cellX + cellWidth / 2, contentY + 8, { align: "center" });
-        } else {
-          // Group by week (by Sunday date)
-          const weeks: Map<string, ServiceRow[]> = new Map();
-          monthServices.forEach((s) => {
-            const d = new Date(s.service_date);
-            // Find the Sunday of this week
-            const dayOfWeek = d.getDay();
-            const sunday = new Date(d);
-            if (dayOfWeek !== 0) {
-              // Find next Sunday
-              sunday.setDate(d.getDate() + (7 - dayOfWeek));
-            }
-            const key = sunday.toISOString().split('T')[0];
-            if (!weeks.has(key)) weeks.set(key, []);
-            weeks.get(key)!.push(s);
-          });
-
-          let lineIdx = 0;
-          const weeksArr = Array.from(weeks.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-
-          for (const [weekKey, weekServices] of weeksArr) {
-            if (lineIdx >= maxLines) break;
-
-            const sunDate = new Date(weekKey);
-            const sunDay = sunDate.getDate();
-            
-            // Week separator line
-            const lineY = contentY + lineIdx * lineHeight;
-            doc.setDrawColor(230, 230, 230);
-            doc.setLineWidth(0.15);
-            if (lineIdx > 0) {
-              doc.line(cellX + 2, lineY - 0.5, cellX + cellWidth - 2, lineY - 0.5);
-            }
-
-            // Find services by type
-            const sun8 = weekServices.find(s => s.title === '08:00 a.m.');
-            const sun1045 = weekServices.find(s => s.title === '10:45 a.m.');
-            const wed = weekServices.find(s => s.service_type === 'Servicio de Miércoles');
-
-            // Show Sunday services
-            if (sun8 && lineIdx < maxLines) {
-              const y = contentY + lineIdx * lineHeight + 2.5;
-              const groupName = sun8.worship_groups ? GROUP_SHORT[sun8.worship_groups.name] || sun8.worship_groups.name : '?';
-              
-              doc.setTextColor(...monthColors[month]);
-              doc.setFontSize(5);
-              doc.setFont("helvetica", "bold");
-              doc.text(`D${sunDay}`, cellX + 2, y);
-              
-              doc.setTextColor(51, 65, 85);
-              doc.setFontSize(4.5);
-              doc.setFont("helvetica", "normal");
-              doc.text(`8AM ${groupName} - ${DIRECTOR_SHORT(sun8.leader)}`, cellX + 9, y);
-              lineIdx++;
-            }
-
-            if (sun1045 && lineIdx < maxLines) {
-              const y = contentY + lineIdx * lineHeight + 2.5;
-              const groupName = sun1045.worship_groups ? GROUP_SHORT[sun1045.worship_groups.name] || sun1045.worship_groups.name : '?';
-              
-              doc.setTextColor(120, 120, 120);
-              doc.setFontSize(4.5);
-              doc.setFont("helvetica", "normal");
-              doc.text(`     10:45 ${groupName} - ${DIRECTOR_SHORT(sun1045.leader)}`, cellX + 2, y);
-              lineIdx++;
-            }
-
-            // Wednesday service
-            if (wed && lineIdx < maxLines) {
-              const wedDate = new Date(wed.service_date);
-              const wedDay = wedDate.getDate();
-              const y = contentY + lineIdx * lineHeight + 2.5;
-              const groupName = wed.worship_groups ? GROUP_SHORT[wed.worship_groups.name] || wed.worship_groups.name : '?';
-              
-              doc.setTextColor(217, 119, 6);
-              doc.setFontSize(4.5);
-              doc.setFont("helvetica", "bold");
-              doc.text(`M${wedDay}`, cellX + 2, y);
-              doc.setFont("helvetica", "normal");
-              doc.text(`7PM ${groupName} - ${DIRECTOR_SHORT(wed.leader)}`, cellX + 9, y);
-              lineIdx++;
-            }
-          }
-
-          // If truncated
-          const totalEntries = monthServices.length;
-          const shownEntries = lineIdx;
-          if (shownEntries < weeksArr.reduce((acc, [, s]) => acc + s.length, 0)) {
-            doc.setTextColor(148, 163, 184);
-            doc.setFontSize(4);
-            doc.setFont("helvetica", "italic");
-            doc.text("...", cellX + cellWidth / 2, cellY + cellHeight - 2, { align: "center" });
-          }
+        // Right month (if exists)
+        if (i + 1 < monthsList.length) {
+          const rightMonth = monthsList[i + 1];
+          const rightServices = servicesByMonth[rightMonth] || [];
+          renderMonthBlock(doc, rightServices, rightMonth, margin + colWidth + 6, contentStartY, colWidth, pageHeight - contentStartY - 12);
         }
 
-        monthIdx++;
+        // Draw card borders
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(margin, contentStartY - 1, colWidth, pageHeight - contentStartY - 10, 3, 3, "S");
+        if (i + 1 < monthsList.length) {
+          doc.roundedRect(margin + colWidth + 6, contentStartY - 1, colWidth, pageHeight - contentStartY - 10, 3, 3, "S");
+        }
+
+        drawFooter(doc, pageWidth, pageHeight);
       }
-
-      // Footer
-      doc.setTextColor(148, 163, 184);
-      doc.setFontSize(6);
-      doc.setFont("helvetica", "italic");
-      doc.text(`Generado por ARCANA • ${new Date().toLocaleDateString('es-DO')}`, pageWidth / 2, pageHeight - 4, { align: "center" });
-
-      // Legend
-      doc.setTextColor(100, 100, 100);
-      doc.setFontSize(5);
-      doc.text("D=Domingo  M=Miércoles  •  Formato: Hora Grupo - Director", pageWidth - margin, pageHeight - 4, { align: "right" });
 
       doc.save(`Agenda_Servicios_${currentYear}.pdf`);
       toast.success("Agenda de servicios descargada");
