@@ -6,6 +6,7 @@ import { AgendaTable } from "@/components/agenda/AgendaTable";
 import { CSVUpload } from "@/components/agenda/CSVUpload";
 import GenerateNextYearServices from "@/components/agenda/GenerateNextYearServices";
 import MonthlyAgendaPDF from "@/components/agenda/MonthlyAgendaPDF";
+import AgendaCalendarPDF from "@/components/agenda/AgendaCalendarPDF";
 import { Calendar, Upload, Plus } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
