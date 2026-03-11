@@ -6,6 +6,7 @@ import { AgendaTable } from "@/components/agenda/AgendaTable";
 import { CSVUpload } from "@/components/agenda/CSVUpload";
 import GenerateNextYearServices from "@/components/agenda/GenerateNextYearServices";
 import MonthlyAgendaPDF from "@/components/agenda/MonthlyAgendaPDF";
+import AgendaCalendarPDF from "@/components/agenda/AgendaCalendarPDF";
 import { Calendar, Upload, Plus } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,8 +55,9 @@ const MinisterialAgenda = () => {
         </div>
 
         {/* Componente de descarga de PDF mensual */}
-        <div className="mb-4">
+        <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <MonthlyAgendaPDF availableYears={availableYears} />
+          <AgendaCalendarPDF />
         </div>
 
         {/* Panel de Contenido Principal */}
