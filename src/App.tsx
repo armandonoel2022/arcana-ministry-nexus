@@ -50,12 +50,32 @@ import SongChangeOverlay from "./components/songs/SongChangeOverlay";
 import { PendingSongNotifications } from "./components/songs/PendingSongNotifications";
 import { SwipeIndicator } from "./components/SwipeIndicator";
 import { OfflineIndicator } from "./components/OfflineIndicator";
+import { BackgroundSyncProvider } from "./components/BackgroundSyncProvider";
 
 import { useNativeNotificationSync } from "./hooks/useNativeNotificationSync";
 import { usePushRegistration } from "./hooks/usePushRegistration";
 import "./App.css";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Keep data in cache for 30 minutes
+      staleTime: 30 * 60 * 1000,
+      // Cache persists for 1 hour
+      gcTime: 60 * 60 * 1000,
+      // Don't retry when offline
+      retry: (failureCount, error) => {
+        if (!navigator.onLine) return false;
+        return failureCount < 2;
+      },
+      // Use cached data when offline
+      networkMode: 'offlineFirst',
+    },
+    mutations: {
+      networkMode: 'offlineFirst',
+    },
+  },
+});
 
 function HeaderTrigger() {
   return <AnimatedLogoTrigger />;
@@ -121,6 +141,7 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <PushServicesInitializer />
+              <BackgroundSyncProvider />
               <SidebarProvider defaultOpen={false}>
                 <SidebarLayout />
                 <SwipeIndicator />
