@@ -141,6 +141,7 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <PushServicesInitializer />
+              <BackgroundSyncProvider />
               <SidebarProvider defaultOpen={false}>
                 <SidebarLayout />
                 <SwipeIndicator />
