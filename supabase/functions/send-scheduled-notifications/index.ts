@@ -302,7 +302,23 @@ async function processDailyAdviceNotification(supabase: any, notification: Sched
   console.log('Processing daily advice notification...');
   
   try {
-    // Get all active advice from database
+    const rdNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
+    const today = `${rdNow.getFullYear()}-${String(rdNow.getMonth()+1).padStart(2,'0')}-${String(rdNow.getDate()).padStart(2,'0')}`;
+
+    // CHECK DEDUPLICATION: if notifications already sent today, skip
+    const startOfDay = `${today}T00:00:00`;
+    const { data: existingToday } = await supabase
+      .from('system_notifications')
+      .select('id')
+      .eq('type', 'daily_advice')
+      .gte('created_at', startOfDay)
+      .limit(1);
+
+    if (existingToday && existingToday.length > 0) {
+      console.log('Daily advice notifications already sent today, skipping');
+      return;
+    }
+
     const { data: activeAdvice, error: adviceError } = await supabase
       .from('daily_advice')
       .select('*')
@@ -310,7 +326,6 @@ async function processDailyAdviceNotification(supabase: any, notification: Sched
 
     if (adviceError) throw adviceError;
 
-    // If no advice in database, use fallback messages
     let selectedAdvice;
     
     if (!activeAdvice || activeAdvice.length === 0) {
@@ -324,7 +339,6 @@ async function processDailyAdviceNotification(supabase: any, notification: Sched
       ];
       selectedAdvice = fallbackMessages[Math.floor(Math.random() * fallbackMessages.length)];
     } else {
-      // Select a random advice from the database
       const randomIndex = Math.floor(Math.random() * activeAdvice.length);
       selectedAdvice = {
         title: activeAdvice[randomIndex].title,
@@ -334,7 +348,6 @@ async function processDailyAdviceNotification(supabase: any, notification: Sched
 
     console.log(`Selected advice: ${selectedAdvice.title}`);
 
-    // Get all active users
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id')
@@ -344,7 +357,6 @@ async function processDailyAdviceNotification(supabase: any, notification: Sched
 
     console.log(`Sending daily advice notification to ${profiles?.length || 0} users`);
 
-    // Send notification to all active users
     for (const profile of profiles) {
       await supabase
         .from('system_notifications')
@@ -358,12 +370,11 @@ async function processDailyAdviceNotification(supabase: any, notification: Sched
             advice_title: selectedAdvice.title,
             advice_message: selectedAdvice.message,
             advice_type: 'daily',
-            date: new Date().toISOString().split('T')[0]
+            date: today
           },
           priority: 1
         });
       
-      // Send native push notification
       await sendPushNotification(supabase, profile.id, {
         title: selectedAdvice.title,
         body: selectedAdvice.message,
