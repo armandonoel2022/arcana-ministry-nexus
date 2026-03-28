@@ -189,6 +189,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     needsPasswordChange,
     isApproved,
     userProfile,
+    isOffline,
     signOut,
   };
 
