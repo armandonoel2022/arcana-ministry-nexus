@@ -755,35 +755,26 @@ async function processBirthdayNotification(supabase: any, notification: Schedule
   }
 }
 
-async function getNextWeekendServices(supabase: any) {
-  const now = new Date();
-  const currentDay = now.getDay();
-  const currentHour = now.getHours();
+// Get services for the current week (Monday to Sunday)
+async function getWeekServices(supabase: any) {
+  const rdNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
+  const currentDay = rdNow.getDay(); // 0=Sun, 1=Mon...
   
-  let weekStart: Date, weekEnd: Date;
+  // Calculate Monday of this week
+  const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1;
+  const monday = new Date(rdNow);
+  monday.setDate(rdNow.getDate() - daysFromMonday);
+  monday.setHours(0, 0, 0, 0);
   
-  // Logic to determine which weekend to show
-  if ((currentDay > 3) || (currentDay === 3 && currentHour >= 14)) {
-    // If it's Thursday after 2 PM or later, show next weekend
-    const daysToAdd = currentDay === 0 ? 5 : (12 - currentDay) % 7;
-    weekStart = new Date(now);
-    weekStart.setDate(now.getDate() + daysToAdd);
-    weekStart.setHours(0, 0, 0, 0);
-    
-    weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 2);
-    weekEnd.setHours(23, 59, 59, 999);
-  } else {
-    // Show current/next weekend
-    const daysUntilFriday = (5 - currentDay + 7) % 7;
-    weekStart = new Date(now);
-    weekStart.setDate(now.getDate() + daysUntilFriday);
-    weekStart.setHours(0, 0, 0, 0);
-    
-    weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 2);
-    weekEnd.setHours(23, 59, 59, 999);
-  }
+  // Sunday of this week  
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+  
+  const mondayStr = `${monday.getFullYear()}-${String(monday.getMonth()+1).padStart(2,'0')}-${String(monday.getDate()).padStart(2,'0')}`;
+  const sundayStr = `${sunday.getFullYear()}-${String(sunday.getMonth()+1).padStart(2,'0')}-${String(sunday.getDate()).padStart(2,'0')}`;
+  
+  console.log(`Getting services from ${mondayStr} to ${sundayStr}`);
   
   const { data: services, error } = await supabase
     .from('services')
@@ -795,16 +786,21 @@ async function getNextWeekendServices(supabase: any) {
         color_theme
       )
     `)
-    .gte('service_date', weekStart.toISOString())
-    .lte('service_date', weekEnd.toISOString())
+    .gte('service_date', mondayStr)
+    .lte('service_date', sundayStr)
     .order('service_date', { ascending: true });
 
   if (error) {
-    console.error('Error fetching weekend services:', error);
+    console.error('Error fetching week services:', error);
     throw error;
   }
 
   return services || [];
+}
+
+// Keep legacy name for backward compatibility
+async function getNextWeekendServices(supabase: any) {
+  return getWeekServices(supabase);
 }
 
 function getServiceTime(serviceTitle: string): string {
@@ -812,6 +808,8 @@ function getServiceTime(serviceTitle: string): string {
     return '8:00 AM';
   } else if (serviceTitle.toLowerCase().includes('segunda') || serviceTitle.toLowerCase().includes('10:45')) {
     return '10:45 AM';
+  } else if (serviceTitle.toLowerCase().includes('miércoles') || serviceTitle.toLowerCase().includes('miercoles') || serviceTitle.toLowerCase().includes('7:00')) {
+    return '7:00 PM';
   }
   return '';
 }
