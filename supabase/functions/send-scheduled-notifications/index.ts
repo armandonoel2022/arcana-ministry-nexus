@@ -209,16 +209,29 @@ async function processDailyVerseNotification(supabase: any, notification: Schedu
   console.log('Processing daily verse notification...');
   
   try {
-    // Get today's verse or create one
-    const today = new Date().toISOString().split('T')[0];
-    
+    const rdNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
+    const today = `${rdNow.getFullYear()}-${String(rdNow.getMonth()+1).padStart(2,'0')}-${String(rdNow.getDate()).padStart(2,'0')}`;
+
+    // CHECK DEDUPLICATION: if notifications already sent today, skip
+    const startOfDay = `${today}T00:00:00`;
+    const { data: existingToday } = await supabase
+      .from('system_notifications')
+      .select('id')
+      .eq('type', 'daily_verse')
+      .gte('created_at', startOfDay)
+      .limit(1);
+
+    if (existingToday && existingToday.length > 0) {
+      console.log('Daily verse notifications already sent today, skipping');
+      return;
+    }
+
     let { data: dailyVerse, error: verseError } = await supabase
       .from('daily_verses')
       .select('*, bible_verses (*)')
       .eq('date', today)
       .single();
 
-    // If no verse for today, create one
     if (!dailyVerse) {
       const { data: allVerses, error: allVersesError } = await supabase
         .from('bible_verses')
@@ -230,17 +243,12 @@ async function processDailyVerseNotification(supabase: any, notification: Schedu
         return;
       }
 
-      // Select a random verse
       const randomIndex = Math.floor(Math.random() * allVerses.length);
       const selectedVerse = allVerses[randomIndex];
 
-      // Create daily verse entry
       const { data: newDailyVerse, error: insertError } = await supabase
         .from('daily_verses')
-        .insert({
-          date: today,
-          verse_id: selectedVerse.id
-        })
+        .insert({ date: today, verse_id: selectedVerse.id })
         .select('*, bible_verses (*)')
         .single();
 
@@ -248,7 +256,6 @@ async function processDailyVerseNotification(supabase: any, notification: Schedu
       dailyVerse = newDailyVerse;
     }
 
-    // Get all active users
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id')
@@ -258,7 +265,6 @@ async function processDailyVerseNotification(supabase: any, notification: Schedu
 
     console.log(`Sending daily verse notification to ${profiles?.length || 0} users`);
 
-    // Send notification to all active users
     for (const profile of profiles) {
       await supabase
         .from('system_notifications')
@@ -276,7 +282,6 @@ async function processDailyVerseNotification(supabase: any, notification: Schedu
           priority: 1
         });
       
-      // Send native push notification
       await sendPushNotification(supabase, profile.id, {
         title: 'Versículo del Día',
         body: `${dailyVerse.bible_verses.book} ${dailyVerse.bible_verses.chapter}:${dailyVerse.bible_verses.verse}`,
