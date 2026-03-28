@@ -201,6 +201,68 @@ serve(async (req) => {
 
       notificationsSent += allNotifications.length
       console.log(`Enviadas ${allNotifications.length} notificaciones para el cumpleaños de ${member.nombres} ${member.apellidos}`)
+
+      // Send native push notifications (web + iOS)
+      for (const notif of allNotifications) {
+        try {
+          // Web push
+          const { data: subs } = await supabase
+            .from('user_push_subscriptions')
+            .select('subscription')
+            .eq('user_id', notif.recipient_id)
+
+          if (subs && subs.length > 0) {
+            for (const sub of subs) {
+              await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-push-notification`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+                },
+                body: JSON.stringify({
+                  subscription: sub.subscription,
+                  payload: {
+                    title: notif.title,
+                    body: notif.message,
+                    icon: '/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png',
+                    url: '/cumpleanos',
+                    type: 'birthday'
+                  }
+                })
+              }).catch(e => console.error('Web push error:', e))
+            }
+          }
+
+          // iOS push
+          const { data: devices } = await supabase
+            .from('user_devices')
+            .select('device_token, platform')
+            .eq('user_id', notif.recipient_id)
+            .eq('is_active', true)
+
+          if (devices && devices.length > 0) {
+            for (const device of devices) {
+              if (device.platform === 'ios' && device.device_token) {
+                await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-ios-push`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+                  },
+                  body: JSON.stringify({
+                    deviceToken: device.device_token,
+                    title: notif.title,
+                    body: notif.message,
+                    data: { url: '/cumpleanos', type: 'birthday' }
+                  })
+                }).catch(e => console.error('iOS push error:', e))
+              }
+            }
+          }
+        } catch (pushErr) {
+          console.error(`Push error for ${notif.recipient_id}:`, pushErr)
+        }
+      }
     }
 
     return new Response(
