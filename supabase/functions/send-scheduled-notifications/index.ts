@@ -821,56 +821,82 @@ async function sendPushNotification(
   notification: { title: string; body: string; url: string; type: string }
 ) {
   try {
-    // Get user's push subscriptions
+    // 1. Web push subscriptions
     const { data: subscriptions, error: subError } = await supabase
       .from('user_push_subscriptions')
       .select('*')
       .eq('user_id', userId);
 
-    if (subError) {
-      console.error(`Error fetching subscriptions for user ${userId}:`, subError);
-      return;
-    }
-
-    if (!subscriptions || subscriptions.length === 0) {
-      console.log(`No push subscriptions found for user ${userId}`);
-      return;
-    }
-
-    // Send push notification to all user's subscriptions
-    for (const sub of subscriptions) {
-      try {
-        const pushSubscription = sub.subscription;
-        
-        // Call the send-push-notification edge function
-        const response = await fetch(
-          `${Deno.env.get('SUPABASE_URL')}/functions/v1/send-push-notification`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
-            },
-            body: JSON.stringify({
-              subscription: pushSubscription,
-              payload: {
-                title: notification.title,
-                body: notification.body,
-                icon: '/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png',
-                url: notification.url,
-                type: notification.type
-              }
-            })
+    if (!subError && subscriptions && subscriptions.length > 0) {
+      for (const sub of subscriptions) {
+        try {
+          const response = await fetch(
+            `${Deno.env.get('SUPABASE_URL')}/functions/v1/send-push-notification`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+              },
+              body: JSON.stringify({
+                subscription: sub.subscription,
+                payload: {
+                  title: notification.title,
+                  body: notification.body,
+                  icon: '/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png',
+                  url: notification.url,
+                  type: notification.type
+                }
+              })
+            }
+          );
+          if (!response.ok) {
+            console.error(`Web push failed for user ${userId}:`, await response.text());
+          } else {
+            console.log(`Web push sent to user ${userId}`);
           }
-        );
-
-        if (!response.ok) {
-          console.error(`Failed to send push notification to user ${userId}:`, await response.text());
-        } else {
-          console.log(`Push notification sent successfully to user ${userId}`);
+        } catch (pushError) {
+          console.error(`Error sending web push:`, pushError);
         }
-      } catch (pushError) {
-        console.error(`Error sending push to subscription:`, pushError);
+      }
+    }
+
+    // 2. iOS native push via APNs
+    const { data: devices, error: devError } = await supabase
+      .from('user_devices')
+      .select('device_token, platform')
+      .eq('user_id', userId)
+      .eq('is_active', true);
+
+    if (!devError && devices && devices.length > 0) {
+      for (const device of devices) {
+        if (device.platform === 'ios' && device.device_token) {
+          try {
+            const response = await fetch(
+              `${Deno.env.get('SUPABASE_URL')}/functions/v1/send-ios-push`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+                },
+                body: JSON.stringify({
+                  deviceToken: device.device_token,
+                  title: notification.title,
+                  body: notification.body,
+                  data: { url: notification.url, type: notification.type }
+                })
+              }
+            );
+            if (!response.ok) {
+              console.error(`iOS push failed for user ${userId}:`, await response.text());
+            } else {
+              console.log(`iOS push sent to user ${userId}`);
+            }
+          } catch (iosError) {
+            console.error(`Error sending iOS push:`, iosError);
+          }
+        }
       }
     }
   } catch (error) {
