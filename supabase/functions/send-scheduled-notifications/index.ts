@@ -134,64 +134,82 @@ async function processServiceOverlayNotification(supabase: any, notification: Sc
   console.log('Processing service overlay notification...');
   
   try {
-    // Get weekend services (next weekend)
-    const weekendServices = await getNextWeekendServices(supabase);
+    // Get all services for the current week (Mon-Sun)
+    const weekServices = await getWeekServices(supabase);
     
-    if (weekendServices.length === 0) {
-      console.log('No weekend services found');
+    if (weekServices.length === 0) {
+      console.log('No services found for this week');
       return;
     }
 
-    // Get all active users to send notification to
+    // CHECK DEDUPLICATION: if service overlay already sent today, skip
+    const rdNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
+    const today = `${rdNow.getFullYear()}-${String(rdNow.getMonth()+1).padStart(2,'0')}-${String(rdNow.getDate()).padStart(2,'0')}`;
+    const startOfDay = `${today}T00:00:00`;
+    
+    const { data: existingToday } = await supabase
+      .from('system_notifications')
+      .select('id')
+      .eq('type', 'service_overlay')
+      .gte('created_at', startOfDay)
+      .limit(1);
+
+    if (existingToday && existingToday.length > 0) {
+      console.log('Service overlay notifications already sent today, skipping');
+      return;
+    }
+
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id, full_name, email')
       .eq('is_active', true);
 
-    if (profilesError) {
-      console.error('Error fetching profiles:', profilesError);
-      throw profilesError;
-    }
+    if (profilesError) throw profilesError;
 
     console.log(`Sending service overlay notification to ${profiles?.length || 0} users`);
 
-    // Create the service overlay notification metadata
+    // Build detailed service list for push body
+    const serviceLines = weekServices.map((service: any) => {
+      const time = getServiceTime(service.title);
+      const dayNames: Record<number, string> = { 0: 'Dom', 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb' };
+      const sDate = new Date(service.service_date + 'T12:00:00');
+      const dayName = dayNames[sDate.getDay()] || '';
+      const dayNum = sDate.getDate();
+      return `${dayName} ${dayNum} ${time}: ${service.leader || 'TBD'} - ${service.worship_groups?.name || ''}`;
+    });
+    const pushBody = serviceLines.join(' | ');
+
     const servicesMetadata = {
-      service_date: weekendServices[0].service_date,
-      services: weekendServices.map((service: any) => ({
+      service_date: weekServices[0].service_date,
+      services: weekServices.map((service: any) => ({
         id: service.id,
         date: service.service_date,
         title: service.title,
         leader: service.leader,
         group: service.worship_groups?.name,
         time: getServiceTime(service.title),
-        director: {
-          name: service.leader,
-          photo: null
-        },
+        director: { name: service.leader, photo: null },
         voices: [],
         songs: []
       }))
     };
 
-    // Send notification to all active users
     for (const profile of profiles) {
       await supabase
         .from('system_notifications')
         .insert({
           recipient_id: profile.id,
           type: 'service_overlay',
-          title: 'Programa de Servicios - Fin de Semana',
-          message: `Servicios programados para el próximo fin de semana`,
+          title: 'Programa de Servicios - Semana',
+          message: `Servicios programados para esta semana`,
           notification_category: 'agenda',
           metadata: servicesMetadata,
           priority: 2
         });
       
-      // Send native push notification
       await sendPushNotification(supabase, profile.id, {
-        title: 'Programa de Servicios - Fin de Semana',
-        body: `Servicios programados para el próximo fin de semana`,
+        title: 'Programa de Servicios - Semana',
+        body: pushBody,
         url: '/ministerial-agenda',
         type: 'service_overlay'
       });
