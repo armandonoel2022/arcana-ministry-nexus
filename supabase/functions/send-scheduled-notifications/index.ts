@@ -134,64 +134,82 @@ async function processServiceOverlayNotification(supabase: any, notification: Sc
   console.log('Processing service overlay notification...');
   
   try {
-    // Get weekend services (next weekend)
-    const weekendServices = await getNextWeekendServices(supabase);
+    // Get all services for the current week (Mon-Sun)
+    const weekServices = await getWeekServices(supabase);
     
-    if (weekendServices.length === 0) {
-      console.log('No weekend services found');
+    if (weekServices.length === 0) {
+      console.log('No services found for this week');
       return;
     }
 
-    // Get all active users to send notification to
+    // CHECK DEDUPLICATION: if service overlay already sent today, skip
+    const rdNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
+    const today = `${rdNow.getFullYear()}-${String(rdNow.getMonth()+1).padStart(2,'0')}-${String(rdNow.getDate()).padStart(2,'0')}`;
+    const startOfDay = `${today}T00:00:00`;
+    
+    const { data: existingToday } = await supabase
+      .from('system_notifications')
+      .select('id')
+      .eq('type', 'service_overlay')
+      .gte('created_at', startOfDay)
+      .limit(1);
+
+    if (existingToday && existingToday.length > 0) {
+      console.log('Service overlay notifications already sent today, skipping');
+      return;
+    }
+
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id, full_name, email')
       .eq('is_active', true);
 
-    if (profilesError) {
-      console.error('Error fetching profiles:', profilesError);
-      throw profilesError;
-    }
+    if (profilesError) throw profilesError;
 
     console.log(`Sending service overlay notification to ${profiles?.length || 0} users`);
 
-    // Create the service overlay notification metadata
+    // Build detailed service list for push body
+    const serviceLines = weekServices.map((service: any) => {
+      const time = getServiceTime(service.title);
+      const dayNames: Record<number, string> = { 0: 'Dom', 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb' };
+      const sDate = new Date(service.service_date + 'T12:00:00');
+      const dayName = dayNames[sDate.getDay()] || '';
+      const dayNum = sDate.getDate();
+      return `${dayName} ${dayNum} ${time}: ${service.leader || 'TBD'} - ${service.worship_groups?.name || ''}`;
+    });
+    const pushBody = serviceLines.join(' | ');
+
     const servicesMetadata = {
-      service_date: weekendServices[0].service_date,
-      services: weekendServices.map((service: any) => ({
+      service_date: weekServices[0].service_date,
+      services: weekServices.map((service: any) => ({
         id: service.id,
         date: service.service_date,
         title: service.title,
         leader: service.leader,
         group: service.worship_groups?.name,
         time: getServiceTime(service.title),
-        director: {
-          name: service.leader,
-          photo: null
-        },
+        director: { name: service.leader, photo: null },
         voices: [],
         songs: []
       }))
     };
 
-    // Send notification to all active users
     for (const profile of profiles) {
       await supabase
         .from('system_notifications')
         .insert({
           recipient_id: profile.id,
           type: 'service_overlay',
-          title: 'Programa de Servicios - Fin de Semana',
-          message: `Servicios programados para el próximo fin de semana`,
+          title: 'Programa de Servicios - Semana',
+          message: `Servicios programados para esta semana`,
           notification_category: 'agenda',
           metadata: servicesMetadata,
           priority: 2
         });
       
-      // Send native push notification
       await sendPushNotification(supabase, profile.id, {
-        title: 'Programa de Servicios - Fin de Semana',
-        body: `Servicios programados para el próximo fin de semana`,
+        title: 'Programa de Servicios - Semana',
+        body: pushBody,
         url: '/ministerial-agenda',
         type: 'service_overlay'
       });
@@ -209,16 +227,29 @@ async function processDailyVerseNotification(supabase: any, notification: Schedu
   console.log('Processing daily verse notification...');
   
   try {
-    // Get today's verse or create one
-    const today = new Date().toISOString().split('T')[0];
-    
+    const rdNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
+    const today = `${rdNow.getFullYear()}-${String(rdNow.getMonth()+1).padStart(2,'0')}-${String(rdNow.getDate()).padStart(2,'0')}`;
+
+    // CHECK DEDUPLICATION: if notifications already sent today, skip
+    const startOfDay = `${today}T00:00:00`;
+    const { data: existingToday } = await supabase
+      .from('system_notifications')
+      .select('id')
+      .eq('type', 'daily_verse')
+      .gte('created_at', startOfDay)
+      .limit(1);
+
+    if (existingToday && existingToday.length > 0) {
+      console.log('Daily verse notifications already sent today, skipping');
+      return;
+    }
+
     let { data: dailyVerse, error: verseError } = await supabase
       .from('daily_verses')
       .select('*, bible_verses (*)')
       .eq('date', today)
       .single();
 
-    // If no verse for today, create one
     if (!dailyVerse) {
       const { data: allVerses, error: allVersesError } = await supabase
         .from('bible_verses')
@@ -230,17 +261,12 @@ async function processDailyVerseNotification(supabase: any, notification: Schedu
         return;
       }
 
-      // Select a random verse
       const randomIndex = Math.floor(Math.random() * allVerses.length);
       const selectedVerse = allVerses[randomIndex];
 
-      // Create daily verse entry
       const { data: newDailyVerse, error: insertError } = await supabase
         .from('daily_verses')
-        .insert({
-          date: today,
-          verse_id: selectedVerse.id
-        })
+        .insert({ date: today, verse_id: selectedVerse.id })
         .select('*, bible_verses (*)')
         .single();
 
@@ -248,7 +274,6 @@ async function processDailyVerseNotification(supabase: any, notification: Schedu
       dailyVerse = newDailyVerse;
     }
 
-    // Get all active users
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id')
@@ -258,7 +283,6 @@ async function processDailyVerseNotification(supabase: any, notification: Schedu
 
     console.log(`Sending daily verse notification to ${profiles?.length || 0} users`);
 
-    // Send notification to all active users
     for (const profile of profiles) {
       await supabase
         .from('system_notifications')
@@ -276,7 +300,6 @@ async function processDailyVerseNotification(supabase: any, notification: Schedu
           priority: 1
         });
       
-      // Send native push notification
       await sendPushNotification(supabase, profile.id, {
         title: 'Versículo del Día',
         body: `${dailyVerse.bible_verses.book} ${dailyVerse.bible_verses.chapter}:${dailyVerse.bible_verses.verse}`,
@@ -297,7 +320,23 @@ async function processDailyAdviceNotification(supabase: any, notification: Sched
   console.log('Processing daily advice notification...');
   
   try {
-    // Get all active advice from database
+    const rdNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
+    const today = `${rdNow.getFullYear()}-${String(rdNow.getMonth()+1).padStart(2,'0')}-${String(rdNow.getDate()).padStart(2,'0')}`;
+
+    // CHECK DEDUPLICATION: if notifications already sent today, skip
+    const startOfDay = `${today}T00:00:00`;
+    const { data: existingToday } = await supabase
+      .from('system_notifications')
+      .select('id')
+      .eq('type', 'daily_advice')
+      .gte('created_at', startOfDay)
+      .limit(1);
+
+    if (existingToday && existingToday.length > 0) {
+      console.log('Daily advice notifications already sent today, skipping');
+      return;
+    }
+
     const { data: activeAdvice, error: adviceError } = await supabase
       .from('daily_advice')
       .select('*')
@@ -305,7 +344,6 @@ async function processDailyAdviceNotification(supabase: any, notification: Sched
 
     if (adviceError) throw adviceError;
 
-    // If no advice in database, use fallback messages
     let selectedAdvice;
     
     if (!activeAdvice || activeAdvice.length === 0) {
@@ -319,7 +357,6 @@ async function processDailyAdviceNotification(supabase: any, notification: Sched
       ];
       selectedAdvice = fallbackMessages[Math.floor(Math.random() * fallbackMessages.length)];
     } else {
-      // Select a random advice from the database
       const randomIndex = Math.floor(Math.random() * activeAdvice.length);
       selectedAdvice = {
         title: activeAdvice[randomIndex].title,
@@ -329,7 +366,6 @@ async function processDailyAdviceNotification(supabase: any, notification: Sched
 
     console.log(`Selected advice: ${selectedAdvice.title}`);
 
-    // Get all active users
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id')
@@ -339,7 +375,6 @@ async function processDailyAdviceNotification(supabase: any, notification: Sched
 
     console.log(`Sending daily advice notification to ${profiles?.length || 0} users`);
 
-    // Send notification to all active users
     for (const profile of profiles) {
       await supabase
         .from('system_notifications')
@@ -353,12 +388,11 @@ async function processDailyAdviceNotification(supabase: any, notification: Sched
             advice_title: selectedAdvice.title,
             advice_message: selectedAdvice.message,
             advice_type: 'daily',
-            date: new Date().toISOString().split('T')[0]
+            date: today
           },
           priority: 1
         });
       
-      // Send native push notification
       await sendPushNotification(supabase, profile.id, {
         title: selectedAdvice.title,
         body: selectedAdvice.message,
@@ -721,35 +755,26 @@ async function processBirthdayNotification(supabase: any, notification: Schedule
   }
 }
 
-async function getNextWeekendServices(supabase: any) {
-  const now = new Date();
-  const currentDay = now.getDay();
-  const currentHour = now.getHours();
+// Get services for the current week (Monday to Sunday)
+async function getWeekServices(supabase: any) {
+  const rdNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
+  const currentDay = rdNow.getDay(); // 0=Sun, 1=Mon...
   
-  let weekStart: Date, weekEnd: Date;
+  // Calculate Monday of this week
+  const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1;
+  const monday = new Date(rdNow);
+  monday.setDate(rdNow.getDate() - daysFromMonday);
+  monday.setHours(0, 0, 0, 0);
   
-  // Logic to determine which weekend to show
-  if ((currentDay > 3) || (currentDay === 3 && currentHour >= 14)) {
-    // If it's Thursday after 2 PM or later, show next weekend
-    const daysToAdd = currentDay === 0 ? 5 : (12 - currentDay) % 7;
-    weekStart = new Date(now);
-    weekStart.setDate(now.getDate() + daysToAdd);
-    weekStart.setHours(0, 0, 0, 0);
-    
-    weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 2);
-    weekEnd.setHours(23, 59, 59, 999);
-  } else {
-    // Show current/next weekend
-    const daysUntilFriday = (5 - currentDay + 7) % 7;
-    weekStart = new Date(now);
-    weekStart.setDate(now.getDate() + daysUntilFriday);
-    weekStart.setHours(0, 0, 0, 0);
-    
-    weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 2);
-    weekEnd.setHours(23, 59, 59, 999);
-  }
+  // Sunday of this week  
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+  
+  const mondayStr = `${monday.getFullYear()}-${String(monday.getMonth()+1).padStart(2,'0')}-${String(monday.getDate()).padStart(2,'0')}`;
+  const sundayStr = `${sunday.getFullYear()}-${String(sunday.getMonth()+1).padStart(2,'0')}-${String(sunday.getDate()).padStart(2,'0')}`;
+  
+  console.log(`Getting services from ${mondayStr} to ${sundayStr}`);
   
   const { data: services, error } = await supabase
     .from('services')
@@ -761,16 +786,21 @@ async function getNextWeekendServices(supabase: any) {
         color_theme
       )
     `)
-    .gte('service_date', weekStart.toISOString())
-    .lte('service_date', weekEnd.toISOString())
+    .gte('service_date', mondayStr)
+    .lte('service_date', sundayStr)
     .order('service_date', { ascending: true });
 
   if (error) {
-    console.error('Error fetching weekend services:', error);
+    console.error('Error fetching week services:', error);
     throw error;
   }
 
   return services || [];
+}
+
+// Keep legacy name for backward compatibility
+async function getNextWeekendServices(supabase: any) {
+  return getWeekServices(supabase);
 }
 
 function getServiceTime(serviceTitle: string): string {
@@ -778,6 +808,8 @@ function getServiceTime(serviceTitle: string): string {
     return '8:00 AM';
   } else if (serviceTitle.toLowerCase().includes('segunda') || serviceTitle.toLowerCase().includes('10:45')) {
     return '10:45 AM';
+  } else if (serviceTitle.toLowerCase().includes('miércoles') || serviceTitle.toLowerCase().includes('miercoles') || serviceTitle.toLowerCase().includes('7:00')) {
+    return '7:00 PM';
   }
   return '';
 }
@@ -789,56 +821,82 @@ async function sendPushNotification(
   notification: { title: string; body: string; url: string; type: string }
 ) {
   try {
-    // Get user's push subscriptions
+    // 1. Web push subscriptions
     const { data: subscriptions, error: subError } = await supabase
       .from('user_push_subscriptions')
       .select('*')
       .eq('user_id', userId);
 
-    if (subError) {
-      console.error(`Error fetching subscriptions for user ${userId}:`, subError);
-      return;
-    }
-
-    if (!subscriptions || subscriptions.length === 0) {
-      console.log(`No push subscriptions found for user ${userId}`);
-      return;
-    }
-
-    // Send push notification to all user's subscriptions
-    for (const sub of subscriptions) {
-      try {
-        const pushSubscription = sub.subscription;
-        
-        // Call the send-push-notification edge function
-        const response = await fetch(
-          `${Deno.env.get('SUPABASE_URL')}/functions/v1/send-push-notification`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
-            },
-            body: JSON.stringify({
-              subscription: pushSubscription,
-              payload: {
-                title: notification.title,
-                body: notification.body,
-                icon: '/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png',
-                url: notification.url,
-                type: notification.type
-              }
-            })
+    if (!subError && subscriptions && subscriptions.length > 0) {
+      for (const sub of subscriptions) {
+        try {
+          const response = await fetch(
+            `${Deno.env.get('SUPABASE_URL')}/functions/v1/send-push-notification`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+              },
+              body: JSON.stringify({
+                subscription: sub.subscription,
+                payload: {
+                  title: notification.title,
+                  body: notification.body,
+                  icon: '/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png',
+                  url: notification.url,
+                  type: notification.type
+                }
+              })
+            }
+          );
+          if (!response.ok) {
+            console.error(`Web push failed for user ${userId}:`, await response.text());
+          } else {
+            console.log(`Web push sent to user ${userId}`);
           }
-        );
-
-        if (!response.ok) {
-          console.error(`Failed to send push notification to user ${userId}:`, await response.text());
-        } else {
-          console.log(`Push notification sent successfully to user ${userId}`);
+        } catch (pushError) {
+          console.error(`Error sending web push:`, pushError);
         }
-      } catch (pushError) {
-        console.error(`Error sending push to subscription:`, pushError);
+      }
+    }
+
+    // 2. iOS native push via APNs
+    const { data: devices, error: devError } = await supabase
+      .from('user_devices')
+      .select('device_token, platform')
+      .eq('user_id', userId)
+      .eq('is_active', true);
+
+    if (!devError && devices && devices.length > 0) {
+      for (const device of devices) {
+        if (device.platform === 'ios' && device.device_token) {
+          try {
+            const response = await fetch(
+              `${Deno.env.get('SUPABASE_URL')}/functions/v1/send-ios-push`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+                },
+                body: JSON.stringify({
+                  deviceToken: device.device_token,
+                  title: notification.title,
+                  body: notification.body,
+                  data: { url: notification.url, type: notification.type }
+                })
+              }
+            );
+            if (!response.ok) {
+              console.error(`iOS push failed for user ${userId}:`, await response.text());
+            } else {
+              console.log(`iOS push sent to user ${userId}`);
+            }
+          } catch (iosError) {
+            console.error(`Error sending iOS push:`, iosError);
+          }
+        }
       }
     }
   } catch (error) {
