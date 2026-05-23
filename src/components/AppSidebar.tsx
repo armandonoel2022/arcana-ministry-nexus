@@ -21,7 +21,8 @@ import {
   Bot,
   LogOut,
   Headphones,
-  TestTube
+  TestTube,
+  Shirt
 } from "lucide-react"
 
 import {
@@ -79,6 +80,7 @@ const iconMap: Record<string, LucideIcon> = {
   '/statutes': FileText,
   '/notificaciones-programadas': Calendar,
   '/scheduled-notifications': Calendar,
+  '/mi-outfit': Shirt,
 };
 
 // Category order for display

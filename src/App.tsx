@@ -28,6 +28,7 @@ import VocalTraining from "./pages/VocalTraining";
 import MusicalTraining from "./pages/MusicalTraining";
 import DanceTraining from "./pages/DanceTraining";
 import PersonalAssistant from "./pages/PersonalAssistant";
+import MiOutfit from "./pages/MiOutfit";
 
 import ScheduledNotifications from "./pages/ScheduledNotifications";
 import Settings from "./pages/Settings";
@@ -173,6 +174,7 @@ function AppContent() {
                         <Route path="/musical-training" element={<MusicalTraining />} />
                         <Route path="/dance-training" element={<DanceTraining />} />
                         <Route path="/personal-assistant" element={<PersonalAssistant />} />
+                        <Route path="/mi-outfit" element={<MiOutfit />} />
                         
                         <Route path="/scheduled-notifications" element={<ScheduledNotifications />} />
                         <Route path="/settings" element={<Settings />} />
