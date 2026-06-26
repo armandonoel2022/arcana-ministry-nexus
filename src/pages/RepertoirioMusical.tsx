@@ -1,33 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Music, Plus, Search, Upload, ArrowLeft } from "lucide-react";
-import { supabase } from '@/integrations/supabase/client';
-import { useSearchParams } from 'react-router-dom';
-import AddSongForm from '@/components/songs/AddSongForm';
-import CSVUpload from '@/components/songs/CSVUpload';
-import SongCatalog from '@/components/songs/SongCatalog';
-import RepertoiryCategorySelector from '@/components/songs/RepertoiryCategorySelector';
+import { supabase } from "@/integrations/supabase/client";
+import { useSearchParams } from "react-router-dom";
+import AddSongForm from "@/components/songs/AddSongForm";
+import CSVUpload from "@/components/songs/CSVUpload";
+import SongCatalog from "@/components/songs/SongCatalog";
+import RepertoiryCategorySelector from "@/components/songs/RepertoiryCategorySelector";
 
 const RepertoirioMusical = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
-  const [initialSearch, setInitialSearch] = useState<string>('');
+  const [initialSearch, setInitialSearch] = useState<string>("");
 
   useEffect(() => {
     checkUserRole();
-    
+
     // Verificar si hay parámetros de categoría y búsqueda en la URL
-    const categoryParam = searchParams.get('category');
-    const searchParam = searchParams.get('search');
-    
+    const categoryParam = searchParams.get("category");
+    const searchParam = searchParams.get("search");
+
     if (categoryParam) {
       setSelectedCategory(categoryParam);
     }
-    
+
     if (searchParam) {
       setInitialSearch(searchParam);
     }
@@ -35,26 +35,24 @@ const RepertoirioMusical = () => {
 
   const checkUserRole = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-        
+        const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+
         if (profile) {
           setUserRole(profile.role);
         }
       }
     } catch (error) {
-      console.error('Error checking user role:', error);
+      console.error("Error checking user role:", error);
     }
   };
 
   const handleDataUpdate = () => {
-    setRefreshTrigger(prev => prev + 1);
+    setRefreshTrigger((prev) => prev + 1);
   };
 
   const handleCategorySelect = (categoryId: string) => {
@@ -67,12 +65,12 @@ const RepertoirioMusical = () => {
 
   const getCategoryName = (categoryId: string) => {
     const names: Record<string, string> = {
-      general: 'Repertorio General',
-      himnario: 'Himnario de Gloria',
-      villancicos: 'Villancicos',
-      adn: 'ADN Arca de Noé'
+      general: "Repertorio General",
+      himnario: "Himnario de Gloria",
+      villancicos: "Villancicos",
+      adn: "ADN Arca de Noé",
     };
-    return names[categoryId] || 'Repertorio';
+    return names[categoryId] || "Repertorio";
   };
 
   return (
@@ -82,12 +80,7 @@ const RepertoirioMusical = () => {
       ) : (
         <>
           <div className="flex items-center gap-3 mb-6">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBackToCategories}
-              className="flex items-center gap-2"
-            >
+            <Button variant="ghost" size="sm" onClick={handleBackToCategories} className="flex items-center gap-2">
               <ArrowLeft className="w-4 h-4" />
               Volver
             </Button>
@@ -120,10 +113,11 @@ const RepertoirioMusical = () => {
             </TabsList>
 
             <TabsContent value="view" className="space-y-4">
-              <SongCatalog 
-                category={selectedCategory} 
-                key={refreshTrigger} 
+              <SongCatalog
+                category={selectedCategory}
+                key={refreshTrigger}
                 initialSearch={initialSearch}
+                onSongDeleted={handleDataUpdate}
               />
             </TabsContent>
 
