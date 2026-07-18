@@ -54,8 +54,16 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initial
   const [sortBy, setSortBy] = useState('title');
 
   const applyCategoryScope = (query: any) => {
-    if (category === 'general') return query;
-    if (category === 'villancicos') return query.or('category.eq.Navidad,genre.eq.Villancico');
+    if (category === 'general') {
+      // Excluir villancicos y canciones de Ministerio ADN del repertorio general
+      return query
+        .not('genre', 'eq', 'Villancico')
+        .not('category', 'eq', 'Navidad')
+        .not('category', 'eq', 'villancicos')
+        .not('category', 'eq', 'adn')
+        .not('artist', 'ilike', '%Ministerio ADN%');
+    }
+    if (category === 'villancicos') return query.or('category.eq.Navidad,category.eq.villancicos,genre.eq.Villancico');
     if (category === 'adn') return query.or('category.eq.adn,artist.ilike.%Ministerio ADN%');
     return query.eq('category', category);
   };
