@@ -30,9 +30,10 @@ interface Song {
 
 interface SongCardProps {
   song: Song;
+  onDelete?: () => void;
 }
 
-const SongCard: React.FC<SongCardProps> = ({ song }) => {
+const SongCard: React.FC<SongCardProps> = ({ song, onDelete }) => {
   const getDifficultyColor = (level?: number) => {
     switch (level) {
       case 1: return 'bg-green-100 text-green-800';
