@@ -1,0 +1,2 @@
+CREATE POLICY "Administrators can delete any song" ON public.songs FOR DELETE TO authenticated USING (public.is_administrator(auth.uid()));
+CREATE POLICY "Administrators can update any song" ON public.songs FOR UPDATE TO authenticated USING (public.is_administrator(auth.uid())) WITH CHECK (public.is_administrator(auth.uid()));
