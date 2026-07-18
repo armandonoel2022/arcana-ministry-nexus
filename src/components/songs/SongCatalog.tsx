@@ -238,7 +238,13 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initial
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {isAdmin && (
+            <Button variant="outline" size="sm" onClick={handleExportCSV} title="Exportar todas las canciones a CSV">
+              <Download className="w-4 h-4 mr-1" />
+              Exportar CSV
+            </Button>
+          )}
           {category === 'himnario' && (
             <Button
               variant={viewMode === 'numbers' ? 'default' : 'outline'}
