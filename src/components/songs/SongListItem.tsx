@@ -189,6 +189,11 @@ const SongListItem: React.FC<SongListItemProps> = ({ song, onDelete }) => {
                 <Edit2 className="w-3 h-3" />
               </Button>
             </EditSongDialog>
+            {onDelete && (
+              <Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={onDelete} title="Eliminar canción">
+                <Trash2 className="w-3 h-3" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
