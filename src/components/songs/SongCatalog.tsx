@@ -35,9 +35,13 @@ const ITEMS_PER_PAGE = 12;
 interface SongCatalogProps {
   category?: string;
   initialSearch?: string;
+  onSongDeleted?: () => void;
 }
 
-const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initialSearch = '' }) => {
+const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initialSearch = '', onSongDeleted }) => {
+  const { userProfile } = useAuth();
+  const queryClient = useQueryClient();
+  const isAdmin = userProfile?.role === 'administrator';
   const getDefaultViewMode = () => {
     if (category === 'himnario') return 'numbers' as const;
     return 'list' as const;
