@@ -2109,81 +2109,114 @@ export type Database = {
       }
       songs: {
         Row: {
+          album: string | null
           artist: string | null
+          capo: number | null
           category: string | null
+          ccli: string | null
           chords: string | null
+          composer: string | null
           cover_image_url: string | null
           created_at: string | null
           created_by: string | null
           difficulty_level: number | null
           director_notes: string | null
+          duration: string | null
           genre: string | null
           id: string
           is_active: boolean | null
           key_signature: string | null
+          language: string | null
           last_used_date: string | null
           lyrics: string | null
           mood: string | null
           sheet_music_url: string | null
+          song_type: string | null
           spotify_link: string | null
           tags: string[] | null
           tempo: string | null
           theme: string | null
+          time_signature: string | null
           title: string
+          tuning: string | null
           updated_at: string | null
           usage_count: number | null
+          vocal_range: string | null
+          year: number | null
           youtube_link: string | null
         }
         Insert: {
+          album?: string | null
           artist?: string | null
+          capo?: number | null
           category?: string | null
+          ccli?: string | null
           chords?: string | null
+          composer?: string | null
           cover_image_url?: string | null
           created_at?: string | null
           created_by?: string | null
           difficulty_level?: number | null
           director_notes?: string | null
+          duration?: string | null
           genre?: string | null
           id?: string
           is_active?: boolean | null
           key_signature?: string | null
+          language?: string | null
           last_used_date?: string | null
           lyrics?: string | null
           mood?: string | null
           sheet_music_url?: string | null
+          song_type?: string | null
           spotify_link?: string | null
           tags?: string[] | null
           tempo?: string | null
           theme?: string | null
+          time_signature?: string | null
           title: string
+          tuning?: string | null
           updated_at?: string | null
           usage_count?: number | null
+          vocal_range?: string | null
+          year?: number | null
           youtube_link?: string | null
         }
         Update: {
+          album?: string | null
           artist?: string | null
+          capo?: number | null
           category?: string | null
+          ccli?: string | null
           chords?: string | null
+          composer?: string | null
           cover_image_url?: string | null
           created_at?: string | null
           created_by?: string | null
           difficulty_level?: number | null
           director_notes?: string | null
+          duration?: string | null
           genre?: string | null
           id?: string
           is_active?: boolean | null
           key_signature?: string | null
+          language?: string | null
           last_used_date?: string | null
           lyrics?: string | null
           mood?: string | null
           sheet_music_url?: string | null
+          song_type?: string | null
           spotify_link?: string | null
           tags?: string[] | null
           tempo?: string | null
           theme?: string | null
+          time_signature?: string | null
           title?: string
+          tuning?: string | null
           updated_at?: string | null
           usage_count?: number | null
+          vocal_range?: string | null
+          year?: number | null
           youtube_link?: string | null
         }
         Relationships: [
