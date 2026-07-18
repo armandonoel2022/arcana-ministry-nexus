@@ -385,13 +385,13 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initial
           ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {songs.map((song) => (
-                <SongCard key={song.id} song={song} />
+                <SongCard key={song.id} song={song} onDelete={isAdmin ? () => handleDeleteSong(song) : undefined} />
               ))}
             </div>
           ) : (
             <div className="space-y-2">
               {songs.map((song) => (
-                <SongListItem key={song.id} song={song} />
+                <SongListItem key={song.id} song={song} onDelete={isAdmin ? () => handleDeleteSong(song) : undefined} />
               ))}
             </div>
           )}
