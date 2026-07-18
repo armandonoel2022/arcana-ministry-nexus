@@ -2,7 +2,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, Clock, Star, ExternalLink, Play, Eye, Plus, Edit2, Music } from 'lucide-react';
+import { User, Clock, Star, ExternalLink, Play, Eye, Plus, Edit2, Music, Trash2 } from 'lucide-react';
 import SongLyrics from './SongLyrics';
 import SongSelectionDialog from './SongSelectionDialog';
 import SongSelectionIndicator from './SongSelectionIndicator';
