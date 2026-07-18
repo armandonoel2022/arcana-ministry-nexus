@@ -148,6 +148,54 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initial
     setCurrentPage(1);
   };
 
+  const handleDeleteSong = async (song: Song) => {
+    if (!isAdmin) return;
+    if (!confirm(`¿Eliminar "${song.title}" permanentemente?`)) return;
+    const { error: delErr } = await supabase.from('songs').delete().eq('id', song.id);
+    if (delErr) {
+      // Fallback: soft delete
+      const { error: softErr } = await supabase.from('songs').update({ is_active: false }).eq('id', song.id);
+      if (softErr) {
+        toast({ title: 'Error', description: softErr.message, variant: 'destructive' });
+        return;
+      }
+    }
+    toast({ title: 'Canción eliminada', description: song.title });
+    queryClient.invalidateQueries({ queryKey: ['songs'] });
+    onSongDeleted?.();
+  };
+
+  const handleExportCSV = async () => {
+    toast({ title: 'Exportando...', description: 'Preparando CSV del repertorio' });
+    const { data, error: expErr } = await supabase
+      .from('songs')
+      .select('*')
+      .eq('category', category)
+      .eq('is_active', true)
+      .order('title');
+    if (expErr || !data) {
+      toast({ title: 'Error', description: expErr?.message || 'Sin datos', variant: 'destructive' });
+      return;
+    }
+    const cols = Object.keys(data[0] || { id: '', title: '' });
+    const escape = (v: any) => {
+      if (v === null || v === undefined) return '';
+      const s = Array.isArray(v) ? v.join('|') : typeof v === 'object' ? JSON.stringify(v) : String(v);
+      return `"${s.replace(/"/g, '""')}"`;
+    };
+    const csv = [cols.join(','), ...data.map(r => cols.map(c => escape((r as any)[c])).join(','))].join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `repertorio_${category}_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast({ title: 'CSV descargado', description: `${data.length} canciones exportadas` });
+  };
+
   const getDifficultyLabel = (level: number) => {
     const labels = {
       1: 'Muy Fácil',
