@@ -52,6 +52,13 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initial
   const [difficultyFilter, setDifficultyFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState('title');
+
+  const applyCategoryScope = (query: any) => {
+    if (category === 'general') return query;
+    if (category === 'villancicos') return query.or('category.eq.Navidad,genre.eq.Villancico');
+    if (category === 'adn') return query.or('category.eq.adn,artist.ilike.%Ministerio ADN%');
+    return query.eq('category', category);
+  };
   
   // Actualizar el término de búsqueda cuando cambie initialSearch
   useEffect(() => {
@@ -69,8 +76,9 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initial
       let query = supabase
         .from('songs')
         .select('*', { count: 'exact' })
-        .eq('is_active', true)
-        .eq('category', category);
+        .eq('is_active', true);
+
+      query = applyCategoryScope(query);
 
       // Apply search filter
       if (searchTerm) {
@@ -167,12 +175,15 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initial
 
   const handleExportCSV = async () => {
     toast({ title: 'Exportando...', description: 'Preparando CSV del repertorio' });
-    const { data, error: expErr } = await supabase
+    let exportQuery = supabase
       .from('songs')
       .select('*')
-      .eq('category', category)
       .eq('is_active', true)
       .order('title');
+
+    exportQuery = applyCategoryScope(exportQuery);
+
+    const { data, error: expErr } = await exportQuery;
     if (expErr || !data) {
       toast({ title: 'Error', description: expErr?.message || 'Sin datos', variant: 'destructive' });
       return;
