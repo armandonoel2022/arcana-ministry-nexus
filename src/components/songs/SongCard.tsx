@@ -183,6 +183,11 @@ const SongCard: React.FC<SongCardProps> = ({ song, onDelete }) => {
               <Edit2 className="w-3 h-3" />
             </Button>
           </EditSongDialog>
+          {onDelete && (
+            <Button variant="ghost" size="sm" className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={onDelete} title="Eliminar canción">
+              <Trash2 className="w-3 h-3" />
+            </Button>
+          )}
         </div>
 
         {/* Date */}
