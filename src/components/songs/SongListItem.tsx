@@ -2,7 +2,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { User, Clock, Star, ExternalLink, Play, Eye, Plus, Edit2, Music } from 'lucide-react';
+import { User, Clock, Star, ExternalLink, Play, Eye, Plus, Edit2, Music, Trash2 } from 'lucide-react';
 import SongLyrics from './SongLyrics';
 import SongSelectionDialog from './SongSelectionDialog';
 import SongSelectionIndicator from './SongSelectionIndicator';
@@ -29,9 +29,10 @@ interface Song {
 
 interface SongListItemProps {
   song: Song;
+  onDelete?: () => void;
 }
 
-const SongListItem: React.FC<SongListItemProps> = ({ song }) => {
+const SongListItem: React.FC<SongListItemProps> = ({ song, onDelete }) => {
   const getDifficultyColor = (level?: number) => {
     switch (level) {
       case 1: return 'bg-green-100 text-green-800';
@@ -188,6 +189,11 @@ const SongListItem: React.FC<SongListItemProps> = ({ song }) => {
                 <Edit2 className="w-3 h-3" />
               </Button>
             </EditSongDialog>
+            {onDelete && (
+              <Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={onDelete} title="Eliminar canción">
+                <Trash2 className="w-3 h-3" />
+              </Button>
+            )}
           </div>
         </div>
       </div>

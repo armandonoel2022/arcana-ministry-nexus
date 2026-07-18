@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Music, User, Clock, Star, ExternalLink, Play, Eye, Plus, Edit2 } from 'lucide-react';
+import { Music, User, Clock, Star, ExternalLink, Play, Eye, Plus, Edit2, Trash2 } from 'lucide-react';
 import SongLyrics from './SongLyrics';
 import SongSelectionDialog from './SongSelectionDialog';
 import SongSelectionIndicator from './SongSelectionIndicator';
@@ -30,9 +30,10 @@ interface Song {
 
 interface SongCardProps {
   song: Song;
+  onDelete?: () => void;
 }
 
-const SongCard: React.FC<SongCardProps> = ({ song }) => {
+const SongCard: React.FC<SongCardProps> = ({ song, onDelete }) => {
   const getDifficultyColor = (level?: number) => {
     switch (level) {
       case 1: return 'bg-green-100 text-green-800';
@@ -182,6 +183,11 @@ const SongCard: React.FC<SongCardProps> = ({ song }) => {
               <Edit2 className="w-3 h-3" />
             </Button>
           </EditSongDialog>
+          {onDelete && (
+            <Button variant="ghost" size="sm" className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={onDelete} title="Eliminar canción">
+              <Trash2 className="w-3 h-3" />
+            </Button>
+          )}
         </div>
 
         {/* Date */}

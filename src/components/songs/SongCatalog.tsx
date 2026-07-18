@@ -1,17 +1,19 @@
 
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Search, Grid, List, Filter, Music, Clock, User, Tag, Hash } from 'lucide-react';
+import { Search, Grid, List, Filter, Music, Clock, User, Tag, Hash, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import SongCard from './SongCard';
 import SongListItem from './SongListItem';
 import SongLyrics from './SongLyrics';
 import SongPagination from './SongPagination';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/hooks/use-toast';
 
 interface Song {
   id: string;
@@ -33,9 +35,13 @@ const ITEMS_PER_PAGE = 12;
 interface SongCatalogProps {
   category?: string;
   initialSearch?: string;
+  onSongDeleted?: () => void;
 }
 
-const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initialSearch = '' }) => {
+const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initialSearch = '', onSongDeleted }) => {
+  const { userProfile } = useAuth();
+  const queryClient = useQueryClient();
+  const isAdmin = userProfile?.role === 'administrator';
   const getDefaultViewMode = () => {
     if (category === 'himnario') return 'numbers' as const;
     return 'list' as const;
@@ -142,6 +148,54 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initial
     setCurrentPage(1);
   };
 
+  const handleDeleteSong = async (song: Song) => {
+    if (!isAdmin) return;
+    if (!confirm(`¿Eliminar "${song.title}" permanentemente?`)) return;
+    const { error: delErr } = await supabase.from('songs').delete().eq('id', song.id);
+    if (delErr) {
+      // Fallback: soft delete
+      const { error: softErr } = await supabase.from('songs').update({ is_active: false }).eq('id', song.id);
+      if (softErr) {
+        toast({ title: 'Error', description: softErr.message, variant: 'destructive' });
+        return;
+      }
+    }
+    toast({ title: 'Canción eliminada', description: song.title });
+    queryClient.invalidateQueries({ queryKey: ['songs'] });
+    onSongDeleted?.();
+  };
+
+  const handleExportCSV = async () => {
+    toast({ title: 'Exportando...', description: 'Preparando CSV del repertorio' });
+    const { data, error: expErr } = await supabase
+      .from('songs')
+      .select('*')
+      .eq('category', category)
+      .eq('is_active', true)
+      .order('title');
+    if (expErr || !data) {
+      toast({ title: 'Error', description: expErr?.message || 'Sin datos', variant: 'destructive' });
+      return;
+    }
+    const cols = Object.keys(data[0] || { id: '', title: '' });
+    const escape = (v: any) => {
+      if (v === null || v === undefined) return '';
+      const s = Array.isArray(v) ? v.join('|') : typeof v === 'object' ? JSON.stringify(v) : String(v);
+      return `"${s.replace(/"/g, '""')}"`;
+    };
+    const csv = [cols.join(','), ...data.map(r => cols.map(c => escape((r as any)[c])).join(','))].join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `repertorio_${category}_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast({ title: 'CSV descargado', description: `${data.length} canciones exportadas` });
+  };
+
   const getDifficultyLabel = (level: number) => {
     const labels = {
       1: 'Muy Fácil',
@@ -184,7 +238,13 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initial
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {isAdmin && (
+            <Button variant="outline" size="sm" onClick={handleExportCSV} title="Exportar todas las canciones a CSV">
+              <Download className="w-4 h-4 mr-1" />
+              Exportar CSV
+            </Button>
+          )}
           {category === 'himnario' && (
             <Button
               variant={viewMode === 'numbers' ? 'default' : 'outline'}
@@ -325,13 +385,13 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initial
           ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {songs.map((song) => (
-                <SongCard key={song.id} song={song} />
+                <SongCard key={song.id} song={song} onDelete={isAdmin ? () => handleDeleteSong(song) : undefined} />
               ))}
             </div>
           ) : (
             <div className="space-y-2">
               {songs.map((song) => (
-                <SongListItem key={song.id} song={song} />
+                <SongListItem key={song.id} song={song} onDelete={isAdmin ? () => handleDeleteSong(song) : undefined} />
               ))}
             </div>
           )}
