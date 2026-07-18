@@ -29,9 +29,10 @@ interface Song {
 
 interface SongListItemProps {
   song: Song;
+  onDelete?: () => void;
 }
 
-const SongListItem: React.FC<SongListItemProps> = ({ song }) => {
+const SongListItem: React.FC<SongListItemProps> = ({ song, onDelete }) => {
   const getDifficultyColor = (level?: number) => {
     switch (level) {
       case 1: return 'bg-green-100 text-green-800';
