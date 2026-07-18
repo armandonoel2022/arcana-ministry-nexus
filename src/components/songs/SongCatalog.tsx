@@ -177,7 +177,8 @@ const SongCatalog: React.FC<SongCatalogProps> = ({ category = 'general', initial
       toast({ title: 'Error', description: expErr?.message || 'Sin datos', variant: 'destructive' });
       return;
     }
-    const cols = Object.keys(data[0] || { id: '', title: '' });
+    const EXCLUDED = new Set(['lyrics', 'chords', 'chord_chart', 'sheet_music', 'notes']);
+    const cols = Object.keys(data[0] || { id: '', title: '' }).filter(c => !EXCLUDED.has(c));
     const escape = (v: any) => {
       if (v === null || v === undefined) return '';
       const s = Array.isArray(v) ? v.join('|') : typeof v === 'object' ? JSON.stringify(v) : String(v);
