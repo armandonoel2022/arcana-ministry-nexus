@@ -1,17 +1,19 @@
 
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Search, Grid, List, Filter, Music, Clock, User, Tag, Hash } from 'lucide-react';
+import { Search, Grid, List, Filter, Music, Clock, User, Tag, Hash, Download } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import SongCard from './SongCard';
 import SongListItem from './SongListItem';
 import SongLyrics from './SongLyrics';
 import SongPagination from './SongPagination';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/hooks/use-toast';
 
 interface Song {
   id: string;
