@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Music, User, Clock, Star, ExternalLink, Play, Eye, Plus, Edit2 } from 'lucide-react';
+import { Music, User, Clock, Star, ExternalLink, Play, Eye, Plus, Edit2, Trash2 } from 'lucide-react';
 import SongLyrics from './SongLyrics';
 import SongSelectionDialog from './SongSelectionDialog';
 import SongSelectionIndicator from './SongSelectionIndicator';
