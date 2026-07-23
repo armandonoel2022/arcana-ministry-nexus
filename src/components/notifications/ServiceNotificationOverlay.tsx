@@ -2905,7 +2905,7 @@ const ServiceNotificationOverlay = ({
                       if (onNavigate) {
                         onNavigate("/repertorio");
                       } else {
-                        window.location.href = "/repertorio";
+                        navigate("/repertorio");
                       }
                     }}
                     className="w-full justify-start"
@@ -2921,7 +2921,7 @@ const ServiceNotificationOverlay = ({
                       if (onNavigate) {
                         onNavigate("/communication");
                       } else {
-                        window.location.href = "/communication";
+                        navigate("/communication");
                       }
                     }}
                     className="w-full justify-start"
@@ -3302,7 +3302,7 @@ const ServiceNotificationOverlay = ({
                             if (onNavigate) {
                               onNavigate("/communication");
                             } else {
-                              window.location.href = "/communication";
+                              navigate("/communication");
                             }
                           }}
                           className="w-full justify-start"
@@ -3316,7 +3316,7 @@ const ServiceNotificationOverlay = ({
                             if (onNavigate) {
                               onNavigate("/repertorio");
                             } else {
-                              window.location.href = "/repertorio";
+                              navigate("/repertorio");
                             }
                           }}
                           className="w-full justify-start"
@@ -3330,7 +3330,7 @@ const ServiceNotificationOverlay = ({
                             if (onNavigate) {
                               onNavigate("/agenda");
                             } else {
-                              window.location.href = "/agenda";
+                              navigate("/agenda");
                             }
                           }}
                           className="w-full justify-start"
