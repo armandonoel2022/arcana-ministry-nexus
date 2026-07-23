@@ -1007,7 +1007,9 @@ const ServiceNotificationOverlay = ({
   onOpenChat,
   onNavigate,
 }: ServiceNotificationOverlayProps = {}) => {
+  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(forceShow);
+
   const [isAnimating, setIsAnimating] = useState(false);
   const [services, setServices] = useState<WeekendService[]>([]);
   const [isLoading, setIsLoading] = useState(!forceShow);
