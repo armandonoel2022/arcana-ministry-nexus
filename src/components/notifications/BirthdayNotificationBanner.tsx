@@ -1,9 +1,11 @@
 import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, Clock, Gift } from "lucide-react";
 import ConfettiEffect from "@/components/birthday/ConfettiEffect";
+
 
 interface BirthdayNotificationBannerProps {
   notification: {
