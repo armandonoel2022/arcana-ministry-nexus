@@ -1,9 +1,11 @@
 import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, Clock, Gift } from "lucide-react";
 import ConfettiEffect from "@/components/birthday/ConfettiEffect";
+
 
 interface BirthdayNotificationBannerProps {
   notification: {
@@ -23,10 +25,12 @@ interface BirthdayNotificationBannerProps {
 }
 
 const BirthdayNotificationBanner: React.FC<BirthdayNotificationBannerProps> = ({ notification, onDismiss }) => {
+  const navigate = useNavigate();
   // Reproducir sonido de cumpleaños al montar el componente
   useEffect(() => {
     playBirthdaySound();
   }, []);
+
 
   const playBirthdaySound = () => {
     try {
@@ -70,10 +74,10 @@ const BirthdayNotificationBanner: React.FC<BirthdayNotificationBannerProps> = ({
   };
 
   const goToChatRoom = () => {
-    // Usar window.location.href en lugar de useNavigate()
-    window.location.href = "/communication";
+    navigate("/communication");
     onDismiss();
   };
+
 
   const dismissNotification = () => {
     onDismiss();

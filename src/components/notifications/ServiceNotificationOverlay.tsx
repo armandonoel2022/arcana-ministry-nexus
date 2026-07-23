@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -1007,7 +1009,9 @@ const ServiceNotificationOverlay = ({
   onOpenChat,
   onNavigate,
 }: ServiceNotificationOverlayProps = {}) => {
+  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(forceShow);
+
   const [isAnimating, setIsAnimating] = useState(false);
   const [services, setServices] = useState<WeekendService[]>([]);
   const [isLoading, setIsLoading] = useState(!forceShow);
@@ -2901,7 +2905,7 @@ const ServiceNotificationOverlay = ({
                       if (onNavigate) {
                         onNavigate("/repertorio");
                       } else {
-                        window.location.href = "/repertorio";
+                        navigate("/repertorio");
                       }
                     }}
                     className="w-full justify-start"
@@ -2917,7 +2921,7 @@ const ServiceNotificationOverlay = ({
                       if (onNavigate) {
                         onNavigate("/communication");
                       } else {
-                        window.location.href = "/communication";
+                        navigate("/communication");
                       }
                     }}
                     className="w-full justify-start"
@@ -3298,7 +3302,7 @@ const ServiceNotificationOverlay = ({
                             if (onNavigate) {
                               onNavigate("/communication");
                             } else {
-                              window.location.href = "/communication";
+                              navigate("/communication");
                             }
                           }}
                           className="w-full justify-start"
@@ -3312,7 +3316,7 @@ const ServiceNotificationOverlay = ({
                             if (onNavigate) {
                               onNavigate("/repertorio");
                             } else {
-                              window.location.href = "/repertorio";
+                              navigate("/repertorio");
                             }
                           }}
                           className="w-full justify-start"
@@ -3326,7 +3330,7 @@ const ServiceNotificationOverlay = ({
                             if (onNavigate) {
                               onNavigate("/agenda");
                             } else {
-                              window.location.href = "/agenda";
+                              navigate("/agenda");
                             }
                           }}
                           className="w-full justify-start"
