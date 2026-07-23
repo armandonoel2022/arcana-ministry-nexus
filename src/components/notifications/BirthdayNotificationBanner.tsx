@@ -25,10 +25,12 @@ interface BirthdayNotificationBannerProps {
 }
 
 const BirthdayNotificationBanner: React.FC<BirthdayNotificationBannerProps> = ({ notification, onDismiss }) => {
+  const navigate = useNavigate();
   // Reproducir sonido de cumpleaños al montar el componente
   useEffect(() => {
     playBirthdaySound();
   }, []);
+
 
   const playBirthdaySound = () => {
     try {
