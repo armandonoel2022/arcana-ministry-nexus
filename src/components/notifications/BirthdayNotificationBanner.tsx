@@ -74,10 +74,10 @@ const BirthdayNotificationBanner: React.FC<BirthdayNotificationBannerProps> = ({
   };
 
   const goToChatRoom = () => {
-    // Usar window.location.href en lugar de useNavigate()
-    window.location.href = "/communication";
+    navigate("/communication");
     onDismiss();
   };
+
 
   const dismissNotification = () => {
     onDismiss();
