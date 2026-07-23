@@ -194,12 +194,25 @@ function AppContent() {
   );
 }
 
+const SPLASH_SHOWN_KEY = 'arcana_splash_shown';
+
 function App() {
-  const [showSplash, setShowSplash] = useState(true);
+  // Solo mostrar el splash una vez por sesión del navegador.
+  // Así, si la app se recarga (push, navegación externa, etc.), no se vuelve a mostrar.
+  const [showSplash, setShowSplash] = useState(() => {
+    try {
+      return sessionStorage.getItem(SPLASH_SHOWN_KEY) !== '1';
+    } catch {
+      return true;
+    }
+  });
 
   const handleSplashComplete = () => {
+    try { sessionStorage.setItem(SPLASH_SHOWN_KEY, '1'); } catch {}
     setShowSplash(false);
   };
+
+
 
   return (
     <QueryClientProvider client={queryClient}>
