@@ -1452,6 +1452,27 @@ export type Database = {
           },
         ]
       }
+      notification_daily_locks: {
+        Row: {
+          created_at: string
+          id: string
+          lock_date: string
+          notification_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lock_date: string
+          notification_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lock_date?: string
+          notification_type?: string
+        }
+        Relationships: []
+      }
       notification_settings: {
         Row: {
           agenda_notifications: boolean | null
