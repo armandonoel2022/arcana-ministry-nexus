@@ -323,19 +323,17 @@ async function processDailyAdviceNotification(supabase: any, notification: Sched
     const rdNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
     const today = `${rdNow.getFullYear()}-${String(rdNow.getMonth()+1).padStart(2,'0')}-${String(rdNow.getDate()).padStart(2,'0')}`;
 
-    // CHECK DEDUPLICATION: if notifications already sent today, skip
-    const startOfDay = `${today}T00:00:00`;
-    const { data: existingToday } = await supabase
-      .from('system_notifications')
-      .select('id')
-      .eq('type', 'daily_advice')
-      .gte('created_at', startOfDay)
-      .limit(1);
+    // ATOMIC DEDUPLICATION via unique lock (notification_type, lock_date)
+    const { error: lockError } = await supabase
+      .from('notification_daily_locks')
+      .insert({ notification_type: 'daily_advice', lock_date: today });
 
-    if (existingToday && existingToday.length > 0) {
-      console.log('Daily advice notifications already sent today, skipping');
+    if (lockError) {
+      // Unique violation => already processed today
+      console.log('Daily advice lock already held for today, skipping:', lockError.message);
       return;
     }
+
 
     const { data: activeAdvice, error: adviceError } = await supabase
       .from('daily_advice')
