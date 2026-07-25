@@ -230,19 +230,16 @@ async function processDailyVerseNotification(supabase: any, notification: Schedu
     const rdNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
     const today = `${rdNow.getFullYear()}-${String(rdNow.getMonth()+1).padStart(2,'0')}-${String(rdNow.getDate()).padStart(2,'0')}`;
 
-    // CHECK DEDUPLICATION: if notifications already sent today, skip
-    const startOfDay = `${today}T00:00:00`;
-    const { data: existingToday } = await supabase
-      .from('system_notifications')
-      .select('id')
-      .eq('type', 'daily_verse')
-      .gte('created_at', startOfDay)
-      .limit(1);
+    // ATOMIC DEDUPLICATION via unique lock (notification_type, lock_date)
+    const { error: lockError } = await supabase
+      .from('notification_daily_locks')
+      .insert({ notification_type: 'daily_verse', lock_date: today });
 
-    if (existingToday && existingToday.length > 0) {
-      console.log('Daily verse notifications already sent today, skipping');
+    if (lockError) {
+      console.log('Daily verse lock already held for today, skipping:', lockError.message);
       return;
     }
+
 
     let { data: dailyVerse, error: verseError } = await supabase
       .from('daily_verses')
