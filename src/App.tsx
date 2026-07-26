@@ -217,6 +217,8 @@ function AppContent() {
                         <Route path="/personal-assistant" element={<PersonalAssistant />} />
                         <Route path="/mi-outfit" element={<MiOutfit />} />
                         
+                        <Route path="/inventario" element={<Inventory />} />
+                        <Route path="/finanzas" element={<Finance />} />
                         <Route path="/scheduled-notifications" element={<ScheduledNotifications />} />
                         <Route path="/settings" element={<Settings />} />
                         <Route path="/about" element={<AboutMinistry />} />
