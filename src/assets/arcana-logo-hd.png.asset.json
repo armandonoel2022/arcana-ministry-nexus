@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "asset_id": "82e6b517-fc6f-4ded-93e1-32b7b7b5ad79",
+  "asset_id": "30f1f077-4c41-44bd-9b74-0f1051f26bd1",
   "project_id": "9ad580d0-87d1-43a0-9d97-fed34a5a6a68",
-  "url": "/__l5e/assets-v1/82e6b517-fc6f-4ded-93e1-32b7b7b5ad79/arcana-logo-hd.png",
-  "r2_key": "a/v1/9ad580d0-87d1-43a0-9d97-fed34a5a6a68/82e6b517-fc6f-4ded-93e1-32b7b7b5ad79/arcana-logo-hd.png",
-  "original_filename": "arcana-logo-hd.png",
-  "size": 867660,
+  "url": "/__l5e/assets-v1/30f1f077-4c41-44bd-9b74-0f1051f26bd1/arcana-logo.png",
+  "r2_key": "a/v1/9ad580d0-87d1-43a0-9d97-fed34a5a6a68/30f1f077-4c41-44bd-9b74-0f1051f26bd1/arcana-logo.png",
+  "original_filename": "arcana-logo.png",
+  "size": 1705665,
   "content_type": "image/png",
-  "created_at": "2026-07-26T02:55:17Z"
+  "created_at": "2026-07-26T02:56:18Z"
 }
