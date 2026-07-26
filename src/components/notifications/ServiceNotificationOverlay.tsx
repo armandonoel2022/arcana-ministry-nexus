@@ -1574,7 +1574,7 @@ const ServiceNotificationOverlay = ({
       await Promise.all(visibleImagePromises);
       await new Promise((resolve) => setTimeout(resolve, 250));
 
-      const canvas = await html2canvas(visibleCard, {
+      const visibleCanvas = await html2canvas(visibleCard, {
         backgroundColor: null,
         scale: 2,
         useCORS: true,
@@ -1591,12 +1591,12 @@ const ServiceNotificationOverlay = ({
       });
 
       const isVisibleQuarantine = service.service_type === 'cuarentena';
-      const filename = isVisibleQuarantine
+      const visibleFilename = isVisibleQuarantine
         ? `cuarentena_${format(parseServiceDate(service.service_date), "yyyy-MM-dd")}.png`
         : `${serviceTitle.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_${new Date().getTime()}.png`;
 
       await new Promise<void>((resolve, reject) => {
-        canvas.toBlob((blob) => {
+        visibleCanvas.toBlob((blob) => {
           if (!blob) {
             reject(new Error("No se pudo generar la imagen"));
             return;
@@ -1605,7 +1605,7 @@ const ServiceNotificationOverlay = ({
           const url = URL.createObjectURL(blob);
           const link = document.createElement("a");
           link.href = url;
-          link.download = filename;
+          link.download = visibleFilename;
           link.style.display = "none";
           document.body.appendChild(link);
           link.click();
