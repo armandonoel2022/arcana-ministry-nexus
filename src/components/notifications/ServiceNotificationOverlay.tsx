@@ -1621,6 +1621,7 @@ const ServiceNotificationOverlay = ({
       toast.success("Imagen descargada exitosamente");
       return;
 
+      {
       const isQuarantine = service.service_type === 'cuarentena';
       const isWomensDay_ = isWomensDayService(service);
       const isSpecialEvent = !isWomensDay_ && (service.service_type === 'especial' || service.leader === 'TODOS');
@@ -2589,6 +2590,7 @@ const ServiceNotificationOverlay = ({
         
         toast.success("Imagen descargada exitosamente");
       }, "image/png", 1.0);
+      }
     } catch (error) {
       console.error("Error downloading service image:", error);
       toast.error("Error al descargar la imagen");
