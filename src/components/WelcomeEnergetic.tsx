@@ -71,7 +71,7 @@ export default function WelcomeEnergetic({ userName, onComplete }: Props) {
       <div className="relative z-10 text-center px-6">
         <div className="mb-6 flex justify-center">
           <img
-            src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png"
+            src="/__l5e/assets-v1/30f1f077-4c41-44bd-9b74-0f1051f26bd1/arcana-logo.png"
             alt="ARCANA"
             className="w-24 h-24 rounded-3xl border-4 border-white/50 shadow-2xl animate-scale-in"
             style={{ animationDuration: "0.5s" }}
