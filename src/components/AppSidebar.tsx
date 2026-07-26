@@ -23,7 +23,9 @@ import {
   LogOut,
   Headphones,
   TestTube,
-  Shirt
+  Shirt,
+  Package,
+  DollarSign
 } from "lucide-react"
 
 import {
