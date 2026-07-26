@@ -8,6 +8,9 @@ import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AnimatedLogoTrigger } from "@/components/AnimatedLogoTrigger";
 import SplashScreen from "@/components/SplashScreen";
+import InstallationCinematic from "@/components/InstallationCinematic";
+import WelcomeEnergetic from "@/components/WelcomeEnergetic";
+import { useAuth } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import RepertoirioMusical from "./pages/RepertoirioMusical";
 import MinisterialAgenda from "./pages/MinisterialAgenda";
@@ -105,8 +108,42 @@ function PushServicesInitializer() {
   return null;
 }
 
+function FirstLoginWelcome() {
+  const { user, userProfile, loading, needsPasswordChange, isApproved } = useAuth();
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    if (loading || !user || !isApproved || needsPasswordChange) return;
+    const key = `arcana_welcomed_${user.id}`;
+    try {
+      if (localStorage.getItem(key) !== "1") {
+        setShow(true);
+      }
+    } catch {}
+  }, [user, loading, isApproved, needsPasswordChange]);
+
+  if (!show || !user) return null;
+
+  const name =
+    userProfile?.full_name ||
+    (user.user_metadata as any)?.full_name ||
+    user.email?.split("@")[0] ||
+    null;
+
+  return (
+    <WelcomeEnergetic
+      userName={name}
+      onComplete={() => {
+        try { localStorage.setItem(`arcana_welcomed_${user.id}`, "1"); } catch {}
+        setShow(false);
+      }}
+    />
+  );
+}
+
 function AppContent() {
   const { isWomensDay, showOverlay: showWomensDayOverlay, dismissOverlay, themeStyles } = useWomensDayTheme();
+
 
   // Apply Women's Day theme styles
   useEffect(() => {
