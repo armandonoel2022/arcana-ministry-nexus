@@ -32,6 +32,8 @@ import MusicalTraining from "./pages/MusicalTraining";
 import DanceTraining from "./pages/DanceTraining";
 import PersonalAssistant from "./pages/PersonalAssistant";
 import MiOutfit from "./pages/MiOutfit";
+import Inventory from "./pages/Inventory";
+import Finance from "./pages/Finance";
 
 import ScheduledNotifications from "./pages/ScheduledNotifications";
 import Settings from "./pages/Settings";
