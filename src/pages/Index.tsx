@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Calendar, Music, Users, MessageSquare, UserCog, Cake, Lightbulb } from "lucide-react";
 import BirthdayNotificationBanner from "@/components/notifications/BirthdayNotificationBanner";
 import { Button } from "@/components/ui/button";
+import arcanaLogo from "@/assets/arcana-logo.png";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -134,7 +135,7 @@ const Index = () => {
         <div className="message-panel">
           <div className="message-content">
             <img
-              src="/__l5e/assets-v1/30f1f077-4c41-44bd-9b74-0f1051f26bd1/arcana-logo.png"
+              src={arcanaLogo}
               alt="ARCANA Logo"
               className="logo-image"
             />
@@ -255,9 +256,10 @@ const Index = () => {
           margin: 0 auto 24px auto;
           object-fit: contain;
           border-radius: 20px; /* Esquinas ovaladas */
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Sombra suave para destacar */
-          background: rgba(255, 255, 255, 0.1); /* Fondo sutil para contrastar */
-          padding: 8px; /* Espacio interno */
+          box-shadow: 0 10px 24px hsl(var(--primary) / 0.28); /* Sombra suave para destacar */
+          background: hsl(var(--card)); /* Fondo blanco/tarjeta para contrastar */
+          border: 1px solid hsl(var(--border));
+          padding: 10px; /* Espacio interno */
         }
 
         .options-grid {
