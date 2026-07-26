@@ -1580,14 +1580,19 @@ const ServiceNotificationOverlay = ({
         useCORS: true,
         allowTaint: true,
         logging: false,
-        ignoreElements: (element) => element.classList.contains("service-action-buttons"),
+        ignoreElements: (element) =>
+          element.classList.contains("service-action-buttons") ||
+          element.classList.contains("service-export-hide"),
         onclone: (clonedDocument) => {
-          clonedDocument.querySelectorAll(".service-action-buttons").forEach((element) => {
-            if (element instanceof HTMLElement) {
-              element.style.display = "none";
-            }
-          });
+          clonedDocument
+            .querySelectorAll(".service-action-buttons, .service-export-hide")
+            .forEach((element) => {
+              if (element instanceof HTMLElement) {
+                element.style.display = "none";
+              }
+            });
         },
+
       });
 
       const isVisibleQuarantine = service.service_type === 'cuarentena';
@@ -2001,7 +2006,7 @@ const ServiceNotificationOverlay = ({
                   </div>
                 </div>
               ) : (
-                <div className="mt-4 pt-4 border-t border-white/10 space-y-2">
+                <div className="service-export-hide mt-4 pt-4 border-t border-white/10 space-y-2">
                   <p className="text-sm text-blue-100/80 mb-3">No hay canciones seleccionadas aún</p>
                   <Button
                     size="sm"
