@@ -2547,7 +2547,7 @@ const ServiceNotificationOverlay = ({
               ? 'bg-gradient-to-br from-rose-900 to-rose-800 border-2 border-rose-400/40'
               : isQuarantine 
                 ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-amber-500/30' 
-                : 'bg-white/90 border border-blue-200'
+                : 'bg-gradient-to-br from-[hsl(220_75%_14%)] via-[hsl(218_78%_20%)] to-[hsl(214_70%_26%)] border-2 border-[hsl(214_100%_56%)]/30'
         }`}
         style={{ maxWidth: "600px" }}
       >
@@ -2618,30 +2618,30 @@ const ServiceNotificationOverlay = ({
                 ? "linear-gradient(to bottom, #E11D4899, #E11D48)"
                 : isQuarantine 
                   ? "linear-gradient(to bottom, #f59e0b99, #f59e0b)"
-                  : `linear-gradient(to bottom, ${service.worship_groups?.color_theme || "#3B82F6"}99, ${service.worship_groups?.color_theme || "#3B82F6"})`,
+                  : "linear-gradient(to bottom, hsl(214 100% 56% / 0.7), hsl(214 100% 56%))",
             }}
           ></div>
           <div>
-            <h3 className={`text-xl font-bold ${isSpecialEvent ? 'text-white' : isQuarantine ? 'text-white' : 'text-blue-900'}`}>
+            <h3 className={`text-xl font-bold ${isSpecialEvent ? 'text-white' : isQuarantine ? 'text-white' : 'text-white'}`}>
               {isSpecialEvent ? (service.special_activity || service.title) : service.title}
             </h3>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span
                 className="text-sm font-medium px-2 py-1 rounded-full text-white"
                 style={{ 
-                  backgroundColor: isSpecialEvent 
+                  background: isSpecialEvent 
                     ? '#E11D48'
                     : isQuarantine 
                       ? '#f59e0b' 
-                      : (service.worship_groups?.color_theme || "#3B82F6") 
+                      : 'linear-gradient(135deg, hsl(220 75% 22%), hsl(214 100% 56%))'
                 }}
               >
                 {isSpecialEvent ? "Todos los Grupos" : (service.worship_groups?.name || "Grupo de Alabanza")}
               </span>
               {!isSpecialEvent && (
                 <>
-                  <span className={`text-sm ${isQuarantine ? 'text-gray-400' : 'text-gray-500'}`}>•</span>
-                  <span className={`text-sm ${isQuarantine ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <span className={`text-sm ${isQuarantine ? 'text-gray-400' : 'text-blue-200/60'}`}>•</span>
+                  <span className={`text-sm ${isQuarantine ? 'text-gray-300' : 'text-blue-100/90'}`}>
                     {service.special_activity
                       ? `Sección especial: ${service.special_activity}`
                       : "Sección especial: Ninguna"}
@@ -2830,15 +2830,15 @@ const ServiceNotificationOverlay = ({
           {/* Left Column - Director and Songs */}
           <div className="space-y-4">
             {/* Director */}
-            <div className={`rounded-lg p-4 ${isQuarantine ? 'bg-amber-900/30' : 'bg-blue-50'}`}>
-              <div className={`text-sm font-semibold mb-3 ${isQuarantine ? 'text-amber-300' : 'text-blue-800'}`}>
+            <div className={`rounded-lg p-4 ${isQuarantine ? 'bg-amber-900/30' : 'bg-white/5 border border-[hsl(214_100%_56%)]/20'}`}>
+              <div className={`text-sm font-semibold mb-3 ${isQuarantine ? 'text-amber-300' : 'text-[hsl(214_100%_72%)]'}`}>
                 Director/a de Alabanza
               </div>
               <div className="flex items-center gap-3">
                 <div className={`w-16 h-16 rounded-full border-3 shadow-lg overflow-hidden ${
                   isQuarantine 
                     ? 'border-amber-400 bg-gradient-to-r from-amber-500 to-amber-600' 
-                    : 'border-blue-300 bg-gradient-to-r from-blue-500 to-blue-600'
+                    : 'border-[hsl(214_100%_56%)] bg-gradient-to-r from-[hsl(220_75%_22%)] to-[hsl(214_100%_56%)]'
                 }`}>
                   <img
                     src={service.director_profile?.photo_url || directorMember?.profiles?.photo_url}
@@ -2856,10 +2856,10 @@ const ServiceNotificationOverlay = ({
                   </div>
                 </div>
                 <div>
-                  <div className={`font-semibold ${isQuarantine ? 'text-white' : 'text-gray-900'}`}>
+                  <div className={`font-semibold ${isQuarantine ? 'text-white' : 'text-white'}`}>
                     {service.leader}
                   </div>
-                  <div className={`text-sm ${isQuarantine ? 'text-amber-400' : 'text-blue-600'}`}>
+                  <div className={`text-sm ${isQuarantine ? 'text-amber-400' : 'text-[hsl(214_100%_72%)]'}`}>
                     Líder del Servicio
                   </div>
                 </div>
@@ -2867,10 +2867,10 @@ const ServiceNotificationOverlay = ({
 
               {/* Canciones debajo del director */}
               {worshipSongs.length > 0 ? (
-                <div className="mt-4 pt-4 border-t border-blue-200">
+                <div className="mt-4 pt-4 border-t border-white/10">
                   <div className="flex items-center gap-2 mb-3">
-                    <Music className="w-4 h-4 text-green-600" />
-                    <div className="text-sm font-semibold text-green-800">Canciones Seleccionadas</div>
+                    <Music className="w-4 h-4 text-emerald-300" />
+                    <div className="text-sm font-semibold text-emerald-200">Canciones Seleccionadas</div>
                   </div>
                   <div className="space-y-3">
                     {worshipSongs.map((song, index) => {
@@ -2879,16 +2879,16 @@ const ServiceNotificationOverlay = ({
 
                       return (
                         <div key={song.id} className="flex items-start gap-2 text-sm">
-                          <span className="w-5 h-5 bg-green-200 text-green-800 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 flex-shrink-0">
+                          <span className="w-5 h-5 bg-emerald-400/20 text-emerald-200 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 flex-shrink-0">
                             {index + 1}
                           </span>
                           <div className="min-w-0 flex-1">
-                            <div className="font-medium text-gray-900">{firstLine}</div>
-                            {secondLine && <div className="text-gray-900">{secondLine}</div>}
+                            <div className="font-medium text-white">{firstLine}</div>
+                            {secondLine && <div className="text-white">{secondLine}</div>}
                             {song.artist && (
-                              <div className="text-xs text-gray-600 mt-1">
+                              <div className="text-xs text-blue-100/80 mt-1">
                                 {artistFirstName}
-                                {artistLastName && <div className="text-gray-500">{artistLastName}</div>}
+                                {artistLastName && <div className="text-blue-100/60">{artistLastName}</div>}
                               </div>
                             )}
                           </div>
@@ -2898,8 +2898,8 @@ const ServiceNotificationOverlay = ({
                   </div>
                 </div>
               ) : (
-                <div className="mt-4 pt-4 border-t border-blue-200 space-y-2">
-                  <p className="text-sm text-gray-600 mb-3">No hay canciones seleccionadas aún</p>
+                <div className="mt-4 pt-4 border-t border-white/10 space-y-2">
+                  <p className="text-sm text-blue-100/80 mb-3">No hay canciones seleccionadas aún</p>
                   <Button
                     size="sm"
                     variant="outline"
@@ -2911,7 +2911,7 @@ const ServiceNotificationOverlay = ({
                         navigate("/repertorio");
                       }
                     }}
-                    className="w-full justify-start"
+                    className="w-full justify-start bg-white/5 border-[hsl(214_100%_56%)]/40 text-white hover:bg-white/10"
                   >
                     <BookOpen className="w-4 h-4 mr-2" />
                     Ir a Repertorio general
@@ -2927,7 +2927,7 @@ const ServiceNotificationOverlay = ({
                         navigate("/communication");
                       }
                     }}
-                    className="w-full justify-start"
+                    className="w-full justify-start bg-white/5 border-[hsl(214_100%_56%)]/40 text-white hover:bg-white/10"
                   >
                     <MessageCircle className="w-4 h-4 mr-2" />
                     Seleccionar con ARCANA
@@ -2938,13 +2938,13 @@ const ServiceNotificationOverlay = ({
 
             {/* Offering Song */}
             {offeringsSongs.length > 0 && (
-              <div className="bg-amber-50 rounded-lg p-4">
+              <div className="bg-amber-500/10 border border-amber-400/30 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-4 h-4 text-amber-600">🎵</div>
-                  <div className="text-sm font-semibold text-amber-800">Canción de Ofrendas</div>
+                  <div className="w-4 h-4 text-amber-300">🎵</div>
+                  <div className="text-sm font-semibold text-amber-200">Canción de Ofrendas</div>
                 </div>
                 <div className="flex items-start gap-2 text-sm">
-                  <span className="w-5 h-5 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 flex-shrink-0">
+                  <span className="w-5 h-5 bg-amber-400/20 text-amber-200 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 flex-shrink-0">
                     $
                   </span>
                   <div className="min-w-0 flex-1">
@@ -2956,12 +2956,12 @@ const ServiceNotificationOverlay = ({
 
                       return (
                         <>
-                          <div className="font-medium text-gray-900">{firstLine}</div>
-                          {secondLine && <div className="text-gray-900">{secondLine}</div>}
+                          <div className="font-medium text-white">{firstLine}</div>
+                          {secondLine && <div className="text-white">{secondLine}</div>}
                           {offeringsSongs[0].artist && (
-                            <div className="text-xs text-gray-600 mt-1">
+                            <div className="text-xs text-amber-100/80 mt-1">
                               {artistFirstName}
-                              {artistLastName && <div className="text-gray-500">{artistLastName}</div>}
+                              {artistLastName && <div className="text-amber-100/60">{artistLastName}</div>}
                             </div>
                           )}
                         </>
@@ -2974,13 +2974,13 @@ const ServiceNotificationOverlay = ({
 
             {/* Communion Song */}
             {communionSongs.length > 0 && (
-              <div className="bg-purple-50 rounded-lg p-4">
+              <div className="bg-[hsl(214_100%_56%)]/10 border border-[hsl(214_100%_56%)]/30 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-4 h-4 text-purple-600">🎵</div>
-                  <div className="text-sm font-semibold text-purple-800">Canción de Comunión</div>
+                  <div className="w-4 h-4 text-[hsl(214_100%_72%)]">🎵</div>
+                  <div className="text-sm font-semibold text-[hsl(214_100%_72%)]">Canción de Comunión</div>
                 </div>
                 <div className="flex items-start gap-2 text-sm">
-                  <span className="w-5 h-5 bg-purple-200 text-purple-800 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 flex-shrink-0">
+                  <span className="w-5 h-5 bg-[hsl(214_100%_56%)]/20 text-[hsl(214_100%_72%)] rounded-full flex items-center justify-center text-xs font-bold mt-0.5 flex-shrink-0">
                     ✝️
                   </span>
                   <div className="min-w-0 flex-1">
@@ -2992,12 +2992,12 @@ const ServiceNotificationOverlay = ({
 
                       return (
                         <>
-                          <div className="font-medium text-gray-900">{firstLine}</div>
-                          {secondLine && <div className="text-gray-900">{secondLine}</div>}
+                          <div className="font-medium text-white">{firstLine}</div>
+                          {secondLine && <div className="text-white">{secondLine}</div>}
                           {communionSongs[0].artist && (
-                            <div className="text-xs text-gray-600 mt-1">
+                            <div className="text-xs text-blue-100/80 mt-1">
                               {artistFirstName}
-                              {artistLastName && <div className="text-gray-500">{artistLastName}</div>}
+                              {artistLastName && <div className="text-blue-100/60">{artistLastName}</div>}
                             </div>
                           )}
                         </>
@@ -3012,8 +3012,8 @@ const ServiceNotificationOverlay = ({
           {/* Right Column - Voices */}
           <div>
             {responsibleVoices.length > 0 && (
-              <div className={`rounded-lg p-4 h-full ${isQuarantine ? 'bg-amber-900/30' : 'bg-blue-50'}`}>
-                <div className={`text-sm font-semibold mb-3 ${isQuarantine ? 'text-amber-300' : 'text-blue-800'}`}>
+              <div className={`rounded-lg p-4 h-full ${isQuarantine ? 'bg-amber-900/30' : 'bg-white/5 border border-[hsl(214_100%_56%)]/20'}`}>
+                <div className={`text-sm font-semibold mb-3 ${isQuarantine ? 'text-amber-300' : 'text-[hsl(214_100%_72%)]'}`}>
                   Responsables de Voces
                 </div>
                 <div className="grid grid-cols-1 gap-3">
@@ -3024,7 +3024,7 @@ const ServiceNotificationOverlay = ({
                         <div className={`w-12 h-12 rounded-full border-2 overflow-hidden ${
                           isQuarantine 
                             ? 'border-amber-400 bg-gradient-to-r from-amber-500 to-amber-600' 
-                            : 'border-blue-200 bg-gradient-to-r from-blue-500 to-blue-600'
+                            : 'border-[hsl(214_100%_56%)]/60 bg-gradient-to-r from-[hsl(220_75%_22%)] to-[hsl(214_100%_56%)]'
                         }`}>
                           <img
                             src={member.profiles?.photo_url}
@@ -3042,15 +3042,15 @@ const ServiceNotificationOverlay = ({
                           </div>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className={`text-sm font-medium ${isQuarantine ? 'text-white' : 'text-gray-900'}`}>
+                          <div className={`text-sm font-medium ${isQuarantine ? 'text-white' : 'text-white'}`}>
                             {firstName}
                           </div>
                           {lastName && (
-                            <div className={`text-xs ${isQuarantine ? 'text-gray-400' : 'text-gray-600'}`}>
+                            <div className={`text-xs ${isQuarantine ? 'text-gray-400' : 'text-blue-100/70'}`}>
                               {lastName}
                             </div>
                           )}
-                          <div className={`text-xs ${isQuarantine ? 'text-amber-400' : 'text-blue-600'}`}>
+                          <div className={`text-xs ${isQuarantine ? 'text-amber-400' : 'text-[hsl(214_100%_72%)]'}`}>
                             {member.instrument}
                           </div>
                         </div>
@@ -3064,12 +3064,12 @@ const ServiceNotificationOverlay = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="service-action-buttons flex flex-wrap gap-2 mt-6 pt-4 border-t border-gray-200">
+        <div className="service-action-buttons flex flex-wrap gap-2 mt-6 pt-4 border-t border-white/10">
           <Button
             size="sm"
             variant="outline"
             onClick={() => downloadServiceImage(service.id, service.title)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-white/5 border-[hsl(214_100%_56%)]/40 text-white hover:bg-white/10"
           >
             <Download className="w-4 h-4" />
             Descargar
