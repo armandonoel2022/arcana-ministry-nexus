@@ -81,115 +81,115 @@ p, h1, h2, h3, h4, h5, h6 {
 
 @layer base {
   :root {
-    /* Modern blue gradient background inspired by the design */
-    --background: 210 40% 98%;
-    --foreground: 215 25% 27%;
+    /* ARCANA palette — deep navy + electric blue accent (from presentation) */
+    --background: 214 40% 98%;
+    --foreground: 220 60% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 27%;
+    --card-foreground: 220 60% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 27%;
+    --popover-foreground: 220 60% 12%;
 
-    /* Primary blue - main brand color from the design */
-    --primary: 217 91% 60%;
+    /* Primary — deep navy (like the presentation's brand blue) */
+    --primary: 220 75% 22%;
     --primary-foreground: 0 0% 100%;
+    --primary-glow: 214 100% 56%;
 
-    /* Light blue secondary */
-    --secondary: 210 100% 95%;
-    --secondary-foreground: 215 25% 27%;
+    /* Secondary — soft navy-tinted surface */
+    --secondary: 214 60% 95%;
+    --secondary-foreground: 220 60% 12%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 13% 54%;
+    --muted: 214 40% 96%;
+    --muted-foreground: 220 20% 40%;
 
-    /* Accent blue for highlights */
-    --accent: 212 100% 87%;
-    --accent-foreground: 215 25% 27%;
+    /* Accent — electric blue (highlights, CTAs, active states) */
+    --accent: 214 100% 92%;
+    --accent-foreground: 220 75% 22%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 217 91% 60%;
+    --border: 214 30% 88%;
+    --input: 214 30% 88%;
+    --ring: 214 100% 56%;
 
     --radius: 1rem;
 
-    /* Gradients for forms */
-    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(217 91% 55%) 50%, hsl(217 91% 50%) 100%);
-    --gradient-blue-form: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(217 91% 50%) 100%);
-    
-    /* Shadows for forms */
-    --shadow-form: 0 4px 12px rgba(30, 136, 229, 0.3);
-    --shadow-elegant: 0 10px 30px -10px rgba(30, 136, 229, 0.4);
-    
-    /* Transitions */
+    /* Gradients — navy → electric blue (matches the presentation) */
+    --gradient-primary: linear-gradient(135deg, hsl(220 75% 18%) 0%, hsl(218 80% 30%) 50%, hsl(214 100% 56%) 100%);
+    --gradient-blue-form: linear-gradient(135deg, hsl(220 75% 22%) 0%, hsl(214 100% 56%) 100%);
+
+    --shadow-form: 0 4px 12px hsl(220 75% 22% / 0.3);
+    --shadow-elegant: 0 10px 30px -10px hsl(214 100% 56% / 0.35);
+
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* Modern blue palette inspired by the uploaded design */
-    --modern-blue-50: 210 100% 98%;
-    --modern-blue-100: 210 100% 95%;
-    --modern-blue-200: 212 100% 87%;
-    --modern-blue-300: 212 100% 78%;
-    --modern-blue-400: 212 100% 63%;
-    --modern-blue-500: 212 100% 47%;
-    --modern-blue-600: 212 100% 40%;
-    --modern-blue-700: 213 87% 34%;
-    --modern-blue-800: 213 84% 28%;
-    --modern-blue-900: 214 79% 23%;
+    /* Modern blue palette — anchored to the ARCANA navy + electric acccent */
+    --modern-blue-50: 214 100% 97%;
+    --modern-blue-100: 214 95% 93%;
+    --modern-blue-200: 214 92% 85%;
+    --modern-blue-300: 214 95% 72%;
+    --modern-blue-400: 214 100% 62%;
+    --modern-blue-500: 214 100% 56%;
+    --modern-blue-600: 218 85% 40%;
+    --modern-blue-700: 220 80% 30%;
+    --modern-blue-800: 220 78% 22%;
+    --modern-blue-900: 222 75% 15%;
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 220 13% 26%;
-    --sidebar-primary: 217 91% 60%;
+    --sidebar-background: 220 78% 18%;
+    --sidebar-foreground: 214 40% 96%;
+    --sidebar-primary: 214 100% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 220 13% 15%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217 91% 60%;
-    --sidebar-muted-foreground: 220 13% 54%;
+    --sidebar-accent: 220 65% 26%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 60% 28%;
+    --sidebar-ring: 214 100% 56%;
+    --sidebar-muted-foreground: 214 30% 75%;
   }
 
   .dark {
-    /* Dark mode with modern blue accents */
-    --background: 215 28% 9%;
-    --foreground: 210 40% 98%;
+    /* Dark mode — deep navy canvas with electric accents */
+    --background: 222 60% 7%;
+    --foreground: 214 40% 98%;
 
-    --card: 215 28% 11%;
-    --card-foreground: 210 40% 98%;
+    --card: 222 55% 10%;
+    --card-foreground: 214 40% 98%;
 
-    --popover: 215 28% 11%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 222 55% 10%;
+    --popover-foreground: 214 40% 98%;
 
-    --primary: 212 100% 63%;
-    --primary-foreground: 215 28% 9%;
+    --primary: 214 100% 62%;
+    --primary-foreground: 222 60% 7%;
+    --primary-glow: 214 100% 72%;
 
-    --secondary: 215 25% 16%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 220 45% 16%;
+    --secondary-foreground: 214 40% 98%;
 
-    --muted: 215 25% 16%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 220 40% 15%;
+    --muted-foreground: 214 25% 70%;
 
-    --accent: 215 25% 18%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 220 50% 20%;
+    --accent-foreground: 214 40% 98%;
 
     --destructive: 0 62% 50%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 214 40% 98%;
 
-    --border: 215 25% 18%;
-    --input: 215 25% 18%;
-    --ring: 212 100% 63%;
-    
-    /* Sidebar mejorado para dark mode - mejor contraste */
-    --sidebar-background: 215 28% 12%;
-    --sidebar-foreground: 210 40% 95%;
-    --sidebar-primary: 212 100% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 25% 20%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 215 25% 22%;
-    --sidebar-ring: 212 100% 63%;
-    --sidebar-muted-foreground: 215 20% 60%;
+    --border: 220 40% 18%;
+    --input: 220 40% 18%;
+    --ring: 214 100% 62%;
+
+    --sidebar-background: 222 65% 9%;
+    --sidebar-foreground: 214 40% 96%;
+    --sidebar-primary: 214 100% 62%;
+    --sidebar-primary-foreground: 222 60% 7%;
+    --sidebar-accent: 220 50% 18%;
+    --sidebar-accent-foreground: 214 40% 98%;
+    --sidebar-border: 220 45% 20%;
+    --sidebar-ring: 214 100% 62%;
+    --sidebar-muted-foreground: 214 25% 65%;
   }
+
 }
 
 @layer base {
