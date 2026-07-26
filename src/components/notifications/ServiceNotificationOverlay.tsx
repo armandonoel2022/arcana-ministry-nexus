@@ -2938,13 +2938,13 @@ const ServiceNotificationOverlay = ({
 
             {/* Offering Song */}
             {offeringsSongs.length > 0 && (
-              <div className="bg-amber-50 rounded-lg p-4">
+              <div className="bg-amber-500/10 border border-amber-400/30 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-4 h-4 text-amber-600">🎵</div>
-                  <div className="text-sm font-semibold text-amber-800">Canción de Ofrendas</div>
+                  <div className="w-4 h-4 text-amber-300">🎵</div>
+                  <div className="text-sm font-semibold text-amber-200">Canción de Ofrendas</div>
                 </div>
                 <div className="flex items-start gap-2 text-sm">
-                  <span className="w-5 h-5 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 flex-shrink-0">
+                  <span className="w-5 h-5 bg-amber-400/20 text-amber-200 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 flex-shrink-0">
                     $
                   </span>
                   <div className="min-w-0 flex-1">
@@ -2956,12 +2956,12 @@ const ServiceNotificationOverlay = ({
 
                       return (
                         <>
-                          <div className="font-medium text-gray-900">{firstLine}</div>
-                          {secondLine && <div className="text-gray-900">{secondLine}</div>}
+                          <div className="font-medium text-white">{firstLine}</div>
+                          {secondLine && <div className="text-white">{secondLine}</div>}
                           {offeringsSongs[0].artist && (
-                            <div className="text-xs text-gray-600 mt-1">
+                            <div className="text-xs text-amber-100/80 mt-1">
                               {artistFirstName}
-                              {artistLastName && <div className="text-gray-500">{artistLastName}</div>}
+                              {artistLastName && <div className="text-amber-100/60">{artistLastName}</div>}
                             </div>
                           )}
                         </>
@@ -2974,13 +2974,13 @@ const ServiceNotificationOverlay = ({
 
             {/* Communion Song */}
             {communionSongs.length > 0 && (
-              <div className="bg-purple-50 rounded-lg p-4">
+              <div className="bg-[hsl(214_100%_56%)]/10 border border-[hsl(214_100%_56%)]/30 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-4 h-4 text-purple-600">🎵</div>
-                  <div className="text-sm font-semibold text-purple-800">Canción de Comunión</div>
+                  <div className="w-4 h-4 text-[hsl(214_100%_72%)]">🎵</div>
+                  <div className="text-sm font-semibold text-[hsl(214_100%_72%)]">Canción de Comunión</div>
                 </div>
                 <div className="flex items-start gap-2 text-sm">
-                  <span className="w-5 h-5 bg-purple-200 text-purple-800 rounded-full flex items-center justify-center text-xs font-bold mt-0.5 flex-shrink-0">
+                  <span className="w-5 h-5 bg-[hsl(214_100%_56%)]/20 text-[hsl(214_100%_72%)] rounded-full flex items-center justify-center text-xs font-bold mt-0.5 flex-shrink-0">
                     ✝️
                   </span>
                   <div className="min-w-0 flex-1">
@@ -2992,12 +2992,12 @@ const ServiceNotificationOverlay = ({
 
                       return (
                         <>
-                          <div className="font-medium text-gray-900">{firstLine}</div>
-                          {secondLine && <div className="text-gray-900">{secondLine}</div>}
+                          <div className="font-medium text-white">{firstLine}</div>
+                          {secondLine && <div className="text-white">{secondLine}</div>}
                           {communionSongs[0].artist && (
-                            <div className="text-xs text-gray-600 mt-1">
+                            <div className="text-xs text-blue-100/80 mt-1">
                               {artistFirstName}
-                              {artistLastName && <div className="text-gray-500">{artistLastName}</div>}
+                              {artistLastName && <div className="text-blue-100/60">{artistLastName}</div>}
                             </div>
                           )}
                         </>
