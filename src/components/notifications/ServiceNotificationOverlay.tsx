@@ -1556,7 +1556,10 @@ const ServiceNotificationOverlay = ({
 
       // Crear un contenedor específico para la descarga
       const container = document.createElement("div");
-      container.style.width = "600px";
+      // Ancho adaptable: tablet/desktop usan un formato más ancho, móvil mantiene 600px
+      const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 600;
+      const downloadWidth = viewportWidth >= 1024 ? 1000 : viewportWidth >= 768 ? 820 : 600;
+      container.style.width = `${downloadWidth}px`;
       container.style.padding = "32px";
       container.style.fontFamily = "system-ui, -apple-system, sans-serif";
       container.style.lineHeight = "1.5";
@@ -3168,7 +3171,7 @@ const ServiceNotificationOverlay = ({
                         ? "linear-gradient(135deg, #E11D48 0%, #BE123C 100%)"
                         : hasQuarantineService 
                           ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
-                          : "linear-gradient(to right, #a855f7, #ec4899)"
+                          : "linear-gradient(135deg, hsl(220 75% 22%), hsl(214 100% 56%))"
                   }}
                 >
                   <Bell className="w-5 h-5 text-white" />
