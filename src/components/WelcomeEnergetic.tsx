@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Sparkles, Music, Users, Heart, Calendar, Zap } from "lucide-react";
+import arcanaLogo from "@/assets/arcana-logo.png";
 
 interface Props {
   userName?: string | null;
@@ -71,9 +72,9 @@ export default function WelcomeEnergetic({ userName, onComplete }: Props) {
       <div className="relative z-10 text-center px-6">
         <div className="mb-6 flex justify-center">
           <img
-            src="/__l5e/assets-v1/30f1f077-4c41-44bd-9b74-0f1051f26bd1/arcana-logo.png"
+            src={arcanaLogo}
             alt="ARCANA"
-            className="w-24 h-24 rounded-3xl border-4 border-white/50 shadow-2xl animate-scale-in"
+            className="w-24 h-24 rounded-3xl bg-card border border-border p-3 shadow-2xl animate-scale-in object-contain"
             style={{ animationDuration: "0.5s" }}
           />
         </div>

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { BiometricAuthSection } from '@/components/BiometricAuthSection';
+import arcanaLogo from '@/assets/arcana-logo.png';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -193,9 +194,9 @@ const Auth = () => {
           <form onSubmit={isActive ? handleSignUp : handleSignIn}>
             <div className="text-center mb-6">
               <img 
-                src="/__l5e/assets-v1/30f1f077-4c41-44bd-9b74-0f1051f26bd1/arcana-logo.png" 
+                src={arcanaLogo} 
                 alt="ARCANA Logo" 
-                className="w-16 h-16 mx-auto mb-4 object-contain"
+                className="w-16 h-16 mx-auto mb-4 object-contain rounded-2xl bg-card border border-border p-2 shadow-lg"
               />
               <h1 className="text-3xl font-bold text-gray-800 mb-2">
                 {isActive ? 'Registrarse' : 'Iniciar Sesión'}

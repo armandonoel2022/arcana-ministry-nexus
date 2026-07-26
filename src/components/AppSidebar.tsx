@@ -45,6 +45,7 @@ import { Button } from "@/components/ui/button"
 import { ThemeSelector } from "@/components/ThemeSelector"
 import { PushNotificationPermission } from "@/components/notifications/PushNotificationPermission"
 import { LucideIcon } from "lucide-react"
+import arcanaLogo from "@/assets/arcana-logo.png"
 
 // Menu items organized by categories
 // Icon mapping for menu items
@@ -129,9 +130,9 @@ export function AppSidebar() {
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0">
               <img 
-                src="/__l5e/assets-v1/30f1f077-4c41-44bd-9b74-0f1051f26bd1/arcana-logo.png" 
+                src={arcanaLogo} 
                 alt="ARCANA Logo" 
-                className="w-10 h-10 object-cover rounded-2xl shadow-sm"
+                className="w-10 h-10 object-contain rounded-2xl bg-card border border-sidebar-border p-1.5 shadow-sm"
               />
             </div>
             <div className="min-w-0">

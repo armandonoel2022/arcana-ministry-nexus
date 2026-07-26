@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import arcanaLogo from "@/assets/arcana-logo.png";
 
 interface Props {
   onComplete: () => void;
@@ -69,9 +70,9 @@ export default function InstallationCinematic({ onComplete }: Props) {
       {/* Logo */}
       <img
         key={`logo-${index}`}
-        src="/__l5e/assets-v1/30f1f077-4c41-44bd-9b74-0f1051f26bd1/arcana-logo.png"
+        src={arcanaLogo}
         alt="ARCANA"
-        className="w-24 h-24 md:w-28 md:h-28 rounded-2xl object-cover mb-10 border border-white/15 shadow-2xl animate-fade-in"
+        className="w-24 h-24 md:w-28 md:h-28 rounded-2xl object-contain mb-10 bg-card border border-border p-3 shadow-2xl animate-fade-in"
         style={{ animationDuration: "1.4s" }}
       />
 
