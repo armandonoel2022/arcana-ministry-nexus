@@ -9,6 +9,7 @@ import {
   Heart,
   Bell,
   Settings,
+  ShieldCheck,
   Info,
   FileText,
   UserCheck,
