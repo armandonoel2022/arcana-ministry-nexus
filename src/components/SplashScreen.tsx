@@ -57,7 +57,7 @@ const SplashScreen = ({ onComplete }: SplashScreenProps) => {
         <div className="mb-12 animate-scale-in">
           <div className="relative">
             <img 
-              src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" 
+              src="/__l5e/assets-v1/30f1f077-4c41-44bd-9b74-0f1051f26bd1/arcana-logo.png" 
               alt="ARCANA Logo" 
               className="w-32 h-32 mx-auto object-cover rounded-3xl shadow-2xl border-4 border-white/30 animate-pulse"
             />

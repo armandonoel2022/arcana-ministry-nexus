@@ -193,7 +193,7 @@ const Auth = () => {
           <form onSubmit={isActive ? handleSignUp : handleSignIn}>
             <div className="text-center mb-6">
               <img 
-                src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" 
+                src="/__l5e/assets-v1/30f1f077-4c41-44bd-9b74-0f1051f26bd1/arcana-logo.png" 
                 alt="ARCANA Logo" 
                 className="w-16 h-16 mx-auto mb-4 object-contain"
               />

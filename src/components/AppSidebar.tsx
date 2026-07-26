@@ -129,7 +129,7 @@ export function AppSidebar() {
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0">
               <img 
-                src="/lovable-uploads/8fdbb3a5-23bc-40fb-aa20-6cfe73adc882.png" 
+                src="/__l5e/assets-v1/30f1f077-4c41-44bd-9b74-0f1051f26bd1/arcana-logo.png" 
                 alt="ARCANA Logo" 
                 className="w-10 h-10 object-cover rounded-2xl shadow-sm"
               />
