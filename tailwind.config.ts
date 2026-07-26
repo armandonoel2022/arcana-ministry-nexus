@@ -75,7 +75,50 @@ export default {
 					700: 'hsl(var(--modern-blue-700))',
 					800: 'hsl(var(--modern-blue-800))',
 					900: 'hsl(var(--modern-blue-900))',
-				}
+				},
+				// Override Tailwind's default blue palette to align every hardcoded
+				// `bg-blue-*`, `text-blue-*`, `border-blue-*` with the ARCANA navy + electric palette.
+				blue: {
+					50: 'hsl(214 100% 97%)',
+					100: 'hsl(214 95% 93%)',
+					200: 'hsl(214 92% 85%)',
+					300: 'hsl(214 95% 72%)',
+					400: 'hsl(214 100% 62%)',
+					500: 'hsl(214 100% 56%)',
+					600: 'hsl(218 85% 40%)',
+					700: 'hsl(220 80% 30%)',
+					800: 'hsl(220 78% 22%)',
+					900: 'hsl(222 75% 15%)',
+					950: 'hsl(222 70% 10%)',
+				},
+				// Indigo/sky often used alongside blue — keep them in the same family.
+				indigo: {
+					50: 'hsl(220 100% 97%)',
+					100: 'hsl(220 95% 93%)',
+					200: 'hsl(220 92% 85%)',
+					300: 'hsl(220 90% 72%)',
+					400: 'hsl(220 90% 60%)',
+					500: 'hsl(220 85% 50%)',
+					600: 'hsl(220 80% 40%)',
+					700: 'hsl(222 78% 30%)',
+					800: 'hsl(222 75% 22%)',
+					900: 'hsl(224 72% 15%)',
+					950: 'hsl(224 68% 10%)',
+				},
+				sky: {
+					50: 'hsl(210 100% 97%)',
+					100: 'hsl(210 95% 92%)',
+					200: 'hsl(210 92% 84%)',
+					300: 'hsl(210 95% 72%)',
+					400: 'hsl(212 100% 62%)',
+					500: 'hsl(214 100% 56%)',
+					600: 'hsl(216 90% 45%)',
+					700: 'hsl(218 85% 35%)',
+					800: 'hsl(220 80% 25%)',
+					900: 'hsl(222 75% 17%)',
+					950: 'hsl(222 70% 11%)',
+				},
+
 			},
 			backgroundImage: {
 				'modern-gradient': 'linear-gradient(135deg, hsl(var(--modern-blue-500)) 0%, hsl(var(--modern-blue-600)) 50%, hsl(var(--modern-blue-700)) 100%)',
