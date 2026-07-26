@@ -1580,14 +1580,19 @@ const ServiceNotificationOverlay = ({
         useCORS: true,
         allowTaint: true,
         logging: false,
-        ignoreElements: (element) => element.classList.contains("service-action-buttons"),
+        ignoreElements: (element) =>
+          element.classList.contains("service-action-buttons") ||
+          element.classList.contains("service-export-hide"),
         onclone: (clonedDocument) => {
-          clonedDocument.querySelectorAll(".service-action-buttons").forEach((element) => {
-            if (element instanceof HTMLElement) {
-              element.style.display = "none";
-            }
-          });
+          clonedDocument
+            .querySelectorAll(".service-action-buttons, .service-export-hide")
+            .forEach((element) => {
+              if (element instanceof HTMLElement) {
+                element.style.display = "none";
+              }
+            });
         },
+
       });
 
       const isVisibleQuarantine = service.service_type === 'cuarentena';
