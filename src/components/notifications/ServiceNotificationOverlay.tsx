@@ -2006,7 +2006,7 @@ const ServiceNotificationOverlay = ({
                   </div>
                 </div>
               ) : (
-                <div className="mt-4 pt-4 border-t border-white/10 space-y-2">
+                <div className="service-export-hide mt-4 pt-4 border-t border-white/10 space-y-2">
                   <p className="text-sm text-blue-100/80 mb-3">No hay canciones seleccionadas aún</p>
                   <Button
                     size="sm"
