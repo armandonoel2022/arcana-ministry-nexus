@@ -1,6 +1,7 @@
 import { useSidebar } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
+import arcanaLogo from "@/assets/arcana-logo.png";
 
 export function AnimatedLogoTrigger() {
   const { toggleSidebar, open } = useSidebar();
@@ -15,9 +16,9 @@ export function AnimatedLogoTrigger() {
         aria-label="Toggle sidebar"
       >
         <img 
-          src="/__l5e/assets-v1/30f1f077-4c41-44bd-9b74-0f1051f26bd1/arcana-logo.png" 
+          src={arcanaLogo} 
           alt="ARCANA Logo" 
-          className={`h-8 w-8 object-cover rounded-2xl transition-all duration-500 ${
+          className={`h-8 w-8 object-contain rounded-2xl bg-card border border-border p-1 transition-all duration-500 ${
             open 
               ? 'opacity-100 scale-100 rotate-0' 
               : 'opacity-90 scale-95 group-hover:scale-110 group-hover:rotate-12'
