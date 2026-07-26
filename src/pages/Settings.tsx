@@ -6,13 +6,13 @@ import { PushNotificationSettings } from "@/components/settings/PushNotification
 
 const Settings = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-600 via-blue-500 to-blue-400">
+    <div className="min-h-screen" style={{ background: 'var(--gradient-primary)' }}>
       <div className="container mx-auto px-6 py-12 max-w-4xl">
         {/* Header */}
         <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-6 mb-8 border border-white/20">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg">
-              <SettingsIcon className="w-8 h-8 text-blue-600" />
+              <SettingsIcon className="w-8 h-8 text-primary" />
             </div>
             <div>
               <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">Configuración</h1>
@@ -20,6 +20,7 @@ const Settings = () => {
             </div>
           </div>
         </div>
+
 
         {/* Settings Cards */}
         <div className="space-y-6">
