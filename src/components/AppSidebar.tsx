@@ -123,9 +123,9 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r-0 shadow-xl" collapsible="icon">
-      <SidebarContent className="bg-sidebar">
-        {/* Header */}
-        <div className="p-6 border-b border-sidebar-border">
+      <SidebarContent className="bg-sidebar flex flex-col h-full overflow-hidden">
+        {/* Header - fixed top */}
+        <div className="flex-shrink-0 p-6 border-b border-sidebar-border">
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0">
               <img 
@@ -134,87 +134,88 @@ export function AppSidebar() {
                 className="w-10 h-10 object-cover rounded-2xl shadow-sm"
               />
             </div>
-            <div>
-              <p className="text-sm font-medium text-sidebar-foreground">{userProfile?.full_name || 'Usuario'}</p>
-              <p className="text-xs text-sidebar-muted-foreground">{user?.email}</p>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-sidebar-foreground truncate">{userProfile?.full_name || 'Usuario'}</p>
+              <p className="text-xs text-sidebar-muted-foreground truncate">{user?.email}</p>
             </div>
           </div>
         </div>
 
-        {/* Navigation Categories */}
-        {isLoading ? (
-          <div className="p-4 text-center text-sidebar-muted-foreground text-sm">
-            Cargando menú...
-          </div>
-        ) : groupedPermissions.length === 0 ? (
-          // Fallback menu for users without permissions configured yet
-          <SidebarGroup className="px-3 py-2">
-            <SidebarGroupLabel className="text-xs uppercase tracking-wider text-sidebar-muted-foreground font-semibold mb-2">
-              Principal
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu className="space-y-1">
-                <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    asChild 
-                    className="h-10 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200 data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:shadow-lg"
-                    data-active={location.pathname === '/'}
-                  >
-                    <Link 
-                      to="/" 
-                      className="flex items-center gap-3 px-3"
-                      onClick={handleLinkClick}
-                    >
-                      <Home className="w-4 h-4" />
-                      <span className="font-medium text-sm">Inicio</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ) : (
-          groupedPermissions.map((category) => (
-            <SidebarGroup key={category.label} className="px-3 py-2">
+        {/* Navigation Categories - scrollable middle */}
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+          {isLoading ? (
+            <div className="p-4 text-center text-sidebar-muted-foreground text-sm">
+              Cargando menú...
+            </div>
+          ) : groupedPermissions.length === 0 ? (
+            <SidebarGroup className="px-3 py-2">
               <SidebarGroupLabel className="text-xs uppercase tracking-wider text-sidebar-muted-foreground font-semibold mb-2">
-                {category.label}
+                Principal
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu className="space-y-1">
-                  {category.items.map((item) => {
-                    const IconComponent = item.icon;
-                    return (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton 
-                          asChild 
-                          className="h-10 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200 data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:shadow-lg"
-                          data-active={location.pathname === item.url}
-                        >
-                          <Link 
-                            to={item.url} 
-                            className="flex items-center gap-3 px-3"
-                            onClick={handleLinkClick}
-                          >
-                            <IconComponent className="w-4 h-4" />
-                            <span className="font-medium text-sm">{item.title}</span>
-                            {item.title === "Notificaciones" && unreadCount > 0 && (
-                              <span className="ml-auto bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center font-bold">
-                                {unreadCount > 99 ? "99+" : unreadCount}
-                              </span>
-                            )}
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
+                  <SidebarMenuItem>
+                    <SidebarMenuButton 
+                      asChild 
+                      className="h-10 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200 data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:shadow-lg"
+                      data-active={location.pathname === '/'}
+                    >
+                      <Link 
+                        to="/" 
+                        className="flex items-center gap-3 px-3"
+                        onClick={handleLinkClick}
+                      >
+                        <Home className="w-4 h-4" />
+                        <span className="font-medium text-sm">Inicio</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
-          ))
-        )}
+          ) : (
+            groupedPermissions.map((category) => (
+              <SidebarGroup key={category.label} className="px-3 py-2">
+                <SidebarGroupLabel className="text-xs uppercase tracking-wider text-sidebar-muted-foreground font-semibold mb-2">
+                  {category.label}
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu className="space-y-1">
+                    {category.items.map((item) => {
+                      const IconComponent = item.icon;
+                      return (
+                        <SidebarMenuItem key={item.title}>
+                          <SidebarMenuButton 
+                            asChild 
+                            className="h-10 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200 data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:shadow-lg"
+                            data-active={location.pathname === item.url}
+                          >
+                            <Link 
+                              to={item.url} 
+                              className="flex items-center gap-3 px-3"
+                              onClick={handleLinkClick}
+                            >
+                              <IconComponent className="w-4 h-4" />
+                              <span className="font-medium text-sm">{item.title}</span>
+                              {item.title === "Notificaciones" && unreadCount > 0 && (
+                                <span className="ml-auto bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center font-bold">
+                                  {unreadCount > 99 ? "99+" : unreadCount}
+                                </span>
+                              )}
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            ))
+          )}
+        </div>
         
-        {/* Theme Selector, Push Notifications and Logout Button */}
-        <div className="mt-auto p-4 border-t border-sidebar-border space-y-2">
+        {/* Footer - fixed bottom */}
+        <div className="flex-shrink-0 p-4 border-t border-sidebar-border space-y-2 bg-sidebar">
           <PushNotificationPermission />
           <ThemeSelector />
           <Button
@@ -230,3 +231,4 @@ export function AppSidebar() {
     </Sidebar>
   )
 }
+
