@@ -2830,15 +2830,15 @@ const ServiceNotificationOverlay = ({
           {/* Left Column - Director and Songs */}
           <div className="space-y-4">
             {/* Director */}
-            <div className={`rounded-lg p-4 ${isQuarantine ? 'bg-amber-900/30' : 'bg-blue-50'}`}>
-              <div className={`text-sm font-semibold mb-3 ${isQuarantine ? 'text-amber-300' : 'text-blue-800'}`}>
+            <div className={`rounded-lg p-4 ${isQuarantine ? 'bg-amber-900/30' : 'bg-white/5 border border-[hsl(214_100%_56%)]/20'}`}>
+              <div className={`text-sm font-semibold mb-3 ${isQuarantine ? 'text-amber-300' : 'text-[hsl(214_100%_72%)]'}`}>
                 Director/a de Alabanza
               </div>
               <div className="flex items-center gap-3">
                 <div className={`w-16 h-16 rounded-full border-3 shadow-lg overflow-hidden ${
                   isQuarantine 
                     ? 'border-amber-400 bg-gradient-to-r from-amber-500 to-amber-600' 
-                    : 'border-blue-300 bg-gradient-to-r from-blue-500 to-blue-600'
+                    : 'border-[hsl(214_100%_56%)] bg-gradient-to-r from-[hsl(220_75%_22%)] to-[hsl(214_100%_56%)]'
                 }`}>
                   <img
                     src={service.director_profile?.photo_url || directorMember?.profiles?.photo_url}
@@ -2856,10 +2856,10 @@ const ServiceNotificationOverlay = ({
                   </div>
                 </div>
                 <div>
-                  <div className={`font-semibold ${isQuarantine ? 'text-white' : 'text-gray-900'}`}>
+                  <div className={`font-semibold ${isQuarantine ? 'text-white' : 'text-white'}`}>
                     {service.leader}
                   </div>
-                  <div className={`text-sm ${isQuarantine ? 'text-amber-400' : 'text-blue-600'}`}>
+                  <div className={`text-sm ${isQuarantine ? 'text-amber-400' : 'text-[hsl(214_100%_72%)]'}`}>
                     Líder del Servicio
                   </div>
                 </div>
