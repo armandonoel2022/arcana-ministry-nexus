@@ -1692,8 +1692,8 @@ const ServiceNotificationOverlay = ({
 
       const groupNameEl = document.createElement("span");
       groupNameEl.textContent = isWomensDay_ ? "Los Varones" : isSpecialEvent ? "Todos los Grupos" : (service.worship_groups?.name || "Grupo de Alabanza");
-      groupNameEl.style.backgroundColor = isWomensDay_ ? "#EC4899" : isSpecialEvent ? "#E11D48" : isQuarantine ? "#f59e0b" : (service.worship_groups?.color_theme || "#3B82F6");
-      groupNameEl.style.color = isWomensDay_ ? "white" : isSpecialEvent ? "white" : isQuarantine ? "#1a1a2e" : "white";
+      groupNameEl.style.background = isWomensDay_ ? "#EC4899" : isSpecialEvent ? "#E11D48" : isQuarantine ? "#f59e0b" : "linear-gradient(135deg, hsl(220 75% 22%), hsl(214 100% 56%))";
+      groupNameEl.style.color = isQuarantine ? "#1a1a2e" : "white";
       groupNameEl.style.padding = "6px 16px";
       groupNameEl.style.borderRadius = "9999px";
       groupNameEl.style.fontSize = "16px";
