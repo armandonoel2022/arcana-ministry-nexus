@@ -370,6 +370,30 @@ export type Database = {
         }
         Relationships: []
       }
+      department_leaders: {
+        Row: {
+          created_at: string
+          department: Database["public"]["Enums"]["inventory_department"]
+          id: string
+          leader_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department: Database["public"]["Enums"]["inventory_department"]
+          id?: string
+          leader_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department?: Database["public"]["Enums"]["inventory_department"]
+          id?: string
+          leader_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       direct_messages: {
         Row: {
           created_at: string | null
@@ -857,6 +881,172 @@ export type Database = {
           },
         ]
       }
+      finance_campaigns: {
+        Row: {
+          created_at: string
+          created_by: string
+          deadline: string | null
+          department: Database["public"]["Enums"]["inventory_department"] | null
+          description: string | null
+          goal_amount: number
+          id: string
+          is_active: boolean
+          scope: Database["public"]["Enums"]["campaign_scope"]
+          title: string
+          updated_at: string
+          worship_group_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          deadline?: string | null
+          department?:
+            | Database["public"]["Enums"]["inventory_department"]
+            | null
+          description?: string | null
+          goal_amount: number
+          id?: string
+          is_active?: boolean
+          scope?: Database["public"]["Enums"]["campaign_scope"]
+          title: string
+          updated_at?: string
+          worship_group_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          deadline?: string | null
+          department?:
+            | Database["public"]["Enums"]["inventory_department"]
+            | null
+          description?: string | null
+          goal_amount?: number
+          id?: string
+          is_active?: boolean
+          scope?: Database["public"]["Enums"]["campaign_scope"]
+          title?: string
+          updated_at?: string
+          worship_group_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_campaigns_worship_group_id_fkey"
+            columns: ["worship_group_id"]
+            isOneToOne: false
+            referencedRelation: "worship_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_contributions: {
+        Row: {
+          amount: number
+          campaign_id: string
+          contribution_date: string
+          contributor_name: string | null
+          created_at: string
+          id: string
+          member_id: string | null
+          method: Database["public"]["Enums"]["finance_method"]
+          note: string | null
+          receipt_url: string | null
+          recorded_by: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          campaign_id: string
+          contribution_date?: string
+          contributor_name?: string | null
+          created_at?: string
+          id?: string
+          member_id?: string | null
+          method?: Database["public"]["Enums"]["finance_method"]
+          note?: string | null
+          receipt_url?: string | null
+          recorded_by: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          campaign_id?: string
+          contribution_date?: string
+          contributor_name?: string | null
+          created_at?: string
+          id?: string
+          member_id?: string | null
+          method?: Database["public"]["Enums"]["finance_method"]
+          note?: string | null
+          receipt_url?: string | null
+          recorded_by?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_contributions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "finance_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_contributions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_contributions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members_basic"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_income: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string
+          description: string | null
+          donor: string | null
+          id: string
+          income_date: string
+          method: Database["public"]["Enums"]["finance_method"]
+          receipt_url: string | null
+          recorded_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          donor?: string | null
+          id?: string
+          income_date?: string
+          method?: Database["public"]["Enums"]["finance_method"]
+          receipt_url?: string | null
+          recorded_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          donor?: string | null
+          id?: string
+          income_date?: string
+          method?: Database["public"]["Enums"]["finance_method"]
+          receipt_url?: string | null
+          recorded_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       frequent_contacts: {
         Row: {
           contact_id: string
@@ -1036,6 +1226,128 @@ export type Database = {
           video_url?: string | null
         }
         Relationships: []
+      }
+      inventory_items: {
+        Row: {
+          acquisition_cost: number | null
+          acquisition_date: string | null
+          assigned_member_id: string | null
+          created_at: string
+          created_by: string | null
+          department: Database["public"]["Enums"]["inventory_department"]
+          id: string
+          loaned_to: string | null
+          name: string
+          notes: string | null
+          photo_url: string | null
+          serial_number: string | null
+          status: Database["public"]["Enums"]["inventory_status"]
+          subcategory: string | null
+          updated_at: string
+          useful_life_months: number | null
+        }
+        Insert: {
+          acquisition_cost?: number | null
+          acquisition_date?: string | null
+          assigned_member_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          department: Database["public"]["Enums"]["inventory_department"]
+          id?: string
+          loaned_to?: string | null
+          name: string
+          notes?: string | null
+          photo_url?: string | null
+          serial_number?: string | null
+          status?: Database["public"]["Enums"]["inventory_status"]
+          subcategory?: string | null
+          updated_at?: string
+          useful_life_months?: number | null
+        }
+        Update: {
+          acquisition_cost?: number | null
+          acquisition_date?: string | null
+          assigned_member_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          department?: Database["public"]["Enums"]["inventory_department"]
+          id?: string
+          loaned_to?: string | null
+          name?: string
+          notes?: string | null
+          photo_url?: string | null
+          serial_number?: string | null
+          status?: Database["public"]["Enums"]["inventory_status"]
+          subcategory?: string | null
+          updated_at?: string
+          useful_life_months?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_assigned_member_id_fkey"
+            columns: ["assigned_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_items_assigned_member_id_fkey"
+            columns: ["assigned_member_id"]
+            isOneToOne: false
+            referencedRelation: "members_basic"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_replacement_requests: {
+        Row: {
+          admin_response: string | null
+          created_at: string
+          id: string
+          item_id: string
+          priority: string
+          reason: string
+          requested_by: string
+          responded_at: string | null
+          responded_by: string | null
+          status: Database["public"]["Enums"]["replacement_status"]
+          updated_at: string
+        }
+        Insert: {
+          admin_response?: string | null
+          created_at?: string
+          id?: string
+          item_id: string
+          priority?: string
+          reason: string
+          requested_by: string
+          responded_at?: string | null
+          responded_by?: string | null
+          status?: Database["public"]["Enums"]["replacement_status"]
+          updated_at?: string
+        }
+        Update: {
+          admin_response?: string | null
+          created_at?: string
+          id?: string
+          item_id?: string
+          priority?: string
+          reason?: string
+          requested_by?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          status?: Database["public"]["Enums"]["replacement_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_replacement_requests_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       live_event_sessions: {
         Row: {
@@ -3161,6 +3473,10 @@ export type Database = {
         Args: { object_name: string }
         Returns: boolean
       }
+      can_manage_campaign: {
+        Args: { _campaign_id: string; _user_id: string }
+        Returns: boolean
+      }
       can_manage_rehearsal_file: {
         Args: { object_name: string }
         Returns: boolean
@@ -3314,6 +3630,13 @@ export type Database = {
         Returns: boolean
       }
       is_administrator: { Args: { _user_id: string }; Returns: boolean }
+      is_department_leader: {
+        Args: {
+          _department: Database["public"]["Enums"]["inventory_department"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_member_available: { Args: { p_member_id: string }; Returns: boolean }
       is_member_discharged: { Args: { p_member_id: string }; Returns: boolean }
       is_member_of_room: {
@@ -3367,6 +3690,12 @@ export type Database = {
     Enums: {
       app_role: "admin" | "lider" | "vocal" | "musico" | "miembro"
       blood_type: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-"
+      campaign_scope:
+        | "todos"
+        | "sin_directiva"
+        | "por_grupo"
+        | "por_departamento"
+      finance_method: "efectivo" | "transferencia" | "electronico" | "otro"
       instrument_type:
         | "vocals"
         | "piano"
@@ -3378,6 +3707,17 @@ export type Database = {
         | "trumpet"
         | "violin"
         | "other"
+      inventory_department:
+        | "voces_sonido"
+        | "instrumentos"
+        | "multimedia"
+        | "danza"
+      inventory_status:
+        | "in_stock"
+        | "assigned"
+        | "loaned"
+        | "damaged"
+        | "retired"
       leave_status:
         | "pendiente"
         | "aprobada"
@@ -3455,6 +3795,7 @@ export type Database = {
         | "birth_announcement"
         | "voice_replacement"
       replacement_category: "voice" | "musician" | "multimedia"
+      replacement_status: "pending" | "approved" | "rejected" | "completed"
       song_knowledge: "unknown" | "learning" | "known" | "expert"
       user_role:
         | "admin"
@@ -3608,6 +3949,13 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "lider", "vocal", "musico", "miembro"],
       blood_type: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+      campaign_scope: [
+        "todos",
+        "sin_directiva",
+        "por_grupo",
+        "por_departamento",
+      ],
+      finance_method: ["efectivo", "transferencia", "electronico", "otro"],
       instrument_type: [
         "vocals",
         "piano",
@@ -3619,6 +3967,19 @@ export const Constants = {
         "trumpet",
         "violin",
         "other",
+      ],
+      inventory_department: [
+        "voces_sonido",
+        "instrumentos",
+        "multimedia",
+        "danza",
+      ],
+      inventory_status: [
+        "in_stock",
+        "assigned",
+        "loaned",
+        "damaged",
+        "retired",
       ],
       leave_status: [
         "pendiente",
@@ -3702,6 +4063,7 @@ export const Constants = {
         "voice_replacement",
       ],
       replacement_category: ["voice", "musician", "multimedia"],
+      replacement_status: ["pending", "approved", "rejected", "completed"],
       song_knowledge: ["unknown", "learning", "known", "expert"],
       user_role: [
         "admin",

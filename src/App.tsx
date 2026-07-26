@@ -32,6 +32,8 @@ import MusicalTraining from "./pages/MusicalTraining";
 import DanceTraining from "./pages/DanceTraining";
 import PersonalAssistant from "./pages/PersonalAssistant";
 import MiOutfit from "./pages/MiOutfit";
+import Inventory from "./pages/Inventory";
+import Finance from "./pages/Finance";
 
 import ScheduledNotifications from "./pages/ScheduledNotifications";
 import Settings from "./pages/Settings";
@@ -215,6 +217,8 @@ function AppContent() {
                         <Route path="/personal-assistant" element={<PersonalAssistant />} />
                         <Route path="/mi-outfit" element={<MiOutfit />} />
                         
+                        <Route path="/inventario" element={<Inventory />} />
+                        <Route path="/finanzas" element={<Finance />} />
                         <Route path="/scheduled-notifications" element={<ScheduledNotifications />} />
                         <Route path="/settings" element={<Settings />} />
                         <Route path="/about" element={<AboutMinistry />} />

@@ -23,7 +23,9 @@ import {
   LogOut,
   Headphones,
   TestTube,
-  Shirt
+  Shirt,
+  Package,
+  DollarSign
 } from "lucide-react"
 
 import {
@@ -83,6 +85,8 @@ const iconMap: Record<string, LucideIcon> = {
   '/notificaciones-programadas': Calendar,
   '/scheduled-notifications': Calendar,
   '/mi-outfit': Shirt,
+  '/inventario': Package,
+  '/finanzas': DollarSign,
 };
 
 // Category order for display
