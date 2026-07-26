@@ -2618,30 +2618,30 @@ const ServiceNotificationOverlay = ({
                 ? "linear-gradient(to bottom, #E11D4899, #E11D48)"
                 : isQuarantine 
                   ? "linear-gradient(to bottom, #f59e0b99, #f59e0b)"
-                  : `linear-gradient(to bottom, ${service.worship_groups?.color_theme || "#3B82F6"}99, ${service.worship_groups?.color_theme || "#3B82F6"})`,
+                  : "linear-gradient(to bottom, hsl(214 100% 56% / 0.7), hsl(214 100% 56%))",
             }}
           ></div>
           <div>
-            <h3 className={`text-xl font-bold ${isSpecialEvent ? 'text-white' : isQuarantine ? 'text-white' : 'text-blue-900'}`}>
+            <h3 className={`text-xl font-bold ${isSpecialEvent ? 'text-white' : isQuarantine ? 'text-white' : 'text-white'}`}>
               {isSpecialEvent ? (service.special_activity || service.title) : service.title}
             </h3>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span
                 className="text-sm font-medium px-2 py-1 rounded-full text-white"
                 style={{ 
-                  backgroundColor: isSpecialEvent 
+                  background: isSpecialEvent 
                     ? '#E11D48'
                     : isQuarantine 
                       ? '#f59e0b' 
-                      : (service.worship_groups?.color_theme || "#3B82F6") 
+                      : 'linear-gradient(135deg, hsl(220 75% 22%), hsl(214 100% 56%))'
                 }}
               >
                 {isSpecialEvent ? "Todos los Grupos" : (service.worship_groups?.name || "Grupo de Alabanza")}
               </span>
               {!isSpecialEvent && (
                 <>
-                  <span className={`text-sm ${isQuarantine ? 'text-gray-400' : 'text-gray-500'}`}>•</span>
-                  <span className={`text-sm ${isQuarantine ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <span className={`text-sm ${isQuarantine ? 'text-gray-400' : 'text-blue-200/60'}`}>•</span>
+                  <span className={`text-sm ${isQuarantine ? 'text-gray-300' : 'text-blue-100/90'}`}>
                     {service.special_activity
                       ? `Sección especial: ${service.special_activity}`
                       : "Sección especial: Ninguna"}
