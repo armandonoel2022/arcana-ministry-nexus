@@ -3171,7 +3171,7 @@ const ServiceNotificationOverlay = ({
                         ? "linear-gradient(135deg, #E11D48 0%, #BE123C 100%)"
                         : hasQuarantineService 
                           ? "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
-                          : "linear-gradient(to right, #a855f7, #ec4899)"
+                          : "linear-gradient(135deg, hsl(220 75% 22%), hsl(214 100% 56%))"
                   }}
                 >
                   <Bell className="w-5 h-5 text-white" />
