@@ -180,7 +180,9 @@ function AppContent() {
             <ProtectedRoute>
               <PushServicesInitializer />
               <BackgroundSyncProvider />
+              <FirstLoginWelcome />
               <SidebarProvider defaultOpen={false}>
+
                 <SidebarLayout />
                 <SwipeIndicator />
                 {/* OverlayManager dentro de la zona protegida para acceder al usuario */}
@@ -232,10 +234,19 @@ function AppContent() {
 }
 
 const SPLASH_SHOWN_KEY = 'arcana_splash_shown';
+const INSTALL_INTRO_KEY = 'arcana_installed_v1';
 
 function App() {
-  // Solo mostrar el splash una vez por sesión del navegador.
-  // Así, si la app se recarga (push, navegación externa, etc.), no se vuelve a mostrar.
+  // Intro cinematográfica: SOLO la primera vez que se instala la app en el dispositivo.
+  const [showInstallIntro, setShowInstallIntro] = useState(() => {
+    try {
+      return localStorage.getItem(INSTALL_INTRO_KEY) !== '1';
+    } catch {
+      return false;
+    }
+  });
+
+  // Splash normal: una vez por sesión del navegador.
   const [showSplash, setShowSplash] = useState(() => {
     try {
       return sessionStorage.getItem(SPLASH_SHOWN_KEY) !== '1';
@@ -244,12 +255,18 @@ function App() {
     }
   });
 
+  const handleInstallIntroComplete = () => {
+    try { localStorage.setItem(INSTALL_INTRO_KEY, '1'); } catch {}
+    // También marcamos el splash de sesión como visto: no duplicamos intros.
+    try { sessionStorage.setItem(SPLASH_SHOWN_KEY, '1'); } catch {}
+    setShowInstallIntro(false);
+    setShowSplash(false);
+  };
+
   const handleSplashComplete = () => {
     try { sessionStorage.setItem(SPLASH_SHOWN_KEY, '1'); } catch {}
     setShowSplash(false);
   };
-
-
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -259,10 +276,17 @@ function App() {
             <Toaster />
             <Sonner />
             <NotificationOverlay />
-            {showSplash ? <SplashScreen onComplete={handleSplashComplete} /> : <AppContent />}
+            {showInstallIntro ? (
+              <InstallationCinematic onComplete={handleInstallIntroComplete} />
+            ) : showSplash ? (
+              <SplashScreen onComplete={handleSplashComplete} />
+            ) : (
+              <AppContent />
+            )}
           </TooltipProvider>
         </AuthProvider>
       </ThemeProvider>
+
     </QueryClientProvider>
   );
 }
