@@ -74,7 +74,7 @@ const iconMap: Record<string, LucideIcon> = {
   '/spiritual': Heart,
   '/configuracion': Settings,
   '/settings': Settings,
-  '/admin': Settings,
+  '/admin': ShieldCheck,
   '/pruebas-notificaciones': TestTube,
   '/acerca': Info,
   '/about': Info,
