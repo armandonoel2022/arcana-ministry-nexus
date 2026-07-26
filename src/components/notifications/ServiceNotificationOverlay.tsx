@@ -1550,6 +1550,77 @@ const ServiceNotificationOverlay = ({
         return;
       }
 
+      const visibleCard = serviceCardRefs.current[serviceId];
+      if (!visibleCard) {
+        toast.error("No se pudo preparar la imagen del servicio");
+        return;
+      }
+
+      const visibleImages = visibleCard.getElementsByTagName("img");
+      const visibleImagePromises = Array.from(visibleImages).map((img) => {
+        if (img.complete) {
+          return Promise.resolve(undefined);
+        }
+        return new Promise<void>((resolve) => {
+          img.onload = () => resolve();
+          img.onerror = () => {
+            console.warn("Image failed to load:", img.src);
+            resolve();
+          };
+          setTimeout(() => resolve(), 3000);
+        });
+      });
+
+      await Promise.all(visibleImagePromises);
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      const canvas = await html2canvas(visibleCard, {
+        backgroundColor: null,
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        ignoreElements: (element) => element.classList.contains("service-action-buttons"),
+        onclone: (clonedDocument) => {
+          clonedDocument.querySelectorAll(".service-action-buttons").forEach((element) => {
+            if (element instanceof HTMLElement) {
+              element.style.display = "none";
+            }
+          });
+        },
+      });
+
+      const isVisibleQuarantine = service.service_type === 'cuarentena';
+      const filename = isVisibleQuarantine
+        ? `cuarentena_${format(parseServiceDate(service.service_date), "yyyy-MM-dd")}.png`
+        : `${serviceTitle.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_${new Date().getTime()}.png`;
+
+      await new Promise<void>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            reject(new Error("No se pudo generar la imagen"));
+            return;
+          }
+
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = filename;
+          link.style.display = "none";
+          document.body.appendChild(link);
+          link.click();
+
+          setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            resolve();
+          }, 100);
+        }, "image/png", 1.0);
+      });
+
+      toast.success("Imagen descargada exitosamente");
+      return;
+
       const isQuarantine = service.service_type === 'cuarentena';
       const isWomensDay_ = isWomensDayService(service);
       const isSpecialEvent = !isWomensDay_ && (service.service_type === 'especial' || service.leader === 'TODOS');
