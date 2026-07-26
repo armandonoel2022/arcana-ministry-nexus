@@ -3012,8 +3012,8 @@ const ServiceNotificationOverlay = ({
           {/* Right Column - Voices */}
           <div>
             {responsibleVoices.length > 0 && (
-              <div className={`rounded-lg p-4 h-full ${isQuarantine ? 'bg-amber-900/30' : 'bg-blue-50'}`}>
-                <div className={`text-sm font-semibold mb-3 ${isQuarantine ? 'text-amber-300' : 'text-blue-800'}`}>
+              <div className={`rounded-lg p-4 h-full ${isQuarantine ? 'bg-amber-900/30' : 'bg-white/5 border border-[hsl(214_100%_56%)]/20'}`}>
+                <div className={`text-sm font-semibold mb-3 ${isQuarantine ? 'text-amber-300' : 'text-[hsl(214_100%_72%)]'}`}>
                   Responsables de Voces
                 </div>
                 <div className="grid grid-cols-1 gap-3">
@@ -3024,7 +3024,7 @@ const ServiceNotificationOverlay = ({
                         <div className={`w-12 h-12 rounded-full border-2 overflow-hidden ${
                           isQuarantine 
                             ? 'border-amber-400 bg-gradient-to-r from-amber-500 to-amber-600' 
-                            : 'border-blue-200 bg-gradient-to-r from-blue-500 to-blue-600'
+                            : 'border-[hsl(214_100%_56%)]/60 bg-gradient-to-r from-[hsl(220_75%_22%)] to-[hsl(214_100%_56%)]'
                         }`}>
                           <img
                             src={member.profiles?.photo_url}
@@ -3042,15 +3042,15 @@ const ServiceNotificationOverlay = ({
                           </div>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className={`text-sm font-medium ${isQuarantine ? 'text-white' : 'text-gray-900'}`}>
+                          <div className={`text-sm font-medium ${isQuarantine ? 'text-white' : 'text-white'}`}>
                             {firstName}
                           </div>
                           {lastName && (
-                            <div className={`text-xs ${isQuarantine ? 'text-gray-400' : 'text-gray-600'}`}>
+                            <div className={`text-xs ${isQuarantine ? 'text-gray-400' : 'text-blue-100/70'}`}>
                               {lastName}
                             </div>
                           )}
-                          <div className={`text-xs ${isQuarantine ? 'text-amber-400' : 'text-blue-600'}`}>
+                          <div className={`text-xs ${isQuarantine ? 'text-amber-400' : 'text-[hsl(214_100%_72%)]'}`}>
                             {member.instrument}
                           </div>
                         </div>
@@ -3064,12 +3064,12 @@ const ServiceNotificationOverlay = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="service-action-buttons flex flex-wrap gap-2 mt-6 pt-4 border-t border-gray-200">
+        <div className="service-action-buttons flex flex-wrap gap-2 mt-6 pt-4 border-t border-white/10">
           <Button
             size="sm"
             variant="outline"
             onClick={() => downloadServiceImage(service.id, service.title)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-white/5 border-[hsl(214_100%_56%)]/40 text-white hover:bg-white/10"
           >
             <Download className="w-4 h-4" />
             Descargar
