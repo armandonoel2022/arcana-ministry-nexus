@@ -225,16 +225,18 @@ export function AppSidebar() {
         </div>
         
         {/* Footer - fixed bottom */}
-        <div className="flex-shrink-0 p-4 border-t border-sidebar-border space-y-2 bg-sidebar">
-          <PushNotificationPermission />
-          <ThemeSelector />
+        <div className={`flex-shrink-0 border-t border-sidebar-border/60 bg-sidebar ${isCollapsed ? 'p-2 flex justify-center' : 'p-4'}`}>
           <Button
             onClick={signOut}
             variant="ghost"
-            className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+            size={isCollapsed ? "icon" : "default"}
+            className={isCollapsed 
+              ? "h-10 w-10 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10"
+              : "w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 rounded-lg"}
+            aria-label="Cerrar Sesión"
           >
-            <LogOut className="w-4 h-4 mr-3" />
-            Cerrar Sesión
+            <LogOut className={isCollapsed ? "w-5 h-5" : "w-4 h-4 mr-3"} />
+            {!isCollapsed && "Cerrar Sesión"}
           </Button>
         </div>
       </SidebarContent>
