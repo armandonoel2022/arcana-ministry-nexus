@@ -95,11 +95,12 @@ const categoryOrder = [
 ];
 
 export function AppSidebar() {
-  const { setOpen } = useSidebar()
+  const { setOpen, state } = useSidebar()
   const location = useLocation()
   const unreadCount = useUnreadNotifications()
   const { signOut, user, userProfile } = useAuth()
   const { permissions, isAdmin, isLoading } = usePermissions()
+  const isCollapsed = state === "collapsed"
   
   const handleLinkClick = () => {
     // Close sidebar when a link is clicked (both mobile and desktop)
@@ -123,23 +124,31 @@ export function AppSidebar() {
   }).filter(group => group.items.length > 0);
 
   return (
-    <Sidebar className="border-r-0 shadow-xl" collapsible="icon">
+    <Sidebar className="border-r-0 shadow-2xl" collapsible="icon">
       <SidebarContent className="bg-sidebar flex flex-col h-full overflow-hidden">
         {/* Header - fixed top */}
-        <div className="flex-shrink-0 p-6 border-b border-sidebar-border">
-          <div className="flex items-center gap-3">
-            <div className="flex-shrink-0">
-              <img 
-                src={arcanaLogo} 
-                alt="ARCANA Logo" 
-                className="w-10 h-10 object-contain rounded-2xl bg-card border border-sidebar-border p-1.5 shadow-sm"
-              />
+        <div className={`flex-shrink-0 border-b border-sidebar-border/60 ${isCollapsed ? 'p-3 flex justify-center' : 'p-5'}`}>
+          {isCollapsed ? (
+            <img 
+              src={arcanaLogo} 
+              alt="ARCANA" 
+              className="w-10 h-10 object-contain rounded-xl bg-card border border-sidebar-border p-1 shadow-md"
+            />
+          ) : (
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0">
+                <img 
+                  src={arcanaLogo} 
+                  alt="ARCANA Logo" 
+                  className="w-11 h-11 object-contain rounded-2xl bg-card border border-sidebar-border p-1.5 shadow-md"
+                />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-sidebar-foreground truncate tracking-tight">{userProfile?.full_name || 'Usuario'}</p>
+                <p className="text-xs text-sidebar-muted-foreground truncate">{user?.email}</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-sidebar-foreground truncate">{userProfile?.full_name || 'Usuario'}</p>
-              <p className="text-xs text-sidebar-muted-foreground truncate">{user?.email}</p>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Navigation Categories - scrollable middle */}
