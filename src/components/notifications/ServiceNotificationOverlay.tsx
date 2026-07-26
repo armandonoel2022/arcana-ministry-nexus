@@ -1556,7 +1556,10 @@ const ServiceNotificationOverlay = ({
 
       // Crear un contenedor específico para la descarga
       const container = document.createElement("div");
-      container.style.width = "600px";
+      // Ancho adaptable: tablet/desktop usan un formato más ancho, móvil mantiene 600px
+      const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 600;
+      const downloadWidth = viewportWidth >= 1024 ? 1000 : viewportWidth >= 768 ? 820 : 600;
+      container.style.width = `${downloadWidth}px`;
       container.style.padding = "32px";
       container.style.fontFamily = "system-ui, -apple-system, sans-serif";
       container.style.lineHeight = "1.5";
