@@ -2547,7 +2547,7 @@ const ServiceNotificationOverlay = ({
               ? 'bg-gradient-to-br from-rose-900 to-rose-800 border-2 border-rose-400/40'
               : isQuarantine 
                 ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-2 border-amber-500/30' 
-                : 'bg-white/90 border border-blue-200'
+                : 'bg-gradient-to-br from-[hsl(220_75%_14%)] via-[hsl(218_78%_20%)] to-[hsl(214_70%_26%)] border-2 border-[hsl(214_100%_56%)]/30'
         }`}
         style={{ maxWidth: "600px" }}
       >
