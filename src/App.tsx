@@ -8,6 +8,9 @@ import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AnimatedLogoTrigger } from "@/components/AnimatedLogoTrigger";
 import SplashScreen from "@/components/SplashScreen";
+import InstallationCinematic from "@/components/InstallationCinematic";
+import WelcomeEnergetic from "@/components/WelcomeEnergetic";
+import { useAuth } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import RepertoirioMusical from "./pages/RepertoirioMusical";
 import MinisterialAgenda from "./pages/MinisterialAgenda";
@@ -105,8 +108,42 @@ function PushServicesInitializer() {
   return null;
 }
 
+function FirstLoginWelcome() {
+  const { user, userProfile, loading, needsPasswordChange, isApproved } = useAuth();
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    if (loading || !user || !isApproved || needsPasswordChange) return;
+    const key = `arcana_welcomed_${user.id}`;
+    try {
+      if (localStorage.getItem(key) !== "1") {
+        setShow(true);
+      }
+    } catch {}
+  }, [user, loading, isApproved, needsPasswordChange]);
+
+  if (!show || !user) return null;
+
+  const name =
+    userProfile?.full_name ||
+    (user.user_metadata as any)?.full_name ||
+    user.email?.split("@")[0] ||
+    null;
+
+  return (
+    <WelcomeEnergetic
+      userName={name}
+      onComplete={() => {
+        try { localStorage.setItem(`arcana_welcomed_${user.id}`, "1"); } catch {}
+        setShow(false);
+      }}
+    />
+  );
+}
+
 function AppContent() {
   const { isWomensDay, showOverlay: showWomensDayOverlay, dismissOverlay, themeStyles } = useWomensDayTheme();
+
 
   // Apply Women's Day theme styles
   useEffect(() => {
@@ -143,7 +180,9 @@ function AppContent() {
             <ProtectedRoute>
               <PushServicesInitializer />
               <BackgroundSyncProvider />
+              <FirstLoginWelcome />
               <SidebarProvider defaultOpen={false}>
+
                 <SidebarLayout />
                 <SwipeIndicator />
                 {/* OverlayManager dentro de la zona protegida para acceder al usuario */}
@@ -195,10 +234,19 @@ function AppContent() {
 }
 
 const SPLASH_SHOWN_KEY = 'arcana_splash_shown';
+const INSTALL_INTRO_KEY = 'arcana_installed_v1';
 
 function App() {
-  // Solo mostrar el splash una vez por sesión del navegador.
-  // Así, si la app se recarga (push, navegación externa, etc.), no se vuelve a mostrar.
+  // Intro cinematográfica: SOLO la primera vez que se instala la app en el dispositivo.
+  const [showInstallIntro, setShowInstallIntro] = useState(() => {
+    try {
+      return localStorage.getItem(INSTALL_INTRO_KEY) !== '1';
+    } catch {
+      return false;
+    }
+  });
+
+  // Splash normal: una vez por sesión del navegador.
   const [showSplash, setShowSplash] = useState(() => {
     try {
       return sessionStorage.getItem(SPLASH_SHOWN_KEY) !== '1';
@@ -207,12 +255,18 @@ function App() {
     }
   });
 
+  const handleInstallIntroComplete = () => {
+    try { localStorage.setItem(INSTALL_INTRO_KEY, '1'); } catch {}
+    // También marcamos el splash de sesión como visto: no duplicamos intros.
+    try { sessionStorage.setItem(SPLASH_SHOWN_KEY, '1'); } catch {}
+    setShowInstallIntro(false);
+    setShowSplash(false);
+  };
+
   const handleSplashComplete = () => {
     try { sessionStorage.setItem(SPLASH_SHOWN_KEY, '1'); } catch {}
     setShowSplash(false);
   };
-
-
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -222,10 +276,17 @@ function App() {
             <Toaster />
             <Sonner />
             <NotificationOverlay />
-            {showSplash ? <SplashScreen onComplete={handleSplashComplete} /> : <AppContent />}
+            {showInstallIntro ? (
+              <InstallationCinematic onComplete={handleInstallIntroComplete} />
+            ) : showSplash ? (
+              <SplashScreen onComplete={handleSplashComplete} />
+            ) : (
+              <AppContent />
+            )}
           </TooltipProvider>
         </AuthProvider>
       </ThemeProvider>
+
     </QueryClientProvider>
   );
 }
