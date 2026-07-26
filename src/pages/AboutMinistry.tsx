@@ -34,16 +34,47 @@ const AboutMinistry = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-modern-gradient-soft p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 modern-gradient rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl">
-            <Heart className="w-8 h-8 text-white" />
+    <div className="min-h-screen bg-background">
+      {/* Hero banner — deep navy like the ARCANA presentation */}
+      <div
+        className="relative overflow-hidden"
+        style={{ background: 'var(--gradient-primary)' }}
+      >
+        {/* Decorative diagonal accent */}
+        <div className="absolute inset-y-0 right-0 w-1/2 opacity-20 pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle at 70% 50%, hsl(var(--primary-glow) / 0.6) 0%, transparent 60%)',
+          }}
+        />
+        <div className="absolute top-0 left-0 w-64 h-64 opacity-10 pointer-events-none"
+          style={{
+            backgroundImage: 'radial-gradient(circle, hsl(0 0% 100% / 0.4) 1px, transparent 1px)',
+            backgroundSize: '20px 20px',
+          }}
+        />
+
+        <div className="relative max-w-4xl mx-auto px-6 py-16 md:py-20">
+          <div className="flex items-center gap-5 mb-6">
+            <div className="w-16 h-16 rounded-2xl bg-white/95 flex items-center justify-center shadow-2xl">
+              <Heart className="w-8 h-8 text-primary" />
+            </div>
+            <span className="uppercase tracking-[0.25em] text-xs md:text-sm text-white/80 font-semibold">
+              Inteligencia Ministerial
+            </span>
           </div>
-          <h1 className="text-3xl font-bold modern-gradient-text mb-2">Acerca del Ministerio ADN</h1>
-          <p className="text-muted-foreground">Arca de Noé - Ministerio de Alabanza y Adoración</p>
+          <h1 className="text-4xl md:text-6xl font-black text-white leading-[1.05] mb-4 drop-shadow-lg">
+            Ministerio ADN
+          </h1>
+          <div className="h-1 w-16 bg-white/80 rounded-full mb-4" />
+          <p className="text-white/90 text-lg md:text-xl max-w-2xl">
+            Arca de Noé — Ministerio de Alabanza y Adoración.
+            De la sobrecarga a la fluidez.
+          </p>
         </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto p-6 -mt-8 relative z-10">
+
 
         {/* Sistema Semáforo - Reglas de Lógica */}
         <Collapsible open={showRules} onOpenChange={setShowRules} className="mb-6">
