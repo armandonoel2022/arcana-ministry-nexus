@@ -5,11 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileText, Music, User, Key, Clock, Star, Youtube } from "lucide-react";
+import { FileText, Music, User, Key, Clock, Star, Youtube, MonitorPlay, Highlighter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { openExternalUrl } from "@/utils/openExternal";
 import YouTubePlayerModal from "./YouTubePlayerModal";
+import TeleprompterView from "./TeleprompterView";
+import LyricsHighlightEditor from "./LyricsHighlightEditor";
+import { getLineStyle, parseFormat } from "./lyricsFormat";
+import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
+
 
 interface Song {
   id: string;
@@ -29,6 +34,8 @@ interface Song {
   usage_count?: number;
   last_used_date?: string;
   cover_image_url?: string;
+  bpm?: number | null;
+  lyrics_format?: unknown;
 }
 
 interface SongLyricsProps {
@@ -40,6 +47,12 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
   const [open, setOpen] = useState(false);
   const [song, setSong] = useState<Song | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showTeleprompter, setShowTeleprompter] = useState(false);
+  const [showEditor, setShowEditor] = useState(false);
+  const { isAdmin } = usePermissions();
+
+  const hasLyrics = !!song?.lyrics && song.lyrics.trim() !== '' && song.lyrics.trim().toLowerCase() !== 'pendiente';
+
   
 
   const loadSongDetails = async () => {
@@ -91,12 +104,16 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
 
   const formatLyrics = (lyrics?: string) => {
     if (!lyrics) return null;
+    const fmt = parseFormat(song?.lyrics_format);
     return lyrics.split('\n').map((line, index) => (
       <div key={index} className={line.trim() === '' ? 'h-4' : 'leading-relaxed'}>
-        {line.trim() === '' ? '\u00A0' : line}
+        {line.trim() === '' ? '\u00A0' : (
+          <span style={getLineStyle(fmt.lines?.[String(index)])}>{line}</span>
+        )}
       </div>
     ));
   };
+
 
 
   return (
@@ -180,7 +197,27 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
                             Partitura
                           </Button>
                         )}
+                        {hasLyrics && (
+                          <Button
+                            onClick={() => setShowTeleprompter(true)}
+                            className="rounded-full px-6"
+                          >
+                            <MonitorPlay className="w-5 h-5 mr-2" />
+                            Teleprompter
+                          </Button>
+                        )}
+                        {hasLyrics && isAdmin && (
+                          <Button
+                            variant="outline"
+                            onClick={() => setShowEditor(true)}
+                            className="rounded-full px-6"
+                          >
+                            <Highlighter className="w-5 h-5 mr-2" />
+                            Destacar coros
+                          </Button>
+                        )}
                       </div>
+
 
                       {/* Song Details Grid */}
                       <div className="grid grid-cols-2 gap-4 pt-2">
@@ -268,6 +305,7 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
                         Pendiente
                       </div>
                     )}
+
                   </CardContent>
                 </Card>
               </div>
@@ -279,6 +317,30 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
           </div>
         )}
       </DialogContent>
+
+      {showTeleprompter && song && (
+        <TeleprompterView
+          title={song.title}
+          artist={song.artist}
+          lyrics={song.lyrics || ''}
+          bpm={song.bpm}
+          format={song.lyrics_format}
+          onClose={() => setShowTeleprompter(false)}
+        />
+      )}
+
+      {song && (
+        <LyricsHighlightEditor
+          open={showEditor}
+          onOpenChange={setShowEditor}
+          songId={song.id}
+          lyrics={song.lyrics || ''}
+          bpm={song.bpm}
+          format={song.lyrics_format}
+          onSaved={(payload) => setSong((prev) => (prev ? { ...prev, ...payload } : prev))}
+        />
+      )}
+
     </Dialog>
   );
 };

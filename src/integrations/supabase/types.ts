@@ -2612,6 +2612,7 @@ export type Database = {
         Row: {
           album: string | null
           artist: string | null
+          bpm: number | null
           capo: number | null
           category: string | null
           ccli: string | null
@@ -2630,6 +2631,7 @@ export type Database = {
           language: string | null
           last_used_date: string | null
           lyrics: string | null
+          lyrics_format: Json
           mood: string | null
           sheet_music_url: string | null
           song_type: string | null
@@ -2649,6 +2651,7 @@ export type Database = {
         Insert: {
           album?: string | null
           artist?: string | null
+          bpm?: number | null
           capo?: number | null
           category?: string | null
           ccli?: string | null
@@ -2667,6 +2670,7 @@ export type Database = {
           language?: string | null
           last_used_date?: string | null
           lyrics?: string | null
+          lyrics_format?: Json
           mood?: string | null
           sheet_music_url?: string | null
           song_type?: string | null
@@ -2686,6 +2690,7 @@ export type Database = {
         Update: {
           album?: string | null
           artist?: string | null
+          bpm?: number | null
           capo?: number | null
           category?: string | null
           ccli?: string | null
@@ -2704,6 +2709,7 @@ export type Database = {
           language?: string | null
           last_used_date?: string | null
           lyrics?: string | null
+          lyrics_format?: Json
           mood?: string | null
           sheet_music_url?: string | null
           song_type?: string | null
