@@ -34,6 +34,8 @@ interface Song {
   usage_count?: number;
   last_used_date?: string;
   cover_image_url?: string;
+  bpm?: number | null;
+  lyrics_format?: unknown;
 }
 
 interface SongLyricsProps {
@@ -45,6 +47,12 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
   const [open, setOpen] = useState(false);
   const [song, setSong] = useState<Song | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showTeleprompter, setShowTeleprompter] = useState(false);
+  const [showEditor, setShowEditor] = useState(false);
+  const { isAdmin } = usePermissions();
+
+  const hasLyrics = !!song?.lyrics && song.lyrics.trim() !== '' && song.lyrics.trim().toLowerCase() !== 'pendiente';
+
   
 
   const loadSongDetails = async () => {
