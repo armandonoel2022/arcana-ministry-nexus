@@ -96,12 +96,16 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
 
   const formatLyrics = (lyrics?: string) => {
     if (!lyrics) return null;
+    const fmt = parseFormat(song?.lyrics_format);
     return lyrics.split('\n').map((line, index) => (
       <div key={index} className={line.trim() === '' ? 'h-4' : 'leading-relaxed'}>
-        {line.trim() === '' ? '\u00A0' : line}
+        {line.trim() === '' ? '\u00A0' : (
+          <span style={getLineStyle(fmt.lines?.[String(index)])}>{line}</span>
+        )}
       </div>
     ));
   };
+
 
 
   return (
