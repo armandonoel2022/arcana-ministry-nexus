@@ -185,7 +185,27 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
                             Partitura
                           </Button>
                         )}
+                        {hasLyrics && (
+                          <Button
+                            onClick={() => setShowTeleprompter(true)}
+                            className="rounded-full px-6"
+                          >
+                            <MonitorPlay className="w-5 h-5 mr-2" />
+                            Teleprompter
+                          </Button>
+                        )}
+                        {hasLyrics && isAdmin && (
+                          <Button
+                            variant="outline"
+                            onClick={() => setShowEditor(true)}
+                            className="rounded-full px-6"
+                          >
+                            <Highlighter className="w-5 h-5 mr-2" />
+                            Destacar coros
+                          </Button>
+                        )}
                       </div>
+
 
                       {/* Song Details Grid */}
                       <div className="grid grid-cols-2 gap-4 pt-2">
