@@ -5,11 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileText, Music, User, Key, Clock, Star, Youtube } from "lucide-react";
+import { FileText, Music, User, Key, Clock, Star, Youtube, MonitorPlay, Highlighter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { openExternalUrl } from "@/utils/openExternal";
 import YouTubePlayerModal from "./YouTubePlayerModal";
+import TeleprompterView from "./TeleprompterView";
+import LyricsHighlightEditor from "./LyricsHighlightEditor";
+import { getLineStyle, parseFormat } from "./lyricsFormat";
+import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
+
 
 interface Song {
   id: string;
