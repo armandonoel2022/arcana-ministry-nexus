@@ -273,6 +273,7 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
                         Pendiente
                       </div>
                     )}
+
                   </CardContent>
                 </Card>
               </div>
