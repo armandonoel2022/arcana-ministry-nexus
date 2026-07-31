@@ -284,6 +284,30 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
           </div>
         )}
       </DialogContent>
+
+      {showTeleprompter && song && (
+        <TeleprompterView
+          title={song.title}
+          artist={song.artist}
+          lyrics={song.lyrics || ''}
+          bpm={song.bpm}
+          format={song.lyrics_format}
+          onClose={() => setShowTeleprompter(false)}
+        />
+      )}
+
+      {song && (
+        <LyricsHighlightEditor
+          open={showEditor}
+          onOpenChange={setShowEditor}
+          songId={song.id}
+          lyrics={song.lyrics || ''}
+          bpm={song.bpm}
+          format={song.lyrics_format}
+          onSaved={(payload) => setSong((prev) => (prev ? { ...prev, ...payload } : prev))}
+        />
+      )}
+
     </Dialog>
   );
 };
