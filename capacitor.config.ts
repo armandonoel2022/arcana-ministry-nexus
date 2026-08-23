@@ -19,12 +19,9 @@ const config: CapacitorConfig = {
     scheme: 'ArcanaApp',
     contentInset: 'automatic',
     scrollEnabled: true,
-    includePlugins: [
-      '@capacitor/haptics',
-      '@capacitor/local-notifications',
-      '@capacitor/push-notifications',
-      '@capacitor/toast'
-    ],
+    // Nota: no se usa includePlugins para no excluir plugins instalados
+    // (browser, preferences, filesystem, share). Si se filtra la lista,
+    // los plugins ausentes dejan de funcionar en el binario nativo.
     preferredContentMode: 'mobile'
   },
 
