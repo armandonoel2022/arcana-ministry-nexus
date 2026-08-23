@@ -5,8 +5,8 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import html2canvas from 'html2canvas';
 import arcanaLogo from '@/assets/arca-noe-logo.png';
-import {
 import { saveImageDataUrl } from '@/utils/saveImage';
+import {
   MemberLeave,
   LEAVE_TYPE_LABELS,
 } from '@/hooks/useMemberLeaves';
