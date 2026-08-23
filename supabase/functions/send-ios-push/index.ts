@@ -91,7 +91,6 @@ serve(async (req) => {
         'apns-push-type': 'alert',
         'apns-priority': '10',
         'apns-expiration': String(expiration),
-        'apns-collapse-id': typeof data?.type === 'string' ? String(data.type).substring(0, 63) : '',
         'Authorization': `bearer ${jwt}`,
         'Content-Type': 'application/json',
       },
