@@ -14,6 +14,7 @@ import { es } from "date-fns/locale";
 import { useSongRepetitionCheck, SongRepetitionResult } from '@/hooks/useSongRepetitionCheck';
 import TrafficLightIndicator from './TrafficLightIndicator';
 import { MUSICAL_KEYS } from '@/utils/musicalKeys';
+import { resolveAssetUrl } from "@/utils/assetUrl";
 
 interface Service {
   id: string;
@@ -563,7 +564,7 @@ const SongSelectionDialog: React.FC<SongSelectionDialogProps> = ({ song, childre
             <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 flex items-center gap-4">
               {song.cover_image_url && (
                 <img 
-                  src={song.cover_image_url} 
+                  src={resolveAssetUrl(song.cover_image_url)} 
                   alt={song.title}
                   className="w-16 h-16 rounded-lg object-cover shadow-md flex-shrink-0"
                 />

@@ -1281,7 +1281,7 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
                               <div className="flex items-center gap-2 mb-2">
                                 {action.coverImageUrl ? (
                                   <img
-                                    src={action.coverImageUrl}
+                                    src={resolveAssetUrl(action.coverImageUrl)}
                                     alt={action.songName}
                                     className="w-10 h-10 rounded object-cover flex-shrink-0"
                                   />

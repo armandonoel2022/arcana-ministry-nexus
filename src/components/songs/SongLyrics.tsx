@@ -14,6 +14,7 @@ import LyricsHighlightEditor from "./LyricsHighlightEditor";
 import { getLineStyle, parseFormat } from "./lyricsFormat";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
+import { resolveAssetUrl } from "@/utils/assetUrl";
 
 
 interface Song {
@@ -145,7 +146,7 @@ const SongLyrics: React.FC<SongLyricsProps> = ({ songId, children }) => {
                     {song.cover_image_url && (
                       <div className="flex-shrink-0">
                         <img 
-                          src={song.cover_image_url} 
+                          src={resolveAssetUrl(song.cover_image_url)} 
                           alt={song.title}
                           className="w-full md:w-48 h-48 object-cover rounded-lg shadow-lg"
                         />
