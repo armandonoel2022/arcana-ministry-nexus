@@ -71,13 +71,17 @@ serve(async (req) => {
         },
         sound: "default",
         badge,
-        'content-available': 1,
         'mutable-content': 1,
       },
       ...(data || {}),
     };
 
     console.log('📦 Payload:', JSON.stringify(payload));
+
+    // Guardar hasta 24h si el dispositivo está apagado / sin conexión.
+    // Con apns-expiration '0' APNs descarta la notificación inmediatamente
+    // cuando el equipo no está accesible (causa típica de "no me llegan").
+    const expiration = Math.floor(Date.now() / 1000) + 60 * 60 * 24;
 
     // 3. Enviar a APNs
     const response = await fetch(`https://${APNS_HOST}/3/device/${deviceToken}`, {
@@ -86,7 +90,7 @@ serve(async (req) => {
         'apns-topic': TOPIC,
         'apns-push-type': 'alert',
         'apns-priority': '10',
-        'apns-expiration': '0',
+        'apns-expiration': String(expiration),
         'Authorization': `bearer ${jwt}`,
         'Content-Type': 'application/json',
       },

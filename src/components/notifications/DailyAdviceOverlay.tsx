@@ -5,6 +5,7 @@ import { X, Lightbulb, Download, Share2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { saveCanvasImage } from '@/utils/saveImage';
 
 interface DailyAdviceOverlayProps {
   title?: string;
@@ -74,11 +75,8 @@ export const DailyAdviceOverlay = ({ title: propTitle, message: propMessage, ski
         logging: false,
       });
       
-      const link = document.createElement('a');
-      link.download = `consejo-del-dia-${new Date().toISOString().split('T')[0]}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-      toast.success('Imagen descargada');
+      await saveCanvasImage(canvas, `consejo-del-dia-${new Date().toISOString().split('T')[0]}.png`, 'Consejo del día - ARCANA');
+      toast.success('Imagen lista');
     } catch (error) {
       console.error('Error al descargar:', error);
       toast.error('Error al descargar imagen');

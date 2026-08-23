@@ -10,6 +10,7 @@ import SongSelectionIndicator from './SongSelectionIndicator';
 import EditSongDialog from './EditSongDialog';
 import { openExternalUrl } from '@/utils/openExternal';
 import YouTubePlayerModal from './YouTubePlayerModal';
+import { resolveAssetUrl } from "@/utils/assetUrl";
 
 interface Song {
   id: string;
@@ -70,7 +71,7 @@ const SongCard: React.FC<SongCardProps> = ({ song, onDelete }) => {
       {song.cover_image_url && (
         <div className="relative h-48 overflow-hidden">
           <img 
-            src={song.cover_image_url} 
+            src={resolveAssetUrl(song.cover_image_url)} 
             alt={song.title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />

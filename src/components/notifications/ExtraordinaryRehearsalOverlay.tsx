@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import arcanaLogo from '@/assets/arca-noe-logo.png';
+import { saveCanvasImage } from '@/utils/saveImage';
 
 interface ExtraordinaryRehearsalOverlayProps {
   activityName: string;
@@ -215,19 +216,9 @@ const ExtraordinaryRehearsalOverlay = ({
       });
       document.body.removeChild(container);
 
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `ensayo-extraordinario-${date}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-      }, "image/png");
+      await saveCanvasImage(canvas, `ensayo-extraordinario-${date}.png`, 'ARCANA');
 
-      toast({ title: "Imagen descargada" });
+      toast({ title: "Imagen lista" });
     } catch (error) {
       console.error("Error downloading image:", error);
       toast({ title: "Error al descargar", variant: "destructive" });

@@ -5,6 +5,7 @@ import { X, BookOpen, Download, Share2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { saveCanvasImage } from '@/utils/saveImage';
 
 interface DailyVerseOverlayProps {
   verseText?: string;
@@ -88,11 +89,8 @@ export const DailyVerseOverlay = ({ verseText: propVerseText, verseReference: pr
         logging: false,
       });
       
-      const link = document.createElement('a');
-      link.download = `versiculo-del-dia-${new Date().toISOString().split('T')[0]}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-      toast.success('Imagen descargada');
+      await saveCanvasImage(canvas, `versiculo-del-dia-${new Date().toISOString().split('T')[0]}.png`, 'Versículo del día - ARCANA');
+      toast.success('Imagen lista');
     } catch (error) {
       console.error('Error al descargar:', error);
       toast.error('Error al descargar imagen');

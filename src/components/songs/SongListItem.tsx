@@ -9,6 +9,7 @@ import SongSelectionIndicator from './SongSelectionIndicator';
 import EditSongDialog from './EditSongDialog';
 import { openExternalUrl } from '@/utils/openExternal';
 import YouTubePlayerModal from './YouTubePlayerModal';
+import { resolveAssetUrl } from "@/utils/assetUrl";
 
 interface Song {
   id: string;
@@ -70,7 +71,7 @@ const SongListItem: React.FC<SongListItemProps> = ({ song, onDelete }) => {
         <div className="flex-shrink-0">
           {song.cover_image_url ? (
             <img 
-              src={song.cover_image_url} 
+              src={resolveAssetUrl(song.cover_image_url)} 
               alt={song.title}
               className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-lg object-cover"
             />

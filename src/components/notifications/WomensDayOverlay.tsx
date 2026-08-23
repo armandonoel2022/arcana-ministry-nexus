@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { X, Heart, Sparkles, Star, Download } from 'lucide-react';
 import arcanaLogo from '@/assets/arca-noe-logo.png';
 import { toast } from 'sonner';
+import { saveCanvasImage } from '@/utils/saveImage';
 
 interface WomensDayOverlayProps {
   onClose: () => void;
@@ -158,19 +159,9 @@ const WomensDayOverlay: React.FC<WomensDayOverlayProps> = ({ onClose }) => {
       const trimCtx = trimmedCanvas.getContext('2d')!;
       trimCtx.drawImage(canvas, 0, 0);
 
-      // Download
-      trimmedCanvas.toBlob((blob) => {
-        if (!blob) return;
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'dia-internacional-mujer-2026.png';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        toast.success('Imagen descargada');
-      }, 'image/png');
+      // Download / compartir
+      await saveCanvasImage(trimmedCanvas, 'dia-internacional-mujer-2026.png', 'ARCANA');
+      toast.success('Imagen lista');
     } catch (err) {
       console.error(err);
       toast.error('Error al generar la imagen');

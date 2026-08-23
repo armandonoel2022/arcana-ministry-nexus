@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveAssetUrl } from "@/utils/assetUrl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1281,7 +1282,7 @@ export const ChatRoom = ({ room, onBack, onStartDirectChat }: ChatRoomProps) => 
                               <div className="flex items-center gap-2 mb-2">
                                 {action.coverImageUrl ? (
                                   <img
-                                    src={action.coverImageUrl}
+                                    src={resolveAssetUrl(action.coverImageUrl)}
                                     alt={action.songName}
                                     className="w-10 h-10 rounded object-cover flex-shrink-0"
                                   />
