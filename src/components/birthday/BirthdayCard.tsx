@@ -6,6 +6,7 @@ import { Download } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
 import ConfettiEffect from './ConfettiEffect';
+import { saveCanvasImage } from '@/utils/saveImage';
 
 interface Member {
   id: string;
@@ -117,10 +118,7 @@ const BirthdayCard: React.FC<BirthdayCardProps> = ({ member, onDownload }) => {
       });
 
       // Crear enlace de descarga
-      const link = document.createElement('a');
-      link.download = `cumpleanos-${member.nombres.toLowerCase()}-${member.apellidos.toLowerCase()}.png`;
-      link.href = canvas.toDataURL('image/png', 1.0);
-      link.click();
+      await saveCanvasImage(canvas, `cumpleanos-${member.nombres.toLowerCase()}-${member.apellidos.toLowerCase()}.png`, 'ARCANA');
 
       toast({
         title: "¡Descarga exitosa!",

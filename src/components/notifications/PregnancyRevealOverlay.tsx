@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
+import { saveCanvasImage } from '@/utils/saveImage';
 
 interface PregnancyRevealOverlayProps {
   parentNames: string;
@@ -66,12 +67,9 @@ const PregnancyRevealOverlay = ({
         allowTaint: true,
       });
       
-      const link = document.createElement('a');
-      link.download = `revelacion-embarazo-${parentNames.replace(/\s+/g, '-').toLowerCase()}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
+      await saveCanvasImage(canvas, `revelacion-embarazo-${parentNames.replace(/\s+/g, '-').toLowerCase()}.png`, 'ARCANA');
       
-      toast.success('Imagen descargada exitosamente');
+      toast.success('Imagen lista');
     } catch (error) {
       console.error('Error downloading image:', error);
       toast.error('Error al descargar la imagen');

@@ -17,6 +17,7 @@ import { format, parseISO, isWithinInterval } from "date-fns";
 import { es } from "date-fns/locale";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
+import { saveCanvasImage } from '@/utils/saveImage';
 
 interface QuarantineServiceOverlayProps {
   forceShow?: boolean;
@@ -133,12 +134,9 @@ const QuarantineServiceOverlay: React.FC<QuarantineServiceOverlayProps> = ({
         ? format(nextService.date, "yyyy-MM-dd")
         : "cuarentena";
       
-      const link = document.createElement('a');
-      link.download = `servicio-cuarentena-${dateStr}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
+      await saveCanvasImage(canvas, `servicio-cuarentena-${dateStr}.png`, 'ARCANA');
       
-      toast.success('Imagen descargada exitosamente');
+      toast.success('Imagen lista');
     } catch (error) {
       console.error('Error downloading image:', error);
       toast.error('Error al descargar la imagen');

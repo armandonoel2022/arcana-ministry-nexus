@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
+import { saveCanvasImage } from '@/utils/saveImage';
 
 interface BirthAnnouncementOverlayProps {
   babyName?: string;
@@ -74,15 +75,12 @@ const BirthAnnouncementOverlay = ({
         allowTaint: true,
       });
       
-      const link = document.createElement('a');
       const fileName = babyName 
         ? `nacimiento-${babyName.replace(/\s+/g, '-').toLowerCase()}.png`
         : `nacimiento-${parentNames.replace(/\s+/g, '-').toLowerCase()}.png`;
-      link.download = fileName;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
+      await saveCanvasImage(canvas, fileName, 'ARCANA');
       
-      toast.success('Imagen descargada exitosamente');
+      toast.success('Imagen lista');
     } catch (error) {
       console.error('Error downloading image:', error);
       toast.error('Error al descargar la imagen');
