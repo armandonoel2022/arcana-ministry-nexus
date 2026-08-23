@@ -6,6 +6,7 @@ import { es } from 'date-fns/locale';
 import html2canvas from 'html2canvas';
 import arcanaLogo from '@/assets/arca-noe-logo.png';
 import {
+import { saveImageDataUrl } from '@/utils/saveImage';
   MemberLeave,
   LEAVE_TYPE_LABELS,
 } from '@/hooks/useMemberLeaves';
@@ -138,12 +139,12 @@ const LeaveNotificationOverlay: React.FC<LeaveNotificationOverlayProps> = ({
     const blob = await generateImage();
     if (!blob) return;
 
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `licencia-${getMemberFullName().replace(/\s+/g, '-').toLowerCase()}.png`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const dataUrl = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob as Blob);
+    });
+    await saveImageDataUrl(dataUrl, `licencia-${getMemberFullName().replace(/\s+/g, '-').toLowerCase()}.png`, 'ARCANA');
   };
 
   const handleShare = async () => {

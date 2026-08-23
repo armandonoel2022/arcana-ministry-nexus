@@ -216,12 +216,9 @@ const ExtraordinaryRehearsalOverlay = ({
       });
       document.body.removeChild(container);
 
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-      }, "image/png");
       await saveCanvasImage(canvas, `ensayo-extraordinario-${date}.png`, 'ARCANA');
 
-      toast({ title: "Imagen descargada" });
+      toast({ title: "Imagen lista" });
     } catch (error) {
       console.error("Error downloading image:", error);
       toast({ title: "Error al descargar", variant: "destructive" });

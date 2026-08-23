@@ -159,9 +159,8 @@ const WomensDayOverlay: React.FC<WomensDayOverlayProps> = ({ onClose }) => {
       const trimCtx = trimmedCanvas.getContext('2d')!;
       trimCtx.drawImage(canvas, 0, 0);
 
-      // Download
-      trimmedCanvas.toBlob((blob) => {
-      await saveCanvasImage(canvas, 'dia-internacional-mujer-2026.png', 'ARCANA');
+      // Download / compartir
+      await saveCanvasImage(trimmedCanvas, 'dia-internacional-mujer-2026.png', 'ARCANA');
       toast.success('Imagen lista');
     } catch (err) {
       console.error(err);
