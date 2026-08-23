@@ -1600,31 +1600,11 @@ const ServiceNotificationOverlay = ({
         ? `cuarentena_${format(parseServiceDate(service.service_date), "yyyy-MM-dd")}.png`
         : `${serviceTitle.replace(/[^a-z0-9]/gi, "_").toLowerCase()}_${new Date().getTime()}.png`;
 
-      await new Promise<void>((resolve, reject) => {
-        visibleCanvas.toBlob((blob) => {
-          if (!blob) {
-            reject(new Error("No se pudo generar la imagen"));
-            return;
-          }
+      await saveCanvasImage(visibleCanvas, visibleFilename, serviceTitle);
 
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = visibleFilename;
-          link.style.display = "none";
-          document.body.appendChild(link);
-          link.click();
-
-          setTimeout(() => {
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            resolve();
-          }, 100);
-        }, "image/png", 1.0);
-      });
-
-      toast.success("Imagen descargada exitosamente");
+      toast.success("Imagen lista");
       return;
+
 
     } catch (error) {
       console.error("Error downloading service image:", error);
