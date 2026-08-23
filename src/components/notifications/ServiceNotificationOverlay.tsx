@@ -48,6 +48,7 @@ const parseServiceDate = (dateString: string): Date => {
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
+import { saveCanvasImage } from "@/utils/saveImage";
 import { createBroadcastNotification } from "@/services/notificationService";
 
 interface WeekendService {
