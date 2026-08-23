@@ -1,0 +1,2 @@
+select cron.alter_job((select jobid from cron.job where jobname='daily-birthday-notifications'), schedule => '30 11 * * *');
+select cron.alter_job((select jobid from cron.job where jobname='monthly-birthday-notifications'), schedule => '0 12 1 * *');
