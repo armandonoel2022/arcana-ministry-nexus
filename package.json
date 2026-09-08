@@ -8,7 +8,9 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "ios:config": "node scripts/apply-ios-config.mjs",
+    "ios:prepare": "vite build && node scripts/apply-ios-config.mjs && npx cap sync ios"
   },
   "dependencies": {
     "@11labs/react": "^0.2.0",
