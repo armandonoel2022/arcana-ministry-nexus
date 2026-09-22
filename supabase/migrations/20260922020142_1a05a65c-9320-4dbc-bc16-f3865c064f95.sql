@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.validate_poll_open() FROM PUBLIC, anon, authenticated;
