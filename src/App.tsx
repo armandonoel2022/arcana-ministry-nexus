@@ -59,6 +59,7 @@ import { PendingSongNotifications } from "./components/songs/PendingSongNotifica
 import { SwipeIndicator } from "./components/SwipeIndicator";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { BackgroundSyncProvider } from "./components/BackgroundSyncProvider";
+import PollActivityNotice from "./components/polls/PollActivityNotice";
 
 import { useNativeNotificationSync } from "./hooks/useNativeNotificationSync";
 import { usePushRegistration } from "./hooks/usePushRegistration";
@@ -191,6 +192,7 @@ function AppContent() {
                 <SwipeIndicator />
                 {/* OverlayManager dentro de la zona protegida para acceder al usuario */}
                 <OverlayManager />
+                <PollActivityNotice />
                 <OfflineIndicator />
                 <div className="flex h-screen w-full bg-gray-50 pt-0">
                   <AppSidebar />
