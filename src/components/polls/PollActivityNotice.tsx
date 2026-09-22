@@ -27,7 +27,7 @@ interface NoticeContent {
   isDemo?: boolean;
 }
 
-const DEMO_KEY = "arcana_poll_notice_demo_v1";
+const DEMO_KEY = "arcana_poll_notice_demo_v2";
 const REMINDER_PREFIX = "arcana_poll_reminder";
 const DEMO_POLL: NoticeContent = {
   isDemo: true,
