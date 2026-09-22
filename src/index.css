@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes poll-results-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.poll-results-ticker {
+  display: flex;
+  width: max-content;
+  animation: poll-results-marquee 15s linear infinite;
+}
+
+.poll-results-ticker > span {
+  padding-right: 3rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poll-results-ticker {
+    animation: none;
+    width: auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .poll-results-ticker > span[aria-hidden="true"] {
+    display: none;
+  }
+}
+
 /* ESTILOS CRÍTICOS PARA iOS */
 html, body {
   margin: 0;
