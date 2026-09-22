@@ -221,6 +221,8 @@ function AppContent() {
                         
                         <Route path="/inventario" element={<Inventory />} />
                         <Route path="/finanzas" element={<Finance />} />
+                        <Route path="/encuestas" element={<Polls />} />
+                        <Route path="/votaciones" element={<Votings />} />
                         <Route path="/scheduled-notifications" element={<ScheduledNotifications />} />
                         <Route path="/settings" element={<Settings />} />
                         <Route path="/about" element={<AboutMinistry />} />
