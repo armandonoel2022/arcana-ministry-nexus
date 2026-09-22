@@ -63,6 +63,13 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
+				// Gold accent for high-visibility highlights
+				gold: {
+					DEFAULT: 'hsl(var(--gold) / <alpha-value>)',
+					foreground: 'hsl(var(--gold-foreground))',
+					glow: 'hsl(var(--gold-glow))',
+					dark: 'hsl(var(--gold-dark))',
+				},
 				// Modern blue palette inspired by the design
 				'modern-blue': {
 					50: 'hsl(var(--modern-blue-50))',

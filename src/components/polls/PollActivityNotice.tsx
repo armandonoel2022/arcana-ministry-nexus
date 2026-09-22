@@ -27,7 +27,7 @@ interface NoticeContent {
   isDemo?: boolean;
 }
 
-const DEMO_KEY = "arcana_poll_notice_demo_v2";
+const DEMO_KEY = "arcana_poll_notice_demo_v3";
 const REMINDER_PREFIX = "arcana_poll_reminder";
 const DEMO_POLL: NoticeContent = {
   isDemo: true,
@@ -237,13 +237,13 @@ export default function PollActivityNotice() {
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[80] pb-[env(safe-area-inset-bottom)]">
       <div className="pointer-events-auto mx-auto w-full max-w-2xl px-3 pb-3 animate-slide-in-right">
-        <div className="overflow-hidden rounded-lg border border-primary-glow/40 bg-primary text-primary-foreground shadow-elegant">
+        <div className="overflow-hidden rounded-lg border border-gold-dark/40 bg-gradient-to-r from-gold to-gold-glow text-gold-foreground shadow-lg shadow-gold-dark/25">
           <div className="flex items-center gap-3 px-3 py-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary-glow/20">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gold-foreground/15">
               <Icon className="h-5 w-5" aria-hidden="true" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-semibold uppercase tracking-normal text-primary-foreground/70">
+              <p className="text-[10px] font-semibold uppercase tracking-normal text-gold-foreground/80">
                 {content.isDemo ? "Demostración · " : "Nueva · "}
                 {isVoting ? "Votación" : "Encuesta"}
               </p>
@@ -252,7 +252,7 @@ export default function PollActivityNotice() {
             <Button
               size="sm"
               variant="secondary"
-              className="h-8 shrink-0 px-2"
+              className="h-8 shrink-0 border-0 bg-gold-foreground text-gold hover:bg-gold-foreground/90"
               onClick={() => {
                 dismiss();
                 navigate(destination);
@@ -263,15 +263,15 @@ export default function PollActivityNotice() {
             <Button
               size="icon"
               variant="ghost"
-              className="h-8 w-8 shrink-0 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+              className="h-8 w-8 shrink-0 text-gold-foreground hover:bg-gold-foreground/10 hover:text-gold-foreground"
               aria-label="Cerrar aviso"
               onClick={dismiss}
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <div className="border-t border-primary-foreground/15 bg-primary-glow/15 py-2">
-            <div className="poll-results-ticker whitespace-nowrap text-xs font-medium">
+          <div className="border-t border-gold-foreground/20 bg-gold-dark/20 py-2">
+            <div className="poll-results-ticker whitespace-nowrap text-xs font-semibold text-gold-foreground">
               <span>{resultText} &nbsp; • &nbsp; {totalVotes} votos en total</span>
               <span aria-hidden="true">{resultText} &nbsp; • &nbsp; {totalVotes} votos en total</span>
             </div>

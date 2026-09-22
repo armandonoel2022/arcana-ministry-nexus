@@ -174,6 +174,12 @@ p, h1, h2, h3, h4, h5, h6 {
     --sidebar-border: 220 60% 28%;
     --sidebar-ring: 214 100% 56%;
     --sidebar-muted-foreground: 214 30% 75%;
+
+    /* Gold accent — high-visibility highlights */
+    --gold: 45 100% 51%;
+    --gold-foreground: 220 75% 15%;
+    --gold-glow: 43 100% 60%;
+    --gold-dark: 38 90% 30%;
   }
 
   .dark {
@@ -216,6 +222,12 @@ p, h1, h2, h3, h4, h5, h6 {
     --sidebar-border: 220 45% 20%;
     --sidebar-ring: 214 100% 62%;
     --sidebar-muted-foreground: 214 25% 65%;
+
+    /* Gold accent — high-visibility highlights (dark mode) */
+    --gold: 45 100% 55%;
+    --gold-foreground: 222 60% 10%;
+    --gold-glow: 43 100% 65%;
+    --gold-dark: 38 85% 35%;
   }
 
 }
