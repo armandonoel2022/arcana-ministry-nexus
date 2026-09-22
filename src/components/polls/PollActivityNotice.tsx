@@ -79,6 +79,7 @@ export default function PollActivityNotice() {
   const [visible, setVisible] = useState(false);
   const dismissalTimer = useRef<number | null>(null);
   const demoPending = useRef(false);
+  const visibleContent = useRef<NoticeContent | null>(null);
 
   const clearDismissalTimer = useCallback(() => {
     if (dismissalTimer.current !== null) {
@@ -89,31 +90,34 @@ export default function PollActivityNotice() {
 
   const dismiss = useCallback(() => {
     clearDismissalTimer();
+    visibleContent.current = null;
     setVisible(false);
   }, [clearDismissalTimer]);
 
   const show = useCallback((next: NoticeContent) => {
     clearDismissalTimer();
+    visibleContent.current = next;
     setContent(next);
     setVisible(true);
     dismissalTimer.current = window.setTimeout(() => setVisible(false), 15_000);
   }, [clearDismissalTimer]);
 
   const refreshVisibleResults = useCallback(async () => {
-    if (!content || content.isDemo) return;
+    const currentContent = visibleContent.current;
+    if (!currentContent || currentContent.isDemo) return;
     const [{ data: optionRows }, { data: voteRows }] = await Promise.all([
       supabase
         .from("poll_options")
         .select("id, label")
-        .eq("poll_id", content.poll.id)
+        .eq("poll_id", currentContent.poll.id)
         .order("sort_order", { ascending: true }),
-      supabase.from("poll_votes").select("option_id").eq("poll_id", content.poll.id),
+      supabase.from("poll_votes").select("option_id").eq("poll_id", currentContent.poll.id),
     ]);
     const totals = new Map<string, number>();
     (voteRows || []).forEach((vote) => {
       totals.set(vote.option_id, (totals.get(vote.option_id) || 0) + 1);
     });
-    setContent((current) => current ? {
+    setContent((current) => current && current.poll.id === currentContent.poll.id ? {
       ...current,
       results: (optionRows || []).map((option) => ({
         id: option.id,
@@ -121,7 +125,7 @@ export default function PollActivityNotice() {
         votes: totals.get(option.id) || 0,
       })),
     } : current);
-  }, [content]);
+  }, []);
 
   const checkForNotice = useCallback(async () => {
     if (!user?.id || demoPending.current) return;
