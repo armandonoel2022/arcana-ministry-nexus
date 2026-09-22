@@ -99,6 +99,30 @@ export default function PollActivityNotice() {
     dismissalTimer.current = window.setTimeout(() => setVisible(false), 15_000);
   }, [clearDismissalTimer]);
 
+  const refreshVisibleResults = useCallback(async () => {
+    if (!content || content.isDemo) return;
+    const [{ data: optionRows }, { data: voteRows }] = await Promise.all([
+      supabase
+        .from("poll_options")
+        .select("id, label")
+        .eq("poll_id", content.poll.id)
+        .order("sort_order", { ascending: true }),
+      supabase.from("poll_votes").select("option_id").eq("poll_id", content.poll.id),
+    ]);
+    const totals = new Map<string, number>();
+    (voteRows || []).forEach((vote) => {
+      totals.set(vote.option_id, (totals.get(vote.option_id) || 0) + 1);
+    });
+    setContent((current) => current ? {
+      ...current,
+      results: (optionRows || []).map((option) => ({
+        id: option.id,
+        label: option.label,
+        votes: totals.get(option.id) || 0,
+      })),
+    } : current);
+  }, [content]);
+
   const checkForNotice = useCallback(async () => {
     if (!user?.id || demoPending.current) return;
 
@@ -174,7 +198,10 @@ export default function PollActivityNotice() {
     const channel = supabase
       .channel(`poll-activity-${user?.id || "guest"}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "polls" }, checkForNotice)
-      .on("postgres_changes", { event: "*", schema: "public", table: "poll_votes" }, checkForNotice)
+      .on("postgres_changes", { event: "*", schema: "public", table: "poll_votes" }, () => {
+        checkForNotice();
+        refreshVisibleResults();
+      })
       .subscribe();
 
     return () => {
@@ -182,7 +209,7 @@ export default function PollActivityNotice() {
       clearDismissalTimer();
       supabase.removeChannel(channel);
     };
-  }, [checkForNotice, clearDismissalTimer, user?.id]);
+  }, [checkForNotice, clearDismissalTimer, refreshVisibleResults, user?.id]);
 
   const totalVotes = useMemo(
     () => content?.results.reduce((sum, result) => sum + result.votes, 0) || 0,
