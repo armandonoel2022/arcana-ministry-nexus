@@ -34,6 +34,8 @@ import PersonalAssistant from "./pages/PersonalAssistant";
 import MiOutfit from "./pages/MiOutfit";
 import Inventory from "./pages/Inventory";
 import Finance from "./pages/Finance";
+import Polls from "./pages/Polls";
+import Votings from "./pages/Votings";
 
 import ScheduledNotifications from "./pages/ScheduledNotifications";
 import Settings from "./pages/Settings";
@@ -219,6 +221,8 @@ function AppContent() {
                         
                         <Route path="/inventario" element={<Inventory />} />
                         <Route path="/finanzas" element={<Finance />} />
+                        <Route path="/encuestas" element={<Polls />} />
+                        <Route path="/votaciones" element={<Votings />} />
                         <Route path="/scheduled-notifications" element={<ScheduledNotifications />} />
                         <Route path="/settings" element={<Settings />} />
                         <Route path="/about" element={<AboutMinistry />} />
