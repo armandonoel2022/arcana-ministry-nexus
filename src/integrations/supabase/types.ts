@@ -2005,6 +2005,163 @@ export type Database = {
         }
         Relationships: []
       }
+      poll_options: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          label: string
+          member_id: string | null
+          photo_url: string | null
+          poll_id: string
+          sort_order: number
+          style: string | null
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          label: string
+          member_id?: string | null
+          photo_url?: string | null
+          poll_id: string
+          sort_order?: number
+          style?: string | null
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          label?: string
+          member_id?: string | null
+          photo_url?: string | null
+          poll_id?: string
+          sort_order?: number
+          style?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_options_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      poll_participants: {
+        Row: {
+          created_at: string
+          id: string
+          poll_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          poll_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          poll_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_participants_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      poll_votes: {
+        Row: {
+          created_at: string
+          id: string
+          option_id: string
+          poll_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          option_id: string
+          poll_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          option_id?: string
+          poll_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_votes_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "poll_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      polls: {
+        Row: {
+          category: string | null
+          closes_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          kind: Database["public"]["Enums"]["poll_kind"]
+          multiple_choice: boolean
+          position_title: string | null
+          status: Database["public"]["Enums"]["poll_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          closes_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["poll_kind"]
+          multiple_choice?: boolean
+          position_title?: string | null
+          status?: Database["public"]["Enums"]["poll_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          closes_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["poll_kind"]
+          multiple_choice?: boolean
+          position_title?: string | null
+          status?: Database["public"]["Enums"]["poll_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null
@@ -3800,6 +3957,8 @@ export type Database = {
         | "pregnancy_reveal"
         | "birth_announcement"
         | "voice_replacement"
+      poll_kind: "encuesta" | "votacion"
+      poll_status: "open" | "closed"
       replacement_category: "voice" | "musician" | "multimedia"
       replacement_status: "pending" | "approved" | "rejected" | "completed"
       song_knowledge: "unknown" | "learning" | "known" | "expert"
@@ -4068,6 +4227,8 @@ export const Constants = {
         "birth_announcement",
         "voice_replacement",
       ],
+      poll_kind: ["encuesta", "votacion"],
+      poll_status: ["open", "closed"],
       replacement_category: ["voice", "musician", "multimedia"],
       replacement_status: ["pending", "approved", "rejected", "completed"],
       song_knowledge: ["unknown", "learning", "known", "expert"],
