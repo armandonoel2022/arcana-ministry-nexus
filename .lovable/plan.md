@@ -1,69 +1,63 @@
+# Encuestas y Votaciones
 
-# Nuevos módulos: Inventario y Finanzas
+Dos módulos nuevos, anónimos, con creación/edición exclusiva para administradores y resultados visibles para todos.
 
-Dos módulos nuevos, ambos con control por rol (admin/líder de departamento) y visibilidad segmentada por departamento.
+## 1. Encuestas — `/encuestas`
 
-## 1. Módulo Inventario
+Categorías fijas:
+- Lugares para viajes
+- Vestimenta para coristas
+- Vestimenta para músicos
+- Vestimenta para danzarinas
+- Vestimenta para encargados de piso
+- Vestimenta para camarógrafos
 
-Ruta: `/inventario` (categoría "Ministerio")
+Cada encuesta tiene: título, descripción, categoría, fecha de cierre, estado (abierta/cerrada) y una lista de opciones.
 
-**Departamentos (categorías fijas)**
-- Voces y Sonido (micrófonos, in-ears, monitores, cables, power cords, consolas, tablets, bocinas, plantas de bajo, etc.)
-- Instrumentos musicales (piano, guitarras, batería, viento, pedales, atriles, etc.)
-- Multimedia (computadoras, cámaras, luces, proyectores, etc.)
-- Danza (panderos, streamers, abanicos, banderas, mantos, aros de lluvia, hoop de gloria, alas, etc.)
+Cada opción puede incluir:
+- Texto (ej. "Punta Cana", "Traje azul marino")
+- Estilo (texto libre: formal, casual, túnica…)
+- Color (selector de color + nombre)
+- Foto opcional (bucket `poll-photos`)
 
-**Por cada ítem**
-- Nombre, tipo/subcategoría (texto libre), foto (bucket público `inventory-photos`)
-- Estado: `in_stock` | `assigned` | `loaned` | `damaged` | `retired`
-- Asignado a: miembro (fk `members`) o líder o "stock" o "prestado a: <texto>"
-- Fecha adquisición, costo, vida útil (meses) → depreciación calculada
-- Notas
-- Botón "Solicitar reemplazo/reparación" → crea notificación a administradores
+Selección simple o múltiple (lo define el administrador al crear).
 
-**Tablas**
-- `inventory_items`: department, subcategory, name, photo_url, status, assigned_member_id, loaned_to, acquisition_date, acquisition_cost, useful_life_months, notes, created_by
-- `inventory_replacement_requests`: item_id, requested_by, reason, priority, status (pending/approved/rejected/completed), admin_response
+Vista del integrante: tarjetas por categoría, votar una vez, y ver barras de progreso con porcentaje y total de votos. Tras cerrar, se marca el ganador.
 
-**Permisos**
-- Admin: todo
-- Líder de departamento: ve y edita solo su departamento
-- Miembro: solo lectura de lo asignado a él
+## 2. Votaciones — `/votaciones`
 
-## 2. Módulo Finanzas
+Elección de integrantes para un cargo. El campo cargo es escribible: se elige de los cargos ya usados o se escribe uno nuevo.
 
-Ruta: `/finanzas` (categoría "Administración Avanzada")
+Cada votación tiene: cargo, descripción, fecha de cierre, estado, y candidatos tomados de `members` (con foto y nombre). Un voto por persona.
 
-**Ingresos**
-- Ofrendas / donaciones con fecha, monto, método (`efectivo` | `transferencia` | `electronico`), descripción, donante (opcional)
+Resultados en tiempo real con barras, conteo y ganador al cerrar.
 
-**Actividades / campañas de recaudación**
-- Título (ej. "Campamento 2026"), meta, fecha límite
-- Alcance: `todos` | `sin_directiva` | `por_grupo` (worship_group) | `por_departamento`
-- Contribuciones por miembro (abonos incrementales), progreso vs meta
-- Visibilidad: solo admins + líder del grupo/departamento asignado
+## Anonimato
 
-**Tablas**
-- `finance_income`: date, amount, method, description, donor, category
-- `finance_campaigns`: title, goal_amount, deadline, scope, group_id, department, visible_to (array de user_ids opcional), created_by
-- `finance_contributions`: campaign_id, member_id, amount, date, note, recorded_by
+Los votos se guardan en tablas separadas del registro de participación:
+- La tabla de votos guarda solo `poll_id` + `option_id` (sin usuario).
+- Una tabla aparte `poll_participants` guarda `poll_id` + `user_id` solo para impedir votar dos veces.
 
-**Permisos**
-- Admin: todo
-- Líder: solo campañas de su grupo/departamento
-- Miembros: pueden ver monto propio aportado en campañas donde participan (opcional)
+Así nadie —ni un administrador— puede reconstruir quién votó qué.
+
+## Base de datos
+
+- `polls`: title, description, category, kind (`encuesta` | `votacion`), position_title, multiple_choice, closes_at, status, created_by
+- `poll_options`: poll_id, label, style, color, photo_url, member_id, sort_order
+- `poll_votes`: poll_id, option_id (anónimo)
+- `poll_participants`: poll_id, user_id (único por encuesta)
+
+Reglas de acceso:
+- Todos los autenticados ven encuestas y resultados.
+- Solo administradores crean, editan, cierran o eliminan.
+- Registrar un voto valida por trigger que la encuesta esté abierta y no vencida.
+- Nadie puede leer `poll_participants` de otros.
+
+Cierre automático: al cargar la pantalla se marcan como cerradas las que ya pasaron su fecha; además un trigger bloquea votos vencidos.
 
 ## Detalles técnicos
 
-- Storage bucket público `inventory-photos` (compresión al subir, ya tenemos patrón en `MiOutfit`)
-- Cálculo de depreciación en frontend: `valor_actual = costo * max(0, 1 - meses_transcurridos/vida_util)`
-- Nuevas rutas registradas en `App.tsx` y entradas en `screen_permissions` para que aparezcan en el sidebar según rol
-- Filtro por departamento con tabs y grid tipo card con foto grande
-- Exportación CSV de ambos módulos (patrón ya usado en repertorio)
-
-## Confirmaciones antes de construir
-
-1. ¿Los "líderes de departamento" son los mismos `lider` del sistema de roles actuales, o hay que crear un mapping departamento→líder?
-2. Para finanzas ¿quieres que los miembros vean el progreso global de la campaña o solo lo que ellos han aportado?
-3. ¿Adjuntar comprobantes de pago (foto) en ofrendas/contribuciones?
-4. ¿Empiezo por Inventario y luego Finanzas, o los hago en paralelo en una sola tanda?
+- Nuevas rutas en `App.tsx` y filas en `screen_permissions` para que aparezcan en el menú lateral (categoría "Ministerio").
+- Componentes: `src/pages/Polls.tsx`, `src/pages/Votings.tsx`, más `PollCard`, `PollForm`, `PollResults` en `src/components/polls/`.
+- Fotos con la misma compresión ya usada en Mi Outfit e Inventario.
+- Paleta navy/azul eléctrico de la app; fechas parseadas al mediodía local.
