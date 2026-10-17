@@ -24,13 +24,13 @@ const isNative = Capacitor.isNativePlatform();
 // Dynamic import for native biometric plugin
 let NativeBiometric: any = null;
 
-if (isNative) {
-  import('@capgo/capacitor-native-biometric').then(module => {
-    NativeBiometric = module.NativeBiometric;
-  }).catch(err => {
-    console.log('Native biometric plugin not available:', err);
-  });
-}
+const nativeBiometricReady: Promise<void> = isNative
+  ? import('@capgo/capacitor-native-biometric').then(module => {
+      NativeBiometric = module.NativeBiometric;
+    }).catch(err => {
+      console.log('Native biometric plugin not available:', err);
+    })
+  : Promise.resolve();
 
 export type BiometricType = 'none' | 'fingerprint' | 'face' | 'iris' | 'multiple';
 
@@ -181,11 +181,13 @@ export function useNativeBiometric() {
 
   // Initialize on mount
   useEffect(() => {
-    // Wait for NativeBiometric to be loaded
-    const timer = setTimeout(() => {
-      checkAvailability();
-    }, 100);
-    return () => clearTimeout(timer);
+    // Esperar a que el plugin termine de cargar (antes un timeout de 100ms
+    // a veces llegaba antes y marcaba Face ID como "no disponible")
+    let cancelled = false;
+    nativeBiometricReady.then(() => {
+      if (!cancelled) checkAvailability();
+    });
+    return () => { cancelled = true; };
   }, [checkAvailability]);
 
   return {
