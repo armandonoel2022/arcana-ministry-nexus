@@ -290,7 +290,7 @@ export const useNativeNotificationSync = () => {
           window.dispatchEvent(
             new CustomEvent("showOverlay", {
               detail: {
-                id: extra.notificationId || `native-${Date.now()}`,
+                id: `notification-click-${extra.notificationId || Date.now()}`,
                 type: extra.type,
                 title: extra.title || "",
                 message: extra.message || "",
