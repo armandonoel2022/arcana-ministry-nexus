@@ -234,7 +234,7 @@ export const usePushNotifications = () => {
         // User tapped on push notification
         await PushNotifications.addListener('pushNotificationActionPerformed', (action: any) => {
           console.log('📱 [PushNotifications] Push action performed:', action);
-          handlePushAction(action);
+          // Tap handling lives in usePushTapHandler (mounted globally)
         });
 
         console.log('📱 [PushNotifications] Native listeners set up');

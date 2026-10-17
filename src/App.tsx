@@ -1,3 +1,4 @@
+import { usePushTapHandler } from "@/hooks/usePushTapHandler";
 import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -108,6 +109,7 @@ function SidebarLayout() {
 function PushServicesInitializer() {
   // Registrar dispositivo para push notifications (se ejecuta solo cuando hay usuario autenticado)
   usePushRegistration();
+  usePushTapHandler();
   // Activar sincronización de notificaciones nativas iOS
   useNativeNotificationSync();
   return null;

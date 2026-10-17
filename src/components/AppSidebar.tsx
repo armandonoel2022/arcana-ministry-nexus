@@ -99,8 +99,10 @@ const HIDDEN_FROM_SIDEBAR = new Set([
 ]);
 
 // Hierarchical sidebar sections (client-side grouping, independent of DB categories)
+// Always visible at the top, never inside a collapsible section
+const PINNED_PATHS = ['/', '/notificaciones'];
+
 const SECTIONS: { label: string; paths: string[]; defaultOpen: boolean }[] = [
-  { label: 'Principal', paths: ['/', '/notificaciones'], defaultOpen: true },
   { label: 'Ministerio', paths: ['/rehearsals', '/ensayos', '/eventos-especiales', '/eventos'], defaultOpen: true },
   { label: 'Participa', paths: ['/encuestas', '/votaciones'], defaultOpen: true },
   { label: 'Mi espacio', paths: ['/spiritual', '/espiritual', '/personal-assistant', '/asistente', '/mi-outfit'], defaultOpen: false },
@@ -121,7 +123,7 @@ export function AppSidebar() {
   }
 
   type Perm = typeof permissions[number];
-  const visible = permissions.filter(p => p.can_view && !HIDDEN_FROM_SIDEBAR.has(p.screen_path));
+  const visible = permissions.filter(p => p.can_view && !HIDDEN_FROM_SIDEBAR.has(p.screen_path) && !PINNED_PATHS.includes(p.screen_path));
   const used = new Set<string>();
   const toItem = (p: Perm) => ({
     title: p.screen_path === '/' ? 'Inicio' : p.screen_name,
@@ -201,7 +203,34 @@ export function AppSidebar() {
               </SidebarGroupContent>
             </SidebarGroup>
           ) : (
-            groupedPermissions.map((category) => (
+            <>
+            <SidebarGroup className="px-3 pt-3 pb-1">
+              <SidebarGroupContent>
+                <SidebarMenu className="space-y-1">
+                  {[{ title: 'Inicio', url: '/', icon: Home }, { title: 'Notificaciones', url: '/notificaciones', icon: Bell }].map((item) => (
+                    <SidebarMenuItem key={item.url}>
+                      <SidebarMenuButton
+                        asChild
+                        className="h-11 rounded-lg hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200 data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:shadow-lg"
+                        data-active={location.pathname === item.url}
+                      >
+                        <Link to={item.url} className="flex items-center gap-3 px-3" onClick={handleLinkClick}>
+                          <item.icon className="w-5 h-5" />
+                          <span className="font-semibold text-sm">{item.title}</span>
+                          {item.url === '/notificaciones' && unreadCount > 0 && (
+                            <span className="ml-auto bg-destructive text-destructive-foreground text-xs rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center font-bold">
+                              {unreadCount > 99 ? "99+" : unreadCount}
+                            </span>
+                          )}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+            <div className="mx-4 my-1 border-t border-sidebar-border/60" />
+            {groupedPermissions.map((category) => (
               <Collapsible
                 key={category.label}
                 defaultOpen={category.defaultOpen || category.items.some(i => i.url === location.pathname)}
@@ -251,7 +280,8 @@ export function AppSidebar() {
                 </CollapsibleContent>
               </SidebarGroup>
               </Collapsible>
-            ))
+            ))}
+            </>
           )}
         </div>
         
