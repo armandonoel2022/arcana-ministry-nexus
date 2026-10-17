@@ -25,8 +25,10 @@ import {
   TestTube,
   Shirt,
   Package,
-  DollarSign
+  DollarSign,
+  ChevronDown
 } from "lucide-react"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
 import {
   Sidebar,
@@ -89,14 +91,21 @@ const iconMap: Record<string, LucideIcon> = {
   '/finanzas': DollarSign,
 };
 
-// Category order for display
-const categoryOrder = [
-  'Principal',
-  'Ministerio',
-  'Comunidad',
-  'Personal',
-  'Configuración',
-  'Administración Avanzada'
+// Screens already reachable from the Home dashboard — hidden from the sidebar to avoid redundancy
+const HIDDEN_FROM_SIDEBAR = new Set([
+  '/agenda', '/repertorio', '/director-replacements', '/reemplazos',
+  '/communication', '/comunicacion', '/cumpleanos', '/recomendaciones',
+  '/integrantes', '/worship-groups', '/grupos',
+]);
+
+// Hierarchical sidebar sections (client-side grouping, independent of DB categories)
+const SECTIONS: { label: string; paths: string[]; defaultOpen: boolean }[] = [
+  { label: 'Principal', paths: ['/', '/notificaciones'], defaultOpen: true },
+  { label: 'Ministerio', paths: ['/rehearsals', '/ensayos', '/eventos-especiales', '/eventos'], defaultOpen: true },
+  { label: 'Participa', paths: ['/encuestas', '/votaciones'], defaultOpen: true },
+  { label: 'Mi espacio', paths: ['/spiritual', '/espiritual', '/personal-assistant', '/asistente', '/mi-outfit'], defaultOpen: false },
+  { label: 'Gestión', paths: ['/inventario', '/finanzas', '/scheduled-notifications', '/notificaciones-programadas', '/admin', '/pruebas-notificaciones'], defaultOpen: false },
+  { label: 'Ministerio e info', paths: ['/about', '/acerca', '/statutes', '/estatutos', '/settings', '/configuracion'], defaultOpen: false },
 ];
 
 export function AppSidebar() {
@@ -104,29 +113,32 @@ export function AppSidebar() {
   const location = useLocation()
   const unreadCount = useUnreadNotifications()
   const { signOut, user, userProfile } = useAuth()
-  const { permissions, isAdmin, isLoading } = usePermissions()
+  const { permissions, isLoading } = usePermissions()
   const isCollapsed = state === "collapsed"
-  
+
   const handleLinkClick = () => {
-    // Close sidebar when a link is clicked (both mobile and desktop)
     setOpen(false)
   }
 
-  // Group permissions by category
-  const groupedPermissions = categoryOrder.map(category => {
-    const items = permissions
-      .filter(p => p.screen_category === category && p.can_view)
-      .map(p => ({
-        title: p.screen_name,
-        url: p.screen_path,
-        icon: iconMap[p.screen_path] || Settings,
-      }));
-    
-    return {
-      label: category,
-      items,
-    };
-  }).filter(group => group.items.length > 0);
+  type Perm = typeof permissions[number];
+  const visible = permissions.filter(p => p.can_view && !HIDDEN_FROM_SIDEBAR.has(p.screen_path));
+  const used = new Set<string>();
+  const toItem = (p: Perm) => ({
+    title: p.screen_path === '/' ? 'Inicio' : p.screen_name,
+    url: p.screen_path,
+    icon: iconMap[p.screen_path] || Settings,
+  });
+  const sections = SECTIONS.map(section => ({
+    label: section.label,
+    defaultOpen: section.defaultOpen,
+    items: section.paths
+      .map(path => visible.find(p => p.screen_path === path))
+      .filter((p): p is Perm => !!p)
+      .map(p => { used.add(p.screen_path); return toItem(p); }),
+  }));
+  const leftovers = visible.filter(p => !used.has(p.screen_path)).map(toItem);
+  if (leftovers.length) sections.push({ label: 'Otros', defaultOpen: false, items: leftovers });
+  const groupedPermissions = sections.filter(g => g.items.length > 0);
 
   return (
     <Sidebar className="border-r-0 shadow-2xl" collapsible="icon">
@@ -190,10 +202,22 @@ export function AppSidebar() {
             </SidebarGroup>
           ) : (
             groupedPermissions.map((category) => (
-              <SidebarGroup key={category.label} className="px-3 py-2">
-                <SidebarGroupLabel className="text-xs uppercase tracking-wider text-sidebar-muted-foreground font-semibold mb-2">
-                  {category.label}
-                </SidebarGroupLabel>
+              <Collapsible
+                key={category.label}
+                defaultOpen={category.defaultOpen || category.items.some(i => i.url === location.pathname)}
+                open={isCollapsed ? true : undefined}
+                className="group/section"
+              >
+              <SidebarGroup className="px-3 py-1">
+                {!isCollapsed && (
+                  <CollapsibleTrigger asChild>
+                    <SidebarGroupLabel className="cursor-pointer flex items-center justify-between text-xs uppercase tracking-wider text-sidebar-muted-foreground font-semibold mb-1 hover:text-sidebar-foreground">
+                      {category.label}
+                      <ChevronDown className="w-3.5 h-3.5 transition-transform group-data-[state=closed]/section:-rotate-90" />
+                    </SidebarGroupLabel>
+                  </CollapsibleTrigger>
+                )}
+                <CollapsibleContent>
                 <SidebarGroupContent>
                   <SidebarMenu className="space-y-1">
                     {category.items.map((item) => {
@@ -224,7 +248,9 @@ export function AppSidebar() {
                     })}
                   </SidebarMenu>
                 </SidebarGroupContent>
+                </CollapsibleContent>
               </SidebarGroup>
+              </Collapsible>
             ))
           )}
         </div>
