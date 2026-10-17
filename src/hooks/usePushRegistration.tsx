@@ -101,6 +101,34 @@ export const usePushRegistration = () => {
         await PushNotifications.register();
         console.log('✅ [PushReg] Register called successfully');
 
+        // Respaldo: si el evento no llegó, leer el token que guardó AppDelegate
+        setTimeout(async () => {
+          if (hasRegisteredRef.current) return;
+          try {
+            const { Preferences } = await import('@capacitor/preferences');
+            const { value } = await Preferences.get({ key: 'apns_device_token' });
+            const fallback = value?.toLowerCase();
+            if (!fallback) return;
+            const { error } = await supabase.from('user_devices').upsert(
+              {
+                user_id: user.id,
+                device_token: fallback,
+                platform: 'ios',
+                is_active: true,
+                last_active: new Date().toISOString(),
+              },
+              { onConflict: 'user_id,device_token' }
+            );
+            if (error) console.error('❌ [PushReg] Fallback save error:', error);
+            else {
+              console.log('✅ [PushReg] Token guardado (respaldo nativo)');
+              hasRegisteredRef.current = true;
+            }
+          } catch (e) {
+            console.error('❌ [PushReg] Fallback error:', e);
+          }
+        }, 4000);
+
       } catch (error) {
         console.error('❌ [PushReg] Error in registerDevice:', error);
       }
