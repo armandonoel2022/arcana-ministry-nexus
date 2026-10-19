@@ -61,6 +61,7 @@ import { SwipeIndicator } from "./components/SwipeIndicator";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { BackgroundSyncProvider } from "./components/BackgroundSyncProvider";
 import PollActivityNotice from "./components/polls/PollActivityNotice";
+import PinkOctoberOverlay from "./components/notifications/PinkOctoberOverlay";
 
 import { useNativeNotificationSync } from "./hooks/useNativeNotificationSync";
 import { usePushRegistration } from "./hooks/usePushRegistration";
@@ -195,6 +196,7 @@ function AppContent() {
                 {/* OverlayManager dentro de la zona protegida para acceder al usuario */}
                 <OverlayManager />
                 <PollActivityNotice />
+                <PinkOctoberOverlay />
                 <OfflineIndicator />
                 <div className="flex h-screen w-full bg-gray-50 pt-0">
                   <AppSidebar />
