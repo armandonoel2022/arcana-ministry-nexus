@@ -37,12 +37,15 @@ function clearProfileCache() {
 }
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  // Seed from the cached profile so a slow server never shows "pending approval"
+  // or a blank loader to someone who already signed in on this device.
+  const [initialCache] = useState(() => loadProfileFromCache());
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
-  const [isApproved, setIsApproved] = useState(false);
-  const [userProfile, setUserProfile] = useState<any | null>(null);
+  const [needsPasswordChange, setNeedsPasswordChange] = useState(initialCache?.needs_password_change ?? false);
+  const [isApproved, setIsApproved] = useState(initialCache?.is_approved ?? false);
+  const [userProfile, setUserProfile] = useState<any | null>(initialCache);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   useEffect(() => {
@@ -56,7 +59,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  const checkUserProfile = async (userId: string) => {
+  const checkUserProfile = async (userId: string, attempt = 0): Promise<void> => {
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
@@ -68,6 +71,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.error('Error fetching user profile:', error);
         // Fallback to cached profile if fetch fails
         const cached = loadProfileFromCache();
+        if (!(cached && cached.id === userId) && attempt < 2 && error.code !== 'PGRST116') {
+          await new Promise((r) => setTimeout(r, 3000));
+          return checkUserProfile(userId, attempt + 1);
+        }
         if (cached && cached.id === userId) {
           setNeedsPasswordChange(cached.needs_password_change ?? false);
           setIsApproved(cached.is_approved ?? false);
@@ -89,6 +96,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error('Error checking user profile:', error);
       // Fallback to cached profile
       const cached = loadProfileFromCache();
+      if (!(cached && cached.id === userId) && attempt < 2) {
+        await new Promise((r) => setTimeout(r, 3000));
+        return checkUserProfile(userId, attempt + 1);
+      }
       if (cached && cached.id === userId) {
         setNeedsPasswordChange(cached.needs_password_change ?? false);
         setIsApproved(cached.is_approved ?? false);
@@ -102,9 +113,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
+    let settled = false;
+    const markSettled = () => { settled = true; clearTimeout(safetyTimer); };
+
+    // If the server is too slow to confirm the session, continue with the
+    // profile cached on this device instead of staying on "Cargando...".
+    const safetyTimer = setTimeout(() => {
+      if (settled) return;
+      const cachedProfile = loadProfileFromCache();
+      if (cachedProfile) {
+        console.warn('⏱️ [Auth] Servidor lento, usando perfil guardado en el dispositivo');
+        setUserProfile(cachedProfile);
+        setNeedsPasswordChange(cachedProfile.needs_password_change ?? false);
+        setIsApproved(cachedProfile.is_approved ?? false);
+        setUser((current) => current ?? ({ id: cachedProfile.id, email: cachedProfile.email } as User));
+      }
+      setLoading(false);
+    }, 6000);
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        // A failed token refresh on a slow network must not kick a cached user out
+        if (!session && event !== 'SIGNED_OUT' && !settled && loadProfileFromCache()) return;
+        markSettled();
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -131,6 +163,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (settled && !session) return; // already resolved from cache; keep it
+      markSettled();
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -155,6 +189,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setLoading(false);
       }
     }).catch(() => {
+      markSettled();
       // Network error getting session - try offline fallback
       const cachedProfile = loadProfileFromCache();
       if (cachedProfile) {
@@ -167,7 +202,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(safetyTimer);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
