@@ -1,0 +1,2 @@
+- The Supabase client wraps fetch with a timeout (short for REST/auth, long for storage/functions) and `useAuth` falls back to the device-cached profile after a few seconds; why: a slow free-tier database must never leave users stuck on "Cargando...".
+- Keep exactly one pg_cron job per edge function and an hourly cleanup of `net._http_response`/`cron.job_run_details`; why: duplicated per-minute jobs and log bloat saturated the free-tier database.
