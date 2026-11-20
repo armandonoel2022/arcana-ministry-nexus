@@ -11,7 +11,7 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 const REQUEST_TIMEOUT_MS = 15000
 const LONG_REQUEST_TIMEOUT_MS = 60000
 
-const fetchWithTimeout: typeof fetch = (input, init = {}) => {
+const fetchWithTimeout: typeof fetch = (input, init: RequestInit = {}) => {
   const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
   const isLong = url.includes('/storage/v1/') || url.includes('/functions/v1/')
   const timeoutMs = isLong ? LONG_REQUEST_TIMEOUT_MS : REQUEST_TIMEOUT_MS
