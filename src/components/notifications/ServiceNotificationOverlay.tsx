@@ -1579,7 +1579,7 @@ const ServiceNotificationOverlay = ({
         backgroundColor: null,
         scale: 2,
         useCORS: true,
-        allowTaint: true,
+        imageTimeout: 15000,
         logging: false,
         ignoreElements: (element) =>
           element.classList.contains("service-action-buttons") ||

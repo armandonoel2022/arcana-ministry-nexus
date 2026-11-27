@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import arcanaLogo from '@/assets/arca-noe-logo.png';
-import { saveCanvasImage } from '@/utils/saveImage';
+import { canvasToBlob, saveCanvasImage, shareImageBlob } from '@/utils/saveImage';
 
 interface ExtraordinaryRehearsalOverlayProps {
   activityName: string;
@@ -38,8 +38,7 @@ const ExtraordinaryRehearsalOverlay = ({
     return `${hour12.toString().padStart(2, '0')}:${minutes} ${ampm}`;
   };
 
-  const downloadImage = async () => {
-    try {
+  const buildCardCanvas = async (): Promise<HTMLCanvasElement> => {
       const container = document.createElement("div");
       container.style.width = "480px";
       container.style.background = "linear-gradient(180deg, #92400e 0%, #78350f 50%, #451a03 100%)";
@@ -208,16 +207,25 @@ const ExtraordinaryRehearsalOverlay = ({
       // Render
       document.body.appendChild(container);
       const html2canvas = (await import("html2canvas")).default;
-      const canvas = await html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: null,
-        logging: false,
-      });
-      document.body.removeChild(container);
+      let canvas: HTMLCanvasElement;
+      try {
+        canvas = await html2canvas(container, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: null,
+          logging: false,
+          imageTimeout: 15000,
+        });
+      } finally {
+        document.body.removeChild(container);
+      }
+      return canvas;
+  };
 
+  const downloadImage = async () => {
+    try {
+      const canvas = await buildCardCanvas();
       await saveCanvasImage(canvas, `ensayo-extraordinario-${date}.png`, 'ARCANA');
-
       toast({ title: "Imagen lista" });
     } catch (error) {
       console.error("Error downloading image:", error);
@@ -227,9 +235,17 @@ const ExtraordinaryRehearsalOverlay = ({
 
   const shareImage = async () => {
     try {
-      await downloadImage();
-      toast({ title: "Imagen lista para compartir" });
-    } catch {
+      const canvas = await buildCardCanvas();
+      const blob = await canvasToBlob(canvas);
+      const result = await shareImageBlob(
+        blob,
+        `ensayo-extraordinario-${date}.png`,
+        'Ensayo Extraordinario - ARCANA',
+        activityName,
+      );
+      toast({ title: result === 'shared' ? 'Imagen compartida' : 'Imagen descargada' });
+    } catch (error) {
+      console.error("Error sharing image:", error);
       toast({ title: "Error al compartir", variant: "destructive" });
     }
   };

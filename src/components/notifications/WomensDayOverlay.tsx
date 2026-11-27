@@ -169,8 +169,8 @@ const WomensDayOverlay: React.FC<WomensDayOverlayProps> = ({ onClose }) => {
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-500">
-      <div className="w-full max-w-md bg-gradient-to-b from-pink-400 via-pink-500 to-rose-600 rounded-3xl shadow-2xl relative overflow-hidden">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-500">
+      <div className="w-full max-w-md my-auto bg-gradient-to-b from-pink-400 via-pink-500 to-rose-600 rounded-3xl shadow-2xl relative overflow-hidden">
         {/* Animated decorations */}
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/4 animate-pulse" />
         <div className="absolute bottom-20 left-0 w-32 h-32 bg-white/10 rounded-full -translate-x-1/2" />

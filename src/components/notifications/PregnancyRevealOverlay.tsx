@@ -64,7 +64,7 @@ const PregnancyRevealOverlay = ({
         backgroundColor: '#fdf2f8',
         scale: 2,
         useCORS: true,
-        allowTaint: true,
+        imageTimeout: 15000,
       });
       
       await saveCanvasImage(canvas, `revelacion-embarazo-${parentNames.replace(/\s+/g, '-').toLowerCase()}.png`, 'ARCANA');

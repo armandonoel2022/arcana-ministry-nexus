@@ -6,6 +6,7 @@ import html2canvas from 'html2canvas';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { saveCanvasImage } from '@/utils/saveImage';
+import { shareOrCopyText } from '@/utils/shareText';
 
 interface DailyVerseOverlayProps {
   verseText?: string;
@@ -100,26 +101,15 @@ export const DailyVerseOverlay = ({ verseText: propVerseText, verseReference: pr
   const handleShare = async () => {
     const shareText = `📖 Versículo del Día\n\n"${verseText}"\n\n— ${verseReference}\n\n— ARCANA`;
     
-    // Try native share API first (works on mobile and modern browsers)
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Versículo del Día - ARCANA',
-          text: shareText,
-        });
-        toast.success('Compartido exitosamente');
-        return;
-      } catch (error) {
-        // User cancelled or share failed, fall back to clipboard
-        if ((error as Error).name !== 'AbortError') {
-          console.log('Share failed, falling back to clipboard:', error);
-        }
-      }
-    }
-    
-    // Fallback: copy to clipboard
-    await navigator.clipboard.writeText(shareText);
-    toast.success('Copiado al portapapeles');
+    // Hoja de compartir del navegador; si no existe (Safari de escritorio) se copia
+    const result = await shareOrCopyText({
+      title: 'Versículo del Día - ARCANA',
+      text: shareText,
+    });
+
+    if (result === 'shared') toast.success('Compartido exitosamente');
+    else if (result === 'copied') toast.success('Copiado al portapapeles');
+    else if (result === 'failed') toast.error('No se pudo compartir. Copia el texto manualmente.');
   };
 
   if (loading) {
@@ -131,8 +121,8 @@ export const DailyVerseOverlay = ({ verseText: propVerseText, verseReference: pr
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <Card className="w-full max-w-2xl bg-gradient-to-br from-blue-50 via-white to-purple-50 border-2 border-blue-200 shadow-2xl relative overflow-hidden">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-300">
+      <Card className="w-full max-w-2xl my-auto bg-gradient-to-br from-blue-50 via-white to-purple-50 border-2 border-blue-200 shadow-2xl relative overflow-hidden">
         {/* Close button - outside downloadable area */}
         <Button
           variant="ghost"

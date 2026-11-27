@@ -125,7 +125,7 @@ const QuarantineServiceOverlay: React.FC<QuarantineServiceOverlayProps> = ({
         backgroundColor: '#1a1a2e',
         scale: 2,
         useCORS: true,
-        allowTaint: true,
+        imageTimeout: 15000,
       });
       
       const dateStr = serviceDate 

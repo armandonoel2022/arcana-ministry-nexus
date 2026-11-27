@@ -46,8 +46,8 @@ const BloodDonationOverlay = ({
   const config = getUrgencyConfig();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-      <Card className="w-full max-w-2xl bg-gradient-to-br from-red-900 via-red-800 to-red-900 border-2 border-red-500 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+      <Card className="w-full max-w-2xl my-auto bg-gradient-to-br from-red-900 via-red-800 to-red-900 border-2 border-red-500 shadow-2xl">
         <div className="relative p-8 text-white">
           <button
             onClick={onClose}

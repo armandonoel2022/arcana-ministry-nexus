@@ -44,8 +44,8 @@ const MinistryInstructionsOverlay = ({
   const config = getPriorityConfig();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
-      <Card className={`w-full max-w-2xl ${config.bgColor} border-2 ${config.accentColor} shadow-2xl`}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+      <Card className={`w-full max-w-2xl my-auto ${config.bgColor} border-2 ${config.accentColor} shadow-2xl`}>
         <div className="relative p-8">
           <button
             onClick={onClose}

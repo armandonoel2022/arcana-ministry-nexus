@@ -72,7 +72,7 @@ const BirthAnnouncementOverlay = ({
         backgroundColor: '#fffbeb',
         scale: 2,
         useCORS: true,
-        allowTaint: true,
+        imageTimeout: 15000,
       });
       
       const fileName = babyName 

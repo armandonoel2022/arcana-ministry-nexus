@@ -64,8 +64,8 @@ const DirectorChangeOverlay: React.FC<DirectorChangeOverlayProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-      <div className="w-full max-w-md bg-gradient-to-b from-blue-500 via-blue-600 to-blue-700 rounded-3xl shadow-2xl relative overflow-hidden">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-300">
+      <div className="w-full max-w-md my-auto bg-gradient-to-b from-blue-500 via-blue-600 to-blue-700 rounded-3xl shadow-2xl relative overflow-hidden">
         {/* Background circles decoration */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-blue-400/30 rounded-full -translate-y-1/2 translate-x-1/4" />
         <div className="absolute top-20 left-0 w-24 h-24 bg-blue-400/20 rounded-full -translate-x-1/2" />
